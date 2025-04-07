@@ -5,14 +5,22 @@ import mammoth from 'mammoth';
 import { log } from './vite';
 
 // Create a fallback implementation for pdf-parse
-const pdfParse = async () => ({ text: "PDF parsing is currently unavailable. Please install the 'pdf-parse' package for PDF support." });
+const pdfParse = async (buffer: Buffer, options?: any) => ({ 
+  text: "PDF parsing is currently unavailable. Please install the 'pdf-parse' package for PDF support.",
+  numpages: 0,
+  numrender: 0,
+  info: {},
+  metadata: {},
+  version: "0.0.0"
+});
 
 // File type verification
 export function isValidFileType(mimetype: string): boolean {
   const validTypes = [
     'application/pdf',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX
-    'application/vnd.openxmlformats-officedocument.presentationml.presentation' // PPTX
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation', // PPTX
+    'text/plain' // Adding text files for testing
   ];
   
   return validTypes.includes(mimetype);
@@ -111,6 +119,17 @@ export async function extractTextFromPPTX(filepath: string): Promise<string> {
   }
 }
 
+// Extract text content from plain text file
+export async function extractTextFromTXT(filepath: string): Promise<string> {
+  try {
+    const content = await fs.readFile(filepath, 'utf8');
+    return content;
+  } catch (error) {
+    log(`Error extracting text from TXT: ${error}`, "document-processor");
+    throw new Error('Failed to extract text from TXT');
+  }
+}
+
 // Process file based on type
 export async function processFile(
   filepath: string, 
@@ -125,6 +144,8 @@ export async function processFile(
       text = await extractTextFromDOCX(filepath);
     } else if (fileType === 'application/vnd.openxmlformats-officedocument.presentationml.presentation') {
       text = await extractTextFromPPTX(filepath);
+    } else if (fileType === 'text/plain') {
+      text = await extractTextFromTXT(filepath);
     } else {
       throw new Error('Unsupported file type');
     }
