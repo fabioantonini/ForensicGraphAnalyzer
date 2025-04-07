@@ -29,8 +29,13 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Initialize ChromaDB
-  await initializeChromaDB();
+  // Initialize ChromaDB - but don't block the app if it fails
+  // This allows the auth system to work even if ChromaDB is unavailable
+  try {
+    await initializeChromaDB();
+  } catch (error) {
+    log(`ChromaDB initialization error (non-blocking): ${error}`, "express");
+  }
 
   // Sets up /api/register, /api/login, /api/logout, /api/user
   setupAuth(app);
