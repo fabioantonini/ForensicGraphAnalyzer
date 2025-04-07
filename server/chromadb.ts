@@ -189,54 +189,30 @@ export async function removeDocumentFromCollection(
   try {
     const docId = `doc_${documentId}`;
     
-    // Always use in-memory fallback for testing
-    // If using in-memory storage, simply remove it from the map
+    // First, remove from in-memory storage if it exists there
     if (inMemoryDocuments.has(docId)) {
       inMemoryDocuments.delete(docId);
       log(`Document ${documentId} removed from in-memory storage for user ${userId}`, "chromadb");
     }
-    return true;
     
-    // Original code - disabled for testing
-    /*
-    if (!apiKey) {
-      throw new Error("OpenAI API key is required");
-    }
-
-    const docId = `doc_${documentId}`;
-
-    // For in-memory fallback
-    if (!isChromaAvailable) {
-      // If using in-memory storage, simply remove it from the map
-      if (inMemoryDocuments.has(docId)) {
-        inMemoryDocuments.delete(docId);
-        log(`Document ${documentId} removed from in-memory storage for user ${userId}`, "chromadb");
+    // If ChromaDB is available, try to remove it from there as well
+    if (isChromaAvailable) {
+      try {
+        const collection = await getUserCollection(userId, apiKey);
+        
+        // Remove document from collection
+        await collection.delete({
+          ids: [docId]
+        });
+        
+        log(`Document ${documentId} removed from ChromaDB collection for user ${userId}`, "chromadb");
+      } catch (error) {
+        // Log error but don't fail the entire operation
+        log(`Notice: Failed to remove from ChromaDB (but removed from in-memory): ${error}`, "chromadb");
       }
-      return true;
     }
-    */
-
-    // If ChromaDB is available, try using it
-    try {
-      const collection = await getUserCollection(userId, apiKey);
-      
-      // Remove document from collection
-      await collection.delete({
-        ids: [docId]
-      });
-      
-      log(`Document ${documentId} removed from collection for user ${userId}`, "chromadb");
-      return true;
-    } catch (error) {
-      log(`Failed to remove document from ChromaDB, using in-memory fallback: ${error}`, "chromadb");
-      
-      // Fallback to in-memory if ChromaDB operation fails
-      if (inMemoryDocuments.has(docId)) {
-        inMemoryDocuments.delete(docId);
-        log(`Document ${documentId} removed from in-memory storage for user ${userId}`, "chromadb");
-      }
-      return true;
-    }
+    
+    return true;
   } catch (error) {
     log(`Failed to remove document from collection: ${error}`, "chromadb");
     return false;
