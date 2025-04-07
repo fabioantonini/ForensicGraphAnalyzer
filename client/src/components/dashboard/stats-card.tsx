@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { formatDistanceToNow } from "date-fns";
 import { Activity, FormattedStorage } from "@/lib/types";
+import { useTranslation } from "react-i18next";
 
 interface StatsCardProps {
   title: string;
@@ -90,13 +91,14 @@ interface DocumentCardProps {
 }
 
 export function DocumentCard({ count, lastUpload }: DocumentCardProps) {
+  const { t } = useTranslation();
   return (
     <StatsCard
-      title="Documents"
+      title={t('dashboard.documents')}
       value={count}
-      badgeText="Total"
+      badgeText={t('common.total')}
       badgeColor="bg-blue-100 text-info"
-      subValue={`Last uploaded: ${formatTimeAgo(lastUpload)}`}
+      subValue={`${t('documents.lastUploaded')}: ${formatTimeAgo(lastUpload)}`}
     />
   );
 }
@@ -107,13 +109,14 @@ interface QueryCardProps {
 }
 
 export function QueryCard({ count, lastQuery }: QueryCardProps) {
+  const { t } = useTranslation();
   return (
     <StatsCard
-      title="RAG Queries"
+      title={t('dashboard.queries')}
       value={count}
-      badgeText="This Month"
+      badgeText={t('common.thisMonth')}
       badgeColor="bg-green-100 text-secondary"
-      subValue={`Last query: ${formatTimeAgo(lastQuery)}`}
+      subValue={`${t('query.lastQuery')}: ${formatTimeAgo(lastQuery)}`}
     />
   );
 }
@@ -123,16 +126,17 @@ interface StorageCardProps {
 }
 
 export function StorageCard({ storageUsed }: StorageCardProps) {
+  const { t } = useTranslation();
   const storage = formatStorageSize(storageUsed);
   
   return (
     <StatsCard
-      title="Storage Used"
+      title={t('dashboard.storage')}
       value={storage.formatted}
-      badgeText="Limit: 500MB"
+      badgeText={t('common.storageLimit', { limit: '500MB' })}
       badgeColor="bg-yellow-100 text-warning"
       progress={storage.percentage}
-      label="used"
+      label={t('common.used')}
     />
   );
 }

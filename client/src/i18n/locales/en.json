@@ -44,7 +44,8 @@
     "uploadNew": "Upload new documents",
     "dragDrop": "Drag and drop files here or click to browse",
     "supportedFormats": "Supported formats: PDF, DOCX, PPTX",
-    "uploading": "Uploading..."
+    "uploading": "Uploading...",
+    "lastUploaded": "Last uploaded"
   },
   "query": {
     "title": "RAG Query Interface",
@@ -58,7 +59,8 @@
     "noDocumentsFound": "No documents found",
     "uploadFirst": "Upload documents first",
     "sources": "Sources:",
-    "copied": "Copied to clipboard!"
+    "copied": "Copied to clipboard!",
+    "lastQuery": "Last query"
   },
   "settings": {
     "title": "Account Settings",
@@ -131,7 +133,13 @@
     "close": "Close",
     "confirmAction": "Are you sure?",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "total": "Total",
+    "thisMonth": "This Month",
+    "storageLimit": "Limit: {{limit}}",
+    "used": "used",
+    "notFound": "404 Page Not Found",
+    "pageNotFoundMessage": "The page you are looking for does not exist."
   },
   "heroSection": {
     "title": "Forensic Graphology Assistant",

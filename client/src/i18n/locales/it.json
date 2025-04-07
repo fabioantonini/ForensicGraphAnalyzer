@@ -44,7 +44,8 @@
     "uploadNew": "Carica nuovi documenti",
     "dragDrop": "Trascina e rilascia i file qui o clicca per sfogliare",
     "supportedFormats": "Formati supportati: PDF, DOCX, PPTX",
-    "uploading": "Caricamento in corso..."
+    "uploading": "Caricamento in corso...",
+    "lastUploaded": "Ultimo caricamento"
   },
   "query": {
     "title": "Interfaccia di Interrogazione RAG",
@@ -58,7 +59,8 @@
     "noDocumentsFound": "Nessun documento trovato",
     "uploadFirst": "Carica prima i documenti",
     "sources": "Fonti:",
-    "copied": "Copiato negli appunti!"
+    "copied": "Copiato negli appunti!",
+    "lastQuery": "Ultima interrogazione"
   },
   "settings": {
     "title": "Impostazioni Account",
@@ -131,7 +133,13 @@
     "close": "Chiudi",
     "confirmAction": "Sei sicuro?",
     "yes": "Sì",
-    "no": "No"
+    "no": "No",
+    "total": "Totale",
+    "thisMonth": "Questo Mese",
+    "storageLimit": "Limite: {{limit}}",
+    "used": "utilizzato",
+    "notFound": "404 Pagina Non Trovata",
+    "pageNotFoundMessage": "La pagina che stai cercando non esiste."
   },
   "heroSection": {
     "title": "Assistente di Grafologia Forense",
