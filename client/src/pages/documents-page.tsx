@@ -289,10 +289,6 @@ export default function DocumentsPage() {
         </CardContent>
       </Card>
 
-      {/* Test Tabs */}
-      <div className="mb-6">
-        <TestTabs />
-      </div>
 
       {/* Documents View */}
       {viewMode === 'grid' ? (
