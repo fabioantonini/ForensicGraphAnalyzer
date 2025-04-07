@@ -116,7 +116,7 @@ export function QueryCard({ count, lastQuery }: QueryCardProps) {
       value={count}
       badgeText={t('common.thisMonth')}
       badgeColor="bg-green-100 text-secondary"
-      subValue={`${t('query.lastQuery')}: ${formatTimeAgo(lastQuery)}`}
+      subValue={`${t('dashboard.lastQuery')}: ${formatTimeAgo(lastQuery)}`}
     />
   );
 }
