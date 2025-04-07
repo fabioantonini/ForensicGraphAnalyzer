@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json, relations } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -15,6 +15,12 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+export const usersRelations = relations(users, ({ many }) => ({
+  documents: many(documents),
+  activities: many(activities),
+  queries: many(queries),
+}));
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -50,6 +56,13 @@ export const documents = pgTable("documents", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+export const documentsRelations = relations(documents, ({ one }) => ({
+  user: one(users, {
+    fields: [documents.userId],
+    references: [users.id],
+  }),
+}));
+
 export const insertDocumentSchema = createInsertSchema(documents).pick({
   userId: true,
   filename: true,
@@ -69,6 +82,13 @@ export const activities = pgTable("activities", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const activitiesRelations = relations(activities, ({ one }) => ({
+  user: one(users, {
+    fields: [activities.userId],
+    references: [users.id],
+  }),
+}));
+
 export const insertActivitySchema = createInsertSchema(activities).pick({
   userId: true,
   type: true,
@@ -84,6 +104,13 @@ export const queries = pgTable("queries", {
   documentIds: json("document_ids").notNull().$type<number[]>(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+export const queriesRelations = relations(queries, ({ one }) => ({
+  user: one(users, {
+    fields: [queries.userId],
+    references: [users.id],
+  }),
+}));
 
 export const insertQuerySchema = createInsertSchema(queries).pick({
   userId: true,
