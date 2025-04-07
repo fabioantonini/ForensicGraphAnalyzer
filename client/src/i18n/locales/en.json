@@ -114,7 +114,7 @@
     "settings": "Settings",
     "profileSettings": "Profile Settings",
     "logout": "Logout",
-    "appName": "GraphoRAG",
+    "appName": "Grapholex Insight",
     "appDescription": "Forensic Graphology Assistant"
   },
   "common": {
@@ -135,7 +135,7 @@
   },
   "heroSection": {
     "title": "Forensic Graphology Assistant",
-    "subtitle": "Welcome to GraphoRAG, your intelligent assistant for forensic graphology analysis powered by advanced AI.",
+    "subtitle": "Welcome to Grapholex Insight, your intelligent assistant for forensic graphology analysis powered by advanced AI.",
     "feature1": "Upload Documents",
     "feature1Desc": "Add handwriting samples and documents for analysis",
     "feature2": "AI-Powered Analysis",

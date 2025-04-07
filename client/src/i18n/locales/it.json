@@ -114,7 +114,7 @@
     "settings": "Impostazioni",
     "profileSettings": "Impostazioni Profilo",
     "logout": "Disconnetti",
-    "appName": "GraphoRAG",
+    "appName": "Grapholex Insight",
     "appDescription": "Assistente di Grafologia Forense"
   },
   "common": {
@@ -135,7 +135,7 @@
   },
   "heroSection": {
     "title": "Assistente di Grafologia Forense",
-    "subtitle": "Benvenuto in GraphoRAG, il tuo assistente intelligente per l'analisi grafologica forense potenziato da avanzata Intelligenza Artificiale.",
+    "subtitle": "Benvenuto in Grapholex Insight, il tuo assistente intelligente per l'analisi grafologica forense potenziato da avanzata Intelligenza Artificiale.",
     "feature1": "Carica Documenti",
     "feature1Desc": "Aggiungi campioni di scrittura e documenti per l'analisi",
     "feature2": "Analisi con IA",
