@@ -211,6 +211,7 @@
     "generic": "Activity"
   },
   "query": {
+    "title": "Forensic Graphology Analysis",
     "askAboutDocuments": "Ask about your documents...",
     "tip": "Tip",
     "graphologyTip": "Be specific about forensic graphology terms for better results",

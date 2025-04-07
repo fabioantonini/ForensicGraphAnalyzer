@@ -53,7 +53,9 @@ export default function QueryPage() {
 
   return (
     <div className="container mx-auto py-6">
-      <h2 className="text-2xl font-bold text-primary mb-6">{t('query.title')}</h2>
+      <h2 className="text-2xl font-bold text-primary mb-6">
+        {t('query.title')}
+      </h2>
       
       {isLoading ? (
         <div className="flex justify-center items-center min-h-[60vh]">
