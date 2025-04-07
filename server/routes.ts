@@ -9,7 +9,9 @@ import {
   generateFilename, 
   saveFile, 
   processFile, 
-  cleanupFile 
+  cleanupFile,
+  fetchHtmlFromUrl,
+  extractTextFromHTML
 } from "./document-processor";
 import { 
   addDocumentToCollection, 
@@ -157,6 +159,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await cleanupFile(filepath);
         throw error;
       }
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Import document from URL
+  app.post("/api/documents/url", isAuthenticated, async (req, res, next) => {
+    try {
+      const { url } = req.body;
+      
+      if (!url || typeof url !== 'string') {
+        return res.status(400).json({ message: "URL is required" });
+      }
+      
+      const userId = req.user!.id;
+      const user = await storage.getUser(userId) as User;
+      
+      // Check if the user has an API key configured or if we have a system key
+      const hasUserKey = !!user.openaiApiKey;
+      const hasSystemKey = !!process.env.OPENAI_API_KEY;
+      
+      if (!hasUserKey && !hasSystemKey) {
+        return res.status(400).json({ 
+          message: "OpenAI API key not configured. Please add your API key in settings." 
+        });
+      }
+      
+      // Fetch HTML content from URL
+      const { content, filename } = await fetchHtmlFromUrl(url);
+      
+      // Process the HTML content
+      const processedContent = await extractTextFromHTML('', content);
+      
+      // Save document to database
+      const estimatedSize = Buffer.byteLength(content, 'utf8');
+      
+      const document = await storage.createDocument({
+        userId,
+        filename,
+        originalFilename: url,
+        fileType: 'text/html',
+        fileSize: estimatedSize,
+        content: processedContent,
+        indexed: false
+      });
+      
+      // Add document to ChromaDB collection - use user key or fallback to system key
+      const apiKeyToUse = user.openaiApiKey || undefined; // undefined will trigger system key use
+      const indexed = await addDocumentToCollection(userId, document, apiKeyToUse);
+      
+      // Update document indexed status
+      if (indexed) {
+        await storage.updateDocumentIndexStatus(document.id, true);
+        document.indexed = true;
+      }
+      
+      // Log activity
+      await storage.createActivity({
+        userId,
+        type: "import",
+        details: `Imported web page: ${url}`
+      });
+      
+      res.status(201).json(document);
     } catch (err) {
       next(err);
     }

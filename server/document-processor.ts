@@ -132,13 +132,17 @@ export async function extractTextFromTXT(filepath: string): Promise<string> {
 }
 
 // Extract text content from HTML file
-export async function extractTextFromHTML(filepath: string): Promise<string> {
+export async function extractTextFromHTML(filepath: string, content?: string): Promise<string> {
   try {
-    const content = await fs.readFile(filepath, 'utf8');
+    // If content is provided directly, use it; otherwise read from file
+    let htmlContent = content;
+    if (!htmlContent) {
+      htmlContent = await fs.readFile(filepath, 'utf8');
+    }
     
     // Simple HTML to text conversion - remove all HTML tags
     // This is a basic implementation - a production app might use a proper HTML parser
-    const text = content
+    const text = htmlContent
       .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ') // Remove scripts
       .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ')   // Remove styles
       .replace(/<[^>]+>/g, ' ')  // Remove HTML tags
@@ -183,6 +187,50 @@ export async function processFile(
     return text;
   } catch (error) {
     log(`Error processing file: ${error}`, "document-processor");
+    throw error;
+  }
+}
+
+// Fetch HTML content from URL
+export async function fetchHtmlFromUrl(url: string): Promise<{ content: string, filename: string }> {
+  try {
+    // Import fetch dynamically to avoid issues in Node environments
+    const fetch = (await import('node-fetch')).default;
+    
+    // Validate URL format
+    try {
+      new URL(url);
+    } catch (e) {
+      throw new Error('Invalid URL format');
+    }
+
+    // Fetch the URL content
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch URL: ${response.statusText}`);
+    }
+    
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('text/html')) {
+      throw new Error('URL does not point to an HTML document');
+    }
+    
+    const content = await response.text();
+    
+    // Generate a filename from the URL
+    const urlObj = new URL(url);
+    const hostname = urlObj.hostname;
+    const pathname = urlObj.pathname;
+    
+    // Create a filename based on the URL structure
+    const sanitizedPathname = pathname.replace(/[^a-z0-9]/gi, '_').substring(0, 30);
+    const timestamp = Date.now();
+    const filename = `${hostname}${sanitizedPathname}_${timestamp}.html`;
+    
+    return { content, filename };
+  } catch (error) {
+    log(`Error fetching HTML from URL: ${error}`, "document-processor");
     throw error;
   }
 }
