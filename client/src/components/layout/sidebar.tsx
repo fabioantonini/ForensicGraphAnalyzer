@@ -1,0 +1,155 @@
+import { useState, useEffect } from "react";
+import { Link, useLocation } from "wouter";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Home, FileText, MessageSquare, Settings, ChevronRight, ChevronLeft } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import React from "react";
+import { useTranslation } from "react-i18next";
+
+interface SidebarProps {
+  className?: string;
+}
+
+interface NavItem {
+  href: string;
+  label: string;
+  icon: React.ReactNode;
+  translationKey: string;
+}
+
+export function Sidebar({ className }: SidebarProps) {
+  const [location] = useLocation();
+  const isMobile = useIsMobile();
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const { t } = useTranslation();
+
+  // Hide mobile sidebar when route changes
+  useEffect(() => {
+    if (isMobile) {
+      setMobileOpen(false);
+    }
+  }, [location, isMobile]);
+
+  const navItems: NavItem[] = [
+    {
+      href: "/",
+      label: "Dashboard",
+      translationKey: "layout.dashboard",
+      icon: <Home className="h-5 w-5 mr-3" />,
+    },
+    {
+      href: "/documents",
+      label: "Documents",
+      translationKey: "layout.documents",
+      icon: <FileText className="h-5 w-5 mr-3" />,
+    },
+    {
+      href: "/query",
+      label: "RAG Query",
+      translationKey: "layout.ragQuery",
+      icon: <MessageSquare className="h-5 w-5 mr-3" />,
+    },
+    {
+      href: "/settings",
+      label: "Settings",
+      translationKey: "layout.settings",
+      icon: <Settings className="h-5 w-5 mr-3" />,
+    },
+  ];
+
+  const toggleSidebar = () => {
+    if (isMobile) {
+      setMobileOpen(!mobileOpen);
+    } else {
+      setCollapsed(!collapsed);
+    }
+  };
+
+  const sidebarClass = isMobile
+    ? `fixed inset-y-0 left-0 z-50 w-64 shadow-lg transform ${
+        mobileOpen ? "translate-x-0" : "-translate-x-full"
+      } transition-transform duration-200 ease-in-out bg-white md:hidden`
+    : `bg-white shadow-md ${
+        collapsed ? "w-16" : "w-64"
+      } transition-all duration-200 hidden md:block ${className}`;
+
+  return (
+    <>
+      {/* Mobile overlay */}
+      {isMobile && mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={sidebarClass}>
+        <div className="flex h-full flex-col">
+          <div className="flex items-center justify-between h-14 px-4 border-b">
+            {!collapsed && (
+              <h2 className="text-lg font-semibold">{t('layout.appName')}</h2>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:flex"
+              onClick={toggleSidebar}
+            >
+              {collapsed ? (
+                <ChevronRight className="h-5 w-5" />
+              ) : (
+                <ChevronLeft className="h-5 w-5" />
+              )}
+            </Button>
+          </div>
+
+          <ScrollArea className="flex-1 px-2 py-4">
+            <nav className="space-y-1">
+              {navItems.map((item) => (
+                <Link key={item.href} href={item.href}>
+                  <a
+                    className={`flex items-center py-2 px-4
+                      rounded-md hover:bg-muted transition-colors
+                      ${
+                        location === item.href
+                          ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                          : "text-gray-700 hover:text-primary"
+                      }
+                      ${collapsed ? "justify-center" : "justify-start"}
+                    `}
+                  >
+                    <div className={collapsed ? "" : "mr-3"}>
+                      {React.cloneElement(item.icon as React.ReactElement, {
+                        className: `h-5 w-5 ${collapsed ? "" : "mr-3"}`,
+                      })}
+                    </div>
+                    {!collapsed && <span>{t(item.translationKey)}</span>}
+                  </a>
+                </Link>
+              ))}
+            </nav>
+          </ScrollArea>
+        </div>
+      </aside>
+
+      {/* Mobile toggle button */}
+      {isMobile && (
+        <Button
+          variant="outline"
+          size="icon"
+          className="fixed bottom-4 right-4 z-40 rounded-full shadow-lg md:hidden"
+          onClick={toggleSidebar}
+        >
+          {mobileOpen ? (
+            <ChevronLeft className="h-5 w-5" />
+          ) : (
+            <ChevronRight className="h-5 w-5" />
+          )}
+        </Button>
+      )}
+    </>
+  );
+}

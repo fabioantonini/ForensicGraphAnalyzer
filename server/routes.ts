@@ -1,0 +1,400 @@
+import { Express, Request, Response, NextFunction } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import { setupAuth } from "./auth";
+import multer from "multer";
+import { Document, User, insertQuerySchema } from "@shared/schema";
+import { 
+  isValidFileType, 
+  generateFilename, 
+  saveFile, 
+  processFile, 
+  cleanupFile 
+} from "./document-processor";
+import { 
+  addDocumentToCollection, 
+  removeDocumentFromCollection,
+  queryCollection,
+  initializeChromaDB
+} from "./chromadb";
+import { chatWithRAG, validateAPIKey } from "./openai";
+import { log } from "./vite";
+
+// Initialize multer for file uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 25 * 1024 * 1024, // 25MB limit
+  },
+});
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize ChromaDB
+  await initializeChromaDB();
+
+  // Sets up /api/register, /api/login, /api/logout, /api/user
+  setupAuth(app);
+
+  // Middleware to check if user is authenticated
+  const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
+    if (req.isAuthenticated()) {
+      return next();
+    }
+    res.status(401).json({ message: "Unauthorized" });
+  };
+
+  // Get user stats
+  app.get("/api/stats", isAuthenticated, async (req, res, next) => {
+    try {
+      const userId = req.user!.id;
+      
+      // Get document count
+      const documentCount = await storage.getDocumentCount(userId);
+      
+      // Get query count
+      const queryCount = await storage.getQueryCount(userId);
+      
+      // Get storage used (in bytes)
+      const storageUsed = await storage.getStorageUsed(userId);
+      
+      // Get recent activity
+      const recentActivity = await storage.getRecentActivity(userId, 5);
+      
+      // Get last uploaded document
+      const lastUpload = await storage.getLastUploadTime(userId);
+      
+      // Get last query time
+      const lastQuery = await storage.getLastQueryTime(userId);
+      
+      res.json({
+        documentCount,
+        queryCount,
+        storageUsed,
+        recentActivity,
+        lastUpload,
+        lastQuery
+      });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Document endpoints
+  // Upload a document
+  app.post("/api/documents", isAuthenticated, upload.single("file"), async (req, res, next) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+      
+      const userId = req.user!.id;
+      const user = await storage.getUser(userId) as User;
+      
+      // Check if the user has an API key configured
+      if (!user.openaiApiKey) {
+        return res.status(400).json({ 
+          message: "OpenAI API key not configured. Please add your API key in settings." 
+        });
+      }
+      
+      // Check if file type is supported
+      if (!isValidFileType(req.file.mimetype)) {
+        return res.status(400).json({ message: "Unsupported file type" });
+      }
+      
+      // Generate a unique filename
+      const filename = generateFilename(req.file.originalname);
+      
+      // Save the file temporarily
+      const filepath = await saveFile(req.file.buffer, filename);
+      
+      try {
+        // Process the file to extract text
+        const content = await processFile(filepath, req.file.mimetype);
+        
+        // Save document to database
+        const document = await storage.createDocument({
+          userId,
+          filename,
+          originalFilename: req.file.originalname,
+          fileType: req.file.mimetype,
+          fileSize: req.file.size,
+          content,
+          indexed: false
+        });
+        
+        // Add document to ChromaDB collection
+        const indexed = await addDocumentToCollection(userId, document, user.openaiApiKey);
+        
+        // Update document indexed status
+        if (indexed) {
+          await storage.updateDocumentIndexStatus(document.id, true);
+          document.indexed = true;
+        }
+        
+        // Log activity
+        await storage.createActivity({
+          userId,
+          type: "upload",
+          details: `Uploaded document: ${req.file.originalname}`
+        });
+        
+        // Cleanup temporary file
+        await cleanupFile(filepath);
+        
+        res.status(201).json(document);
+      } catch (error) {
+        // Cleanup temporary file on error
+        await cleanupFile(filepath);
+        throw error;
+      }
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Get all documents for a user
+  app.get("/api/documents", isAuthenticated, async (req, res, next) => {
+    try {
+      const userId = req.user!.id;
+      
+      // Get query parameters for filtering
+      const fileType = req.query.fileType as string | undefined;
+      const searchTerm = req.query.search as string | undefined;
+      const dateRange = req.query.dateRange as string | undefined;
+      
+      const documents = await storage.getUserDocuments(userId, { fileType, searchTerm, dateRange });
+      res.json(documents);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Get a specific document
+  app.get("/api/documents/:id", isAuthenticated, async (req, res, next) => {
+    try {
+      const userId = req.user!.id;
+      const documentId = parseInt(req.params.id);
+      
+      if (isNaN(documentId)) {
+        return res.status(400).json({ message: "Invalid document ID" });
+      }
+      
+      const document = await storage.getDocument(documentId);
+      
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+      
+      // Check if document belongs to user
+      if (document.userId !== userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      res.json(document);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Delete a document
+  app.delete("/api/documents/:id", isAuthenticated, async (req, res, next) => {
+    try {
+      const userId = req.user!.id;
+      const documentId = parseInt(req.params.id);
+      const user = await storage.getUser(userId) as User;
+      
+      if (isNaN(documentId)) {
+        return res.status(400).json({ message: "Invalid document ID" });
+      }
+      
+      const document = await storage.getDocument(documentId);
+      
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+      
+      // Check if document belongs to user
+      if (document.userId !== userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      // Remove document from ChromaDB if it was indexed
+      if (document.indexed && user.openaiApiKey) {
+        await removeDocumentFromCollection(userId, documentId, user.openaiApiKey);
+      }
+      
+      // Delete document from storage
+      await storage.deleteDocument(documentId);
+      
+      // Log activity
+      await storage.createActivity({
+        userId,
+        type: "delete",
+        details: `Deleted document: ${document.originalFilename}`
+      });
+      
+      res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Query endpoints
+  // Perform a RAG query
+  app.post("/api/query", isAuthenticated, async (req, res, next) => {
+    try {
+      const userId = req.user!.id;
+      const user = await storage.getUser(userId) as User;
+      
+      // Validate request body
+      const { query, documentIds, model = "gpt-4o", temperature = 0.7 } = req.body;
+      
+      if (!query || typeof query !== "string") {
+        return res.status(400).json({ message: "Query is required" });
+      }
+      
+      if (!Array.isArray(documentIds)) {
+        return res.status(400).json({ message: "documentIds must be an array" });
+      }
+      
+      // Check if user has configured an API key
+      if (!user.openaiApiKey) {
+        return res.status(400).json({ 
+          message: "OpenAI API key not configured. Please add your API key in settings." 
+        });
+      }
+      
+      // Validate API key
+      const isValidKey = await validateAPIKey(user.openaiApiKey);
+      if (!isValidKey) {
+        return res.status(400).json({ message: "Invalid OpenAI API key" });
+      }
+      
+      // Check if selected documents exist and belong to the user
+      const selectedDocuments = await storage.getMultipleDocuments(documentIds);
+      
+      // Filter out documents that don't belong to the user
+      const validDocuments = selectedDocuments.filter(doc => doc.userId === userId);
+      
+      if (validDocuments.length === 0) {
+        return res.status(400).json({ message: "No valid documents selected" });
+      }
+      
+      // Get document IDs that are actually valid
+      const validDocumentIds = validDocuments.map(doc => doc.id);
+      
+      // Query ChromaDB for relevant context
+      const queryResults = await queryCollection(
+        userId,
+        query,
+        validDocumentIds,
+        user.openaiApiKey
+      );
+      
+      // Build context from retrieved documents
+      const context = queryResults.documents;
+      
+      // Get ChatGPT response
+      const response = await chatWithRAG(
+        query,
+        context,
+        user.openaiApiKey,
+        model,
+        temperature
+      );
+      
+      // Save query and response to database
+      const savedQuery = await storage.createQuery({
+        userId,
+        query,
+        response,
+        documentIds: validDocumentIds,
+      });
+      
+      // Log activity
+      await storage.createActivity({
+        userId,
+        type: "query",
+        details: `Performed query: ${query.substring(0, 50)}${query.length > 50 ? '...' : ''}`
+      });
+      
+      res.json({
+        id: savedQuery.id,
+        query,
+        response,
+        documents: validDocuments.map(doc => ({
+          id: doc.id,
+          filename: doc.originalFilename
+        })),
+        createdAt: savedQuery.createdAt
+      });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Get query history
+  app.get("/api/queries", isAuthenticated, async (req, res, next) => {
+    try {
+      const userId = req.user!.id;
+      const queries = await storage.getUserQueries(userId);
+      res.json(queries);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Get a specific query
+  app.get("/api/queries/:id", isAuthenticated, async (req, res, next) => {
+    try {
+      const userId = req.user!.id;
+      const queryId = parseInt(req.params.id);
+      
+      if (isNaN(queryId)) {
+        return res.status(400).json({ message: "Invalid query ID" });
+      }
+      
+      const query = await storage.getQuery(queryId);
+      
+      if (!query) {
+        return res.status(404).json({ message: "Query not found" });
+      }
+      
+      // Check if query belongs to user
+      if (query.userId !== userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      // Get document information for the query
+      const documents = await storage.getMultipleDocuments(query.documentIds);
+      
+      res.json({
+        ...query,
+        documents: documents.map(doc => ({
+          id: doc.id,
+          filename: doc.originalFilename
+        }))
+      });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Activity endpoints
+  // Get recent activity
+  app.get("/api/activities", isAuthenticated, async (req, res, next) => {
+    try {
+      const userId = req.user!.id;
+      const limit = parseInt(req.query.limit as string || "10");
+      
+      const activities = await storage.getRecentActivity(userId, limit);
+      res.json(activities);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  const httpServer = createServer(app);
+  return httpServer;
+}
