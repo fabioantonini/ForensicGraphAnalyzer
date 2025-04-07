@@ -90,7 +90,7 @@
     "unknownType": "Unknown Type"
   },
   "query": {
-    "title": "RAG Query Interface",
+    "title": "Forensic Graphology Analysis",
     "selectDocuments": "Select Documents",
     "search": "Search documents...",
     "noDocumentsSelected": "No documents selected",
@@ -154,7 +154,7 @@
   "layout": {
     "dashboard": "Dashboard",
     "documents": "Documents",
-    "ragQuery": "RAG Query",
+    "ragQuery": "Graphology Analysis",
     "settings": "Settings",
     "profileSettings": "Profile Settings",
     "logout": "Logout",

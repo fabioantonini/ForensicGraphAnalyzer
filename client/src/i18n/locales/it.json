@@ -90,7 +90,7 @@
     "unknownType": "Tipo Sconosciuto"
   },
   "query": {
-    "title": "Interfaccia di Interrogazione RAG",
+    "title": "Analisi di Grafologia Forense",
     "selectDocuments": "Seleziona Documenti",
     "search": "Cerca documenti...",
     "noDocumentsSelected": "Nessun documento selezionato",
@@ -154,7 +154,7 @@
   "layout": {
     "dashboard": "Dashboard",
     "documents": "Documenti",
-    "ragQuery": "Interrogazione RAG",
+    "ragQuery": "Analisi Grafologica",
     "settings": "Impostazioni",
     "profileSettings": "Impostazioni Profilo",
     "logout": "Disconnetti",
