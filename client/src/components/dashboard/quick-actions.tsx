@@ -2,72 +2,20 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FileInput, SelectedFile } from "@/components/ui/file-input";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { LoadingSpinner } from "../ui/loading-spinner";
 import { useTranslation } from "react-i18next";
+import { UploadModal } from "@/components/documents/upload-modal-fixed";
+import { PlusCircle, ArrowRightCircle } from "lucide-react";
 
 export function QuickUpload() {
-  const [file, setFile] = useState<File | null>(null);
-  const { toast } = useToast();
+  const [showUploadModal, setShowUploadModal] = useState(false);
   const [, setLocation] = useLocation();
   const { t } = useTranslation();
   
-  const uploadMutation = useMutation({
-    mutationFn: async (file: File) => {
-      const formData = new FormData();
-      formData.append("file", file);
-      
-      const response = await fetch("/api/documents", {
-        method: "POST",
-        body: formData,
-        credentials: "include",
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || t('documents.uploadFailedGeneric'));
-      }
-      
-      return await response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: t('documents.uploadSuccess'),
-        description: t('documents.uploadSuccessMessage'),
-        variant: "default",
-      });
-      setFile(null);
-      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
-      setLocation("/documents");
-    },
-    onError: (error: Error) => {
-      toast({
-        title: t('documents.uploadFailed'),
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-  
-  const handleFileSelect = (selectedFile: File) => {
-    setFile(selectedFile);
-  };
-  
-  const handleRemoveFile = () => {
-    setFile(null);
-  };
-  
-  const handleUpload = () => {
-    if (file) {
-      uploadMutation.mutate(file);
-    }
-  };
-
   return (
     <Card>
       <CardContent className="p-6">
@@ -76,27 +24,29 @@ export function QuickUpload() {
           {t('dashboard.quickUploadDescription')}
         </p>
         
-        {!file ? (
-          <FileInput
-            onFileSelect={handleFileSelect}
-            buttonText={t('documents.dragDropOrBrowse')}
-            helperText={t('documents.fileFormatInfo')}
-          />
-        ) : (
-          <div>
-            <SelectedFile file={file} onRemove={handleRemoveFile} />
-            <Button 
-              className="w-full mt-4" 
-              onClick={handleUpload}
-              disabled={uploadMutation.isPending}
-            >
-              {uploadMutation.isPending ? (
-                <LoadingSpinner size="sm" className="mr-2" />
-              ) : null}
-              {t('documents.uploadDocument')}
-            </Button>
-          </div>
-        )}
+        <div className="flex gap-4">
+          <Button 
+            className="flex-1"
+            onClick={() => setShowUploadModal(true)}
+          >
+            <PlusCircle className="h-5 w-5 mr-2" />
+            {t('documents.uploadDocument')}
+          </Button>
+          
+          <Button
+            variant="outline"
+            className="flex-none"
+            onClick={() => setLocation("/documents")}
+          >
+            <ArrowRightCircle className="h-5 w-5 mr-2" />
+            {t('documents.viewDocuments')}
+          </Button>
+        </div>
+        
+        <UploadModal
+          open={showUploadModal}
+          onOpenChange={setShowUploadModal}
+        />
       </CardContent>
     </Card>
   );
