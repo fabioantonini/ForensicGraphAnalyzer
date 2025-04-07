@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { useTranslation } from "react-i18next";
-import { Link, Import } from "lucide-react";
+import { Link, Import, Upload } from "lucide-react";
 
 interface UploadModalProps {
   open: boolean;
@@ -147,7 +147,7 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
         <Tabs defaultValue="file" value={activeTab} onValueChange={setActiveTab} className="mt-4">
           <TabsList className="grid grid-cols-2 mb-4">
             <TabsTrigger value="file">
-              <LoadingSpinner size="sm" className="mr-2" />
+              <Upload className="h-4 w-4 mr-2" />
               {t("documents.uploadFile", "Upload File")}
             </TabsTrigger>
             <TabsTrigger value="url">
