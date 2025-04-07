@@ -51,6 +51,7 @@
     "viewAllQueries": "View all queries",
     "documentStorage": "Document Storage",
     "viewAllDocuments": "View all documents",
+    "viewDocuments": "Documents",
     "never": "Never",
     "quickUpload": "Quick Upload",
     "quickUploadDescription": "Upload a new document to your forensic collection",
