@@ -109,26 +109,28 @@ export function Sidebar({ className }: SidebarProps) {
           <ScrollArea className="flex-1 px-2 py-4">
             <nav className="space-y-1">
               {navItems.map((item) => (
-                <Link key={item.href} href={item.href}>
-                  <a
-                    className={`flex items-center py-2 px-4
-                      rounded-md hover:bg-muted transition-colors
-                      ${
-                        location === item.href
-                          ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                          : "text-gray-700 hover:text-primary"
-                      }
-                      ${collapsed ? "justify-center" : "justify-start"}
-                    `}
-                  >
-                    <div className={collapsed ? "" : "mr-3"}>
-                      {React.cloneElement(item.icon as React.ReactElement, {
-                        className: `h-5 w-5 ${collapsed ? "" : "mr-3"}`,
-                      })}
+                <div key={item.href}>
+                  <Link href={item.href}>
+                    <div
+                      className={`flex items-center py-2 px-4
+                        rounded-md hover:bg-muted transition-colors cursor-pointer
+                        ${
+                          location === item.href
+                            ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                            : "text-gray-700 hover:text-primary"
+                        }
+                        ${collapsed ? "justify-center" : "justify-start"}
+                      `}
+                    >
+                      <div className={collapsed ? "" : "mr-3"}>
+                        {React.cloneElement(item.icon as React.ReactElement, {
+                          className: `h-5 w-5 ${collapsed ? "" : "mr-3"}`,
+                        })}
+                      </div>
+                      {!collapsed && <span>{t(item.translationKey)}</span>}
                     </div>
-                    {!collapsed && <span>{t(item.translationKey)}</span>}
-                  </a>
-                </Link>
+                  </Link>
+                </div>
               ))}
             </nav>
           </ScrollArea>
