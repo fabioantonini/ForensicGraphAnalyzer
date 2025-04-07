@@ -1,19 +1,22 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Activity } from "@/lib/types";
 import { formatDistanceToNow } from "date-fns";
+import { useTranslation } from "react-i18next";
 
 interface ActivityListProps {
   activities: Activity[];
 }
 
 export function ActivityList({ activities }: ActivityListProps) {
+  const { t } = useTranslation();
+  
   if (!activities.length) {
     return (
       <Card>
         <CardContent className="p-6">
-          <h3 className="text-lg font-medium text-gray-700 mb-4">Recent Activity</h3>
+          <h3 className="text-lg font-medium text-gray-700 mb-4">{t('dashboard.recentActivity')}</h3>
           <div className="text-center py-8 text-muted-foreground">
-            No recent activity found
+            {t('dashboard.noActivity')}
           </div>
         </CardContent>
       </Card>
@@ -73,44 +76,44 @@ export function ActivityList({ activities }: ActivityListProps) {
   const getActivityTitle = (type: string): string => {
     switch (type) {
       case 'upload':
-        return 'Document Upload';
+        return t('activity.documentUpload');
       case 'query':
-        return 'RAG Query';
+        return t('activity.ragQuery');
       case 'api_key_update':
-        return 'API Key Updated';
+        return t('activity.apiKeyUpdated');
       case 'delete':
-        return 'Document Delete';
+        return t('activity.documentDelete');
       case 'login':
-        return 'User Login';
+        return t('activity.userLogin');
       case 'logout':
-        return 'User Logout';
+        return t('activity.userLogout');
       case 'signup':
-        return 'Account Created';
+        return t('activity.accountCreated');
       case 'profile_update':
-        return 'Profile Updated';
+        return t('activity.profileUpdated');
       case 'password_update':
-        return 'Password Changed';
+        return t('activity.passwordChanged');
       default:
-        return 'Activity';
+        return t('activity.generic');
     }
   };
 
   return (
     <Card>
       <CardContent className="p-6">
-        <h3 className="text-lg font-medium text-gray-700 mb-4">Recent Activity</h3>
+        <h3 className="text-lg font-medium text-gray-700 mb-4">{t('dashboard.recentActivity')}</h3>
         <div className="overflow-x-auto">
           <table className="min-w-full">
             <thead className="bg-muted">
               <tr>
                 <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Action
+                  {t('activity.action')}
                 </th>
                 <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Details
+                  {t('activity.details')}
                 </th>
                 <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date
+                  {t('activity.date')}
                 </th>
               </tr>
             </thead>

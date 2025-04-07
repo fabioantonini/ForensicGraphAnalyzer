@@ -28,7 +28,24 @@
     "uploadDocument": "Upload Document",
     "askQuestion": "Ask Question",
     "manageDocuments": "Manage Documents",
-    "noActivity": "No recent activity"
+    "noActivity": "No recent activity",
+    "welcomeBack": "Welcome back, {{name}}",
+    "summary": "Summary",
+    "documentCount": "Documents",
+    "queryCount": "Queries",
+    "storageUsed": "{{storage}} used",
+    "lastUpload": "Last upload",
+    "lastQuery": "Last query",
+    "recentQueries": "Recent Queries",
+    "noRecentQueries": "No recent queries found",
+    "viewAllQueries": "View all queries",
+    "documentStorage": "Document Storage",
+    "viewAllDocuments": "View all documents",
+    "never": "Never",
+    "quickUpload": "Quick Upload",
+    "quickUploadDescription": "Upload a new document to your forensic collection",
+    "quickQuery": "Quick Query",
+    "quickQueryDescription": "Ask a question using your document knowledge base"
   },
   "documents": {
     "title": "Document Library",
@@ -45,7 +62,14 @@
     "dragDrop": "Drag and drop files here or click to browse",
     "supportedFormats": "Supported formats: PDF, DOCX, PPTX",
     "uploading": "Uploading...",
-    "lastUploaded": "Last uploaded"
+    "lastUploaded": "Last uploaded",
+    "uploadSuccess": "Document uploaded",
+    "uploadSuccessMessage": "Your document was successfully uploaded",
+    "uploadFailed": "Upload failed",
+    "uploadFailedGeneric": "Failed to upload document",
+    "dragDropOrBrowse": "Drag & drop files or browse",
+    "fileFormatInfo": "PDF, DOCX, PPTX (Max 25MB)",
+    "uploadDocument": "Upload Document"
   },
   "query": {
     "title": "RAG Query Interface",
@@ -150,5 +174,25 @@
     "feature2Desc": "Leverage RAG technology with your OpenAI API key",
     "feature3": "Detailed Insights",
     "feature3Desc": "Get professional insights from your handwriting samples"
+  },
+  "activity": {
+    "action": "Action",
+    "details": "Details",
+    "date": "Date",
+    "documentUpload": "Document Upload",
+    "ragQuery": "RAG Query",
+    "apiKeyUpdated": "API Key Updated",
+    "documentDelete": "Document Delete",
+    "userLogin": "User Login",
+    "userLogout": "User Logout",
+    "accountCreated": "Account Created",
+    "profileUpdated": "Profile Updated",
+    "passwordChanged": "Password Changed",
+    "generic": "Activity"
+  },
+  "query": {
+    "askAboutDocuments": "Ask about your documents...",
+    "tip": "Tip",
+    "graphologyTip": "Be specific about forensic graphology terms for better results"
   }
 }

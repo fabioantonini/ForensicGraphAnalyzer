@@ -8,11 +8,13 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { LoadingSpinner } from "../ui/loading-spinner";
+import { useTranslation } from "react-i18next";
 
 export function QuickUpload() {
   const [file, setFile] = useState<File | null>(null);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const { t } = useTranslation();
   
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
@@ -27,15 +29,15 @@ export function QuickUpload() {
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to upload document");
+        throw new Error(errorData.message || t('documents.uploadFailedGeneric'));
       }
       
       return await response.json();
     },
     onSuccess: () => {
       toast({
-        title: "Document uploaded",
-        description: "Your document was successfully uploaded",
+        title: t('documents.uploadSuccess'),
+        description: t('documents.uploadSuccessMessage'),
         variant: "default",
       });
       setFile(null);
@@ -45,7 +47,7 @@ export function QuickUpload() {
     },
     onError: (error: Error) => {
       toast({
-        title: "Upload failed",
+        title: t('documents.uploadFailed'),
         description: error.message,
         variant: "destructive",
       });
@@ -69,16 +71,16 @@ export function QuickUpload() {
   return (
     <Card>
       <CardContent className="p-6">
-        <h3 className="text-lg font-medium text-gray-700 mb-4">Quick Upload</h3>
+        <h3 className="text-lg font-medium text-gray-700 mb-4">{t('dashboard.quickUpload')}</h3>
         <p className="text-sm text-gray-500 mb-4">
-          Upload a new document to your forensic collection
+          {t('dashboard.quickUploadDescription')}
         </p>
         
         {!file ? (
           <FileInput
             onFileSelect={handleFileSelect}
-            buttonText="Drag & drop files or browse"
-            helperText="PDF, DOCX, PPTX (Max 25MB)"
+            buttonText={t('documents.dragDropOrBrowse')}
+            helperText={t('documents.fileFormatInfo')}
           />
         ) : (
           <div>
@@ -91,7 +93,7 @@ export function QuickUpload() {
               {uploadMutation.isPending ? (
                 <LoadingSpinner size="sm" className="mr-2" />
               ) : null}
-              Upload Document
+              {t('documents.uploadDocument')}
             </Button>
           </div>
         )}
@@ -103,6 +105,7 @@ export function QuickUpload() {
 export function QuickQuery() {
   const [query, setQuery] = useState("");
   const [, setLocation] = useLocation();
+  const { t } = useTranslation();
   
   const handleQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
@@ -117,14 +120,14 @@ export function QuickQuery() {
   return (
     <Card>
       <CardContent className="p-6">
-        <h3 className="text-lg font-medium text-gray-700 mb-4">Quick Query</h3>
+        <h3 className="text-lg font-medium text-gray-700 mb-4">{t('dashboard.quickQuery')}</h3>
         <p className="text-sm text-gray-500 mb-4">
-          Ask a question using your document knowledge base
+          {t('dashboard.quickQueryDescription')}
         </p>
         <div className="relative">
           <Input
             className="w-full px-4 py-3"
-            placeholder="Ask about your documents..."
+            placeholder={t('query.askAboutDocuments')}
             value={query}
             onChange={handleQueryChange}
             onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
@@ -150,8 +153,7 @@ export function QuickQuery() {
           </Button>
         </div>
         <div className="text-sm text-gray-500 mt-2">
-          <span className="font-medium">Tip:</span> Be specific about forensic
-          graphology terms for better results
+          <span className="font-medium">{t('query.tip')}:</span> {t('query.graphologyTip')}
         </div>
       </CardContent>
     </Card>

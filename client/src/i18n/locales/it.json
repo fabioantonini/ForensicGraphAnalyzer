@@ -28,7 +28,24 @@
     "uploadDocument": "Carica Documento",
     "askQuestion": "Fai una Domanda",
     "manageDocuments": "Gestisci Documenti",
-    "noActivity": "Nessuna attività recente"
+    "noActivity": "Nessuna attività recente",
+    "welcomeBack": "Bentornato, {{name}}",
+    "summary": "Riepilogo",
+    "documentCount": "Documenti",
+    "queryCount": "Interrogazioni",
+    "storageUsed": "{{storage}} utilizzato",
+    "lastUpload": "Ultimo caricamento",
+    "lastQuery": "Ultima interrogazione",
+    "recentQueries": "Interrogazioni Recenti",
+    "noRecentQueries": "Nessuna interrogazione recente trovata",
+    "viewAllQueries": "Vedi tutte le interrogazioni",
+    "documentStorage": "Archiviazione Documenti",
+    "viewAllDocuments": "Vedi tutti i documenti",
+    "never": "Mai",
+    "quickUpload": "Caricamento Rapido",
+    "quickUploadDescription": "Carica un nuovo documento nella tua collezione forense",
+    "quickQuery": "Interrogazione Rapida",
+    "quickQueryDescription": "Fai una domanda utilizzando la tua base di conoscenza documentale"
   },
   "documents": {
     "title": "Libreria Documenti",
@@ -45,7 +62,14 @@
     "dragDrop": "Trascina e rilascia i file qui o clicca per sfogliare",
     "supportedFormats": "Formati supportati: PDF, DOCX, PPTX",
     "uploading": "Caricamento in corso...",
-    "lastUploaded": "Ultimo caricamento"
+    "lastUploaded": "Ultimo caricamento",
+    "uploadSuccess": "Documento caricato",
+    "uploadSuccessMessage": "Il tuo documento è stato caricato con successo",
+    "uploadFailed": "Caricamento fallito",
+    "uploadFailedGeneric": "Impossibile caricare il documento",
+    "dragDropOrBrowse": "Trascina e rilascia i file o sfoglia",
+    "fileFormatInfo": "PDF, DOCX, PPTX (Max 25MB)",
+    "uploadDocument": "Carica Documento"
   },
   "query": {
     "title": "Interfaccia di Interrogazione RAG",
@@ -150,5 +174,25 @@
     "feature2Desc": "Sfrutta la tecnologia RAG con la tua chiave API OpenAI",
     "feature3": "Approfondimenti Dettagliati",
     "feature3Desc": "Ottieni approfondimenti professionali dai tuoi campioni di scrittura"
+  },
+  "activity": {
+    "action": "Azione",
+    "details": "Dettagli",
+    "date": "Data",
+    "documentUpload": "Caricamento Documento",
+    "ragQuery": "Interrogazione RAG",
+    "apiKeyUpdated": "Chiave API Aggiornata",
+    "documentDelete": "Eliminazione Documento",
+    "userLogin": "Accesso Utente",
+    "userLogout": "Disconnessione Utente",
+    "accountCreated": "Account Creato",
+    "profileUpdated": "Profilo Aggiornato",
+    "passwordChanged": "Password Modificata",
+    "generic": "Attività"
+  },
+  "query": {
+    "askAboutDocuments": "Chiedi riguardo ai tuoi documenti...",
+    "tip": "Consiglio",
+    "graphologyTip": "Sii specifico riguardo ai termini di grafologia forense per risultati migliori"
   }
 }
