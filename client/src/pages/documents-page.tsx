@@ -12,9 +12,9 @@ import { useQuery } from "@tanstack/react-query";
 export default function DocumentsPage() {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [filters, setFilters] = useState<FilterOptions>({
-    fileType: "",
+    fileType: "all",
     searchTerm: "",
-    dateRange: "",
+    dateRange: "all",
   });
 
   const { data: documents, isLoading } = useQuery<Document[]>({
@@ -74,7 +74,7 @@ export default function DocumentsPage() {
                   <SelectValue placeholder="All Types" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Types</SelectItem>
+                  <SelectItem value="all">All Types</SelectItem>
                   <SelectItem value="pdf">PDF</SelectItem>
                   <SelectItem value="docx">DOCX</SelectItem>
                   <SelectItem value="pptx">PPTX</SelectItem>
@@ -87,7 +87,7 @@ export default function DocumentsPage() {
                   <SelectValue placeholder="All Dates" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Dates</SelectItem>
+                  <SelectItem value="all">All Dates</SelectItem>
                   <SelectItem value="today">Today</SelectItem>
                   <SelectItem value="week">This Week</SelectItem>
                   <SelectItem value="month">This Month</SelectItem>

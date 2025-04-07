@@ -65,9 +65,9 @@ export interface FormattedStorage {
 }
 
 export interface FilterOptions {
-  fileType?: string;
+  fileType?: 'all' | 'pdf' | 'docx' | 'pptx' | string;
   searchTerm?: string;
-  dateRange?: string;
+  dateRange?: 'all' | 'today' | 'week' | 'month' | 'year' | string;
 }
 
 export interface QueryResult {

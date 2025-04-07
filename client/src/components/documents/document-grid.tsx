@@ -14,7 +14,7 @@ export function DocumentGrid({ documents, isLoading, filters }: DocumentGridProp
     let match = true;
     
     // Filter by file type
-    if (filters.fileType && filters.fileType !== "") {
+    if (filters.fileType && filters.fileType !== "all") {
       match = match && doc.fileType.includes(filters.fileType);
     }
     
@@ -24,6 +24,10 @@ export function DocumentGrid({ documents, isLoading, filters }: DocumentGridProp
     }
     
     // Filter by date range (handled by the backend)
+    if (filters.dateRange && filters.dateRange !== "all") {
+      // The back-end would handle this in a real implementation
+      // This is just for completeness in the client-side code
+    }
     
     return match;
   });
