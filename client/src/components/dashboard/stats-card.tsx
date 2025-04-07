@@ -19,7 +19,7 @@ export function StatsCard({
   value,
   label,
   badgeText,
-  badgeColor = "bg-blue-100 text-info",
+  badgeColor = "bg-blue-100 text-blue-800",
   icon,
   subValue,
   progress,
@@ -97,7 +97,7 @@ export function DocumentCard({ count, lastUpload }: DocumentCardProps) {
       title={t('dashboard.documents')}
       value={count}
       badgeText={t('common.total')}
-      badgeColor="bg-blue-100 text-info"
+      badgeColor="bg-blue-100 text-blue-800"
       subValue={`${t('documents.lastUploaded')}: ${formatTimeAgo(lastUpload)}`}
     />
   );
@@ -115,7 +115,7 @@ export function QueryCard({ count, lastQuery }: QueryCardProps) {
       title={t('dashboard.queries')}
       value={count}
       badgeText={t('common.thisMonth')}
-      badgeColor="bg-green-100 text-secondary"
+      badgeColor="bg-green-100 text-green-800"
       subValue={`${t('dashboard.lastQuery')}: ${formatTimeAgo(lastQuery)}`}
     />
   );
@@ -134,7 +134,7 @@ export function StorageCard({ storageUsed }: StorageCardProps) {
       title={t('dashboard.storage')}
       value={storage.formatted}
       badgeText={t('common.storageLimit', { limit: '500MB' })}
-      badgeColor="bg-yellow-100 text-warning"
+      badgeColor="bg-yellow-100 text-yellow-800"
       progress={storage.percentage}
       label={t('common.used')}
     />
