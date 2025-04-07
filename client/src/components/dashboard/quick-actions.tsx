@@ -30,7 +30,7 @@ export function QuickUpload() {
             onClick={() => setShowUploadModal(true)}
           >
             <PlusCircle className="h-4 w-4 mr-1 sm:h-5 sm:w-5 sm:mr-2" />
-            <span className="truncate">{t('documents.upload')}</span>
+            <span>Upload</span>
           </Button>
           
           <Button
@@ -39,7 +39,7 @@ export function QuickUpload() {
             onClick={() => setLocation("/documents")}
           >
             <ArrowRightCircle className="h-4 w-4 mr-1 sm:h-5 sm:w-5 sm:mr-2" />
-            <span className="truncate">{t('dashboard.viewDocuments')}</span>
+            <span>Documents</span>
           </Button>
         </div>
         
