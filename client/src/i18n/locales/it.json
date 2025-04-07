@@ -69,7 +69,13 @@
     "uploadFailedGeneric": "Impossibile caricare il documento",
     "dragDropOrBrowse": "Trascina e rilascia i file o sfoglia",
     "fileFormatInfo": "PDF, DOCX, PPTX (Max 25MB)",
-    "uploadDocument": "Carica Documento"
+    "uploadDocument": "Carica Documento",
+    "uploadAFile": "Carica un file",
+    "selectFile": "Seleziona file",
+    "pdfDocument": "Documento PDF",
+    "wordDocument": "Documento Word",
+    "powerPointPresentation": "Presentazione PowerPoint",
+    "unknownType": "Tipo Sconosciuto"
   },
   "query": {
     "title": "Interfaccia di Interrogazione RAG",

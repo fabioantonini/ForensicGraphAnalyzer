@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface FileInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   onFileSelect: (file: File) => void;
@@ -15,15 +16,16 @@ interface FileInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 
 export function FileInput({
   onFileSelect,
-  label = "Upload a file",
+  label,
   accept = ".pdf,.docx,.pptx",
   maxSize = 25 * 1024 * 1024, // 25MB default
   className = "",
-  buttonText = "Select file",
+  buttonText,
   icon = <Upload className="h-5 w-5 mr-2" />,
-  helperText = "PDF, DOCX, PPTX (Max 25MB)",
+  helperText,
   ...props
 }: FileInputProps) {
+  const { t } = useTranslation();
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -65,6 +67,11 @@ export function FileInput({
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
+  // Set defaults using translations
+  const defaultLabel = t('documents.uploadAFile');
+  const defaultButtonText = t('documents.selectFile');
+  const defaultHelperText = t('documents.fileFormatInfo');
+
   return (
     <div className={className}>
       {label && (
@@ -89,8 +96,8 @@ export function FileInput({
         >
           <div className="flex flex-col items-center justify-center">
             {icon}
-            <span>{buttonText}</span>
-            <p className="text-xs text-gray-500 mt-1">{helperText}</p>
+            <span>{buttonText || defaultButtonText}</span>
+            <p className="text-xs text-gray-500 mt-1">{helperText || defaultHelperText}</p>
           </div>
         </Button>
         {error && (
@@ -108,6 +115,8 @@ export function SelectedFile({
   file: File;
   onRemove: () => void;
 }) {
+  const { t } = useTranslation();
+  
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -118,13 +127,13 @@ export function SelectedFile({
     const extension = filename.split('.').pop()?.toLowerCase();
     switch (extension) {
       case 'pdf':
-        return 'PDF Document';
+        return t('documents.pdfDocument');
       case 'docx':
-        return 'Word Document';
+        return t('documents.wordDocument');
       case 'pptx':
-        return 'PowerPoint Presentation';
+        return t('documents.powerPointPresentation');
       default:
-        return 'Unknown Type';
+        return t('documents.unknownType');
     }
   };
 

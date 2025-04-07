@@ -69,7 +69,13 @@
     "uploadFailedGeneric": "Failed to upload document",
     "dragDropOrBrowse": "Drag & drop files or browse",
     "fileFormatInfo": "PDF, DOCX, PPTX (Max 25MB)",
-    "uploadDocument": "Upload Document"
+    "uploadDocument": "Upload Document",
+    "uploadAFile": "Upload a file",
+    "selectFile": "Select file",
+    "pdfDocument": "PDF Document",
+    "wordDocument": "Word Document",
+    "powerPointPresentation": "PowerPoint Presentation",
+    "unknownType": "Unknown Type"
   },
   "query": {
     "title": "RAG Query Interface",
