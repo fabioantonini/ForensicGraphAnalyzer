@@ -169,7 +169,9 @@
     "storageLimit": "Limit: {{limit}}",
     "used": "used",
     "notFound": "404 Page Not Found",
-    "pageNotFoundMessage": "The page you are looking for does not exist."
+    "pageNotFoundMessage": "The page you are looking for does not exist.",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All"
   },
   "heroSection": {
     "title": "Forensic Graphology Assistant",
@@ -199,6 +201,16 @@
   "query": {
     "askAboutDocuments": "Ask about your documents...",
     "tip": "Tip",
-    "graphologyTip": "Be specific about forensic graphology terms for better results"
+    "graphologyTip": "Be specific about forensic graphology terms for better results",
+    "chatInterface": "Chat Interface",
+    "thinking": "Thinking...",
+    "document": "document",
+    "documents": "documents",
+    "usingDocuments": "Using",
+    "inContext": "in context",
+    "sendMessage": "Send message",
+    "configureApiKey": "Please configure your OpenAI API key in the settings page",
+    "queryFailed": "Query failed",
+    "welcomeMessage": "Hello! I'm your forensic graphology assistant. I can analyze handwriting, signatures, and other graphological elements using your document knowledge base. How can I help you today?"
   }
 }

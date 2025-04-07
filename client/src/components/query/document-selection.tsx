@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Document } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
 import { LoadingSpinner } from "../ui/loading-spinner";
+import { useTranslation } from "react-i18next";
 
 interface DocumentSelectionProps {
   selectedDocumentIds: number[];
@@ -18,6 +19,7 @@ export function DocumentSelection({
   onSelectionChange,
   className,
 }: DocumentSelectionProps) {
+  const { t } = useTranslation();
   const { data: documents, isLoading } = useQuery<Document[]>({
     queryKey: ["/api/documents"],
   });
@@ -60,20 +62,22 @@ export function DocumentSelection({
   return (
     <Card className={className}>
       <CardContent className="p-6">
-        <h3 className="text-lg font-medium text-gray-700 mb-4">Knowledge Base</h3>
+        <h3 className="text-lg font-medium text-gray-700 mb-4">{t('query.selectDocuments')}</h3>
         <p className="text-sm text-gray-500 mb-4">
-          Select documents to include in your query context
+          {selectedDocumentIds.length === 0 
+            ? t('query.noDocumentsSelected') 
+            : t('query.selectAtLeastOne')}
         </p>
         
         {isLoading ? (
           <div className="py-8 flex justify-center">
-            <LoadingSpinner text="Loading documents..." />
+            <LoadingSpinner text={t('query.loadingDocuments')} />
           </div>
         ) : !documents || documents.length === 0 ? (
           <div className="py-8 text-center">
-            <p className="text-gray-500">No documents found</p>
+            <p className="text-gray-500">{t('query.noDocumentsFound')}</p>
             <p className="text-sm text-gray-400 mt-2">
-              Upload documents to use in your queries
+              {t('query.uploadFirst')}
             </p>
           </div>
         ) : (
@@ -109,7 +113,7 @@ export function DocumentSelection({
                 className="text-sm text-primary hover:text-primary-dark font-medium p-0"
                 onClick={handleSelectAll}
               >
-                {selectAll ? "Deselect All" : "Select All"}
+                {selectAll ? t('common.deselectAll') : t('common.selectAll')}
               </Button>
               {selectedDocumentIds.length > 0 && (
                 <Button
@@ -118,7 +122,7 @@ export function DocumentSelection({
                   className="text-sm text-gray-500 hover:text-gray-700 font-medium p-0"
                   onClick={handleDeselectAll}
                 >
-                  Deselect All
+                  {t('common.deselectAll')}
                 </Button>
               )}
             </div>

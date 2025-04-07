@@ -5,6 +5,7 @@ import { DocumentSelection } from "@/components/query/document-selection";
 import { ChatInterface } from "@/components/query/chat-interface";
 import { useLocation } from "wouter";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { useTranslation } from "react-i18next";
 
 export default function QueryPage() {
   const queryClient = useQueryClient();
@@ -12,6 +13,7 @@ export default function QueryPage() {
   const [selectedDocumentIds, setSelectedDocumentIds] = useState<number[]>([]);
   const [documentMap, setDocumentMap] = useState<Record<number, Document>>({});
   const [initialQuery, setInitialQuery] = useState("");
+  const { t } = useTranslation();
 
   // Get documents
   const { data: documents, isLoading } = useQuery<Document[]>({
@@ -51,11 +53,11 @@ export default function QueryPage() {
 
   return (
     <div className="container mx-auto py-6">
-      <h2 className="text-2xl font-bold text-primary mb-6">RAG Query Interface</h2>
+      <h2 className="text-2xl font-bold text-primary mb-6">{t('query.title')}</h2>
       
       {isLoading ? (
         <div className="flex justify-center items-center min-h-[60vh]">
-          <LoadingSpinner text="Loading documents..." />
+          <LoadingSpinner text={t('query.loadingDocuments')} />
         </div>
       ) : (
         <div className="flex flex-col md:flex-row gap-6">

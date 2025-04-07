@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { LoadingSpinner } from "../ui/loading-spinner";
 import { useAuth } from "@/hooks/use-auth";
+import { useTranslation } from "react-i18next";
 
 interface ChatInterfaceProps {
   selectedDocumentIds: number[];
@@ -28,10 +29,11 @@ export function ChatInterface({
 }: ChatInterfaceProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "system",
-      content: "Hello! I'm your forensic graphology assistant. I can analyze handwriting, signatures, and other graphological elements using your document knowledge base. How can I help you today?",
+      content: t("query.welcomeMessage", "Hello! I'm your forensic graphology assistant. I can analyze handwriting, signatures, and other graphological elements using your document knowledge base. How can I help you today?"),
       timestamp: new Date(),
     },
   ]);
@@ -86,7 +88,7 @@ export function ChatInterface({
     },
     onError: (error: Error) => {
       toast({
-        title: "Query failed",
+        title: t("query.queryFailed", "Query failed"),
         description: error.message,
         variant: "destructive",
       });
@@ -99,8 +101,8 @@ export function ChatInterface({
     // Check if user has API key configured
     if (!user?.openaiApiKey) {
       toast({
-        title: "API Key Required",
-        description: "Please configure your OpenAI API key in the settings page.",
+        title: t("settings.api.apiKeyRequired", "API Key Required"),
+        description: t("query.configureApiKey", "Please configure your OpenAI API key in the settings page."),
         variant: "destructive",
       });
       return;
@@ -109,8 +111,8 @@ export function ChatInterface({
     // Check if at least one document is selected
     if (selectedDocumentIds.length === 0) {
       toast({
-        title: "No Documents Selected",
-        description: "Please select at least one document to query.",
+        title: t("query.noDocumentsSelected", "No Documents Selected"),
+        description: t("query.selectAtLeastOne", "Please select at least one document to query."),
         variant: "destructive",
       });
       return;
@@ -146,7 +148,7 @@ export function ChatInterface({
   return (
     <Card className={className}>
       <CardContent className="p-6 flex flex-col h-full">
-        <h3 className="text-lg font-medium text-gray-700 mb-4">Chat Interface</h3>
+        <h3 className="text-lg font-medium text-gray-700 mb-4">{t('query.chatInterface', 'Chat Interface')}</h3>
         
         {/* Chat Messages */}
         <ScrollArea className="flex-1 mb-4 border border-gray-200 rounded-lg p-4 min-h-[300px] max-h-[500px]" ref={scrollAreaRef}>
@@ -175,7 +177,7 @@ export function ChatInterface({
                   
                   {message.sources && message.sources.length > 0 && (
                     <div className="text-xs mt-2 pt-2 border-t border-gray-200 text-gray-500">
-                      <span className="font-medium">Sources:</span>{" "}
+                      <span className="font-medium">{t('query.sources', 'Sources')}:</span>{" "}
                       {message.sources.map((source, idx) => (
                         <span key={idx}>
                           {idx > 0 && ", "}
@@ -201,7 +203,7 @@ export function ChatInterface({
                 </div>
                 <div className="ml-3 bg-muted rounded-lg py-4 px-4 max-w-[85%] flex items-center">
                   <LoadingSpinner size="sm" />
-                  <span className="ml-2 text-sm text-gray-600">Thinking...</span>
+                  <span className="ml-2 text-sm text-gray-600">{t('query.thinking', 'Thinking...')}</span>
                 </div>
               </div>
             )}
@@ -211,12 +213,12 @@ export function ChatInterface({
         {/* Advanced Settings */}
         <div className="flex flex-col md:flex-row justify-between text-xs text-gray-500 mb-2">
           <div className="flex items-center mb-2 md:mb-0">
-            <span>Using {selectedDocumentIds.length} document{selectedDocumentIds.length !== 1 ? 's' : ''} in context</span>
+            <span>{t('query.usingDocuments', 'Using')} {selectedDocumentIds.length} {t(selectedDocumentIds.length !== 1 ? 'query.documents' : 'query.document', 'document')} {t('query.inContext', 'in context')}</span>
           </div>
           
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <span>Model:</span>
+              <span>{t('settings.api.model', 'Model')}:</span>
               <Select value={model} onValueChange={setModel}>
                 <SelectTrigger className="h-7 w-28">
                   <SelectValue placeholder="GPT-4o" />
@@ -229,7 +231,7 @@ export function ChatInterface({
             </div>
             
             <div className="flex items-center space-x-2">
-              <span>Temp: {temperature}</span>
+              <span>{t('settings.api.temperature', 'Temp')}: {temperature}</span>
               <Slider
                 className="w-24"
                 min={0}
@@ -248,7 +250,7 @@ export function ChatInterface({
             <Textarea
               className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               rows={3}
-              placeholder="Ask a question about your documents..."
+              placeholder={t('query.askAboutDocuments', 'Ask a question about your documents...')}
               value={inputValue}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
@@ -262,8 +264,8 @@ export function ChatInterface({
               disabled={inputValue.trim() === "" || queryMutation.isPending || selectedDocumentIds.length === 0}
               title={
                 selectedDocumentIds.length === 0 
-                  ? "Select at least one document"
-                  : "Send message"
+                  ? t('query.selectAtLeastOne', 'Select at least one document')
+                  : t('query.sendMessage', 'Send message')
               }
             >
               <SendHorizontal className="h-5 w-5" />

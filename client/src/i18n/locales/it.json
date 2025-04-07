@@ -169,7 +169,9 @@
     "storageLimit": "Limite: {{limit}}",
     "used": "utilizzato",
     "notFound": "404 Pagina Non Trovata",
-    "pageNotFoundMessage": "La pagina che stai cercando non esiste."
+    "pageNotFoundMessage": "La pagina che stai cercando non esiste.",
+    "selectAll": "Seleziona tutti",
+    "deselectAll": "Deseleziona tutti"
   },
   "heroSection": {
     "title": "Assistente di Grafologia Forense",
@@ -199,6 +201,16 @@
   "query": {
     "askAboutDocuments": "Chiedi riguardo ai tuoi documenti...",
     "tip": "Consiglio",
-    "graphologyTip": "Sii specifico riguardo ai termini di grafologia forense per risultati migliori"
+    "graphologyTip": "Sii specifico riguardo ai termini di grafologia forense per risultati migliori",
+    "chatInterface": "Interfaccia di Chat",
+    "thinking": "Sto pensando...",
+    "document": "documento",
+    "documents": "documenti",
+    "usingDocuments": "Utilizzo",
+    "inContext": "nel contesto",
+    "sendMessage": "Invia messaggio",
+    "configureApiKey": "Configura la tua chiave API OpenAI nella pagina delle impostazioni",
+    "queryFailed": "Interrogazione fallita",
+    "welcomeMessage": "Ciao! Sono il tuo assistente di grafologia forense. Posso analizzare calligrafie, firme e altri elementi grafologici utilizzando la tua base di conoscenza documentale. Come posso aiutarti oggi?"
   }
 }
