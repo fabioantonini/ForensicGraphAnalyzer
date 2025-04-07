@@ -45,7 +45,7 @@
     "queryCount": "Interrogazioni",
     "storageUsed": "{{storage}} utilizzato",
     "lastUpload": "Ultimo caricamento",
-    "lastQuery": "Ultima interrogazione",
+    "lastQuery": "Ultima analisi",
     "recentQueries": "Interrogazioni Recenti",
     "noRecentQueries": "Nessuna interrogazione recente trovata",
     "viewAllQueries": "Vedi tutte le interrogazioni",
@@ -102,7 +102,7 @@
     "uploadFirst": "Carica prima i documenti",
     "sources": "Fonti:",
     "copied": "Copiato negli appunti!",
-    "lastQuery": "Ultima interrogazione"
+    "lastQuery": "Ultima analisi"
   },
   "settings": {
     "title": "Impostazioni Account",

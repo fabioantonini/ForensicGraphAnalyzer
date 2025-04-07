@@ -45,7 +45,7 @@
     "queryCount": "Queries",
     "storageUsed": "{{storage}} used",
     "lastUpload": "Last upload",
-    "lastQuery": "Last query",
+    "lastQuery": "Last analysis",
     "recentQueries": "Recent Queries",
     "noRecentQueries": "No recent queries found",
     "viewAllQueries": "View all queries",

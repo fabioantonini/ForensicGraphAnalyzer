@@ -40,7 +40,7 @@ export function StatsCard({
           <div>
             <p className="text-3xl font-bold text-primary">{value}</p>
             {subValue && (
-              <p className="text-sm text-gray-500 mt-2">{subValue}</p>
+              <p className="text-sm text-gray-700 mt-2">{subValue}</p>
             )}
           </div>
         </div>
@@ -52,7 +52,7 @@ export function StatsCard({
                 style={{ width: `${progress}%` }}
               ></div>
             </div>
-            <p className="text-sm text-gray-500 mt-2">{progress}% {label}</p>
+            <p className="text-sm text-gray-700 mt-2">{progress}% {label}</p>
           </>
         )}
       </CardContent>
