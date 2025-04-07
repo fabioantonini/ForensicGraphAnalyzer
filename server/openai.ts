@@ -1,17 +1,23 @@
 import OpenAI from "openai";
 import { log } from "./vite";
 
-// Create a context-specific OpenAI client with the user's API key
-export function createOpenAIClient(apiKey: string) {
-  if (!apiKey) {
-    throw new Error("OpenAI API key is required");
+// Get system API key
+const SYSTEM_API_KEY = process.env.OPENAI_API_KEY;
+
+// Create a context-specific OpenAI client with the user's API key or fallback to system key
+export function createOpenAIClient(apiKey?: string) {
+  // Try user's key first, then fallback to system key
+  const finalApiKey = apiKey || SYSTEM_API_KEY;
+  
+  if (!finalApiKey) {
+    throw new Error("OpenAI API key is required (either user-provided or system)");
   }
   
-  return new OpenAI({ apiKey });
+  return new OpenAI({ apiKey: finalApiKey });
 }
 
 // Generate embedding for a text
-export async function generateEmbedding(text: string, apiKey: string): Promise<number[]> {
+export async function generateEmbedding(text: string, apiKey?: string): Promise<number[]> {
   try {
     const openai = createOpenAIClient(apiKey);
     
@@ -31,7 +37,7 @@ export async function generateEmbedding(text: string, apiKey: string): Promise<n
 export async function chatWithRAG(
   query: string,
   context: string[],
-  apiKey: string,
+  apiKey?: string,
   model: string = "gpt-4o",
   temperature: number = 0.7
 ): Promise<string> {
@@ -47,6 +53,8 @@ ${context.join('\n\n')}
 
 Always provide concise, accurate information based on the context. If you don't know the answer or it's not in the context, be honest about it.
 When citing information, mention the specific document it came from if possible.
+
+Note: Respond in the same language as the query. If the query is in Italian, respond in Italian. If the query is in English, respond in English.
 `;
 
     // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
@@ -66,9 +74,14 @@ When citing information, mention the specific document it came from if possible.
   }
 }
 
-// Validate API key
-export async function validateAPIKey(apiKey: string): Promise<boolean> {
+// Validate API key - can be either user-provided or system key
+export async function validateAPIKey(apiKey?: string): Promise<boolean> {
   try {
+    // If no key provided, check if system key is available
+    if (!apiKey && !SYSTEM_API_KEY) {
+      return false;
+    }
+    
     const openai = createOpenAIClient(apiKey);
     
     // Make a small request to validate the API key

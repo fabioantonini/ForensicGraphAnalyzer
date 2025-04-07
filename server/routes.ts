@@ -95,8 +95,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user!.id;
       const user = await storage.getUser(userId) as User;
       
-      // Check if the user has an API key configured
-      if (!user.openaiApiKey) {
+      // Check if the user has an API key configured or if we have a system key
+      const hasUserKey = !!user.openaiApiKey;
+      const hasSystemKey = !!process.env.OPENAI_API_KEY;
+      
+      if (!hasUserKey && !hasSystemKey) {
         return res.status(400).json({ 
           message: "OpenAI API key not configured. Please add your API key in settings." 
         });
@@ -128,8 +131,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           indexed: false
         });
         
-        // Add document to ChromaDB collection
-        const indexed = await addDocumentToCollection(userId, document, user.openaiApiKey);
+        // Add document to ChromaDB collection - use user key or fallback to system key
+        const apiKeyToUse = user.openaiApiKey || undefined; // undefined will trigger system key use
+        const indexed = await addDocumentToCollection(userId, document, apiKeyToUse);
         
         // Update document indexed status
         if (indexed) {
@@ -224,9 +228,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Forbidden" });
       }
       
-      // Remove document from ChromaDB if it was indexed
-      if (document.indexed && user.openaiApiKey) {
-        await removeDocumentFromCollection(userId, documentId, user.openaiApiKey);
+      // Remove document from ChromaDB if it was indexed - use user key or fallback to system key
+      if (document.indexed) {
+        const apiKeyForDelete = user.openaiApiKey || undefined; // undefined will trigger system key use
+        await removeDocumentFromCollection(userId, documentId, apiKeyForDelete);
       }
       
       // Delete document from storage
@@ -263,15 +268,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "documentIds must be an array" });
       }
       
-      // Check if user has configured an API key
-      if (!user.openaiApiKey) {
+      // Check if the user has an API key configured or if we have a system key
+      const hasUserKey = !!user.openaiApiKey;
+      const hasSystemKey = !!process.env.OPENAI_API_KEY;
+      
+      if (!hasUserKey && !hasSystemKey) {
         return res.status(400).json({ 
-          message: "OpenAI API key not configured. Please add your API key in settings." 
+          message: "OpenAI API key not configured. Please add your API key in settings or ask administrator to configure system key." 
         });
       }
       
-      // Validate API key
-      const isValidKey = await validateAPIKey(user.openaiApiKey);
+      // Validate API key - prioritize user key, fall back to system key
+      const apiKeyToUse = user.openaiApiKey || undefined; // undefined will trigger system key use
+      const isValidKey = await validateAPIKey(apiKeyToUse);
       if (!isValidKey) {
         return res.status(400).json({ message: "Invalid OpenAI API key" });
       }
@@ -289,22 +298,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get document IDs that are actually valid
       const validDocumentIds = validDocuments.map(doc => doc.id);
       
-      // Query ChromaDB for relevant context
+      // Query ChromaDB for relevant context with the API key
       const queryResults = await queryCollection(
         userId,
         query,
         validDocumentIds,
-        user.openaiApiKey
+        apiKeyToUse
       );
       
       // Build context from retrieved documents
       const context = queryResults.documents;
       
-      // Get ChatGPT response
+      // Get ChatGPT response - use user key or fallback to system key
       const response = await chatWithRAG(
         query,
         context,
-        user.openaiApiKey,
+        apiKeyToUse,
         model,
         temperature
       );
