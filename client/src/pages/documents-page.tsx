@@ -7,6 +7,7 @@ import { PlusCircle, Search, LayoutGrid, List, Trash } from "lucide-react";
 import { Document, FilterOptions } from "@/lib/types";
 import { DocumentGrid } from "@/components/documents/document-grid";
 import { UploadModal } from "@/components/documents/upload-modal";
+import { TestTabs } from "@/components/documents/test-tabs";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -287,6 +288,11 @@ export default function DocumentsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Test Tabs */}
+      <div className="mb-6">
+        <TestTabs />
+      </div>
 
       {/* Documents View */}
       {viewMode === 'grid' ? (
