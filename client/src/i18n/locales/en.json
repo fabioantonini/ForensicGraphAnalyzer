@@ -183,6 +183,9 @@
     "used": "used",
     "notFound": "404 Page Not Found",
     "pageNotFoundMessage": "The page you are looking for does not exist.",
+    "language": "en",
+    "upload": "Upload",
+    "documents": "Documents",
     "selectAll": "Select All",
     "deselectAll": "Deselect All"
   },

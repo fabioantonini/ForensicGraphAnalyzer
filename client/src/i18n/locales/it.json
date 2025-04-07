@@ -183,6 +183,9 @@
     "used": "utilizzato",
     "notFound": "404 Pagina Non Trovata",
     "pageNotFoundMessage": "La pagina che stai cercando non esiste.",
+    "language": "it",
+    "upload": "Carica",
+    "documents": "Documenti",
     "selectAll": "Seleziona tutti",
     "deselectAll": "Deseleziona tutti"
   },
