@@ -211,6 +211,13 @@
     "sendMessage": "Invia messaggio",
     "configureApiKey": "Configura la tua chiave API OpenAI nella pagina delle impostazioni",
     "queryFailed": "Interrogazione fallita",
-    "welcomeMessage": "Ciao! Sono il tuo assistente di grafologia forense. Posso analizzare calligrafie, firme e altri elementi grafologici utilizzando la tua base di conoscenza documentale. Come posso aiutarti oggi?"
+    "welcomeMessage": "Ciao! Sono il tuo assistente di grafologia forense. Posso analizzare calligrafie, firme e altri elementi grafologici utilizzando la tua base di conoscenza documentale. Come posso aiutarti oggi?",
+    "selectDocuments": "Seleziona Documenti",
+    "noDocumentsSelected": "Nessun documento selezionato",
+    "selectAtLeastOne": "Seleziona almeno un documento",
+    "loadingDocuments": "Caricamento documenti...",
+    "noDocumentsFound": "Nessun documento trovato",
+    "uploadFirst": "Carica prima alcuni documenti nella pagina documenti",
+    "sources": "Fonti"
   }
 }

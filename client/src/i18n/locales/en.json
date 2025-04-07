@@ -211,6 +211,13 @@
     "sendMessage": "Send message",
     "configureApiKey": "Please configure your OpenAI API key in the settings page",
     "queryFailed": "Query failed",
-    "welcomeMessage": "Hello! I'm your forensic graphology assistant. I can analyze handwriting, signatures, and other graphological elements using your document knowledge base. How can I help you today?"
+    "welcomeMessage": "Hello! I'm your forensic graphology assistant. I can analyze handwriting, signatures, and other graphological elements using your document knowledge base. How can I help you today?",
+    "selectDocuments": "Select Documents",
+    "noDocumentsSelected": "No documents selected",
+    "selectAtLeastOne": "Select at least one document",
+    "loadingDocuments": "Loading documents...",
+    "noDocumentsFound": "No documents found",
+    "uploadFirst": "Upload some documents in the documents page first",
+    "sources": "Sources"
   }
 }
