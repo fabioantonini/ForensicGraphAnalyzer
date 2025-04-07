@@ -116,6 +116,10 @@ export default function DocumentsPage() {
       return "DOCX";
     } else if (fileType.includes("pptx")) {
       return "PPTX";
+    } else if (fileType.includes("txt")) {
+      return "TXT";
+    } else if (fileType.includes("html")) {
+      return "HTML";
     } else {
       return "Unknown";
     }
@@ -261,6 +265,8 @@ export default function DocumentsPage() {
                   <SelectItem value="pdf">PDF</SelectItem>
                   <SelectItem value="docx">DOCX</SelectItem>
                   <SelectItem value="pptx">PPTX</SelectItem>
+                  <SelectItem value="txt">TXT</SelectItem>
+                  <SelectItem value="html">HTML</SelectItem>
                 </SelectContent>
               </Select>
             </div>

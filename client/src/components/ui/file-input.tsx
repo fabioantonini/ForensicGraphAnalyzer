@@ -17,7 +17,7 @@ interface FileInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 export function FileInput({
   onFileSelect,
   label,
-  accept = ".pdf,.docx,.pptx",
+  accept = ".pdf,.docx,.pptx,.txt,.html",
   maxSize = 25 * 1024 * 1024, // 25MB default
   className = "",
   buttonText,
@@ -132,6 +132,10 @@ export function SelectedFile({
         return t('documents.wordDocument');
       case 'pptx':
         return t('documents.powerPointPresentation');
+      case 'txt':
+        return t('documents.textDocument');
+      case 'html':
+        return t('documents.htmlDocument');
       default:
         return t('documents.unknownType');
     }
@@ -153,9 +157,27 @@ export function SelectedFile({
                 <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
               </svg>
             </div>
-          ) : (
+          ) : file.name.endsWith('.pptx') ? (
             <div className="bg-yellow-100 p-2 rounded-md mr-3">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+              </svg>
+            </div>
+          ) : file.name.endsWith('.txt') ? (
+            <div className="bg-green-100 p-2 rounded-md mr-3">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+              </svg>
+            </div>
+          ) : file.name.endsWith('.html') ? (
+            <div className="bg-purple-100 p-2 rounded-md mr-3">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+              </svg>
+            </div>
+          ) : (
+            <div className="bg-gray-100 p-2 rounded-md mr-3">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
               </svg>
             </div>

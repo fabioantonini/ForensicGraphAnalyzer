@@ -20,7 +20,8 @@ export function isValidFileType(mimetype: string): boolean {
     'application/pdf',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX
     'application/vnd.openxmlformats-officedocument.presentationml.presentation', // PPTX
-    'text/plain' // Adding text files for testing
+    'text/plain', // TXT
+    'text/html' // HTML
   ];
   
   return validTypes.includes(mimetype);
@@ -130,6 +131,33 @@ export async function extractTextFromTXT(filepath: string): Promise<string> {
   }
 }
 
+// Extract text content from HTML file
+export async function extractTextFromHTML(filepath: string): Promise<string> {
+  try {
+    const content = await fs.readFile(filepath, 'utf8');
+    
+    // Simple HTML to text conversion - remove all HTML tags
+    // This is a basic implementation - a production app might use a proper HTML parser
+    const text = content
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ') // Remove scripts
+      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ')   // Remove styles
+      .replace(/<[^>]+>/g, ' ')  // Remove HTML tags
+      .replace(/&nbsp;/g, ' ')   // Replace non-breaking spaces
+      .replace(/&amp;/g, '&')    // Replace &amp; with &
+      .replace(/&lt;/g, '<')     // Replace &lt; with <
+      .replace(/&gt;/g, '>')     // Replace &gt; with >
+      .replace(/&quot;/g, '"')   // Replace &quot; with "
+      .replace(/&apos;/g, "'")   // Replace &apos; with '
+      .replace(/\s+/g, ' ')      // Replace multiple spaces with single space
+      .trim();                    // Remove leading/trailing spaces
+    
+    return text;
+  } catch (error) {
+    log(`Error extracting text from HTML: ${error}`, "document-processor");
+    throw new Error('Failed to extract text from HTML');
+  }
+}
+
 // Process file based on type
 export async function processFile(
   filepath: string, 
@@ -146,6 +174,8 @@ export async function processFile(
       text = await extractTextFromPPTX(filepath);
     } else if (fileType === 'text/plain') {
       text = await extractTextFromTXT(filepath);
+    } else if (fileType === 'text/html') {
+      text = await extractTextFromHTML(filepath);
     } else {
       throw new Error('Unsupported file type');
     }

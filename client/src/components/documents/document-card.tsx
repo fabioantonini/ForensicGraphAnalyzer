@@ -69,12 +69,63 @@ export function DocumentCard({ document }: DocumentCardProps) {
           </svg>
         </div>
       );
-    } else {
+    } else if (document.fileType.includes("pptx")) {
       return (
         <div className="bg-yellow-100 p-2 rounded-md mr-3">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-6 w-6 text-yellow-500"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </div>
+      );
+    } else if (document.fileType.includes("txt")) {
+      return (
+        <div className="bg-green-100 p-2 rounded-md mr-3">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6 text-green-500"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </div>
+      );
+    } else if (document.fileType.includes("html")) {
+      return (
+        <div className="bg-purple-100 p-2 rounded-md mr-3">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6 text-purple-500"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </div>
+      );
+    } else {
+      return (
+        <div className="bg-gray-100 p-2 rounded-md mr-3">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6 text-gray-500"
             viewBox="0 0 20 20"
             fill="currentColor"
           >
@@ -106,6 +157,10 @@ export function DocumentCard({ document }: DocumentCardProps) {
       return "DOCX";
     } else if (document.fileType.includes("pptx")) {
       return "PPTX";
+    } else if (document.fileType.includes("txt")) {
+      return "TXT";
+    } else if (document.fileType.includes("html")) {
+      return "HTML";
     } else {
       return "Unknown";
     }

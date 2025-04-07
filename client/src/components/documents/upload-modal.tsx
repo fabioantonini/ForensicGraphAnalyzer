@@ -88,7 +88,7 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
         <DialogHeader>
           <DialogTitle>Upload Document</DialogTitle>
           <DialogDescription>
-            Upload a document to your forensic graphology knowledge base. Supported formats: PDF, DOCX, PPTX.
+            Upload a document to your forensic graphology knowledge base. Supported formats: PDF, DOCX, PPTX, TXT, HTML.
           </DialogDescription>
         </DialogHeader>
 

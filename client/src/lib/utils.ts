@@ -31,6 +31,16 @@ export function getFileTypeIcon(fileType: string) {
       bgColor: "bg-yellow-100",
       textColor: "text-yellow-500"
     };
+  } else if (fileType.includes("text/plain") || fileType.includes("txt")) {
+    return {
+      bgColor: "bg-green-100",
+      textColor: "text-green-500"
+    };
+  } else if (fileType.includes("text/html") || fileType.includes("html")) {
+    return {
+      bgColor: "bg-purple-100",
+      textColor: "text-purple-500"
+    };
   } else {
     return {
       bgColor: "bg-gray-100",
