@@ -1,0 +1,225 @@
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { FileInput, SelectedFile } from "@/components/ui/file-input";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useTranslation } from "react-i18next";
+import { Link, Import, Upload } from "lucide-react";
+
+interface UploadModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function UploadModal({ open, onOpenChange }: UploadModalProps) {
+  const { t } = useTranslation();
+  const [file, setFile] = useState<File | null>(null);
+  const [url, setUrl] = useState<string>("");
+  const [activeTab, setActiveTab] = useState<"file" | "url">("file");
+  const { toast } = useToast();
+
+  const uploadFileMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      
+      const response = await fetch("/api/documents", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to upload document");
+      }
+      
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: t("documents.uploadSuccess", "Document uploaded"),
+        description: t("documents.uploadSuccessDesc", "Your document was successfully uploaded"),
+        variant: "default",
+      });
+      setFile(null);
+      onOpenChange(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: t("documents.uploadFailed", "Upload failed"),
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const uploadUrlMutation = useMutation({
+    mutationFn: async (url: string) => {
+      const response = await fetch("/api/documents/url", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url }),
+        credentials: "include",
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to import document from URL");
+      }
+      
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: t("documents.urlImportSuccess", "URL imported"),
+        description: t("documents.urlImportSuccessDesc", "The web page was successfully imported"),
+        variant: "default",
+      });
+      setUrl("");
+      onOpenChange(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: t("documents.urlImportFailed", "Import failed"),
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleFileSelect = (selectedFile: File) => {
+    setFile(selectedFile);
+  };
+
+  const handleRemoveFile = () => {
+    setFile(null);
+  };
+
+  const handleUpload = () => {
+    if (activeTab === "file" && file) {
+      uploadFileMutation.mutate(file);
+    } else if (activeTab === "url" && url) {
+      uploadUrlMutation.mutate(url);
+    }
+  };
+
+  const handleClose = () => {
+    if (!uploadFileMutation.isPending && !uploadUrlMutation.isPending) {
+      setFile(null);
+      setUrl("");
+      onOpenChange(false);
+    }
+  };
+
+  const isUploading = uploadFileMutation.isPending || uploadUrlMutation.isPending;
+  const canUpload = (activeTab === "file" && file) || (activeTab === "url" && url);
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{t("documents.uploadDocument", "Upload Document")}</DialogTitle>
+          <DialogDescription>
+            {t("documents.uploadDescription", "Upload a document to your forensic graphology knowledge base. Supported formats: PDF, DOCX, PPTX, TXT, HTML.")}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="mt-4">
+          <div className="flex mb-4 border-b">
+            <button
+              type="button"
+              className={`px-4 py-2 font-medium flex items-center ${
+                activeTab === "file" 
+                  ? "text-primary border-b-2 border-primary" 
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              onClick={() => setActiveTab("file")}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              {t("documents.uploadFile", "Upload File")}
+            </button>
+            <button
+              type="button"
+              className={`px-4 py-2 font-medium flex items-center ${
+                activeTab === "url" 
+                  ? "text-primary border-b-2 border-primary" 
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              onClick={() => setActiveTab("url")}
+            >
+              <Link className="h-4 w-4 mr-2" />
+              {t("documents.importUrl", "Import from URL")}
+            </button>
+          </div>
+          
+          {activeTab === "file" && (
+            <>
+              {!file ? (
+                <FileInput
+                  onFileSelect={handleFileSelect}
+                  buttonText={t("documents.dragAndDrop", "Drag & drop files or browse")}
+                  helperText={t("documents.maxFileSize", "Maximum file size: 25MB")}
+                />
+              ) : (
+                <SelectedFile file={file} onRemove={handleRemoveFile} />
+              )}
+            </>
+          )}
+          
+          {activeTab === "url" && (
+            <div className="space-y-2">
+              <Label htmlFor="url">{t("documents.enterUrl", "Enter a web page URL")}</Label>
+              <Input
+                id="url"
+                placeholder="https://example.com/page"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+              />
+              <p className="text-sm text-muted-foreground">
+                {t("documents.urlHelp", "The web page will be fetched and processed as HTML content.")}
+              </p>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={handleClose} disabled={isUploading}>
+            {t("common.cancel", "Cancel")}
+          </Button>
+          <Button 
+            onClick={handleUpload} 
+            disabled={!canUpload || isUploading}
+          >
+            {isUploading ? (
+              <LoadingSpinner size="sm" className="mr-2" />
+            ) : (
+              <Import className="h-4 w-4 mr-2" />
+            )}
+            {activeTab === "file" 
+              ? t("documents.upload", "Upload") 
+              : t("documents.import", "Import")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
