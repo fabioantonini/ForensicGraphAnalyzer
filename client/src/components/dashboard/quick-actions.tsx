@@ -24,22 +24,22 @@ export function QuickUpload() {
           {t('dashboard.quickUploadDescription')}
         </p>
         
-        <div className="flex flex-wrap sm:flex-nowrap gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <Button 
-            className="flex-1 min-w-0 whitespace-nowrap"
+            className="w-full text-xs sm:text-sm"
             onClick={() => setShowUploadModal(true)}
           >
-            <PlusCircle className="h-5 w-5 mr-2 flex-shrink-0" />
-            {t('documents.uploadDocument')}
+            <PlusCircle className="h-4 w-4 mr-1 sm:h-5 sm:w-5 sm:mr-2" />
+            <span className="truncate">{t('documents.upload')}</span>
           </Button>
           
           <Button
             variant="outline"
-            className="flex-1 min-w-0 whitespace-nowrap"
+            className="w-full text-xs sm:text-sm"
             onClick={() => setLocation("/documents")}
           >
-            <ArrowRightCircle className="h-5 w-5 mr-2 flex-shrink-0" />
-            {t('dashboard.viewDocuments')}
+            <ArrowRightCircle className="h-4 w-4 mr-1 sm:h-5 sm:w-5 sm:mr-2" />
+            <span className="truncate">{t('dashboard.viewDocuments')}</span>
           </Button>
         </div>
         
