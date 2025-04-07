@@ -12,9 +12,11 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { useTranslation } from "react-i18next";
 
 export function LoginForm() {
   const { loginMutation } = useAuth();
+  const { t } = useTranslation();
   const form = useForm<LoginData>({
     resolver: loginResolver,
     defaultValues: {
@@ -35,9 +37,9 @@ export function LoginForm() {
           name="username"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Username</FormLabel>
+              <FormLabel>{t('auth.username', 'Username')}</FormLabel>
               <FormControl>
-                <Input placeholder="Enter your username" {...field} />
+                <Input placeholder={t('auth.username', 'Enter your username')} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -48,14 +50,14 @@ export function LoginForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel>{t('auth.password', 'Password')}</FormLabel>
               <FormControl>
-                <Input type="password" placeholder="Enter your password" {...field} />
+                <Input type="password" placeholder={t('auth.password', 'Enter your password')} {...field} />
               </FormControl>
               <FormMessage />
               <div className="text-right">
                 <a href="#" className="text-sm text-primary hover:text-primary-dark">
-                  Forgot password?
+                  {t('auth.forgotPassword', 'Forgot password?')}
                 </a>
               </div>
             </FormItem>
@@ -69,7 +71,7 @@ export function LoginForm() {
           {loginMutation.isPending ? (
             <LoadingSpinner size="sm" className="mr-2" />
           ) : null}
-          Sign In
+          {t('auth.signIn', 'Sign In')}
         </Button>
       </form>
     </Form>
@@ -78,6 +80,7 @@ export function LoginForm() {
 
 export function RegisterForm() {
   const { registerMutation } = useAuth();
+  const { t } = useTranslation();
   const form = useForm<RegisterData>({
     resolver: registerResolver,
     defaultValues: {
@@ -199,7 +202,7 @@ export function RegisterForm() {
           {registerMutation.isPending ? (
             <LoadingSpinner size="sm" className="mr-2" />
           ) : null}
-          Sign Up
+          {t('auth.signUp', 'Sign Up')}
         </Button>
       </form>
     </Form>
@@ -208,36 +211,37 @@ export function RegisterForm() {
 
 export function AuthForms() {
   const [isLogin, setIsLogin] = useState(true);
+  const { t } = useTranslation();
 
   return (
     <div>
       {isLogin ? (
         <>
-          <h2 className="text-xl font-medium text-primary mb-6">Sign In</h2>
+          <h2 className="text-xl font-medium text-primary mb-6">{t('auth.signIn', 'Sign In')}</h2>
           <LoginForm />
           <div className="mt-4 text-center">
-            <span className="text-sm text-gray-600">Don't have an account?</span>
+            <span className="text-sm text-gray-600">{t('auth.noAccount', 'Don\'t have an account?')}</span>
             <button
               type="button"
               onClick={() => setIsLogin(false)}
               className="text-sm text-primary hover:text-primary-dark ml-1 font-medium"
             >
-              Sign Up
+              {t('auth.signUp', 'Sign Up')}
             </button>
           </div>
         </>
       ) : (
         <>
-          <h2 className="text-xl font-medium text-primary mb-6">Create Account</h2>
+          <h2 className="text-xl font-medium text-primary mb-6">{t('auth.createAccount', 'Create Account')}</h2>
           <RegisterForm />
           <div className="mt-4 text-center">
-            <span className="text-sm text-gray-600">Already have an account?</span>
+            <span className="text-sm text-gray-600">{t('auth.alreadyHaveAccount', 'Already have an account?')}</span>
             <button
               type="button"
               onClick={() => setIsLogin(true)}
               className="text-sm text-primary hover:text-primary-dark ml-1 font-medium"
             >
-              Sign In
+              {t('auth.signIn', 'Sign In')}
             </button>
           </div>
         </>

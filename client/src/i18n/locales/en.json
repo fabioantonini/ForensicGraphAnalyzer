@@ -16,7 +16,17 @@
     "passwordRequired": "Password is required",
     "passwordMatch": "Passwords must match",
     "emailRequired": "Email is required",
-    "invalidEmail": "Please enter a valid email"
+    "invalidEmail": "Please enter a valid email",
+    "forensicGraphologyAssistant": "Forensic Graphology Assistant",
+    "welcomeMessage": "Welcome to Grapholex Insight, your intelligent assistant for forensic graphology analysis powered by advanced AI.",
+    "features": {
+      "uploadDocuments": "Upload Documents",
+      "uploadDescription": "Add handwriting samples and documents for analysis",
+      "aiAnalysis": "AI-Powered Analysis",
+      "aiDescription": "Leverage RAG technology with your OpenAI API key",
+      "insights": "Detailed Insights",
+      "insightsDescription": "Get professional insights from your handwriting samples"
+    }
   },
   "dashboard": {
     "title": "Dashboard",

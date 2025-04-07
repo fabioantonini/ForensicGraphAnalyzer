@@ -3,10 +3,13 @@ import { Card } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
 import { AuthForms } from "@/components/auth/auth-forms";
 import { useLocation } from "wouter";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
+import { useTranslation } from "react-i18next";
 
 export default function AuthPage() {
   const { user, isLoading } = useAuth();
   const [, navigate] = useLocation();
+  const { t } = useTranslation();
 
   // Redirect to dashboard if already logged in
   useEffect(() => {
@@ -20,7 +23,7 @@ export default function AuthPage() {
       <div className="min-h-screen flex items-center justify-center p-4 bg-neutral">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-4 text-gray-600">{t('common.loading', 'Loading...')}</p>
         </div>
       </div>
     );
@@ -32,8 +35,11 @@ export default function AuthPage() {
         {/* Auth Form */}
         <Card className="bg-white rounded-lg shadow-xl w-full overflow-hidden">
           <div className="bg-primary p-6 flex justify-between items-center">
-            <h1 className="text-white text-2xl font-bold">GraphoRAG</h1>
-            <div className="text-white text-sm">Forensic Graphology</div>
+            <h1 className="text-white text-2xl font-bold">{t('layout.appName', 'Grapholex Insight')}</h1>
+            <div className="flex items-center">
+              <div className="text-white text-sm mr-3">{t('layout.appDescription', 'Forensic Graphology')}</div>
+              <LanguageSwitcher />
+            </div>
           </div>
           <div className="p-6">
             <AuthForms />
@@ -43,9 +49,9 @@ export default function AuthPage() {
         {/* Info Panel */}
         <div className="hidden md:flex flex-col justify-center bg-primary-dark p-8 rounded-r-lg text-white space-y-6">
           <div>
-            <h2 className="text-3xl font-bold mb-4">Forensic Graphology Assistant</h2>
+            <h2 className="text-3xl font-bold mb-4">{t('auth.forensicGraphologyAssistant', 'Forensic Graphology Assistant')}</h2>
             <p className="opacity-90">
-              Welcome to GraphoRAG, your intelligent assistant for forensic graphology analysis powered by advanced AI.
+              {t('auth.welcomeMessage', 'Welcome to Grapholex Insight, your intelligent assistant for forensic graphology analysis powered by advanced AI.')}
             </p>
           </div>
 
@@ -58,8 +64,8 @@ export default function AuthPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold">Upload Documents</h3>
-                <p className="text-sm opacity-90">Add handwriting samples and documents for analysis</p>
+                <h3 className="font-semibold">{t('auth.features.uploadDocuments', 'Upload Documents')}</h3>
+                <p className="text-sm opacity-90">{t('auth.features.uploadDescription', 'Add handwriting samples and documents for analysis')}</p>
               </div>
             </div>
             
@@ -71,8 +77,8 @@ export default function AuthPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold">AI-Powered Analysis</h3>
-                <p className="text-sm opacity-90">Leverage RAG technology with your OpenAI API key</p>
+                <h3 className="font-semibold">{t('auth.features.aiAnalysis', 'AI-Powered Analysis')}</h3>
+                <p className="text-sm opacity-90">{t('auth.features.aiDescription', 'Leverage RAG technology with your OpenAI API key')}</p>
               </div>
             </div>
             
@@ -83,8 +89,8 @@ export default function AuthPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold">Detailed Insights</h3>
-                <p className="text-sm opacity-90">Get professional insights from your handwriting samples</p>
+                <h3 className="font-semibold">{t('auth.features.insights', 'Detailed Insights')}</h3>
+                <p className="text-sm opacity-90">{t('auth.features.insightsDescription', 'Get professional insights from your handwriting samples')}</p>
               </div>
             </div>
           </div>

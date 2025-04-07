@@ -16,7 +16,17 @@
     "passwordRequired": "La password è obbligatoria",
     "passwordMatch": "Le password devono corrispondere",
     "emailRequired": "L'email è obbligatoria",
-    "invalidEmail": "Inserisci un'email valida"
+    "invalidEmail": "Inserisci un'email valida",
+    "forensicGraphologyAssistant": "Assistente di Grafologia Forense",
+    "welcomeMessage": "Benvenuto in Grapholex Insight, il tuo assistente intelligente per analisi di grafologia forense alimentato da IA avanzata.",
+    "features": {
+      "uploadDocuments": "Carica Documenti",
+      "uploadDescription": "Aggiungi campioni di scrittura e documenti per l'analisi",
+      "aiAnalysis": "Analisi Basata su IA",
+      "aiDescription": "Sfrutta la tecnologia RAG con la tua chiave API OpenAI",
+      "insights": "Approfondimenti Dettagliati",
+      "insightsDescription": "Ottieni insight professionali dai tuoi campioni di scrittura"
+    }
   },
   "dashboard": {
     "title": "Dashboard",
