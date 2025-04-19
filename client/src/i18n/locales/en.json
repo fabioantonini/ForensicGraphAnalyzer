@@ -156,6 +156,7 @@
     "dashboard": "Dashboard",
     "documents": "Documents",
     "ragQuery": "Graphology Analysis",
+    "signatures": "Signature Verification",
     "settings": "Settings",
     "profileSettings": "Profile Settings",
     "logout": "Logout",
@@ -236,5 +237,30 @@
     "noDocumentsFound": "No documents found",
     "uploadFirst": "Upload some documents in the documents page first",
     "sources": "Sources"
+  },
+  "signatures": {
+    "title": "Signature Verification",
+    "createProject": "Create Project",
+    "createProjectDescription": "Create a new signature verification project to manage reference signatures and verify new ones",
+    "projectName": "Project Name",
+    "projectNamePlaceholder": "Enter project name",
+    "projectDescription": "Project Description",
+    "projectDescriptionPlaceholder": "Enter project description (optional)",
+    "projects": "Projects",
+    "selectProject": "Select a Project",
+    "selectProjectDescription": "Select a project from the left to view signatures",
+    "noProjects": "No signature projects yet",
+    "noProjectsDescription": "Create your first project to start adding reference signatures",
+    "createFirstProject": "Create First Project",
+    "referenceSignatures": "Reference Signatures",
+    "noReferenceSignatures": "No reference signatures yet. Upload some reference signatures to start verifying other signatures.",
+    "uploadReference": "Upload Reference",
+    "uploadReferenceDescription": "Upload a reference signature that will be used to verify other signatures",
+    "verificationSignatures": "Verification Signatures",
+    "noVerificationSignatures": "No verification signatures yet. Upload a signature to verify against the reference signatures.",
+    "uploadVerify": "Upload for Verification",
+    "uploadVerifyDescription": "Upload a signature to verify it against your reference signatures",
+    "file": "Signature File",
+    "needReferenceFirst": "You need reference signatures first"
   }
 }

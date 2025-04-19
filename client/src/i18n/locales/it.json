@@ -156,6 +156,7 @@
     "dashboard": "Dashboard",
     "documents": "Documenti",
     "ragQuery": "Analisi Grafologica",
+    "signatures": "Verifica Firme",
     "settings": "Impostazioni",
     "profileSettings": "Impostazioni Profilo",
     "logout": "Disconnetti",
@@ -236,5 +237,30 @@
     "noDocumentsFound": "Nessun documento trovato",
     "uploadFirst": "Carica prima alcuni documenti nella pagina documenti",
     "sources": "Fonti"
+  },
+  "signatures": {
+    "title": "Verifica Firme",
+    "createProject": "Crea Progetto",
+    "createProjectDescription": "Crea un nuovo progetto di verifica firma per gestire firme di riferimento e verificarne di nuove",
+    "projectName": "Nome Progetto",
+    "projectNamePlaceholder": "Inserisci nome progetto",
+    "projectDescription": "Descrizione Progetto",
+    "projectDescriptionPlaceholder": "Inserisci descrizione progetto (opzionale)",
+    "projects": "Progetti",
+    "selectProject": "Seleziona un Progetto",
+    "selectProjectDescription": "Seleziona un progetto a sinistra per visualizzare le firme",
+    "noProjects": "Nessun progetto firma ancora",
+    "noProjectsDescription": "Crea il tuo primo progetto per iniziare ad aggiungere firme di riferimento",
+    "createFirstProject": "Crea Primo Progetto",
+    "referenceSignatures": "Firme di Riferimento",
+    "noReferenceSignatures": "Ancora nessuna firma di riferimento. Carica alcune firme di riferimento per iniziare a verificare altre firme.",
+    "uploadReference": "Carica Riferimento",
+    "uploadReferenceDescription": "Carica una firma di riferimento che sarà utilizzata per verificare altre firme",
+    "verificationSignatures": "Firme da Verificare",
+    "noVerificationSignatures": "Ancora nessuna firma da verificare. Carica una firma per verificarla con le firme di riferimento.",
+    "uploadVerify": "Carica per Verifica",
+    "uploadVerifyDescription": "Carica una firma per verificarla con le tue firme di riferimento",
+    "file": "File Firma",
+    "needReferenceFirst": "Hai bisogno prima di firme di riferimento"
   }
 }

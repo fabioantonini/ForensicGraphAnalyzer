@@ -60,6 +60,12 @@ function Router() {
           <SettingsPage />
         </AppLayout>
       )} />
+
+      <ProtectedRoute path="/signatures" component={() => (
+        <AppLayout>
+          <SignaturesPage />
+        </AppLayout>
+      )} />
       
       <Route component={NotFound} />
     </Switch>
