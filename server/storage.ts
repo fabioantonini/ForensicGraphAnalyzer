@@ -2,7 +2,7 @@ import {
   User, InsertUser, Document, InsertDocument, Activity,
   InsertActivity, Query, InsertQuery, users, documents, activities, queries,
   SignatureProject, InsertSignatureProject, Signature, InsertSignature,
-  signatureProjects, signatures
+  signatureProjects, signatures, SignatureParameters
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -564,6 +564,121 @@ export class DatabaseStorage implements IStorage {
       conObject: { connectionString: process.env.DATABASE_URL },
       createTableIfMissing: true,
     });
+  }
+  
+  // Signature Project methods
+  async createSignatureProject(projectData: InsertSignatureProject): Promise<SignatureProject> {
+    const [project] = await db
+      .insert(signatureProjects)
+      .values(projectData)
+      .returning();
+    return project;
+  }
+
+  async getSignatureProject(id: number): Promise<SignatureProject | undefined> {
+    const [project] = await db
+      .select()
+      .from(signatureProjects)
+      .where(eq(signatureProjects.id, id));
+    return project;
+  }
+
+  async getUserSignatureProjects(userId: number): Promise<SignatureProject[]> {
+    return await db
+      .select()
+      .from(signatureProjects)
+      .where(eq(signatureProjects.userId, userId))
+      .orderBy(desc(signatureProjects.createdAt));
+  }
+
+  async updateSignatureProject(id: number, data: {
+    name?: string;
+    description?: string;
+  }): Promise<SignatureProject> {
+    const [project] = await db
+      .update(signatureProjects)
+      .set(data)
+      .where(eq(signatureProjects.id, id))
+      .returning();
+    return project;
+  }
+
+  async deleteSignatureProject(id: number): Promise<void> {
+    await db
+      .delete(signatures)
+      .where(eq(signatures.projectId, id));
+    
+    await db
+      .delete(signatureProjects)
+      .where(eq(signatureProjects.id, id));
+  }
+
+  // Signature methods
+  async createSignature(signatureData: InsertSignature): Promise<Signature> {
+    const [signature] = await db
+      .insert(signatures)
+      .values({
+        ...signatureData,
+        parameters: null,
+        processingStatus: 'pending',
+        comparisonResult: null
+      })
+      .returning();
+    return signature;
+  }
+
+  async getSignature(id: number): Promise<Signature | undefined> {
+    const [signature] = await db
+      .select()
+      .from(signatures)
+      .where(eq(signatures.id, id));
+    return signature;
+  }
+
+  async getProjectSignatures(projectId: number, referenceOnly?: boolean): Promise<Signature[]> {
+    let query = db
+      .select()
+      .from(signatures)
+      .where(eq(signatures.projectId, projectId));
+    
+    if (referenceOnly) {
+      query = query.where(eq(signatures.isReference, true));
+    }
+    
+    return await query.orderBy(desc(signatures.createdAt));
+  }
+
+  async updateSignatureParameters(id: number, parameters: SignatureParameters): Promise<Signature> {
+    const [signature] = await db
+      .update(signatures)
+      .set({ parameters })
+      .where(eq(signatures.id, id))
+      .returning();
+    return signature;
+  }
+
+  async updateSignatureStatus(id: number, status: string): Promise<Signature> {
+    const [signature] = await db
+      .update(signatures)
+      .set({ processingStatus: status })
+      .where(eq(signatures.id, id))
+      .returning();
+    return signature;
+  }
+
+  async updateSignatureComparisonResult(id: number, result: number): Promise<Signature> {
+    const [signature] = await db
+      .update(signatures)
+      .set({ comparisonResult: result })
+      .where(eq(signatures.id, id))
+      .returning();
+    return signature;
+  }
+
+  async deleteSignature(id: number): Promise<void> {
+    await db
+      .delete(signatures)
+      .where(eq(signatures.id, id));
   }
 
   // User methods
