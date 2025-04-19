@@ -89,18 +89,18 @@ export default function SignaturesPage() {
   
   // Query to get all projects
   const { 
-    data: projects,
+    data: projects = [],
     isLoading: projectsLoading
-  } = useQuery({
+  } = useQuery<any[]>({
     queryKey: ["/api/signature-projects"],
     enabled: !!user,
   });
   
   // Query to get signatures for selected project
   const { 
-    data: signatures,
+    data: signatures = [],
     isLoading: signaturesLoading
-  } = useQuery({
+  } = useQuery<any[]>({
     queryKey: ["/api/signature-projects", selectedProject, "signatures"],
     enabled: !!user && !!selectedProject,
   });
