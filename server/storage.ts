@@ -1,6 +1,8 @@
 import { 
   User, InsertUser, Document, InsertDocument, Activity,
-  InsertActivity, Query, InsertQuery, users, documents, activities, queries
+  InsertActivity, Query, InsertQuery, users, documents, activities, queries,
+  SignatureProject, InsertSignatureProject, Signature, InsertSignature,
+  signatureProjects, signatures
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -52,6 +54,25 @@ export interface IStorage {
   getQueryCount(userId: number): Promise<number>;
   getLastQueryTime(userId: number): Promise<Date | null>;
 
+  // Signature Projects methods
+  createSignatureProject(project: InsertSignatureProject): Promise<SignatureProject>;
+  getSignatureProject(id: number): Promise<SignatureProject | undefined>;
+  getUserSignatureProjects(userId: number): Promise<SignatureProject[]>;
+  updateSignatureProject(id: number, data: {
+    name?: string;
+    description?: string;
+  }): Promise<SignatureProject>;
+  deleteSignatureProject(id: number): Promise<void>;
+
+  // Signatures methods
+  createSignature(signature: InsertSignature): Promise<Signature>;
+  getSignature(id: number): Promise<Signature | undefined>;
+  getProjectSignatures(projectId: number, referenceOnly?: boolean): Promise<Signature[]>;
+  updateSignatureParameters(id: number, parameters: SignatureParameters): Promise<Signature>;
+  updateSignatureStatus(id: number, status: string): Promise<Signature>;
+  updateSignatureComparisonResult(id: number, result: number): Promise<Signature>;
+  deleteSignature(id: number): Promise<void>;
+
   // Session store
   sessionStore: any;
 }
@@ -61,17 +82,23 @@ export class MemStorage implements IStorage {
   private documents: Map<number, Document>;
   private activities: Map<number, Activity>;
   private queries: Map<number, Query>;
+  private signatureProjects: Map<number, SignatureProject>;
+  private signatures: Map<number, Signature>;
   public sessionStore: any;
   private nextUserId: number;
   private nextDocumentId: number;
   private nextActivityId: number;
   private nextQueryId: number;
+  private nextSignatureProjectId: number;
+  private nextSignatureId: number;
 
   constructor() {
     this.users = new Map();
     this.documents = new Map();
     this.activities = new Map();
     this.queries = new Map();
+    this.signatureProjects = new Map();
+    this.signatures = new Map();
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
     });
@@ -79,6 +106,8 @@ export class MemStorage implements IStorage {
     this.nextDocumentId = 1;
     this.nextActivityId = 1;
     this.nextQueryId = 1;
+    this.nextSignatureProjectId = 1;
+    this.nextSignatureId = 1;
   }
 
   // User methods
@@ -371,6 +400,159 @@ export class MemStorage implements IStorage {
     return userQueries.sort(
       (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
     )[0].createdAt;
+  }
+
+  // Signature Projects methods
+  async createSignatureProject(projectData: InsertSignatureProject): Promise<SignatureProject> {
+    const id = this.nextSignatureProjectId++;
+    const now = new Date();
+    const project: SignatureProject = {
+      ...projectData,
+      id,
+      createdAt: now,
+      updatedAt: now,
+    };
+    this.signatureProjects.set(id, project);
+    return project;
+  }
+
+  async getSignatureProject(id: number): Promise<SignatureProject | undefined> {
+    return this.signatureProjects.get(id);
+  }
+
+  async getUserSignatureProjects(userId: number): Promise<SignatureProject[]> {
+    const userProjects = Array.from(this.signatureProjects.values()).filter(
+      (project) => project.userId === userId,
+    );
+    
+    // Sort by creation date (newest first)
+    return userProjects.sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+    );
+  }
+
+  async updateSignatureProject(id: number, data: {
+    name?: string;
+    description?: string;
+  }): Promise<SignatureProject> {
+    const project = await this.getSignatureProject(id);
+    if (!project) {
+      throw new Error(`Signature project with ID ${id} not found`);
+    }
+    
+    const updatedProject: SignatureProject = {
+      ...project,
+      ...(data.name !== undefined && { name: data.name }),
+      ...(data.description !== undefined && { description: data.description }),
+      updatedAt: new Date(),
+    };
+    
+    this.signatureProjects.set(id, updatedProject);
+    return updatedProject;
+  }
+
+  async deleteSignatureProject(id: number): Promise<void> {
+    // Delete all signatures associated with this project
+    const projectSignatures = Array.from(this.signatures.values())
+      .filter(signature => signature.projectId === id);
+    
+    for (const signature of projectSignatures) {
+      this.signatures.delete(signature.id);
+    }
+    
+    // Delete the project
+    this.signatureProjects.delete(id);
+  }
+
+  // Signatures methods
+  async createSignature(signatureData: InsertSignature): Promise<Signature> {
+    const id = this.nextSignatureId++;
+    const now = new Date();
+    const signature: Signature = {
+      ...signatureData,
+      id,
+      parameters: null,
+      processingStatus: 'pending',
+      comparisonResult: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+    this.signatures.set(id, signature);
+    return signature;
+  }
+
+  async getSignature(id: number): Promise<Signature | undefined> {
+    return this.signatures.get(id);
+  }
+
+  async getProjectSignatures(projectId: number, referenceOnly?: boolean): Promise<Signature[]> {
+    let projectSignatures = Array.from(this.signatures.values()).filter(
+      (signature) => signature.projectId === projectId,
+    );
+    
+    if (referenceOnly) {
+      projectSignatures = projectSignatures.filter(
+        (signature) => signature.isReference
+      );
+    }
+    
+    // Sort by creation date (newest first)
+    return projectSignatures.sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+    );
+  }
+
+  async updateSignatureParameters(id: number, parameters: SignatureParameters): Promise<Signature> {
+    const signature = await this.getSignature(id);
+    if (!signature) {
+      throw new Error(`Signature with ID ${id} not found`);
+    }
+    
+    const updatedSignature: Signature = {
+      ...signature,
+      parameters,
+      updatedAt: new Date(),
+    };
+    
+    this.signatures.set(id, updatedSignature);
+    return updatedSignature;
+  }
+
+  async updateSignatureStatus(id: number, status: string): Promise<Signature> {
+    const signature = await this.getSignature(id);
+    if (!signature) {
+      throw new Error(`Signature with ID ${id} not found`);
+    }
+    
+    const updatedSignature: Signature = {
+      ...signature,
+      processingStatus: status,
+      updatedAt: new Date(),
+    };
+    
+    this.signatures.set(id, updatedSignature);
+    return updatedSignature;
+  }
+
+  async updateSignatureComparisonResult(id: number, result: number): Promise<Signature> {
+    const signature = await this.getSignature(id);
+    if (!signature) {
+      throw new Error(`Signature with ID ${id} not found`);
+    }
+    
+    const updatedSignature: Signature = {
+      ...signature,
+      comparisonResult: result,
+      processingStatus: 'completed',
+      updatedAt: new Date(),
+    };
+    
+    this.signatures.set(id, updatedSignature);
+    return updatedSignature;
+  }
+
+  async deleteSignature(id: number): Promise<void> {
+    this.signatures.delete(id);
   }
 }
 
