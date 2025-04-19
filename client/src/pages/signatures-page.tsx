@@ -27,6 +27,7 @@ import {
   FormLabel,
   FormMessage
 } from "@/components/ui/form";
+import { SignatureProject, Signature } from "@shared/schema";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
@@ -91,7 +92,7 @@ export default function SignaturesPage() {
   const { 
     data: projects = [],
     isLoading: projectsLoading
-  } = useQuery<any[]>({
+  } = useQuery<SignatureProject[]>({
     queryKey: ["/api/signature-projects"],
     enabled: !!user,
   });
@@ -100,7 +101,7 @@ export default function SignaturesPage() {
   const { 
     data: signatures = [],
     isLoading: signaturesLoading
-  } = useQuery<any[]>({
+  } = useQuery<Signature[]>({
     queryKey: ["/api/signature-projects", selectedProject, "signatures"],
     enabled: !!user && !!selectedProject,
   });
@@ -420,7 +421,7 @@ export default function SignaturesPage() {
           <div className="lg:col-span-3">
             <div className="space-y-4">
               <h2 className="text-xl font-bold">{t('signatures.projects')}</h2>
-              {projects.map((project: any) => (
+              {projects.map((project) => (
                 <Card 
                   key={project.id} 
                   className={`cursor-pointer hover:border-primary transition-colors ${
@@ -462,7 +463,7 @@ export default function SignaturesPage() {
               <>
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl font-bold">
-                    {projects.find((p: any) => p.id === selectedProject)?.name}
+                    {projects.find((p) => p.id === selectedProject)?.name}
                   </h2>
                   <div className="space-x-2">
                     <Dialog open={isUploadReferenceOpen} onOpenChange={setIsUploadReferenceOpen}>
