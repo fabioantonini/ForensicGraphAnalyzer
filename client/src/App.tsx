@@ -16,6 +16,7 @@ import DashboardPage from "@/pages/dashboard-page";
 import DocumentsPage from "@/pages/documents-page";
 import QueryPage from "@/pages/query-page";
 import SettingsPage from "@/pages/settings-page";
+import SignaturesPage from "@/pages/signatures-page";
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   return (

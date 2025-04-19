@@ -21,6 +21,7 @@ import {
 } from "./chromadb";
 import { chatWithRAG, validateAPIKey } from "./openai";
 import { log } from "./vite";
+import { registerSignatureRoutes } from "./signature-routes";
 
 // Initialize multer for file uploads
 const upload = multer({
@@ -41,6 +42,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Sets up /api/register, /api/login, /api/logout, /api/user
   setupAuth(app);
+  
+  // Register signature routes
+  registerSignatureRoutes(app);
 
   // Middleware to check if user is authenticated
   const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
