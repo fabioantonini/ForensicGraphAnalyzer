@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json, jsonb, real } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -21,6 +21,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   documents: many(documents),
   activities: many(activities),
   queries: many(queries),
+  signatureProjects: many(signatureProjects),
 }));
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -32,10 +33,6 @@ export const insertUserSchema = createInsertSchema(users).pick({
   profession: true,
 }).extend({
   confirmPassword: z.string(),
-}).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
 });
 
 export const loginUserSchema = z.object({
@@ -133,3 +130,124 @@ export type InsertActivity = z.infer<typeof insertActivitySchema>;
 
 export type Query = typeof queries.$inferSelect;
 export type InsertQuery = z.infer<typeof insertQuerySchema>;
+
+// Type definition for signature parameters
+export interface SignatureParameters {
+  // Base metrics
+  width: number;
+  height: number;
+  aspectRatio: number;
+  
+  // Stroke characteristics
+  strokeWidth: {
+    min: number;
+    max: number;
+    mean: number;
+    variance: number;
+  };
+  
+  // Pressure points (if available from image analysis)
+  pressurePoints: {
+    count: number;
+    distribution: number[];
+  };
+  
+  // Curvature metrics
+  curvatureMetrics: {
+    totalAngleChanges: number;
+    sharpCorners: number;
+    smoothCurves: number;
+  };
+  
+  // Spatial distribution
+  spatialDistribution: {
+    centerOfMassX: number;
+    centerOfMassY: number;
+    density: number;
+  };
+  
+  // Connectivity and line breaks
+  connectivity: {
+    connectedComponents: number;
+    gaps: number;
+  };
+  
+  // Feature points
+  featurePoints: {
+    startPoint: [number, number];
+    endPoint: [number, number];
+    loopPoints: number;
+    crossPoints: number;
+  };
+  
+  // Normalized vector representation
+  vectorRepresentation?: number[];
+  
+  // Raw image features (optional)
+  rawFeatures?: any;
+}
+
+// Signature Projects schema
+export const signatureProjects = pgTable("signature_projects", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  name: text("name").notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Signatures schema
+export const signatures = pgTable("signatures", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").notNull().references(() => signatureProjects.id),
+  filename: text("filename").notNull(),
+  originalFilename: text("original_filename").notNull(),
+  fileType: text("file_type").notNull(),
+  fileSize: integer("file_size").notNull(),
+  isReference: boolean("is_reference").default(true).notNull(),
+  parameters: jsonb("parameters").$type<SignatureParameters>(),
+  processingStatus: text("processing_status").default("pending").notNull(), // pending, processing, completed, failed
+  comparisonResult: real("comparison_result"), // null for reference signatures, 0-1 for verification signatures
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const signatureProjectsRelations = relations(signatureProjects, ({ one, many }) => ({
+  user: one(users, {
+    fields: [signatureProjects.userId],
+    references: [users.id],
+  }),
+  signatures: many(signatures),
+}));
+
+export const signaturesRelations = relations(signatures, ({ one }) => ({
+  project: one(signatureProjects, {
+    fields: [signatures.projectId],
+    references: [signatureProjects.id],
+  }),
+}));
+
+export const insertSignatureProjectSchema = createInsertSchema(signatureProjects).pick({
+  userId: true,
+  name: true,
+  description: true,
+});
+
+export const insertSignatureSchema = createInsertSchema(signatures).pick({
+  projectId: true,
+  filename: true,
+  originalFilename: true,
+  fileType: true,
+  fileSize: true,
+  isReference: true,
+});
+
+// Questa relazione è già definita in usersRelations
+
+// Type definitions for signature projects
+export type SignatureProject = typeof signatureProjects.$inferSelect;
+export type InsertSignatureProject = z.infer<typeof insertSignatureProjectSchema>;
+
+export type Signature = typeof signatures.$inferSelect;
+export type InsertSignature = z.infer<typeof insertSignatureSchema>;
