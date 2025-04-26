@@ -255,13 +255,19 @@
     "createFirstProject": "Crea Primo Progetto",
     "referenceSignatures": "Firme di Riferimento",
     "noReferenceSignatures": "Ancora nessuna firma di riferimento. Carica alcune firme di riferimento per iniziare a verificare altre firme.",
+    "noReferenceSignaturesDescription": "Aggiungi firme di riferimento autentiche per confrontarle con quelle da verificare",
     "uploadReference": "Carica Riferimento",
     "uploadReferenceDescription": "Carica una firma di riferimento che sarà utilizzata per verificare altre firme",
-    "verificationSignatures": "Firme da Verificare",
-    "noVerificationSignatures": "Ancora nessuna firma da verificare. Carica una firma per verificarla con le firme di riferimento.",
+    "verificationsSignatures": "Firme da Verificare",
+    "noVerifySignatures": "Ancora nessuna firma da verificare. Carica una firma per verificarla con le firme di riferimento.",
+    "noVerifySignaturesDescription": "Aggiungi firme da verificare confrontandole con quelle di riferimento",
     "uploadVerify": "Carica per Verifica",
     "uploadVerifyDescription": "Carica una firma per verificarla con le tue firme di riferimento",
     "file": "File Firma",
-    "needReferenceFirst": "Hai bisogno prima di firme di riferimento"
+    "selectFile": "Seleziona file",
+    "needReferenceFirst": "Hai bisogno prima di firme di riferimento",
+    "uploadFirstReference": "Carica prima firma di riferimento",
+    "uploadFirstVerify": "Carica prima firma da verificare",
+    "compareAll": "Confronta Tutte"
   }
 }

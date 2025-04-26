@@ -255,13 +255,19 @@
     "createFirstProject": "Create First Project",
     "referenceSignatures": "Reference Signatures",
     "noReferenceSignatures": "No reference signatures yet. Upload some reference signatures to start verifying other signatures.",
+    "noReferenceSignaturesDescription": "Add authentic reference signatures to compare against verification signatures",
     "uploadReference": "Upload Reference",
     "uploadReferenceDescription": "Upload a reference signature that will be used to verify other signatures",
-    "verificationSignatures": "Verification Signatures",
-    "noVerificationSignatures": "No verification signatures yet. Upload a signature to verify against the reference signatures.",
+    "verificationsSignatures": "Verification Signatures",
+    "noVerifySignatures": "No verification signatures yet. Upload a signature to verify against the reference signatures.",
+    "noVerifySignaturesDescription": "Add signatures to verify by comparing them against reference signatures",
     "uploadVerify": "Upload for Verification",
     "uploadVerifyDescription": "Upload a signature to verify it against your reference signatures",
     "file": "Signature File",
-    "needReferenceFirst": "You need reference signatures first"
+    "selectFile": "Select file",
+    "needReferenceFirst": "You need reference signatures first",
+    "uploadFirstReference": "Upload first reference signature",
+    "uploadFirstVerify": "Upload first verification signature",
+    "compareAll": "Compare All"
   }
 }
