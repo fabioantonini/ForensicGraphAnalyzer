@@ -103,7 +103,7 @@ export default function SignaturesPage() {
     isLoading: signaturesLoading
   } = useQuery<Signature[]>({
     queryKey: ["/api/signature-projects", selectedProject, "signatures"],
-    enabled: !!user && !!selectedProject,
+    enabled: !!user && !!selectedProject
   });
   
   // Query to get reference signatures for selected project
@@ -635,7 +635,8 @@ export default function SignaturesPage() {
               <div className="flex justify-center items-center h-40">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            ) : signatures.filter((signature: any) => signature.isReference).length === 0 ? (
+            ) : !signatures || !Array.isArray(signatures) || signatures.length === 0 || 
+                 signatures.every((s: any) => !s.isReference || s.processingStatus !== 'completed') ? (
               <Card className="border-dashed border-2">
                 <CardContent className="flex flex-col items-center justify-center p-6">
                   <div className="rounded-full p-3 bg-primary-100 mb-4">
@@ -652,8 +653,8 @@ export default function SignaturesPage() {
               </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {signatures
-                  .filter((signature: any) => signature.isReference)
+                {Array.isArray(signatures) && signatures
+                  .filter((s: any) => s.isReference)
                   .map((signature: any) => (
                     <Card key={signature.id} className="overflow-hidden">
                       <div className="relative h-48 bg-gray-100">
@@ -695,7 +696,8 @@ export default function SignaturesPage() {
               <div className="flex justify-center items-center h-40">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            ) : signatures.filter((signature: any) => !signature.isReference).length === 0 ? (
+            ) : !signatures || !Array.isArray(signatures) || signatures.length === 0 || 
+                 signatures.every((s: any) => s.isReference || s.processingStatus !== 'completed') ? (
               <Card className="border-dashed border-2">
                 <CardContent className="flex flex-col items-center justify-center p-6">
                   <div className="rounded-full p-3 bg-primary-100 mb-4">
@@ -712,8 +714,8 @@ export default function SignaturesPage() {
               </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {signatures
-                  .filter((signature: any) => !signature.isReference)
+                {Array.isArray(signatures) && signatures
+                  .filter((s: any) => !s.isReference)
                   .map((signature: any) => (
                     <Card key={signature.id} className="overflow-hidden">
                       <div className="relative h-48 bg-gray-100">
