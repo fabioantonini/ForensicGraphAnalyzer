@@ -476,309 +476,275 @@ export default function SignaturesPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Projects sidebar */}
-          <div className="lg:col-span-3">
-            <div className="space-y-4">
-              <h2 className="text-xl font-bold">{t('signatures.projects')}</h2>
-              {projects.map((project) => (
-                <Card 
-                  key={project.id} 
-                  className={`cursor-pointer hover:border-primary transition-colors ${
-                    selectedProject === project.id ? 'border-primary bg-muted/50' : ''
-                  }`}
-                  onClick={() => setSelectedProject(project.id)}
-                >
-                  <CardHeader className="p-4 pb-2">
-                    <div className="flex justify-between items-start">
-                      <CardTitle className="text-lg">{project.name}</CardTitle>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteProject(project.id);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  {project.description && (
-                    <CardContent className="p-4 pt-0">
-                      <CardDescription>{project.description}</CardDescription>
-                    </CardContent>
-                  )}
-                  <CardFooter className="p-4 pt-0 text-xs text-muted-foreground">
-                    {new Date(project.createdAt).toLocaleDateString()}
-                  </CardFooter>
-                </Card>
-              ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {projects.map((project) => (
+            <Card 
+              key={project.id} 
+              className={`cursor-pointer hover:shadow-md transition-shadow ${
+                selectedProject === project.id ? 'ring-2 ring-primary' : ''
+              }`}
+              onClick={() => setSelectedProject(project.id)}
+            >
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-start">
+                  <CardTitle className="text-xl">{project.name}</CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteProject(project.id);
+                    }}
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </Button>
+                </div>
+                {project.description && (
+                  <CardDescription>{project.description}</CardDescription>
+                )}
+              </CardHeader>
+              <CardFooter className="pt-2">
+                <p className="text-sm text-muted-foreground">
+                  Creato: {new Date(project.createdAt).toLocaleDateString()}
+                </p>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      )}
+      
+      {/* Selected project content */}
+      {selectedProject && (
+        <div className="mt-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">
+              {projects.find(p => p.id === selectedProject)?.name}
+            </h2>
+            <div className="flex space-x-2">
+              <Dialog open={isUploadReferenceOpen} onOpenChange={setIsUploadReferenceOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline">
+                    <Upload className="h-4 w-4 mr-2" />
+                    {t('signatures.uploadReference')}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>{t('signatures.uploadReference')}</DialogTitle>
+                    <DialogDescription>
+                      {t('signatures.uploadReferenceDescription')}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <Form {...referenceForm}>
+                    <form onSubmit={referenceForm.handleSubmit(onUploadReference)} className="space-y-4">
+                      <FormField
+                        control={referenceForm.control}
+                        name="file"
+                        render={({ field: { onChange, ...rest } }) => (
+                          <FormItem>
+                            <FormLabel>{t('signatures.selectFile')}</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="file" 
+                                onChange={(e) => onChange(e.target.files)}
+                                accept="image/*"
+                                {...rest}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <DialogFooter>
+                        <Button 
+                          type="submit" 
+                          disabled={uploadReference.isPending}
+                        >
+                          {uploadReference.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          {t('common.upload')}
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
+              
+              <Dialog open={isUploadVerifyOpen} onOpenChange={setIsUploadVerifyOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Upload className="h-4 w-4 mr-2" />
+                    {t('signatures.uploadVerify')}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>{t('signatures.uploadVerify')}</DialogTitle>
+                    <DialogDescription>
+                      {t('signatures.uploadVerifyDescription')}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <Form {...verifyForm}>
+                    <form onSubmit={verifyForm.handleSubmit(onUploadVerify)} className="space-y-4">
+                      <FormField
+                        control={verifyForm.control}
+                        name="file"
+                        render={({ field: { onChange, ...rest } }) => (
+                          <FormItem>
+                            <FormLabel>{t('signatures.selectFile')}</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="file" 
+                                onChange={(e) => onChange(e.target.files)}
+                                accept="image/*"
+                                {...rest}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <DialogFooter>
+                        <Button 
+                          type="submit" 
+                          disabled={uploadVerify.isPending}
+                        >
+                          {uploadVerify.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          {t('common.upload')}
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
+              
+              <Button 
+                variant="secondary"
+                onClick={() => compareAllSignatures.mutate()}
+                disabled={compareAllSignatures.isPending}
+              >
+                {compareAllSignatures.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {t('signatures.compareAll')}
+              </Button>
             </div>
           </div>
           
-          {/* Signatures content */}
-          <div className="lg:col-span-9">
-            {selectedProject ? (
-              <>
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-bold">
-                    {projects.find((p) => p.id === selectedProject)?.name}
-                  </h2>
-                  <div className="space-x-2">
-                    <Dialog open={isUploadReferenceOpen} onOpenChange={setIsUploadReferenceOpen}>
-                      <DialogTrigger asChild>
-                        <Button variant="outline">
-                          {t('signatures.uploadReference')}
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>{t('signatures.uploadReference')}</DialogTitle>
-                          <DialogDescription>
-                            {t('signatures.uploadReferenceDescription')}
-                          </DialogDescription>
-                        </DialogHeader>
-                        <Form {...referenceForm}>
-                          <form onSubmit={referenceForm.handleSubmit(onUploadReference)} className="space-y-4">
-                            <FormField
-                              control={referenceForm.control}
-                              name="file"
-                              render={({ field: { onChange, value, ...rest } }) => (
-                                <FormItem>
-                                  <FormLabel>{t('signatures.file')}</FormLabel>
-                                  <FormControl>
-                                    <Input 
-                                      type="file" 
-                                      accept="image/*"
-                                      onChange={(e) => onChange(e.target.files)}
-                                      {...rest}
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <DialogFooter>
-                              <Button 
-                                type="submit" 
-                                disabled={uploadReference.isPending}
-                              >
-                                {uploadReference.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                {t('common.upload')}
-                              </Button>
-                            </DialogFooter>
-                          </form>
-                        </Form>
-                      </DialogContent>
-                    </Dialog>
-                    
-                    <Dialog open={isUploadVerifyOpen} onOpenChange={setIsUploadVerifyOpen}>
-                      <DialogTrigger asChild>
-                        <Button 
-                          disabled={!referenceSignatures || referenceSignatures.length === 0}
-                        >
-                          {t('signatures.uploadVerify')}
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>{t('signatures.uploadVerify')}</DialogTitle>
-                          <DialogDescription>
-                            {t('signatures.uploadVerifyDescription')}
-                          </DialogDescription>
-                        </DialogHeader>
-                        <Form {...verifyForm}>
-                          <form onSubmit={verifyForm.handleSubmit(onUploadVerify)} className="space-y-4">
-                            <FormField
-                              control={verifyForm.control}
-                              name="file"
-                              render={({ field: { onChange, value, ...rest } }) => (
-                                <FormItem>
-                                  <FormLabel>{t('signatures.file')}</FormLabel>
-                                  <FormControl>
-                                    <Input 
-                                      type="file" 
-                                      accept="image/*" 
-                                      onChange={(e) => onChange(e.target.files)}
-                                      {...rest}
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <DialogFooter>
-                              <Button 
-                                type="submit" 
-                                disabled={uploadVerify.isPending}
-                              >
-                                {uploadVerify.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                {t('common.upload')}
-                              </Button>
-                            </DialogFooter>
-                          </form>
-                        </Form>
-                      </DialogContent>
-                    </Dialog>
+          <div className="mb-6">
+            <h3 className="text-xl font-semibold mb-3">{t('signatures.referenceSignatures')}</h3>
+            {signaturesLoading ? (
+              <div className="flex justify-center items-center h-40">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : signatures.filter((signature: any) => signature.isReference).length === 0 ? (
+              <Card className="border-dashed border-2">
+                <CardContent className="flex flex-col items-center justify-center p-6">
+                  <div className="rounded-full p-3 bg-primary-100 mb-4">
+                    <AlertCircle className="h-6 w-6 text-primary" />
                   </div>
-                </div>
-                
-                {/* Reference signatures section */}
-                <h3 className="text-lg font-semibold mb-3">{t('signatures.referenceSignatures')}</h3>
-                
-                {signaturesLoading ? (
-                  <div className="flex justify-center items-center h-40">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  </div>
-                ) : !signatures || !signatures.filter((signature: any) => signature.isReference).length ? (
-                  <Card className="border-dashed border-2 mb-6">
-                    <CardContent className="flex flex-col items-center justify-center p-6">
-                      <AlertCircle className="h-6 w-6 text-muted-foreground mb-4" />
-                      <p className="text-center text-sm text-muted-foreground mb-4">
-                        {t('signatures.noReferenceSignatures')}
-                      </p>
-                      <Button onClick={() => setIsUploadReferenceOpen(true)}>
-                        <Upload className="h-4 w-4 mr-2" />
-                        {t('signatures.uploadReference')}
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
-                    {signatures
-                      .filter((signature: any) => signature.isReference)
-                      .map((signature: any) => (
-                        <Card key={signature.id} className="overflow-hidden">
-                          <div className="relative aspect-square bg-black/5">
-                            <img 
-                              src={`/uploads/${signature.filename}`} 
-                              alt={signature.originalFilename}
-                              className="absolute inset-0 w-full h-full object-contain"
-                            />
-                            <Button
-                              variant="destructive"
-                              size="icon"
-                              className="absolute top-2 right-2 h-7 w-7 opacity-80 hover:opacity-100"
-                              onClick={() => handleDeleteSignature(signature.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          <CardFooter className="p-3 flex-col items-start">
-                            <p className="text-sm font-medium truncate w-full" title={signature.originalFilename}>
-                              {signature.originalFilename}
-                            </p>
-                            <Badge 
-                              className={`mt-1 ${getStatusColor(signature.processingStatus)}`}
-                            >
-                              {signature.processingStatus === 'pending' ? 'In attesa' : 
-                               signature.processingStatus === 'processing' ? 'In elaborazione' :
-                               signature.processingStatus === 'completed' ? 'Completato' : 'Fallito'}
-                            </Badge>
-                          </CardFooter>
-                        </Card>
-                      ))}
-                  </div>
-                )}
-                
-                <Separator className="my-6" />
-                
-                {/* Verification signatures section */}
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-lg font-semibold">{t('signatures.verificationSignatures')}</h3>
-                  <div className="flex items-center space-x-2">
-                    {signatures && signatures.filter((signature: any) => !signature.isReference && signature.processingStatus === 'completed').length > 0 && 
-                     signatures.filter((signature: any) => signature.isReference && signature.processingStatus === 'completed').length > 0 ? (
-                      <Button 
-                        onClick={() => compareAllSignatures.mutate()}
-                        disabled={compareAllSignatures.isPending}
-                        size="sm"
-                      >
-                        {compareAllSignatures.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        {t('signatures.compare')}
-                      </Button>
-                    ) : null}
-                    
-                    {!referenceSignatures || referenceSignatures.length === 0 ? (
-                      <div className="flex items-center text-sm text-yellow-600">
-                        <AlertCircle className="h-4 w-4 mr-1" />
-                        {t('signatures.needReferenceFirst')}
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-                
-                {signaturesLoading ? (
-                  <div className="flex justify-center items-center h-40">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  </div>
-                ) : !signatures || !signatures.filter((signature: any) => !signature.isReference).length ? (
-                  <Card className="border-dashed border-2">
-                    <CardContent className="flex flex-col items-center justify-center p-6">
-                      <AlertCircle className="h-6 w-6 text-muted-foreground mb-4" />
-                      <p className="text-center text-sm text-muted-foreground mb-4">
-                        {t('signatures.noVerificationSignatures')}
-                      </p>
-                      <Button 
-                        onClick={() => setIsUploadVerifyOpen(true)}
-                        disabled={!referenceSignatures || referenceSignatures.length === 0}
-                      >
-                        <Upload className="h-4 w-4 mr-2" />
-                        {t('signatures.uploadVerify')}
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {signatures
-                      .filter((signature: any) => !signature.isReference)
-                      .map((signature: any) => (
-                        <Card key={signature.id} className="overflow-hidden">
-                          <div className="relative aspect-square bg-black/5">
-                            <img 
-                              src={`/uploads/${signature.filename}`} 
-                              alt={signature.originalFilename}
-                              className="absolute inset-0 w-full h-full object-contain"
-                            />
-                            <Button
-                              variant="destructive"
-                              size="icon"
-                              className="absolute top-2 right-2 h-7 w-7 opacity-80 hover:opacity-100"
-                              onClick={() => handleDeleteSignature(signature.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          <CardFooter className="p-3 flex-col items-start">
-                            <p className="text-sm font-medium truncate w-full" title={signature.originalFilename}>
-                              {signature.originalFilename}
-                            </p>
-                            <Badge 
-                              className={`mt-1 ${getStatusColor(signature.processingStatus)}`}
-                            >
-                              {signature.processingStatus === 'pending' ? 'In attesa' : 
-                               signature.processingStatus === 'processing' ? 'In elaborazione' :
-                               signature.processingStatus === 'completed' ? 'Completato' : 'Fallito'}
-                            </Badge>
-                            {signature.processingStatus === 'completed' && 
-                             renderSimilarityScore(signature.comparisonResult)}
-                          </CardFooter>
-                        </Card>
-                      ))}
-                  </div>
-                )}
-              </>
-            ) : (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center p-10">
-                  <FileCheck className="h-12 w-12 text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium mb-2">{t('signatures.selectProject')}</h3>
-                  <p className="text-center text-sm text-muted-foreground">
-                    {t('signatures.selectProjectDescription')}
+                  <h3 className="text-lg font-medium mb-2">{t('signatures.noReferenceSignatures')}</h3>
+                  <p className="text-center text-sm text-muted-foreground mb-4">
+                    {t('signatures.noReferenceSignaturesDescription')}
                   </p>
+                  <Button onClick={() => setIsUploadReferenceOpen(true)}>
+                    {t('signatures.uploadFirstReference')}
+                  </Button>
                 </CardContent>
               </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {signatures
+                  .filter((signature: any) => signature.isReference)
+                  .map((signature: any) => (
+                    <Card key={signature.id} className="overflow-hidden">
+                      <div className="relative h-48 bg-gray-100">
+                        <img 
+                          src={`/uploads/${signature.filename}`} 
+                          alt={signature.originalFilename}
+                          className="w-full h-full object-contain p-2"
+                        />
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-2 right-2 h-7 w-7 opacity-80 hover:opacity-100"
+                          onClick={() => handleDeleteSignature(signature.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <CardContent className="p-3">
+                        <p className="text-sm truncate" title={signature.originalFilename}>
+                          {signature.originalFilename}
+                        </p>
+                        <div className="flex items-center mt-1">
+                          <Badge className={getStatusColor(signature.processingStatus)}>
+                            {signature.processingStatus}
+                          </Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+              </div>
+            )}
+          </div>
+          
+          <Separator className="my-6" />
+          
+          <div>
+            <h3 className="text-xl font-semibold mb-3">{t('signatures.verificationsSignatures')}</h3>
+            {signaturesLoading ? (
+              <div className="flex justify-center items-center h-40">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : signatures.filter((signature: any) => !signature.isReference).length === 0 ? (
+              <Card className="border-dashed border-2">
+                <CardContent className="flex flex-col items-center justify-center p-6">
+                  <div className="rounded-full p-3 bg-primary-100 mb-4">
+                    <AlertCircle className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="text-lg font-medium mb-2">{t('signatures.noVerifySignatures')}</h3>
+                  <p className="text-center text-sm text-muted-foreground mb-4">
+                    {t('signatures.noVerifySignaturesDescription')}
+                  </p>
+                  <Button onClick={() => setIsUploadVerifyOpen(true)}>
+                    {t('signatures.uploadFirstVerify')}
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {signatures
+                  .filter((signature: any) => !signature.isReference)
+                  .map((signature: any) => (
+                    <Card key={signature.id} className="overflow-hidden">
+                      <div className="relative h-48 bg-gray-100">
+                        <img 
+                          src={`/uploads/${signature.filename}`} 
+                          alt={signature.originalFilename}
+                          className="w-full h-full object-contain p-2"
+                        />
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-2 right-2 h-7 w-7 opacity-80 hover:opacity-100"
+                          onClick={() => handleDeleteSignature(signature.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <CardContent className="p-3">
+                        <p className="text-sm truncate" title={signature.originalFilename}>
+                          {signature.originalFilename}
+                        </p>
+                        <div className="flex items-center mt-1">
+                          <Badge className={getStatusColor(signature.processingStatus)}>
+                            {signature.processingStatus}
+                          </Badge>
+                        </div>
+                        {signature.processingStatus === 'completed' && renderSimilarityScore(signature.similarityScore)}
+                      </CardContent>
+                    </Card>
+                  ))}
+              </div>
             )}
           </div>
         </div>
