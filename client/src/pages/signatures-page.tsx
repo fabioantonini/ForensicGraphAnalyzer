@@ -631,7 +631,7 @@ export default function SignaturesPage() {
                   <div className="flex justify-center items-center h-40">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
-                ) : !signatures || !signatures.filter((s: any) => s.isReference).length ? (
+                ) : !signatures || !signatures.filter((signature: any) => signature.isReference).length ? (
                   <Card className="border-dashed border-2 mb-6">
                     <CardContent className="flex flex-col items-center justify-center p-6">
                       <AlertCircle className="h-6 w-6 text-muted-foreground mb-4" />
@@ -688,8 +688,8 @@ export default function SignaturesPage() {
                 <div className="flex justify-between items-center mb-3">
                   <h3 className="text-lg font-semibold">{t('signatures.verificationSignatures')}</h3>
                   <div className="flex items-center space-x-2">
-                    {signatures && signatures.filter((s: any) => !s.isReference && s.processingStatus === 'completed').length > 0 && 
-                     signatures.filter((s: any) => s.isReference && s.processingStatus === 'completed').length > 0 ? (
+                    {signatures && signatures.filter((signature: any) => !signature.isReference && signature.processingStatus === 'completed').length > 0 && 
+                     signatures.filter((signature: any) => signature.isReference && signature.processingStatus === 'completed').length > 0 ? (
                       <Button 
                         onClick={() => compareAllSignatures.mutate()}
                         disabled={compareAllSignatures.isPending}
@@ -713,7 +713,7 @@ export default function SignaturesPage() {
                   <div className="flex justify-center items-center h-40">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
-                ) : !signatures || !signatures.filter((s: any) => !s.isReference).length ? (
+                ) : !signatures || !signatures.filter((signature: any) => !signature.isReference).length ? (
                   <Card className="border-dashed border-2">
                     <CardContent className="flex flex-col items-center justify-center p-6">
                       <AlertCircle className="h-6 w-6 text-muted-foreground mb-4" />
