@@ -289,6 +289,61 @@ export function registerSignatureRoutes(router: Router) {
       res.status(500).json({ error: error.message });
     }
   });
+  
+  // Esegui confronto manuale di una firma
+  router.post("/signatures/:id/compare", isAuthenticated, async (req, res) => {
+    try {
+      const signatureId = parseInt(req.params.id);
+      const signature = await storage.getSignature(signatureId);
+      
+      if (!signature) {
+        return res.status(404).json({ error: 'Firma non trovata' });
+      }
+      
+      // Verifica che la firma appartenga all'utente corrente
+      const project = await storage.getSignatureProject(signature.projectId);
+      if (!project || project.userId !== req.user!.id) {
+        return res.status(403).json({ error: 'Non autorizzato' });
+      }
+      
+      // Verifica che la firma non sia di riferimento
+      if (signature.isReference) {
+        return res.status(400).json({ error: 'Non è possibile confrontare una firma di riferimento' });
+      }
+      
+      // Verifica che la firma sia stata elaborata
+      if (signature.processingStatus !== 'completed') {
+        return res.status(400).json({ error: 'La firma deve essere completamente elaborata prima di poter essere confrontata' });
+      }
+      
+      // Ottieni le firme di riferimento per questo progetto
+      const referenceSignatures = await storage.getProjectSignatures(signature.projectId, true);
+      
+      // Filtra le firme di riferimento complete (con parametri)
+      const completedReferences = referenceSignatures.filter(
+        ref => ref.processingStatus === 'completed' && ref.parameters
+      );
+      
+      if (completedReferences.length === 0) {
+        return res.status(400).json({
+          error: 'Nessuna firma di riferimento elaborata disponibile'
+        });
+      }
+      
+      // Estrai i parametri delle firme di riferimento
+      const referenceParameters = completedReferences.map(ref => ref.parameters!);
+      
+      // Esegui il confronto
+      const similarityScore = SignatureAnalyzer.compareSignatures(signature.parameters!, referenceParameters);
+      
+      // Aggiorna il risultato del confronto
+      const updatedSignature = await storage.updateSignatureComparisonResult(signatureId, similarityScore);
+      
+      res.json(updatedSignature);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
 
   // Elimina una firma
   router.delete("/signatures/:id", isAuthenticated, async (req, res) => {

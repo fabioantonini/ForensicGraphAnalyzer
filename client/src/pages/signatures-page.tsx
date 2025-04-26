@@ -309,6 +309,66 @@ export default function SignaturesPage() {
     }
   };
   
+  // Mutation to manually compare all signatures
+  const compareAllSignatures = useMutation({
+    mutationFn: async () => {
+      if (!selectedProject) throw new Error("Nessun progetto selezionato");
+      
+      // Ottieni tutte le firme del progetto
+      const allSignatures = await queryClient.fetchQuery<Signature[]>({
+        queryKey: ["/api/signature-projects", selectedProject, "signatures"],
+      });
+      
+      // Verifica se ci sono firme di riferimento e di verifica
+      const referenceSignatures = allSignatures.filter((s) => s.isReference && s.processingStatus === 'completed');
+      const verificationSignatures = allSignatures.filter((s) => !s.isReference && s.processingStatus === 'completed');
+      
+      if (referenceSignatures.length === 0) {
+        throw new Error("Nessuna firma di riferimento completata disponibile");
+      }
+      
+      if (verificationSignatures.length === 0) {
+        throw new Error("Nessuna firma da verificare disponibile o completata");
+      }
+      
+      // Per ogni firma da verificare, richiedi un nuovo confronto
+      const promises = verificationSignatures.map(async (signature: any) => {
+        const res = await fetch(`/api/signatures/${signature.id}/compare`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({ projectId: selectedProject }),
+        });
+        
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || "Errore durante il confronto della firma");
+        }
+        
+        return res.json();
+      });
+      
+      // Attendi che tutti i confronti siano completati
+      return Promise.all(promises);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures"] });
+      toast({
+        title: "Successo",
+        description: "Confronto delle firme completato",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Errore",
+        description: `Errore durante il confronto delle firme: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+  
   // Function to render similarity score
   const renderSimilarityScore = (score: number | null) => {
     if (score === null) return null;
@@ -627,12 +687,26 @@ export default function SignaturesPage() {
                 {/* Verification signatures section */}
                 <div className="flex justify-between items-center mb-3">
                   <h3 className="text-lg font-semibold">{t('signatures.verificationSignatures')}</h3>
-                  {!referenceSignatures || referenceSignatures.length === 0 ? (
-                    <div className="flex items-center text-sm text-yellow-600">
-                      <AlertCircle className="h-4 w-4 mr-1" />
-                      {t('signatures.needReferenceFirst')}
-                    </div>
-                  ) : null}
+                  <div className="flex items-center space-x-2">
+                    {signatures && signatures.filter((s: any) => !s.isReference && s.processingStatus === 'completed').length > 0 && 
+                     signatures.filter((s: any) => s.isReference && s.processingStatus === 'completed').length > 0 ? (
+                      <Button 
+                        onClick={() => compareAllSignatures.mutate()}
+                        disabled={compareAllSignatures.isPending}
+                        size="sm"
+                      >
+                        {compareAllSignatures.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {t('signatures.compare')}
+                      </Button>
+                    ) : null}
+                    
+                    {!referenceSignatures || referenceSignatures.length === 0 ? (
+                      <div className="flex items-center text-sm text-yellow-600">
+                        <AlertCircle className="h-4 w-4 mr-1" />
+                        {t('signatures.needReferenceFirst')}
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
                 
                 {signaturesLoading ? (
