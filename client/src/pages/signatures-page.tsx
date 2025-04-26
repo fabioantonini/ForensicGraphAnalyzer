@@ -103,7 +103,10 @@ export default function SignaturesPage() {
     isLoading: signaturesLoading
   } = useQuery<Signature[]>({
     queryKey: ["/api/signature-projects", selectedProject, "signatures"],
-    enabled: !!user && !!selectedProject
+    enabled: !!user && !!selectedProject,
+    onSuccess: (data) => {
+      console.log("Signatures loaded:", data);
+    }
   });
   
   // Query to get reference signatures for selected project
@@ -635,8 +638,7 @@ export default function SignaturesPage() {
               <div className="flex justify-center items-center h-40">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            ) : !signatures || !Array.isArray(signatures) || signatures.length === 0 || 
-                 signatures.every((s: any) => !s.isReference || s.processingStatus !== 'completed') ? (
+            ) : !Array.isArray(signatures) || signatures.filter(s => s.isReference).length === 0 ? (
               <Card className="border-dashed border-2">
                 <CardContent className="flex flex-col items-center justify-center p-6">
                   <div className="rounded-full p-3 bg-primary-100 mb-4">
@@ -653,6 +655,15 @@ export default function SignaturesPage() {
               </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Aggiungiamo un messaggio di debug se ci sono firme di riferimento ma con stato non 'completed' */}
+                {Array.isArray(signatures) && signatures.some(s => s.isReference && s.processingStatus !== 'completed') && (
+                  <div className="col-span-full mb-2 p-2 bg-yellow-100 rounded-md">
+                    <p className="text-sm text-yellow-700">
+                      Ci sono {signatures.filter(s => s.isReference && s.processingStatus !== 'completed').length} firme di riferimento in elaborazione. 
+                      Attendere il completamento per visualizzarle.
+                    </p>
+                  </div>
+                )}
                 {Array.isArray(signatures) && signatures
                   .filter((s: any) => s.isReference)
                   .map((signature: any) => (
@@ -696,8 +707,7 @@ export default function SignaturesPage() {
               <div className="flex justify-center items-center h-40">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            ) : !signatures || !Array.isArray(signatures) || signatures.length === 0 || 
-                 signatures.every((s: any) => s.isReference || s.processingStatus !== 'completed') ? (
+            ) : !Array.isArray(signatures) || signatures.filter(s => !s.isReference).length === 0 ? (
               <Card className="border-dashed border-2">
                 <CardContent className="flex flex-col items-center justify-center p-6">
                   <div className="rounded-full p-3 bg-primary-100 mb-4">
@@ -714,6 +724,15 @@ export default function SignaturesPage() {
               </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Aggiungiamo un messaggio di debug se ci sono firme da verificare ma con stato non 'completed' */}
+                {Array.isArray(signatures) && signatures.some(s => !s.isReference && s.processingStatus !== 'completed') && (
+                  <div className="col-span-full mb-2 p-2 bg-yellow-100 rounded-md">
+                    <p className="text-sm text-yellow-700">
+                      Ci sono {signatures.filter(s => !s.isReference && s.processingStatus !== 'completed').length} firme da verificare in elaborazione. 
+                      Attendere il completamento per visualizzarle.
+                    </p>
+                  </div>
+                )}
                 {Array.isArray(signatures) && signatures
                   .filter((s: any) => !s.isReference)
                   .map((signature: any) => (
