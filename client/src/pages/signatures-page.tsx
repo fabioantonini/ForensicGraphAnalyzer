@@ -106,6 +106,11 @@ export default function SignaturesPage() {
     enabled: !!user && !!selectedProject,
     onSuccess: (data) => {
       console.log("Signatures loaded:", data);
+      if (data && Array.isArray(data)) {
+        console.log("Firme di riferimento:", data.filter(s => s.isReference).length);
+        console.log("Firme da verificare:", data.filter(s => !s.isReference).length);
+        console.log("Status firme:", data.map(s => ({id: s.id, ref: s.isReference, status: s.processingStatus})));
+      }
     }
   });
   
@@ -638,7 +643,7 @@ export default function SignaturesPage() {
               <div className="flex justify-center items-center h-40">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            ) : !Array.isArray(signatures) || signatures.filter(s => s.isReference).length === 0 ? (
+            ) : signatures.length === 0 || (Array.isArray(signatures) && signatures.filter(s => s.isReference).length === 0) ? (
               <Card className="border-dashed border-2">
                 <CardContent className="flex flex-col items-center justify-center p-6">
                   <div className="rounded-full p-3 bg-primary-100 mb-4">
@@ -666,6 +671,7 @@ export default function SignaturesPage() {
                 )}
                 {Array.isArray(signatures) && signatures
                   .filter((s: any) => s.isReference)
+                  .sort((a, b) => a.processingStatus === 'completed' ? -1 : 1) // Mostra prima le firme completate
                   .map((signature: any) => (
                     <Card key={signature.id} className="overflow-hidden">
                       <div className="relative h-48 bg-gray-100">
@@ -707,7 +713,7 @@ export default function SignaturesPage() {
               <div className="flex justify-center items-center h-40">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            ) : !Array.isArray(signatures) || signatures.filter(s => !s.isReference).length === 0 ? (
+            ) : signatures.length === 0 || (Array.isArray(signatures) && signatures.filter(s => !s.isReference).length === 0) ? (
               <Card className="border-dashed border-2">
                 <CardContent className="flex flex-col items-center justify-center p-6">
                   <div className="rounded-full p-3 bg-primary-100 mb-4">
@@ -735,6 +741,7 @@ export default function SignaturesPage() {
                 )}
                 {Array.isArray(signatures) && signatures
                   .filter((s: any) => !s.isReference)
+                  .sort((a, b) => a.processingStatus === 'completed' ? -1 : 1) // Mostra prima le firme completate
                   .map((signature: any) => (
                     <Card key={signature.id} className="overflow-hidden">
                       <div className="relative h-48 bg-gray-100">
