@@ -252,22 +252,49 @@ export function registerSignatureRoutes(router: Router) {
   router.get("/signature-projects/:id/signatures", isAuthenticated, async (req, res) => {
     try {
       const projectId = parseInt(req.params.id);
+      console.log(`[DEBUG] Richiesta firme per progetto ${projectId}`);
+      
       const project = await storage.getSignatureProject(projectId);
       
       if (!project) {
+        console.log(`[DEBUG] Progetto ${projectId} non trovato`);
         return res.status(404).json({ error: 'Progetto non trovato' });
       }
       
       // Verifica che il progetto appartenga all'utente corrente
       if (project.userId !== req.user!.id) {
+        console.log(`[DEBUG] Utente ${req.user!.id} non autorizzato per progetto ${projectId} (proprietario: ${project.userId})`);
         return res.status(403).json({ error: 'Non autorizzato' });
       }
       
       const referenceOnly = req.query.referenceOnly === 'true';
       const signatures = await storage.getProjectSignatures(projectId, referenceOnly);
       
-      res.json(signatures);
+      console.log(`[DEBUG] Trovate ${signatures.length} firme per progetto ${projectId}`);
+      if (signatures.length > 0) {
+        console.log(`[DEBUG] Prima firma: ID=${signatures[0].id}, projectId=${signatures[0].projectId}`);
+      }
+      
+      // Trasforma il risultato in array di oggetti JSON per garantire che tutti i campi siano serializzati
+      const result = signatures.map(sig => ({
+        id: sig.id,
+        projectId: sig.projectId,
+        filename: sig.filename,
+        originalFilename: sig.originalFilename,
+        fileType: sig.fileType,
+        fileSize: sig.fileSize,
+        isReference: sig.isReference,
+        parameters: sig.parameters,
+        processingStatus: sig.processingStatus,
+        comparisonResult: sig.comparisonResult,
+        createdAt: sig.createdAt,
+        updatedAt: sig.updatedAt
+      }));
+      
+      console.log(`[DEBUG] Risposta API: ${signatures.length} firme`);
+      res.json(result);
     } catch (error: any) {
+      console.error(`[DEBUG] Errore nel recupero firme:`, error);
       res.status(500).json({ error: error.message });
     }
   });
