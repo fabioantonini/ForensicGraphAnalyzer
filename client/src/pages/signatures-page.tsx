@@ -105,7 +105,9 @@ export default function SignaturesPage() {
     isLoading: signaturesLoading,
     refetch: refetchSignatures
   } = useQuery<Signature[]>({
-    queryKey: ["/api/signature-projects", selectedProject, "signatures-debug"], // Usa l'endpoint di debug
+    // MODIFICA CRITICA: usa un URL completo per l'endpoint di debug
+    // Non usare più il pattern di generazione delle query key (che mette solo la prima parte in fetch)
+    queryKey: [`/api/signature-projects/${selectedProject}/signatures-debug`],
     enabled: !!user && !!selectedProject,
     staleTime: 0, // Forza sempre il refetch
     refetchOnMount: true, // Ricarica ad ogni montaggio del componente

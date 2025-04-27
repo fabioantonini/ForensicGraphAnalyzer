@@ -67,28 +67,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user!.id;
       console.log(`[DEBUG FORZATO] Utente ${userId} richiede firme per progetto ${projectId}`);
       
-      // Ottieni le firme associate a questo progetto direttamente dal database
-      const signatureResults = await db.select().from(signatures).where(eq(signatures.projectId, projectId));
+      // Esegui query SQL diretta per evitare problemi di mappatura di Drizzle
+      const { rows } = await pool.query(`
+        SELECT * FROM signatures WHERE project_id = $1
+      `, [projectId]);
       
-      console.log(`[DEBUG FORZATO] Trovate ${signatureResults.length} firme per progetto ${projectId}`);
-      if (signatureResults.length > 0) {
-        console.log(`[DEBUG FORZATO] Prima firma:`, signatureResults[0]);
+      console.log(`[DEBUG FORZATO] Trovate ${rows.length} firme per progetto ${projectId}`);
+      if (rows.length > 0) {
+        console.log(`[DEBUG FORZATO] Prima firma:`, JSON.stringify(rows[0]));
       }
       
-      // Trasforma il risultato in array di oggetti JSON
-      const result = signatureResults.map(sig => ({
+      // Trasforma il risultato in array di oggetti JSON con camelCase
+      const result = rows.map(sig => ({
         id: sig.id,
-        projectId: sig.projectId, 
+        projectId: sig.project_id,
         filename: sig.filename,
-        originalFilename: sig.originalFilename,
-        fileType: sig.fileType,
-        fileSize: sig.fileSize,
-        isReference: sig.isReference,
+        originalFilename: sig.original_filename,
+        fileType: sig.file_type,
+        fileSize: sig.file_size,
+        isReference: sig.is_reference,
         parameters: sig.parameters,
-        processingStatus: sig.processingStatus,
-        comparisonResult: sig.comparisonResult,
-        createdAt: sig.createdAt,
-        updatedAt: sig.updatedAt
+        processingStatus: sig.processing_status,
+        comparisonResult: sig.comparison_result,
+        createdAt: sig.created_at,
+        updatedAt: sig.updated_at
       }));
       
       console.log(`[DEBUG FORZATO] Invio risposta con ${result.length} firme`);
