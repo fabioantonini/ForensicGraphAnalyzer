@@ -651,11 +651,32 @@ export default function SignaturesPage() {
                   onClick={() => {
                     const confirmDelete = confirm("Sei sicuro di voler eliminare tutte le firme? Questa operazione ripulirà l'intero progetto.");
                     if (confirmDelete) {
-                      // Disabilita temporaneamente le query automatiche
-                      queryClient.cancelQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures"] });
+                      if (!selectedProject) {
+                        toast({
+                          title: "Errore",
+                          description: "Nessun progetto selezionato",
+                          variant: "destructive"
+                        });
+                        return;
+                      }
                       
-                      // Ripulisci l'intero progetto
-                      fetch(`/api/signature-projects/${selectedProject}/reset`, {
+                      toast({
+                        title: "Elaborazione in corso",
+                        description: "Eliminazione in corso delle firme...",
+                      });
+                      
+                      // Memorizza l'ID del progetto corrente
+                      const projectId = selectedProject;
+                      
+                      // 1. Prima forzare pulizia cache manualmente
+                      queryClient.cancelQueries();
+                      queryClient.setQueryData(
+                        ["/api/signature-projects", projectId, "signatures"],
+                        []
+                      );
+                      
+                      // 2. Chiamare endpoint di pulizia
+                      fetch(`/api/signature-projects/${projectId}/reset`, {
                         method: "POST",
                         headers: {
                           "Content-Type": "application/json",
@@ -669,24 +690,34 @@ export default function SignaturesPage() {
                         return response.json();
                       })
                       .then(async (data) => {
-                        // Prima imposta manualmente i dati a un array vuoto
+                        console.log("Risposta pulizia:", data);
+                        
+                        // 3. Imposta manualmente i dati a un array vuoto
                         queryClient.setQueryData(
-                          ["/api/signature-projects", selectedProject, "signatures"], 
+                          ["/api/signature-projects", projectId, "signatures"], 
                           []
                         );
                         
-                        // Poi forza un aggiornamento completo
-                        queryClient.invalidateQueries({ queryKey: ["/api/signature-projects"] });
-                        await queryClient.invalidateQueries({ 
-                          queryKey: ["/api/signature-projects", selectedProject, "signatures"],
-                          refetchType: 'all'
-                        });
+                        // 4. Invalida tutte le query (molto aggressivo)
+                        queryClient.removeQueries();
+                        queryClient.invalidateQueries();
                         
-                        // Forza anche un refetch esplicito
-                        await refetchSignatures();
+                        // 5. Dopo un piccolo ritardo, forza il refetch
+                        setTimeout(async () => {
+                          // Rifetch delle firme
+                          await refetchSignatures();
+                          
+                          // Rifetch esplicito anche dei progetti
+                          queryClient.invalidateQueries({ queryKey: ["/api/signature-projects"] });
+                          
+                          toast({
+                            title: "Successo",
+                            description: "Tutte le firme sono state eliminate",
+                          });
+                        }, 1000);
                         
                         toast({
-                          title: "Successo",
+                          title: "Pulizia completata",
                           description: data.message || "Tutte le firme sono state eliminate",
                         });
                       })

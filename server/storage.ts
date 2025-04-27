@@ -707,9 +707,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteSignature(id: number): Promise<void> {
-    await db
-      .delete(signatures)
-      .where(eq(signatures.id, id));
+    console.log(`[STORAGE] Eliminazione firma con ID ${id} in corso...`);
+    try {
+      const result = await db
+        .delete(signatures)
+        .where(eq(signatures.id, id))
+        .returning({ deletedId: signatures.id });
+      
+      console.log(`[STORAGE] Eliminazione firma ${id} completata:`, result);
+      
+      if (!result || result.length === 0) {
+        console.warn(`[STORAGE] Firma ${id} non trovata o già eliminata`);
+      }
+    } catch (error) {
+      console.error(`[STORAGE] Errore durante l'eliminazione della firma ${id}:`, error);
+      throw error;
+    }
   }
 
   // User methods
