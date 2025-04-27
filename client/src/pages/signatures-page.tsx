@@ -632,7 +632,47 @@ export default function SignaturesPage() {
           {/* Debugging Info */}
           <Card className="bg-blue-50 mb-6 border border-blue-200">
             <CardContent className="p-4">
-              <h4 className="text-sm font-semibold text-blue-800 mb-2">Debug Info:</h4>
+              <div className="flex justify-between items-start">
+                <h4 className="text-sm font-semibold text-blue-800 mb-2">Debug Info:</h4>
+                <Button 
+                  variant="destructive" 
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => {
+                    if (Array.isArray(signatures) && signatures.length > 0) {
+                      const confirmDelete = confirm("Sei sicuro di voler eliminare tutte le firme in questo progetto?");
+                      if (confirmDelete) {
+                        // Delete each signature
+                        const deletePromises = signatures.map(s => 
+                          deleteSignature.mutateAsync(s.id)
+                        );
+                        
+                        Promise.all(deletePromises)
+                          .then(() => {
+                            toast({
+                              title: "Successo",
+                              description: "Tutte le firme sono state eliminate",
+                            });
+                          })
+                          .catch(error => {
+                            toast({
+                              title: "Errore",
+                              description: `Si è verificato un errore: ${error.message}`,
+                              variant: "destructive"
+                            });
+                          });
+                      }
+                    } else {
+                      toast({
+                        title: "Info",
+                        description: "Non ci sono firme da eliminare",
+                      });
+                    }
+                  }}
+                >
+                  Elimina tutte le firme
+                </Button>
+              </div>
               <pre className="text-xs bg-white p-2 rounded overflow-auto max-h-32">
                 {JSON.stringify({
                   totalSignatures: Array.isArray(signatures) ? signatures.length : 0,
@@ -733,12 +773,15 @@ export default function SignaturesPage() {
             ) : (
               <div>
                 {/* Messaggio se ci sono firme da verificare in elaborazione */}
-                {Array.isArray(signatures) && signatures.some((s: any) => !s.isReference && s.processingStatus !== 'completed') && (
-                  <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-800 text-sm">
-                    Ci sono {signatures.filter((s: any) => !s.isReference && s.processingStatus !== 'completed').length} firme da verificare in elaborazione. 
-                    Attendere il completamento per visualizzare il risultato della verifica.
-                  </div>
-                )}
+                {Array.isArray(signatures) && 
+                  signatures.length > 0 && 
+                  signatures.some((s: any) => !s.isReference && s.processingStatus !== 'completed') && (
+                    <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-800 text-sm">
+                      Ci sono {signatures.filter((s: any) => !s.isReference && s.processingStatus !== 'completed').length} firme da verificare in elaborazione. 
+                      Attendere il completamento per visualizzare il risultato della verifica.
+                    </div>
+                  )
+                }
                 
                 {Array.isArray(signatures) && signatures.filter((s: any) => !s.isReference).length === 0 ? (
                   <Card className="border-dashed border-2">
