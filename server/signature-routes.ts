@@ -33,6 +33,10 @@ const upload = multer({
 
 // Middleware per verificare l'autenticazione
 const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
+  console.log('Session ID:', req.sessionID);  
+  console.log('Is authenticated?', req.isAuthenticated());
+  console.log('User:', req.user);
+  
   if (req.isAuthenticated()) {
     return next();
   }

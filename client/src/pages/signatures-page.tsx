@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "react-i18next";
 import { 
@@ -104,26 +104,6 @@ export default function SignaturesPage() {
   } = useQuery<Signature[]>({
     queryKey: ["/api/signature-projects", selectedProject, "signatures"],
     enabled: !!user && !!selectedProject,
-    onSuccess: (data) => {
-      console.log("Signatures loaded:", data);
-      if (data && Array.isArray(data)) {
-        console.log("Firme di riferimento:", data.filter(s => s.isReference).length);
-        console.log("Firme da verificare:", data.filter(s => !s.isReference).length);
-        console.log("Status firme:", data.map(s => ({id: s.id, ref: s.isReference, status: s.processingStatus})));
-      }
-    }
-  });
-  
-  // Query to get reference signatures for selected project
-  const { 
-    data: referenceSignatures
-  } = useQuery({
-    queryKey: ["/api/signature-projects", selectedProject, "signatures", "reference"],
-    queryFn: async () => {
-      const res = await apiRequest("GET", `/api/signature-projects/${selectedProject}/signatures?referenceOnly=true`);
-      return res.json();
-    },
-    enabled: !!user && !!selectedProject,
   });
   
   // Mutation to create new project
@@ -171,7 +151,6 @@ export default function SignaturesPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures", "reference"] });
       referenceForm.reset();
       setIsUploadReferenceOpen(false);
       toast({
@@ -258,7 +237,6 @@ export default function SignaturesPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures", "reference"] });
       toast({
         title: "Successo",
         description: "Firma eliminata con successo",
@@ -484,37 +462,37 @@ export default function SignaturesPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           {projects.map((project) => (
             <Card 
               key={project.id} 
-              className={`cursor-pointer hover:shadow-md transition-shadow ${
-                selectedProject === project.id ? 'ring-2 ring-primary' : ''
+              className={`cursor-pointer hover:border-primary transition-colors ${
+                selectedProject === project.id ? 'border-2 border-primary' : ''
               }`}
               onClick={() => setSelectedProject(project.id)}
             >
               <CardHeader className="pb-2">
                 <div className="flex justify-between items-start">
-                  <CardTitle className="text-xl">{project.name}</CardTitle>
+                  <CardTitle className="text-lg">{project.name}</CardTitle>
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                    className="h-7 w-7"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleDeleteProject(project.id);
                     }}
                   >
-                    <Trash2 className="h-5 w-5" />
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
-                {project.description && (
-                  <CardDescription>{project.description}</CardDescription>
-                )}
+                <CardDescription>
+                  {project.description || t('signatures.noDescription')}
+                </CardDescription>
               </CardHeader>
               <CardFooter className="pt-2">
-                <p className="text-sm text-muted-foreground">
-                  Creato: {new Date(project.createdAt).toLocaleDateString()}
+                <p className="text-xs text-muted-foreground">
+                  {new Date(project.createdAt).toLocaleDateString()}
                 </p>
               </CardFooter>
             </Card>
@@ -522,11 +500,11 @@ export default function SignaturesPage() {
         </div>
       )}
       
-      {/* Selected project content */}
+      {/* Selected project */}
       {selectedProject && (
-        <div className="mt-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold">
+        <div className="mt-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-semibold">
               {projects.find(p => p.id === selectedProject)?.name}
             </h2>
             <div className="flex space-x-2">
@@ -549,15 +527,17 @@ export default function SignaturesPage() {
                       <FormField
                         control={referenceForm.control}
                         name="file"
-                        render={({ field: { onChange, ...rest } }) => (
+                        render={({ field: { onChange, onBlur, name, ref, value } }) => (
                           <FormItem>
                             <FormLabel>{t('signatures.selectFile')}</FormLabel>
                             <FormControl>
-                              <input 
-                                type="file" 
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                onChange={(e) => onChange(e.target.files)}
+                              <Input
+                                type="file"
                                 accept="image/*"
+                                onChange={onChange}
+                                onBlur={onBlur}
+                                name={name}
+                                ref={ref}
                               />
                             </FormControl>
                             <FormMessage />
@@ -580,7 +560,7 @@ export default function SignaturesPage() {
               
               <Dialog open={isUploadVerifyOpen} onOpenChange={setIsUploadVerifyOpen}>
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button variant="outline">
                     <Upload className="h-4 w-4 mr-2" />
                     {t('signatures.uploadVerify')}
                   </Button>
@@ -597,15 +577,17 @@ export default function SignaturesPage() {
                       <FormField
                         control={verifyForm.control}
                         name="file"
-                        render={({ field: { onChange, ...rest } }) => (
+                        render={({ field: { onChange, onBlur, name, ref } }) => (
                           <FormItem>
                             <FormLabel>{t('signatures.selectFile')}</FormLabel>
                             <FormControl>
-                              <input 
-                                type="file" 
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                onChange={(e) => onChange(e.target.files)}
+                              <Input
+                                type="file"
                                 accept="image/*"
+                                onChange={onChange}
+                                onBlur={onBlur}
+                                name={name}
+                                ref={ref}
                               />
                             </FormControl>
                             <FormMessage />
@@ -627,7 +609,7 @@ export default function SignaturesPage() {
               </Dialog>
               
               <Button 
-                variant="secondary"
+                variant="default"
                 onClick={() => compareAllSignatures.mutate()}
                 disabled={compareAllSignatures.isPending}
               >
@@ -637,70 +619,95 @@ export default function SignaturesPage() {
             </div>
           </div>
           
+          {/* Debugging Info */}
+          <Card className="bg-blue-50 mb-6 border border-blue-200">
+            <CardContent className="p-4">
+              <h4 className="text-sm font-semibold text-blue-800 mb-2">Debug Info:</h4>
+              <pre className="text-xs bg-white p-2 rounded overflow-auto max-h-32">
+                {JSON.stringify({
+                  totalSignatures: Array.isArray(signatures) ? signatures.length : 0,
+                  referenceSignatures: Array.isArray(signatures) ? signatures.filter((s: any) => s.isReference).length : 0,
+                  verifySignatures: Array.isArray(signatures) ? signatures.filter((s: any) => !s.isReference).length : 0,
+                  signatureDetails: Array.isArray(signatures) ? signatures.map((s: any) => ({
+                    id: s.id,
+                    filename: s.filename,
+                    type: s.isReference ? 'reference' : 'verify',
+                    status: s.processingStatus
+                  })) : []
+                }, null, 2)}
+              </pre>
+            </CardContent>
+          </Card>
+          
           <div className="mb-6">
             <h3 className="text-xl font-semibold mb-3">{t('signatures.referenceSignatures')}</h3>
             {signaturesLoading ? (
               <div className="flex justify-center items-center h-40">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            ) : signatures.length === 0 || (Array.isArray(signatures) && signatures.filter(s => s.isReference).length === 0) ? (
-              <Card className="border-dashed border-2">
-                <CardContent className="flex flex-col items-center justify-center p-6">
-                  <div className="rounded-full p-3 bg-primary-100 mb-4">
-                    <AlertCircle className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="text-lg font-medium mb-2">{t('signatures.noReferenceSignatures')}</h3>
-                  <p className="text-center text-sm text-muted-foreground mb-4">
-                    {t('signatures.noReferenceSignaturesDescription')}
-                  </p>
-                  <Button onClick={() => setIsUploadReferenceOpen(true)}>
-                    {t('signatures.uploadFirstReference')}
-                  </Button>
-                </CardContent>
-              </Card>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Aggiungiamo un messaggio di debug se ci sono firme di riferimento ma con stato non 'completed' */}
-                {Array.isArray(signatures) && signatures.some(s => s.isReference && s.processingStatus !== 'completed') && (
-                  <div className="col-span-full mb-2 p-2 bg-yellow-100 rounded-md">
-                    <p className="text-sm text-yellow-700">
-                      Ci sono {signatures.filter(s => s.isReference && s.processingStatus !== 'completed').length} firme di riferimento in elaborazione. 
-                      Attendere il completamento per visualizzarle.
-                    </p>
+              <div>
+                {/* Messaggio se ci sono firme di riferimento in elaborazione */}
+                {Array.isArray(signatures) && signatures.some((s: any) => s.isReference && s.processingStatus !== 'completed') && (
+                  <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-800 text-sm">
+                    Ci sono {signatures.filter((s: any) => s.isReference && s.processingStatus !== 'completed').length} firme di riferimento in elaborazione. 
+                    Attendere il completamento per visualizzarle completamente.
                   </div>
                 )}
-                {Array.isArray(signatures) && signatures
-                  .filter((s: any) => s.isReference)
-                  .sort((a, b) => a.processingStatus === 'completed' ? -1 : 1) // Mostra prima le firme completate
-                  .map((signature: any) => (
-                    <Card key={signature.id} className="overflow-hidden">
-                      <div className="relative h-48 bg-gray-100">
-                        <img 
-                          src={`/uploads/${signature.filename}`} 
-                          alt={signature.originalFilename}
-                          className="w-full h-full object-contain p-2"
-                        />
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          className="absolute top-2 right-2 h-7 w-7 opacity-80 hover:opacity-100"
-                          onClick={() => handleDeleteSignature(signature.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                
+                {Array.isArray(signatures) && signatures.filter((s: any) => s.isReference).length === 0 ? (
+                  <Card className="border-dashed border-2">
+                    <CardContent className="flex flex-col items-center justify-center p-6">
+                      <div className="rounded-full p-3 bg-primary-100 mb-4">
+                        <AlertCircle className="h-6 w-6 text-primary" />
                       </div>
-                      <CardContent className="p-3">
-                        <p className="text-sm truncate" title={signature.originalFilename}>
-                          {signature.originalFilename}
-                        </p>
-                        <div className="flex items-center mt-1">
-                          <Badge className={getStatusColor(signature.processingStatus)}>
-                            {signature.processingStatus}
-                          </Badge>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                      <h3 className="text-lg font-medium mb-2">{t('signatures.noReferenceSignatures')}</h3>
+                      <p className="text-center text-sm text-muted-foreground mb-4">
+                        {t('signatures.noReferenceSignaturesDescription')}
+                      </p>
+                      <Button onClick={() => setIsUploadReferenceOpen(true)}>
+                        {t('signatures.uploadFirstReference')}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {Array.isArray(signatures) && 
+                     signatures
+                      .filter((s: any) => s.isReference)
+                      .sort((a: any, b: any) => a.processingStatus === 'completed' ? -1 : 1)
+                      .map((signature: any) => (
+                        <Card key={signature.id} className="overflow-hidden">
+                          <div className="relative h-48 bg-gray-100">
+                            <img 
+                              src={`/uploads/${signature.filename}`} 
+                              alt={signature.originalFilename || 'Signature'}
+                              className="w-full h-full object-contain p-2"
+                            />
+                            <Button
+                              variant="destructive"
+                              size="icon"
+                              className="absolute top-2 right-2 h-7 w-7 opacity-80 hover:opacity-100"
+                              onClick={() => handleDeleteSignature(signature.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <CardContent className="p-3">
+                            <p className="text-sm truncate" title={signature.originalFilename}>
+                              {signature.originalFilename || 'Unknown File'}
+                            </p>
+                            <div className="flex items-center mt-1">
+                              <Badge className={getStatusColor(signature.processingStatus)}>
+                                {signature.processingStatus}
+                              </Badge>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))
+                    }
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -713,65 +720,70 @@ export default function SignaturesPage() {
               <div className="flex justify-center items-center h-40">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            ) : signatures.length === 0 || (Array.isArray(signatures) && signatures.filter(s => !s.isReference).length === 0) ? (
-              <Card className="border-dashed border-2">
-                <CardContent className="flex flex-col items-center justify-center p-6">
-                  <div className="rounded-full p-3 bg-primary-100 mb-4">
-                    <AlertCircle className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="text-lg font-medium mb-2">{t('signatures.noVerifySignatures')}</h3>
-                  <p className="text-center text-sm text-muted-foreground mb-4">
-                    {t('signatures.noVerifySignaturesDescription')}
-                  </p>
-                  <Button onClick={() => setIsUploadVerifyOpen(true)}>
-                    {t('signatures.uploadFirstVerify')}
-                  </Button>
-                </CardContent>
-              </Card>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Aggiungiamo un messaggio di debug se ci sono firme da verificare ma con stato non 'completed' */}
-                {Array.isArray(signatures) && signatures.some(s => !s.isReference && s.processingStatus !== 'completed') && (
-                  <div className="col-span-full mb-2 p-2 bg-yellow-100 rounded-md">
-                    <p className="text-sm text-yellow-700">
-                      Ci sono {signatures.filter(s => !s.isReference && s.processingStatus !== 'completed').length} firme da verificare in elaborazione. 
-                      Attendere il completamento per visualizzarle.
-                    </p>
+              <div>
+                {/* Messaggio se ci sono firme da verificare in elaborazione */}
+                {Array.isArray(signatures) && signatures.some((s: any) => !s.isReference && s.processingStatus !== 'completed') && (
+                  <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-800 text-sm">
+                    Ci sono {signatures.filter((s: any) => !s.isReference && s.processingStatus !== 'completed').length} firme da verificare in elaborazione. 
+                    Attendere il completamento per visualizzare il risultato della verifica.
                   </div>
                 )}
-                {Array.isArray(signatures) && signatures
-                  .filter((s: any) => !s.isReference)
-                  .sort((a, b) => a.processingStatus === 'completed' ? -1 : 1) // Mostra prima le firme completate
-                  .map((signature: any) => (
-                    <Card key={signature.id} className="overflow-hidden">
-                      <div className="relative h-48 bg-gray-100">
-                        <img 
-                          src={`/uploads/${signature.filename}`} 
-                          alt={signature.originalFilename}
-                          className="w-full h-full object-contain p-2"
-                        />
-                        <Button
-                          variant="destructive"
-                          size="icon"
-                          className="absolute top-2 right-2 h-7 w-7 opacity-80 hover:opacity-100"
-                          onClick={() => handleDeleteSignature(signature.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                
+                {Array.isArray(signatures) && signatures.filter((s: any) => !s.isReference).length === 0 ? (
+                  <Card className="border-dashed border-2">
+                    <CardContent className="flex flex-col items-center justify-center p-6">
+                      <div className="rounded-full p-3 bg-primary-100 mb-4">
+                        <AlertCircle className="h-6 w-6 text-primary" />
                       </div>
-                      <CardContent className="p-3">
-                        <p className="text-sm truncate" title={signature.originalFilename}>
-                          {signature.originalFilename}
-                        </p>
-                        <div className="flex items-center mt-1">
-                          <Badge className={getStatusColor(signature.processingStatus)}>
-                            {signature.processingStatus}
-                          </Badge>
-                        </div>
-                        {signature.processingStatus === 'completed' && renderSimilarityScore(signature.similarityScore)}
-                      </CardContent>
-                    </Card>
-                  ))}
+                      <h3 className="text-lg font-medium mb-2">{t('signatures.noVerifySignatures')}</h3>
+                      <p className="text-center text-sm text-muted-foreground mb-4">
+                        {t('signatures.noVerifySignaturesDescription')}
+                      </p>
+                      <Button onClick={() => setIsUploadVerifyOpen(true)}>
+                        {t('signatures.uploadFirstVerify')}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {Array.isArray(signatures) && 
+                     signatures
+                      .filter((s: any) => !s.isReference)
+                      .sort((a: any, b: any) => a.processingStatus === 'completed' ? -1 : 1)
+                      .map((signature: any) => (
+                        <Card key={signature.id} className="overflow-hidden">
+                          <div className="relative h-48 bg-gray-100">
+                            <img 
+                              src={`/uploads/${signature.filename}`} 
+                              alt={signature.originalFilename || 'Signature'}
+                              className="w-full h-full object-contain p-2"
+                            />
+                            <Button
+                              variant="destructive"
+                              size="icon"
+                              className="absolute top-2 right-2 h-7 w-7 opacity-80 hover:opacity-100"
+                              onClick={() => handleDeleteSignature(signature.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <CardContent className="p-3">
+                            <p className="text-sm truncate" title={signature.originalFilename}>
+                              {signature.originalFilename || 'Unknown File'}
+                            </p>
+                            <div className="flex items-center mt-1">
+                              <Badge className={getStatusColor(signature.processingStatus)}>
+                                {signature.processingStatus}
+                              </Badge>
+                            </div>
+                            {signature.processingStatus === 'completed' && renderSimilarityScore(signature.similarityScore)}
+                          </CardContent>
+                        </Card>
+                      ))
+                    }
+                  </div>
+                )}
               </div>
             )}
           </div>
