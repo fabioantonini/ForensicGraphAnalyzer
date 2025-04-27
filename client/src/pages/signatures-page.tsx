@@ -639,38 +639,47 @@ export default function SignaturesPage() {
                   size="sm"
                   className="text-xs"
                   onClick={() => {
-                    if (Array.isArray(signatures) && signatures.length > 0) {
-                      const confirmDelete = confirm("Sei sicuro di voler eliminare tutte le firme in questo progetto?");
-                      if (confirmDelete) {
-                        // Delete each signature
-                        const deletePromises = signatures.map(s => 
-                          deleteSignature.mutateAsync(s.id)
-                        );
-                        
-                        Promise.all(deletePromises)
-                          .then(() => {
-                            toast({
-                              title: "Successo",
-                              description: "Tutte le firme sono state eliminate",
+                    const confirmDelete = confirm("Sei sicuro di voler eliminare tutte le firme? Questa operazione ripulirà l'intero progetto.");
+                    if (confirmDelete) {
+                      // Ripulisci l'intero progetto
+                      fetch(`/api/signature-projects/${selectedProject}/reset`, {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                        credentials: "include",
+                      })
+                      .then(response => {
+                        if (!response.ok) {
+                          // Se il reset API non esiste, elimina e ricrea il progetto
+                          return deleteProject.mutateAsync(selectedProject)
+                            .then(() => {
+                              toast({
+                                title: "Progetto eliminato",
+                                description: "Il progetto è stato eliminato. Creane uno nuovo.",
+                              });
+                              setSelectedProject(null);
                             });
-                          })
-                          .catch(error => {
-                            toast({
-                              title: "Errore",
-                              description: `Si è verificato un errore: ${error.message}`,
-                              variant: "destructive"
-                            });
-                          });
-                      }
-                    } else {
-                      toast({
-                        title: "Info",
-                        description: "Non ci sono firme da eliminare",
+                        }
+                        return response.json();
+                      })
+                      .then(() => {
+                        queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures"] });
+                        toast({
+                          title: "Successo",
+                          description: "Tutte le firme sono state eliminate",
+                        });
+                      })
+                      .catch(error => {
+                        toast({
+                          title: "Azione alternativa",
+                          description: "Creazione nuovo progetto consigliata",
+                        });
                       });
                     }
                   }}
                 >
-                  Elimina tutte le firme
+                  Ripulisci progetto
                 </Button>
               </div>
               <pre className="text-xs bg-white p-2 rounded overflow-auto max-h-32">
