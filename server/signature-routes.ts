@@ -380,6 +380,54 @@ export function registerSignatureRoutes(router: Router) {
       res.status(500).json({ error: error.message });
     }
   });
+  
+  // Endpoint per ripulire tutte le firme di un progetto
+  router.post("/signature-projects/:id/reset", isAuthenticated, async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const project = await storage.getSignatureProject(projectId);
+      
+      if (!project) {
+        return res.status(404).json({ error: 'Progetto non trovato' });
+      }
+      
+      if (project.userId !== req.user!.id) {
+        return res.status(403).json({ error: 'Non autorizzato' });
+      }
+      
+      // Ottieni tutte le firme del progetto
+      const signatures = await storage.getProjectSignatures(projectId);
+      
+      // Elimina ogni firma e il suo file
+      for (const signature of signatures) {
+        try {
+          // Elimina il file se esiste
+          if (signature.filename) {
+            const filePath = path.join('./uploads', signature.filename);
+            await fs.access(filePath).then(() => 
+              fs.unlink(filePath)
+            ).catch(err => {
+              console.log(`File non trovato o non accessibile: ${filePath}`);
+            });
+          }
+          
+          // Elimina il record della firma
+          await storage.deleteSignature(signature.id);
+        } catch (error) {
+          console.error(`Errore durante l'eliminazione della firma ${signature.id}:`, error);
+          // Continua con le altre firme anche se questa fallisce
+        }
+      }
+      
+      res.json({ 
+        success: true, 
+        message: `Rimosse ${signatures.length} firme dal progetto` 
+      });
+    } catch (error: any) {
+      console.error("Errore durante il reset del progetto:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
 }
 
 // Funzioni ausiliarie per elaborazione asincrona
