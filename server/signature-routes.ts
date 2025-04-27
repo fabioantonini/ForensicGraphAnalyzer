@@ -395,36 +395,80 @@ export function registerSignatureRoutes(router: Router) {
         return res.status(403).json({ error: 'Non autorizzato' });
       }
       
-      // Ottieni tutte le firme del progetto
-      const signatures = await storage.getProjectSignatures(projectId);
+      console.log(`[CLEANUP] Iniziata pulizia completa del progetto ${projectId}...`);
       
-      // Elimina ogni firma e il suo file
+      // Ottieni tutte le firme del progetto
+      let signatures = await storage.getProjectSignatures(projectId);
+      console.log(`[CLEANUP] Trovate ${signatures.length} firme da eliminare`);
+      
+      // Implementazione migliorata con due passaggi separati:
+      // 1. Prima eliminiamo tutti i file fisici
       for (const signature of signatures) {
         try {
-          // Elimina il file se esiste
           if (signature.filename) {
             const filePath = path.join('./uploads', signature.filename);
-            await fs.access(filePath).then(() => 
-              fs.unlink(filePath)
-            ).catch(err => {
-              console.log(`File non trovato o non accessibile: ${filePath}`);
-            });
+            try {
+              await fs.access(filePath);
+              await fs.unlink(filePath);
+              console.log(`[CLEANUP] File eliminato: ${filePath}`);
+            } catch (err) {
+              console.log(`[CLEANUP] File non trovato: ${filePath}`);
+            }
           }
-          
-          // Elimina il record della firma
-          await storage.deleteSignature(signature.id);
         } catch (error) {
-          console.error(`Errore durante l'eliminazione della firma ${signature.id}:`, error);
-          // Continua con le altre firme anche se questa fallisce
+          console.error(`[CLEANUP] Errore eliminando file per firma ${signature.id}:`, error);
         }
+      }
+      
+      // 2. Poi eliminiamo tutti i record dal database
+      for (const signature of signatures) {
+        try {
+          await storage.deleteSignature(signature.id);
+          console.log(`[CLEANUP] Record firma eliminato: ${signature.id}`);
+        } catch (error) {
+          console.error(`[CLEANUP] Errore eliminando record firma ${signature.id}:`, error);
+        }
+      }
+      
+      // 3. Verifica che non ci siano firme residue
+      signatures = await storage.getProjectSignatures(projectId);
+      if (signatures.length > 0) {
+        console.warn(`[CLEANUP] ⚠️ Ci sono ancora ${signatures.length} firme residue nel progetto!`);
+        
+        // Secondo tentativo di pulizia forzata
+        console.log(`[CLEANUP] Esecuzione secondo passaggio di pulizia forzata...`);
+        for (const signature of signatures) {
+          try {
+            console.log(`[CLEANUP] Eliminazione forzata della firma ${signature.id}`);
+            if (signature.filename) {
+              try {
+                await fs.unlink(path.join('./uploads', signature.filename)).catch(() => {});
+              } catch (e) {}
+            }
+            await storage.deleteSignature(signature.id);
+          } catch (error) {
+            console.error(`[CLEANUP] Impossibile eliminare forzatamente la firma ${signature.id}:`, error);
+          }
+        }
+        
+        // Ultima verifica
+        const finalCheck = await storage.getProjectSignatures(projectId);
+        console.log(`[CLEANUP] Dopo pulizia forzata: ${finalCheck.length} firme rimaste`);
+        
+        if (finalCheck.length > 0) {
+          console.log(`[CLEANUP] IDs firme rimanenti: ${finalCheck.map(s => s.id).join(', ')}`);
+        }
+      } else {
+        console.log(`[CLEANUP] ✓ Progetto ripulito con successo: nessuna firma rimasta`);
       }
       
       res.json({ 
         success: true, 
-        message: `Rimosse ${signatures.length} firme dal progetto` 
+        message: `Rimosse ${signatures.length} firme dal progetto`,
+        remainingCount: signatures.length
       });
     } catch (error: any) {
-      console.error("Errore durante il reset del progetto:", error);
+      console.error("[CLEANUP] Errore durante il reset del progetto:", error);
       res.status(500).json({ error: error.message });
     }
   });
