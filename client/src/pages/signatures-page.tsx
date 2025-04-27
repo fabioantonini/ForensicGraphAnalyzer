@@ -102,10 +102,13 @@ export default function SignaturesPage() {
   // Query to get signatures for selected project
   const { 
     data: signatures = [],
-    isLoading: signaturesLoading
+    isLoading: signaturesLoading,
+    refetch: refetchSignatures
   } = useQuery<Signature[]>({
     queryKey: ["/api/signature-projects", selectedProject, "signatures"],
     enabled: !!user && !!selectedProject,
+    staleTime: 0, // Forza sempre il refetch
+    refetchOnMount: true // Ricarica ad ogni montaggio del componente
   });
   
   // Mutation to create new project
@@ -648,6 +651,9 @@ export default function SignaturesPage() {
                   onClick={() => {
                     const confirmDelete = confirm("Sei sicuro di voler eliminare tutte le firme? Questa operazione ripulirà l'intero progetto.");
                     if (confirmDelete) {
+                      // Disabilita temporaneamente le query automatiche
+                      queryClient.cancelQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures"] });
+                      
                       // Ripulisci l'intero progetto
                       fetch(`/api/signature-projects/${selectedProject}/reset`, {
                         method: "POST",
@@ -662,18 +668,27 @@ export default function SignaturesPage() {
                         }
                         return response.json();
                       })
-                      .then((data) => {
-                        // Forza un aggiornamento completo dei dati
-                        queryClient.invalidateQueries({ queryKey: ["/api/signature-projects"] });
-                        queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures"] });
+                      .then(async (data) => {
+                        // Prima imposta manualmente i dati a un array vuoto
+                        queryClient.setQueryData(
+                          ["/api/signature-projects", selectedProject, "signatures"], 
+                          []
+                        );
                         
-                        // Ritardo per consentire al server di completare eventuali operazioni
-                        setTimeout(() => {
-                          toast({
-                            title: "Successo",
-                            description: data.message || "Tutte le firme sono state eliminate",
-                          });
-                        }, 500);
+                        // Poi forza un aggiornamento completo
+                        queryClient.invalidateQueries({ queryKey: ["/api/signature-projects"] });
+                        await queryClient.invalidateQueries({ 
+                          queryKey: ["/api/signature-projects", selectedProject, "signatures"],
+                          refetchType: 'all'
+                        });
+                        
+                        // Forza anche un refetch esplicito
+                        await refetchSignatures();
+                        
+                        toast({
+                          title: "Successo",
+                          description: data.message || "Tutte le firme sono state eliminate",
+                        });
                       })
                       .catch(error => {
                         console.error("Errore durante il reset del progetto:", error);
