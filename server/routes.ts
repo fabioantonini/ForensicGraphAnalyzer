@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import multer from "multer";
-import { Document, User, insertQuerySchema } from "@shared/schema";
+import { Document, User, insertQuerySchema, signatures } from "@shared/schema";
 import { 
   isValidFileType, 
   generateFilename, 
@@ -22,6 +22,8 @@ import {
 import { chatWithRAG, validateAPIKey } from "./openai";
 import { log } from "./vite";
 import { registerSignatureRoutes } from "./signature-routes";
+import { eq } from "drizzle-orm";
+import { db } from "./db";
 
 // Initialize multer for file uploads
 const upload = multer({
@@ -43,11 +45,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Sets up /api/register, /api/login, /api/logout, /api/user
   setupAuth(app);
   
-  // Register signature routes
-  const router = Router();
-  registerSignatureRoutes(router);
-  app.use("/api", router);
-
   // Middleware to check if user is authenticated
   const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
     if (req.isAuthenticated()) {
@@ -55,6 +52,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     res.status(401).json({ message: "Unauthorized" });
   };
+
+  // Register signature routes
+  const router = Router();
+  registerSignatureRoutes(router);
+  
+  // ROUTE DI DEBUG PER RISOLVERE IL PROBLEMA DELLE FIRME
+  router.get("/signature-projects/:id/signatures-debug", isAuthenticated, async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      console.log(`[DEBUG FORZATO] Richiesta firme per progetto ${projectId}`);
+      
+      // Verifica credenziali utente
+      const userId = req.user!.id;
+      console.log(`[DEBUG FORZATO] Utente ${userId} richiede firme per progetto ${projectId}`);
+      
+      // Ottieni le firme associate a questo progetto direttamente dal database
+      const signatureResults = await db.select().from(signatures).where(eq(signatures.projectId, projectId));
+      
+      console.log(`[DEBUG FORZATO] Trovate ${signatureResults.length} firme per progetto ${projectId}`);
+      if (signatureResults.length > 0) {
+        console.log(`[DEBUG FORZATO] Prima firma:`, signatureResults[0]);
+      }
+      
+      // Trasforma il risultato in array di oggetti JSON
+      const result = signatureResults.map(sig => ({
+        id: sig.id,
+        projectId: sig.projectId, 
+        filename: sig.filename,
+        originalFilename: sig.originalFilename,
+        fileType: sig.fileType,
+        fileSize: sig.fileSize,
+        isReference: sig.isReference,
+        parameters: sig.parameters,
+        processingStatus: sig.processingStatus,
+        comparisonResult: sig.comparisonResult,
+        createdAt: sig.createdAt,
+        updatedAt: sig.updatedAt
+      }));
+      
+      console.log(`[DEBUG FORZATO] Invio risposta con ${result.length} firme`);
+      res.json(result);
+    } catch (error: any) {
+      console.error(`[DEBUG FORZATO] Errore:`, error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  app.use("/api", router);
 
   // Get user stats
   app.get("/api/stats", isAuthenticated, async (req, res, next) => {

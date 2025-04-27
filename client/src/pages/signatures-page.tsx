@@ -105,7 +105,7 @@ export default function SignaturesPage() {
     isLoading: signaturesLoading,
     refetch: refetchSignatures
   } = useQuery<Signature[]>({
-    queryKey: ["/api/signature-projects", selectedProject, "signatures"],
+    queryKey: ["/api/signature-projects", selectedProject, "signatures-debug"], // Usa l'endpoint di debug
     enabled: !!user && !!selectedProject,
     staleTime: 0, // Forza sempre il refetch
     refetchOnMount: true, // Ricarica ad ogni montaggio del componente
@@ -186,7 +186,9 @@ export default function SignaturesPage() {
       return res.json();
     },
     onSuccess: () => {
+      // Usa entrambi i query key per il route standard e per il route di debug
       queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures-debug"] });
       referenceForm.reset();
       setIsUploadReferenceOpen(false);
       toast({
@@ -223,7 +225,9 @@ export default function SignaturesPage() {
       return res.json();
     },
     onSuccess: () => {
+      // Usa entrambi i query key per il route standard e per il route di debug
       queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures-debug"] });
       verifyForm.reset();
       setIsUploadVerifyOpen(false);
       toast({
