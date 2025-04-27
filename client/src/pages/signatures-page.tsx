@@ -119,12 +119,36 @@ export default function SignaturesPage() {
         return [];
       }
       
+      // Log dettagliato di ogni firma ricevuta
+      console.log("Firme ricevute dal server:", JSON.stringify(data, null, 2));
+      
       // Solo firme che hanno effettivamente un projectId che corrisponde al progetto selezionato
-      const validSignatures = data.filter(s => 
-        s && typeof s === 'object' && 'projectId' in s && s.projectId === selectedProject
-      );
+      const validSignatures = data.filter(s => {
+        // Log dettagliato su ogni firma e il motivo per cui potrebbe essere filtrata
+        const valid = s && typeof s === 'object' && 'projectId' in s;
+        
+        if (!valid) {
+          console.log(`Firma invalida (manca projectId):`, s);
+          return false;
+        }
+        
+        const projectIdMatch = s.projectId === selectedProject;
+        
+        if (!projectIdMatch) {
+          console.log(`Firma con projectId errato: ${s.projectId} vs atteso ${selectedProject}`);
+        }
+        
+        return projectIdMatch;
+      });
       
       console.log(`Debug firme: ricevute ${data.length}, valide ${validSignatures.length}`);
+      
+      if (validSignatures.length === 0 && data.length > 0) {
+        // Se riceviamo firme ma nessuna è valida, disabilita temporaneamente il filtro
+        // per scopi di debugging
+        console.log("⚠️ ATTENZIONE: Ritorno tutte le firme senza filtro per debug!");
+        return data;
+      }
       
       return validSignatures;
     }
