@@ -658,30 +658,60 @@ export default function SignaturesPage() {
                       })
                       .then(response => {
                         if (!response.ok) {
-                          // Se il reset API non esiste, elimina e ricrea il progetto
-                          return deleteProject.mutateAsync(selectedProject)
-                            .then(() => {
-                              toast({
-                                title: "Progetto eliminato",
-                                description: "Il progetto è stato eliminato. Creane uno nuovo.",
-                              });
-                              setSelectedProject(null);
-                            });
+                          throw new Error("Errore nell'endpoint di reset");
                         }
                         return response.json();
                       })
-                      .then(() => {
+                      .then((data) => {
+                        // Forza un aggiornamento completo dei dati
+                        queryClient.invalidateQueries({ queryKey: ["/api/signature-projects"] });
                         queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures"] });
-                        toast({
-                          title: "Successo",
-                          description: "Tutte le firme sono state eliminate",
-                        });
+                        
+                        // Ritardo per consentire al server di completare eventuali operazioni
+                        setTimeout(() => {
+                          toast({
+                            title: "Successo",
+                            description: data.message || "Tutte le firme sono state eliminate",
+                          });
+                        }, 500);
                       })
                       .catch(error => {
-                        toast({
-                          title: "Azione alternativa",
-                          description: "Creazione nuovo progetto consigliata",
-                        });
+                        console.error("Errore durante il reset del progetto:", error);
+                        
+                        // Fallback: elimina e ricrea il progetto
+                        const currentProject = projects.find(p => p.id === selectedProject);
+                        if (currentProject) {
+                          const projectName = currentProject.name;
+                          const projectDescription = currentProject.description || '';
+                          
+                          deleteProject.mutateAsync(selectedProject)
+                            .then(() => {
+                              // Crea un nuovo progetto con lo stesso nome
+                              return createProject.mutateAsync({ 
+                                name: projectName + " (ricreato)", 
+                                description: projectDescription 
+                              });
+                            })
+                            .then(() => {
+                              toast({
+                                title: "Operazione completata",
+                                description: "Il progetto è stato ricreato pulito",
+                              });
+                            })
+                            .catch(err => {
+                              toast({
+                                title: "Errore",
+                                description: "Impossibile eliminare/ricreare il progetto",
+                                variant: "destructive"
+                              });
+                            });
+                        } else {
+                          toast({
+                            title: "Errore",
+                            description: "Errore durante l'eliminazione delle firme",
+                            variant: "destructive"
+                          });
+                        }
                       });
                     }
                   }}
