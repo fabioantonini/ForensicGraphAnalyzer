@@ -649,7 +649,8 @@ export default function SignaturesPage() {
                   size="sm"
                   className="text-xs"
                   onClick={() => {
-                    const confirmDelete = confirm("Sei sicuro di voler eliminare tutte le firme? Questa operazione ripulirà l'intero progetto.");
+                    const confirmDelete = confirm("Sei sicuro di voler eliminare completamente il progetto? Questa operazione eliminerà il progetto attuale e ne creerà uno nuovo con lo stesso nome. Questo è l'unico modo per rimuovere eventuali firme fantasma.");
+                    
                     if (confirmDelete) {
                       if (!selectedProject) {
                         toast({
@@ -661,104 +662,66 @@ export default function SignaturesPage() {
                       }
                       
                       toast({
-                        title: "Elaborazione in corso",
-                        description: "Eliminazione in corso delle firme...",
+                        title: "Ricreazione in corso",
+                        description: "Eliminazione e ricreazione del progetto...",
                       });
                       
-                      // Memorizza l'ID del progetto corrente
-                      const projectId = selectedProject;
+                      // Salviamo i dettagli del progetto prima di eliminarlo
+                      const currentProject = projects.find(p => p.id === selectedProject);
                       
-                      // 1. Prima forzare pulizia cache manualmente
-                      queryClient.cancelQueries();
-                      queryClient.setQueryData(
-                        ["/api/signature-projects", projectId, "signatures"],
-                        []
-                      );
+                      if (!currentProject) {
+                        toast({
+                          title: "Errore",
+                          description: "Progetto non trovato",
+                          variant: "destructive"
+                        });
+                        return;
+                      }
                       
-                      // 2. Chiamare endpoint di pulizia
-                      fetch(`/api/signature-projects/${projectId}/reset`, {
-                        method: "POST",
-                        headers: {
-                          "Content-Type": "application/json",
-                        },
-                        credentials: "include",
-                      })
-                      .then(response => {
-                        if (!response.ok) {
-                          throw new Error("Errore nell'endpoint di reset");
-                        }
-                        return response.json();
-                      })
-                      .then(async (data) => {
-                        console.log("Risposta pulizia:", data);
-                        
-                        // 3. Imposta manualmente i dati a un array vuoto
-                        queryClient.setQueryData(
-                          ["/api/signature-projects", projectId, "signatures"], 
-                          []
-                        );
-                        
-                        // 4. Invalida tutte le query (molto aggressivo)
-                        queryClient.removeQueries();
-                        queryClient.invalidateQueries();
-                        
-                        // 5. Dopo un piccolo ritardo, forza il refetch
-                        setTimeout(async () => {
-                          // Rifetch delle firme
-                          await refetchSignatures();
+                      const projectName = currentProject.name;
+                      const projectDescription = currentProject.description || '';
+                      
+                      // SOLUZIONE RADICALE: Elimina e ricrea il progetto
+                      // Questo è garantito per risolvere il problema delle firme fantasma
+                      deleteProject.mutateAsync(selectedProject)
+                        .then(() => {
+                          toast({
+                            title: "Progetto eliminato",
+                            description: "Creazione del nuovo progetto in corso...",
+                          });
                           
-                          // Rifetch esplicito anche dei progetti
-                          queryClient.invalidateQueries({ queryKey: ["/api/signature-projects"] });
+                          // Forza l'invalidazione della cache prima di creare il nuovo progetto
+                          queryClient.removeQueries();
+                          queryClient.invalidateQueries();
+                          
+                          // Crea un nuovo progetto con lo stesso nome
+                          return createProject.mutateAsync({ 
+                            name: projectName, 
+                            description: projectDescription 
+                          });
+                        })
+                        .then((newProject) => {
+                          // Forza nuovamente l'invalidazione della cache dopo la creazione
+                          queryClient.invalidateQueries();
                           
                           toast({
-                            title: "Successo",
-                            description: "Tutte le firme sono state eliminate",
+                            title: "Operazione completata",
+                            description: `Il progetto "${projectName}" è stato ricreato pulito`,
                           });
-                        }, 1000);
-                        
-                        toast({
-                          title: "Pulizia completata",
-                          description: data.message || "Tutte le firme sono state eliminate",
-                        });
-                      })
-                      .catch(error => {
-                        console.error("Errore durante il reset del progetto:", error);
-                        
-                        // Fallback: elimina e ricrea il progetto
-                        const currentProject = projects.find(p => p.id === selectedProject);
-                        if (currentProject) {
-                          const projectName = currentProject.name;
-                          const projectDescription = currentProject.description || '';
                           
-                          deleteProject.mutateAsync(selectedProject)
-                            .then(() => {
-                              // Crea un nuovo progetto con lo stesso nome
-                              return createProject.mutateAsync({ 
-                                name: projectName + " (ricreato)", 
-                                description: projectDescription 
-                              });
-                            })
-                            .then(() => {
-                              toast({
-                                title: "Operazione completata",
-                                description: "Il progetto è stato ricreato pulito",
-                              });
-                            })
-                            .catch(err => {
-                              toast({
-                                title: "Errore",
-                                description: "Impossibile eliminare/ricreare il progetto",
-                                variant: "destructive"
-                              });
-                            });
-                        } else {
+                          // Seleziona automaticamente il nuovo progetto
+                          if (newProject && newProject.id) {
+                            setSelectedProject(newProject.id);
+                          }
+                        })
+                        .catch(err => {
+                          console.error("Errore durante la ricreazione del progetto:", err);
                           toast({
                             title: "Errore",
-                            description: "Errore durante l'eliminazione delle firme",
+                            description: "Impossibile completare l'operazione",
                             variant: "destructive"
                           });
-                        }
-                      });
+                        });
                     }
                   }}
                 >
