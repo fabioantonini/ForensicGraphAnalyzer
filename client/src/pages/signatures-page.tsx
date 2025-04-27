@@ -108,7 +108,26 @@ export default function SignaturesPage() {
     queryKey: ["/api/signature-projects", selectedProject, "signatures"],
     enabled: !!user && !!selectedProject,
     staleTime: 0, // Forza sempre il refetch
-    refetchOnMount: true // Ricarica ad ogni montaggio del componente
+    refetchOnMount: true, // Ricarica ad ogni montaggio del componente
+    refetchInterval: 5000, // Aggiorna ogni 5 secondi
+    
+    // Implementa un selettore per garantire che riceviamo solo firme valide
+    select: (data) => {
+      // Se i dati non sono un array valido, restituisci un array vuoto
+      if (!Array.isArray(data)) {
+        console.log("Dati non validi ricevuti:", data);
+        return [];
+      }
+      
+      // Solo firme che hanno effettivamente un projectId che corrisponde al progetto selezionato
+      const validSignatures = data.filter(s => 
+        s && typeof s === 'object' && 'projectId' in s && s.projectId === selectedProject
+      );
+      
+      console.log(`Debug firme: ricevute ${data.length}, valide ${validSignatures.length}`);
+      
+      return validSignatures;
+    }
   });
   
   // Mutation to create new project
