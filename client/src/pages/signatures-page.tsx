@@ -51,7 +51,9 @@ type ProjectFormValues = z.infer<typeof projectSchema>;
 
 // File upload schema
 const fileSchema = z.object({
-  file: z.instanceof(FileList).refine(files => files.length === 1, "Seleziona un file")
+  file: z.any()
+    .refine(file => file instanceof FileList, "Input non valido")
+    .refine(files => (files instanceof FileList) && files.length === 1, "Seleziona un file")
 });
 
 type FileFormValues = z.infer<typeof fileSchema>;
@@ -527,17 +529,21 @@ export default function SignaturesPage() {
                       <FormField
                         control={referenceForm.control}
                         name="file"
-                        render={({ field: { onChange, onBlur, name, ref, value } }) => (
+                        render={({ field }) => (
                           <FormItem>
                             <FormLabel>{t('signatures.selectFile')}</FormLabel>
                             <FormControl>
                               <Input
                                 type="file"
                                 accept="image/*"
-                                onChange={onChange}
-                                onBlur={onBlur}
-                                name={name}
-                                ref={ref}
+                                onChange={(e) => {
+                                  if (e.target.files) {
+                                    field.onChange(e.target.files);
+                                  }
+                                }}
+                                onBlur={field.onBlur}
+                                name={field.name}
+                                ref={field.ref}
                               />
                             </FormControl>
                             <FormMessage />
@@ -577,17 +583,21 @@ export default function SignaturesPage() {
                       <FormField
                         control={verifyForm.control}
                         name="file"
-                        render={({ field: { onChange, onBlur, name, ref } }) => (
+                        render={({ field }) => (
                           <FormItem>
                             <FormLabel>{t('signatures.selectFile')}</FormLabel>
                             <FormControl>
                               <Input
                                 type="file"
                                 accept="image/*"
-                                onChange={onChange}
-                                onBlur={onBlur}
-                                name={name}
-                                ref={ref}
+                                onChange={(e) => {
+                                  if (e.target.files) {
+                                    field.onChange(e.target.files);
+                                  }
+                                }}
+                                onBlur={field.onBlur}
+                                name={field.name}
+                                ref={field.ref}
                               />
                             </FormControl>
                             <FormMessage />
