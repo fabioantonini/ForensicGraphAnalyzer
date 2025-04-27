@@ -111,7 +111,7 @@ export default function SignaturesPage() {
     refetchOnMount: true, // Ricarica ad ogni montaggio del componente
     refetchInterval: 5000, // Aggiorna ogni 5 secondi
     
-    // Implementa un selettore per garantire che riceviamo solo firme valide
+    // Setup di un gestore di errore personalizzato
     select: (data) => {
       // Se i dati non sono un array valido, restituisci un array vuoto
       if (!Array.isArray(data)) {
@@ -122,35 +122,16 @@ export default function SignaturesPage() {
       // Log dettagliato di ogni firma ricevuta
       console.log("Firme ricevute dal server:", JSON.stringify(data, null, 2));
       
-      // Solo firme che hanno effettivamente un projectId che corrisponde al progetto selezionato
-      const validSignatures = data.filter(s => {
-        // Log dettagliato su ogni firma e il motivo per cui potrebbe essere filtrata
-        const valid = s && typeof s === 'object' && 'projectId' in s;
-        
-        if (!valid) {
-          console.log(`Firma invalida (manca projectId):`, s);
-          return false;
-        }
-        
-        const projectIdMatch = s.projectId === selectedProject;
-        
-        if (!projectIdMatch) {
-          console.log(`Firma con projectId errato: ${s.projectId} vs atteso ${selectedProject}`);
-        }
-        
-        return projectIdMatch;
-      });
+      // Controllo se riceviamo progetti invece di firme (errore comune)
+      const containsProjects = data.length > 0 && 
+        data.some(item => 'name' in item && !('projectId' in item));
       
-      console.log(`Debug firme: ricevute ${data.length}, valide ${validSignatures.length}`);
-      
-      if (validSignatures.length === 0 && data.length > 0) {
-        // Se riceviamo firme ma nessuna è valida, disabilita temporaneamente il filtro
-        // per scopi di debugging
-        console.log("⚠️ ATTENZIONE: Ritorno tutte le firme senza filtro per debug!");
-        return data;
+      if (containsProjects) {
+        console.error("⚠️ ERRORE: L'API ha restituito progetti invece di firme!");
+        return []; // Restituisci un array vuoto quando i dati sono di tipo errato
       }
       
-      return validSignatures;
+      return data; // Restituisci tutti i dati, dovrebbero già essere filtrati dal server
     }
   });
   
