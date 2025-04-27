@@ -114,10 +114,17 @@ export default function SignaturesPage() {
       const res = await apiRequest("POST", "/api/signature-projects", data);
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/signature-projects"] });
       projectForm.reset();
       setIsCreateProjectOpen(false);
+      
+      // Breve ritardo prima di selezionare il progetto per garantire che
+      // eventuali operazioni di pulizia sul server siano completate
+      setTimeout(() => {
+        setSelectedProject(data.id);
+      }, 500);
+      
       toast({
         title: "Successo",
         description: "Progetto creato con successo",

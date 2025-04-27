@@ -406,6 +406,18 @@ export class MemStorage implements IStorage {
   async createSignatureProject(projectData: InsertSignatureProject): Promise<SignatureProject> {
     const id = this.nextSignatureProjectId++;
     const now = new Date();
+    
+    // Trova e rimuove firme residue che potrebbero avere lo stesso ID del progetto
+    const existingSignatures = Array.from(this.signatures.values())
+      .filter(s => s.projectId === id);
+    
+    if (existingSignatures.length > 0) {
+      console.log(`ATTENZIONE: Rilevate ${existingSignatures.length} firme residue per progetto ID ${id}, elimino...`);
+      for (const signature of existingSignatures) {
+        this.signatures.delete(signature.id);
+      }
+    }
+    
     const project: SignatureProject = {
       ...projectData,
       id,
@@ -568,11 +580,30 @@ export class DatabaseStorage implements IStorage {
   
   // Signature Project methods
   async createSignatureProject(projectData: InsertSignatureProject): Promise<SignatureProject> {
-    const [project] = await db
-      .insert(signatureProjects)
-      .values(projectData)
-      .returning();
-    return project;
+    // Prima di creare un nuovo progetto, verifica se esistono già firme con lo stesso ID
+    // che potrebbero essere create prima del progetto (bug nella sincronizzazione del DB)
+    try {
+      // Crea il progetto
+      const [project] = await db
+        .insert(signatureProjects)
+        .values(projectData)
+        .returning();
+      
+      // Cerca e elimina eventuali firme residue
+      await db
+        .delete(signatures)
+        .where(
+          and(
+            eq(signatures.projectId, project.id),
+            sql`${signatures.id} < ${project.id * 1000}` // Assume che le firme abbiano ID maggiori
+          )
+        );
+        
+      return project;
+    } catch (error) {
+      console.error("Errore durante la creazione del progetto di firma:", error);
+      throw error;
+    }
   }
 
   async getSignatureProject(id: number): Promise<SignatureProject | undefined> {
