@@ -585,40 +585,57 @@ export function registerSignatureRoutes(router: Router) {
   router.post("/signature-projects/:id/compare-all", isAuthenticated, async (req, res) => {
     try {
       const projectId = parseInt(req.params.id);
+      
+      console.log(`[DEBUG COMPARE-ALL] Avvio confronto multiplo per progetto ${projectId}`);
+      
       const project = await storage.getSignatureProject(projectId);
       
       if (!project) {
+        console.log(`[DEBUG COMPARE-ALL] Progetto ${projectId} non trovato`);
         return res.status(404).json({ error: 'Progetto non trovato' });
       }
       
       // Verifica che il progetto appartenga all'utente corrente
       if (project.userId !== req.user!.id) {
+        console.log(`[DEBUG COMPARE-ALL] Utente ${req.user!.id} non autorizzato per progetto ${projectId} (proprietario: ${project.userId})`);
         return res.status(403).json({ error: 'Non autorizzato' });
       }
       
+      console.log(`[DEBUG COMPARE-ALL] Recupero firme di riferimento per progetto ${projectId}`);
+      
       // Ottieni tutte le firme di riferimento
       const referenceSignatures = await storage.getProjectSignatures(projectId, true);
+      console.log(`[DEBUG COMPARE-ALL] Trovate ${referenceSignatures.length} firme di riferimento totali`);
       
       // Filtra le firme di riferimento complete (con parametri)
       const completedReferences = referenceSignatures.filter(
         ref => ref.processingStatus === 'completed' && ref.parameters
       );
       
+      console.log(`[DEBUG COMPARE-ALL] Firme di riferimento completate: ${completedReferences.length}`);
+      
       if (completedReferences.length === 0) {
+        console.log(`[DEBUG COMPARE-ALL] Nessuna firma di riferimento elaborata disponibile per il progetto ${projectId}`);
         return res.status(400).json({
           error: 'Nessuna firma di riferimento elaborata disponibile'
         });
       }
       
+      console.log(`[DEBUG COMPARE-ALL] Recupero firme da verificare per progetto ${projectId}`);
+      
       // Ottieni tutte le firme da verificare
       const verificationSignatures = await storage.getProjectSignatures(projectId, false);
+      console.log(`[DEBUG COMPARE-ALL] Trovate ${verificationSignatures.length} firme da verificare totali`);
       
       // Filtra le firme da verificare complete (con parametri)
       const completedVerifications = verificationSignatures.filter(
         sig => sig.processingStatus === 'completed' && sig.parameters
       );
       
+      console.log(`[DEBUG COMPARE-ALL] Firme da verificare completate: ${completedVerifications.length}`);
+      
       if (completedVerifications.length === 0) {
+        console.log(`[DEBUG COMPARE-ALL] Nessuna firma da verificare elaborata disponibile per il progetto ${projectId}`);
         return res.status(400).json({
           error: 'Nessuna firma da verificare elaborata disponibile'
         });
@@ -626,7 +643,7 @@ export function registerSignatureRoutes(router: Router) {
       
       // Verifica la disponibilità dell'analizzatore Python avanzato
       const isPythonAvailable = await SignaturePythonAnalyzer.checkAvailability();
-      log(`Confronto multiplo delle firme per progetto ${projectId}: analizzatore Python ${isPythonAvailable ? 'disponibile' : 'non disponibile'}`, 'signatures');
+      console.log(`[DEBUG COMPARE-ALL] Analizzatore Python ${isPythonAvailable ? 'disponibile' : 'non disponibile'}`);
       
       // Crea le informazioni sul caso
       const caseInfo = {
@@ -637,16 +654,21 @@ export function registerSignatureRoutes(router: Router) {
         notes: project.description || ""
       };
       
-      // Esegui il confronto per ogni firma da verificare
-      const results = await Promise.all(
-        completedVerifications.map(async (signature) => {
+      console.log(`[DEBUG COMPARE-ALL] Inizio elaborazione di ${completedVerifications.length} firme da verificare`);
+      
+      // Utilizziamo un ciclo for standard invece di Promise.all per garantire migliore gestione degli errori
+      const results = [];
+      for (const signature of completedVerifications) {
+        try {
+          console.log(`[DEBUG COMPARE-ALL] Elaborazione firma ${signature.id}`);
+          
           let similarityScore = 0;
           let comparisonChart = null;
           let analysisReport = null;
           
           if (isPythonAvailable) {
             try {
-              log(`Usando analizzatore Python avanzato per confronto firma ${signature.id}`, 'signatures');
+              console.log(`[DEBUG COMPARE-ALL] Usando analizzatore Python per firma ${signature.id}`);
               
               // Usiamo la prima firma di riferimento per il confronto avanzato
               const referenceSignature = completedReferences[0];
@@ -667,57 +689,68 @@ export function registerSignatureRoutes(router: Router) {
               comparisonChart = comparisonResult.comparison_chart;
               analysisReport = comparisonResult.description;
               
-              log(`Confronto Python completato per firma ${signature.id} con score ${similarityScore}`, 'signatures');
+              console.log(`[DEBUG COMPARE-ALL] Confronto Python completato per firma ${signature.id} con score ${similarityScore}`);
             } catch (pythonError: any) {
-              log(`Errore con analizzatore Python per confronto: ${pythonError.message}. Uso analizzatore JS fallback.`, 'signatures');
+              console.log(`[DEBUG COMPARE-ALL] Errore con analizzatore Python: ${pythonError.message}. Fallback a JS.`);
               // Fallback all'analizzatore JavaScript se quello Python fallisce
               const referenceParameters = completedReferences.map(ref => ref.parameters!);
               similarityScore = SignatureAnalyzer.compareSignatures(signature.parameters!, referenceParameters);
             }
           } else {
-            log(`Analizzatore Python non disponibile, uso analizzatore JS per confronto.`, 'signatures');
+            console.log(`[DEBUG COMPARE-ALL] Usando analizzatore JS per firma ${signature.id}`);
             // Usa l'analizzatore JavaScript standard
             const referenceParameters = completedReferences.map(ref => ref.parameters!);
             similarityScore = SignatureAnalyzer.compareSignatures(signature.parameters!, referenceParameters);
           }
           
-          // Prepara i dati da aggiornare in un unico oggetto
-          const updateData: any = {
-            comparisonResult: similarityScore
-          };
+          console.log(`[DEBUG COMPARE-ALL] Risultato confronto per firma ${signature.id}: ${similarityScore}`);
           
-          // Aggiungi i dati di confronto avanzato se disponibili
-          if (comparisonChart) {
-            updateData.comparisonChart = comparisonChart;
-          }
-          
-          if (analysisReport) {
-            updateData.analysisReport = analysisReport;
-          }
-          
-          log(`Aggiornamento firma ${signature.id} con score ${similarityScore} e dati avanzati`, 'signatures');
-          
-          // Prima aggiorniamo solo il risultato numerico
+          // Primo step: aggiornamento del risultato numerico
+          console.log(`[DEBUG COMPARE-ALL] Aggiornamento punteggio di confronto per firma ${signature.id}`);
           await storage.updateSignatureComparisonResult(signature.id, similarityScore);
           
-          // Poi, se abbiamo dati aggiuntivi, facciamo un'altra query per aggiornare gli altri campi
+          // Secondo step: aggiornamento dei dati aggiuntivi solo se necessario
           if (comparisonChart || analysisReport) {
-            const additionalData: any = {};
-            if (comparisonChart) additionalData.comparisonChart = comparisonChart;
-            if (analysisReport) additionalData.analysisReport = analysisReport;
+            console.log(`[DEBUG COMPARE-ALL] Aggiornamento dati avanzati per firma ${signature.id}`);
             
-            await storage.updateSignature(signature.id, additionalData);
+            // Creiamo un nuovo oggetto con solo i campi effettivamente presenti
+            const updateData: Record<string, any> = {};
+            
+            if (comparisonChart) {
+              console.log(`[DEBUG COMPARE-ALL] Firma ${signature.id} ha un grafico di confronto`);
+              updateData.comparisonChart = comparisonChart;
+            }
+            
+            if (analysisReport) {
+              console.log(`[DEBUG COMPARE-ALL] Firma ${signature.id} ha un report di analisi`);
+              updateData.analysisReport = analysisReport;
+            }
+            
+            // Aggiorniamo solo se abbiamo effettivamente dei dati da aggiornare
+            if (Object.keys(updateData).length > 0) {
+              console.log(`[DEBUG COMPARE-ALL] Aggiornamento firma ${signature.id} con dati avanzati`);
+              await storage.updateSignature(signature.id, updateData);
+            }
           }
           
           // Recupera la firma aggiornata
+          console.log(`[DEBUG COMPARE-ALL] Recupero firma aggiornata ${signature.id}`);
           const updatedSignature = await storage.getSignature(signature.id);
+          
           if (!updatedSignature) {
+            console.error(`[DEBUG COMPARE-ALL] Impossibile recuperare la firma aggiornata ${signature.id}`);
             throw new Error(`Impossibile recuperare la firma aggiornata con ID ${signature.id}`);
           }
           
-          return updatedSignature;
-        })
-      );
+          results.push(updatedSignature);
+          console.log(`[DEBUG COMPARE-ALL] Firma ${signature.id} elaborata con successo`);
+        } catch (signatureError) {
+          console.error(`[DEBUG COMPARE-ALL] Errore nell'elaborazione della firma ${signature.id}:`, signatureError);
+          // Continuiamo con le altre firme anche se una fallisce
+        }
+      }
+      
+      console.log(`[DEBUG COMPARE-ALL] Confronto multiplo completato per ${results.length} firme`);
       
       // Aggiorna il registro attività
       await storage.createActivity({
@@ -727,9 +760,10 @@ export function registerSignatureRoutes(router: Router) {
       });
       
       // Rispondi con tutte le firme aggiornate
+      console.log(`[DEBUG COMPARE-ALL] Invio risposta con ${results.length} firme aggiornate`);
       res.json(results);
     } catch (error: any) {
-      console.error(`Errore nel confronto multiplo delle firme:`, error);
+      console.error(`[DEBUG COMPARE-ALL] Errore generale nel confronto multiplo delle firme:`, error);
       res.status(500).json({ error: error.message });
     }
   });
