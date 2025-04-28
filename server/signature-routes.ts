@@ -4,7 +4,9 @@ import multer from "multer";
 import path from "path";
 import fs from "fs/promises";
 import { SignatureAnalyzer } from "./signature-analyzer";
+import { SignaturePythonAnalyzer } from "./python-bridge";
 import { insertSignatureProjectSchema, insertSignatureSchema } from "@shared/schema";
+import { log } from "./vite";
 
 // Configurazione di multer per gestire upload di immagini
 const upload = multer({
@@ -381,17 +383,77 @@ export function registerSignatureRoutes(router: Router) {
           error: 'Nessuna firma di riferimento elaborata disponibile'
         });
       }
+
+      let similarityScore = 0;
+      let comparisonChart = null;
+      let analysisReport = null;
       
-      // Estrai i parametri delle firme di riferimento
-      const referenceParameters = completedReferences.map(ref => ref.parameters!);
+      // Verifica la disponibilità dell'analizzatore Python avanzato
+      const isPythonAvailable = await SignaturePythonAnalyzer.checkAvailability();
       
-      // Esegui il confronto
-      const similarityScore = SignatureAnalyzer.compareSignatures(signature.parameters!, referenceParameters);
+      if (isPythonAvailable) {
+        try {
+          log(`Usando analizzatore Python avanzato per confronto firma ${signatureId}`, 'signatures');
+          
+          // Usiamo la prima firma di riferimento per il confronto avanzato
+          const referenceSignature = completedReferences[0];
+          const referencePath = path.join('./uploads', referenceSignature.filename);
+          const signaturePath = path.join('./uploads', signature.filename);
+          
+          // Crea le informazioni sul caso
+          const caseInfo = {
+            caseName: project.name,
+            subject: `Firma ${signature.originalFilename}`,
+            date: new Date().toLocaleDateString('it-IT'),
+            documentType: 'Verifica di firma',
+            notes: project.description || ""
+          };
+          
+          // Esegui il confronto avanzato
+          const comparisonResult = await SignaturePythonAnalyzer.compareSignatures(
+            signaturePath,
+            referencePath,
+            false, // Non generare report DOCX automaticamente
+            caseInfo
+          );
+          
+          similarityScore = comparisonResult.similarity;
+          
+          // Salva il grafico e il report
+          comparisonChart = comparisonResult.comparison_chart;
+          analysisReport = comparisonResult.description;
+          
+          log(`Confronto Python completato per firma ${signatureId} con score ${similarityScore}`, 'signatures');
+        } catch (pythonError: any) {
+          log(`Errore con analizzatore Python per confronto: ${pythonError.message}. Uso analizzatore JS fallback.`, 'signatures');
+          // Fallback all'analizzatore JavaScript se quello Python fallisce
+          const referenceParameters = completedReferences.map(ref => ref.parameters!);
+          similarityScore = SignatureAnalyzer.compareSignatures(signature.parameters!, referenceParameters);
+        }
+      } else {
+        log(`Analizzatore Python non disponibile, uso analizzatore JS per confronto.`, 'signatures');
+        // Usa l'analizzatore JavaScript standard
+        const referenceParameters = completedReferences.map(ref => ref.parameters!);
+        similarityScore = SignatureAnalyzer.compareSignatures(signature.parameters!, referenceParameters);
+      }
       
-      // Aggiorna il risultato del confronto
+      // Aggiorna il risultato del confronto includendo grafico e report
       const updatedSignature = await storage.updateSignatureComparisonResult(signatureId, similarityScore);
       
-      res.json(updatedSignature);
+      // Se abbiamo generato un grafico e un report, salviamoli
+      if (comparisonChart && analysisReport) {
+        // Aggiorniamo la firma con il grafico e il report
+        await storage.updateSignature(signatureId, {
+          comparisonChart,
+          analysisReport
+        });
+      }
+      
+      res.json({
+        ...updatedSignature,
+        comparisonChart,
+        analysisReport
+      });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
@@ -529,15 +591,33 @@ async function processSignature(signatureId: number, filePath: string) {
     // Aggiorna lo stato a 'processing'
     await storage.updateSignatureStatus(signatureId, 'processing');
     
-    // Estrai i parametri dalla firma
-    const parameters = await SignatureAnalyzer.extractParameters(filePath);
+    // Verifica la disponibilità dell'analizzatore Python
+    const isPythonAvailable = await SignaturePythonAnalyzer.checkAvailability();
+    
+    let parameters;
+    
+    if (isPythonAvailable) {
+      log(`Usando analizzatore Python avanzato per la firma ${signatureId}`, 'signatures');
+      try {
+        // Prova a usare l'analizzatore Python avanzato
+        parameters = await SignaturePythonAnalyzer.analyzeSignature(filePath);
+      } catch (pythonError: any) {
+        log(`Errore con analizzatore Python: ${pythonError.message}. Uso analizzatore JS fallback.`, 'signatures');
+        // Fallback all'analizzatore JavaScript se quello Python fallisce
+        parameters = await SignatureAnalyzer.extractParameters(filePath);
+      }
+    } else {
+      log(`Analizzatore Python non disponibile, uso analizzatore JS.`, 'signatures');
+      // Usa l'analizzatore JavaScript standard
+      parameters = await SignatureAnalyzer.extractParameters(filePath);
+    }
     
     // Aggiorna la firma con i parametri estratti
     await storage.updateSignatureParameters(signatureId, parameters);
     
     // Aggiorna lo stato a 'completed'
     await storage.updateSignatureStatus(signatureId, 'completed');
-  } catch (error) {
+  } catch (error: any) {
     console.error(`Errore nell'elaborazione della firma ${signatureId}:`, error);
     await storage.updateSignatureStatus(signatureId, 'failed');
   }
@@ -545,28 +625,45 @@ async function processSignature(signatureId: number, filePath: string) {
 
 async function processAndCompareSignature(signatureId: number, filePath: string, projectId: number) {
   try {
-    console.log(`[DEBUG] Inizio elaborazione firma ${signatureId} per progetto ${projectId}`);
+    log(`Inizio elaborazione firma ${signatureId} per progetto ${projectId}`, 'signatures');
     
     // Aggiorna lo stato a 'processing'
     await storage.updateSignatureStatus(signatureId, 'processing');
     
-    // Estrai i parametri dalla firma
-    console.log(`[DEBUG] Estrazione parametri da ${filePath}`);
-    const parameters = await SignatureAnalyzer.extractParameters(filePath);
+    // Verifica la disponibilità dell'analizzatore Python
+    const isPythonAvailable = await SignaturePythonAnalyzer.checkAvailability();
+    
+    let parameters;
+    
+    if (isPythonAvailable) {
+      log(`Usando analizzatore Python avanzato per la firma ${signatureId}`, 'signatures');
+      try {
+        // Prova a usare l'analizzatore Python avanzato
+        parameters = await SignaturePythonAnalyzer.analyzeSignature(filePath);
+      } catch (pythonError: any) {
+        log(`Errore con analizzatore Python: ${pythonError.message}. Uso analizzatore JS fallback.`, 'signatures');
+        // Fallback all'analizzatore JavaScript se quello Python fallisce
+        parameters = await SignatureAnalyzer.extractParameters(filePath);
+      }
+    } else {
+      log(`Analizzatore Python non disponibile, uso analizzatore JS.`, 'signatures');
+      // Usa l'analizzatore JavaScript standard
+      parameters = await SignatureAnalyzer.extractParameters(filePath);
+    }
     
     // Aggiorna la firma con i parametri estratti
-    console.log(`[DEBUG] Aggiornamento parametri firma ${signatureId}`);
+    log(`Aggiornamento parametri firma ${signatureId}`, 'signatures');
     await storage.updateSignatureParameters(signatureId, parameters);
     
     // Aggiorna lo stato come 'completed', ma senza confrontare automaticamente
     // Lo stato 'completed' indica che la firma è pronta per essere confrontata ma non è stata ancora confrontata
     await storage.updateSignatureStatus(signatureId, 'completed');
-    console.log(`[DEBUG] Elaborazione firma ${signatureId} completata con successo - in attesa di confronto manuale`);
+    log(`Elaborazione firma ${signatureId} completata con successo - in attesa di confronto manuale`, 'signatures');
     
     // Il confronto verrà eseguito solo quando l'utente preme "Confronta Tutte" 
     // e non più automaticamente qui
     
-  } catch (error) {
+  } catch (error: any) {
     console.error(`Errore nell'elaborazione della firma ${signatureId}:`, error);
     await storage.updateSignatureStatus(signatureId, 'failed');
   }

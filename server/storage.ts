@@ -71,6 +71,11 @@ export interface IStorage {
   updateSignatureParameters(id: number, parameters: SignatureParameters): Promise<Signature>;
   updateSignatureStatus(id: number, status: string): Promise<Signature>;
   updateSignatureComparisonResult(id: number, result: number): Promise<Signature>;
+  updateSignature(id: number, data: {
+    comparisonChart?: string;
+    analysisReport?: string;
+    reportPath?: string;
+  }): Promise<Signature>;
   deleteSignature(id: number): Promise<void>;
 
   // Session store
@@ -556,6 +561,28 @@ export class MemStorage implements IStorage {
       ...signature,
       comparisonResult: result,
       processingStatus: 'completed',
+      updatedAt: new Date(),
+    };
+    
+    this.signatures.set(id, updatedSignature);
+    return updatedSignature;
+  }
+  
+  async updateSignature(id: number, data: {
+    comparisonChart?: string;
+    analysisReport?: string;
+    reportPath?: string;
+  }): Promise<Signature> {
+    const signature = await this.getSignature(id);
+    if (!signature) {
+      throw new Error(`Signature with ID ${id} not found`);
+    }
+    
+    const updatedSignature: Signature = {
+      ...signature,
+      ...(data.comparisonChart !== undefined && { comparisonChart: data.comparisonChart }),
+      ...(data.analysisReport !== undefined && { analysisReport: data.analysisReport }),
+      ...(data.reportPath !== undefined && { reportPath: data.reportPath }),
       updatedAt: new Date(),
     };
     
