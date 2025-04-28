@@ -209,6 +209,9 @@ export const signatures = pgTable("signatures", {
   parameters: jsonb("parameters").$type<SignatureParameters>(),
   processingStatus: text("processing_status").default("pending").notNull(), // pending, processing, completed, failed
   comparisonResult: real("comparison_result"), // null for reference signatures, 0-1 for verification signatures
+  comparisonChart: text("comparison_chart"), // Base64-encoded image of the comparison chart
+  analysisReport: text("analysis_report"), // Testo del report descrittivo
+  reportPath: text("report_path"), // Percorso al file DOCX del report (se generato)
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
