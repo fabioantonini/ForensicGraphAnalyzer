@@ -732,6 +732,29 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return signature;
   }
+  
+  async updateSignature(id: number, data: {
+    comparisonChart?: string;
+    analysisReport?: string;
+    reportPath?: string;
+  }): Promise<Signature> {
+    const [signature] = await db
+      .update(signatures)
+      .set({
+        ...(data.comparisonChart !== undefined && { comparisonChart: data.comparisonChart }),
+        ...(data.analysisReport !== undefined && { analysisReport: data.analysisReport }),
+        ...(data.reportPath !== undefined && { reportPath: data.reportPath }),
+        updatedAt: new Date()
+      })
+      .where(eq(signatures.id, id))
+      .returning();
+      
+    if (!signature) {
+      throw new Error(`Signature with ID ${id} not found`);
+    }
+    
+    return signature;
+  }
 
   async deleteSignature(id: number): Promise<void> {
     console.log(`[STORAGE] Eliminazione firma con ID ${id} in corso...`);

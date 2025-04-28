@@ -491,6 +491,144 @@ export function registerSignatureRoutes(router: Router) {
     }
   });
   
+  // Esegui confronto automatico di tutte le firme da verificare in un progetto
+  router.post("/signature-projects/:id/compare-all", isAuthenticated, async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const project = await storage.getSignatureProject(projectId);
+      
+      if (!project) {
+        return res.status(404).json({ error: 'Progetto non trovato' });
+      }
+      
+      // Verifica che il progetto appartenga all'utente corrente
+      if (project.userId !== req.user!.id) {
+        return res.status(403).json({ error: 'Non autorizzato' });
+      }
+      
+      // Ottieni tutte le firme di riferimento
+      const referenceSignatures = await storage.getProjectSignatures(projectId, true);
+      
+      // Filtra le firme di riferimento complete (con parametri)
+      const completedReferences = referenceSignatures.filter(
+        ref => ref.processingStatus === 'completed' && ref.parameters
+      );
+      
+      if (completedReferences.length === 0) {
+        return res.status(400).json({
+          error: 'Nessuna firma di riferimento elaborata disponibile'
+        });
+      }
+      
+      // Ottieni tutte le firme da verificare
+      const verificationSignatures = await storage.getProjectSignatures(projectId, false);
+      
+      // Filtra le firme da verificare complete (con parametri)
+      const completedVerifications = verificationSignatures.filter(
+        sig => sig.processingStatus === 'completed' && sig.parameters
+      );
+      
+      if (completedVerifications.length === 0) {
+        return res.status(400).json({
+          error: 'Nessuna firma da verificare elaborata disponibile'
+        });
+      }
+      
+      // Verifica la disponibilità dell'analizzatore Python avanzato
+      const isPythonAvailable = await SignaturePythonAnalyzer.checkAvailability();
+      log(`Confronto multiplo delle firme per progetto ${projectId}: analizzatore Python ${isPythonAvailable ? 'disponibile' : 'non disponibile'}`, 'signatures');
+      
+      // Crea le informazioni sul caso
+      const caseInfo = {
+        caseName: project.name,
+        subject: `Verifica multiple di firme`,
+        date: new Date().toLocaleDateString('it-IT'),
+        documentType: 'Verifiche multiple',
+        notes: project.description || ""
+      };
+      
+      // Esegui il confronto per ogni firma da verificare
+      const results = await Promise.all(
+        completedVerifications.map(async (signature) => {
+          let similarityScore = 0;
+          let comparisonChart = null;
+          let analysisReport = null;
+          
+          if (isPythonAvailable) {
+            try {
+              log(`Usando analizzatore Python avanzato per confronto firma ${signature.id}`, 'signatures');
+              
+              // Usiamo la prima firma di riferimento per il confronto avanzato
+              const referenceSignature = completedReferences[0];
+              const referencePath = path.join('./uploads', referenceSignature.filename);
+              const signaturePath = path.join('./uploads', signature.filename);
+              
+              // Esegui il confronto avanzato
+              const comparisonResult = await SignaturePythonAnalyzer.compareSignatures(
+                signaturePath,
+                referencePath,
+                false, // Non generare report DOCX automaticamente
+                caseInfo
+              );
+              
+              similarityScore = comparisonResult.similarity;
+              
+              // Salva il grafico e il report
+              comparisonChart = comparisonResult.comparison_chart;
+              analysisReport = comparisonResult.description;
+              
+              log(`Confronto Python completato per firma ${signature.id} con score ${similarityScore}`, 'signatures');
+            } catch (pythonError: any) {
+              log(`Errore con analizzatore Python per confronto: ${pythonError.message}. Uso analizzatore JS fallback.`, 'signatures');
+              // Fallback all'analizzatore JavaScript se quello Python fallisce
+              const referenceParameters = completedReferences.map(ref => ref.parameters!);
+              similarityScore = SignatureAnalyzer.compareSignatures(signature.parameters!, referenceParameters);
+            }
+          } else {
+            log(`Analizzatore Python non disponibile, uso analizzatore JS per confronto.`, 'signatures');
+            // Usa l'analizzatore JavaScript standard
+            const referenceParameters = completedReferences.map(ref => ref.parameters!);
+            similarityScore = SignatureAnalyzer.compareSignatures(signature.parameters!, referenceParameters);
+          }
+          
+          // Aggiorna il risultato del confronto
+          const updatedSignature = await storage.updateSignatureComparisonResult(signature.id, similarityScore);
+          
+          // Se abbiamo generato un grafico e un report, salviamoli
+          if (comparisonChart && analysisReport) {
+            // Aggiorniamo la firma con il grafico e il report
+            await storage.updateSignature(signature.id, {
+              comparisonChart,
+              analysisReport
+            });
+            
+            // Aggiorniamo la risposta con i dati aggiuntivi
+            return {
+              ...updatedSignature,
+              comparisonChart,
+              analysisReport
+            };
+          }
+          
+          return updatedSignature;
+        })
+      );
+      
+      // Aggiorna il registro attività
+      await storage.createActivity({
+        userId: req.user!.id,
+        type: 'signature_compare',
+        details: `Confrontate ${results.length} firme nel progetto "${project.name}"`
+      });
+      
+      // Rispondi con tutte le firme aggiornate
+      res.json(results);
+    } catch (error: any) {
+      console.error(`Errore nel confronto multiplo delle firme:`, error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Endpoint per ripulire tutte le firme di un progetto
   router.post("/signature-projects/:id/reset", isAuthenticated, async (req, res) => {
     try {
