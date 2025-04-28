@@ -681,23 +681,38 @@ export function registerSignatureRoutes(router: Router) {
             similarityScore = SignatureAnalyzer.compareSignatures(signature.parameters!, referenceParameters);
           }
           
-          // Aggiorna il risultato del confronto
-          const updatedSignature = await storage.updateSignatureComparisonResult(signature.id, similarityScore);
+          // Prepara i dati da aggiornare in un unico oggetto
+          const updateData: any = {
+            comparisonResult: similarityScore
+          };
           
-          // Se abbiamo generato un grafico e un report, salviamoli
-          if (comparisonChart && analysisReport) {
-            // Aggiorniamo la firma con il grafico e il report
-            await storage.updateSignature(signature.id, {
-              comparisonChart,
-              analysisReport
-            });
+          // Aggiungi i dati di confronto avanzato se disponibili
+          if (comparisonChart) {
+            updateData.comparisonChart = comparisonChart;
+          }
+          
+          if (analysisReport) {
+            updateData.analysisReport = analysisReport;
+          }
+          
+          log(`Aggiornamento firma ${signature.id} con score ${similarityScore} e dati avanzati`, 'signatures');
+          
+          // Prima aggiorniamo solo il risultato numerico
+          await storage.updateSignatureComparisonResult(signature.id, similarityScore);
+          
+          // Poi, se abbiamo dati aggiuntivi, facciamo un'altra query per aggiornare gli altri campi
+          if (comparisonChart || analysisReport) {
+            const additionalData: any = {};
+            if (comparisonChart) additionalData.comparisonChart = comparisonChart;
+            if (analysisReport) additionalData.analysisReport = analysisReport;
             
-            // Aggiorniamo la risposta con i dati aggiuntivi
-            return {
-              ...updatedSignature,
-              comparisonChart,
-              analysisReport
-            };
+            await storage.updateSignature(signature.id, additionalData);
+          }
+          
+          // Recupera la firma aggiornata
+          const updatedSignature = await storage.getSignature(signature.id);
+          if (!updatedSignature) {
+            throw new Error(`Impossibile recuperare la firma aggiornata con ID ${signature.id}`);
           }
           
           return updatedSignature;
