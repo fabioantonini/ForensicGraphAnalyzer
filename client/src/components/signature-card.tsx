@@ -5,7 +5,7 @@ import { Eye, Trash2 } from "lucide-react";
 import { SignatureImage } from "./signature-image";
 import { Progress } from "@/components/ui/progress";
 import { useTranslation } from "react-i18next";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
 
@@ -74,11 +74,11 @@ export function SignatureCard({
     );
   };
   
-  // Verifica se dobbiamo mostrare il pulsante per il rapporto di analisi
-  const hasAdvancedAnalysis = showSimilarity && 
+  // Verifica se dobbiamo mostrare il pulsante per il rapporto di analisi dettagliato
+  const hasAdvancedDetails = showSimilarity && 
     signature.processingStatus === 'completed' && 
     signature.comparisonResult !== null && 
-    (signature.comparisonChart || signature.analysisReport);
+    (signature.comparisonChart || signature.analysisReport || signature.parameters);
   
   return (
     <>
@@ -91,7 +91,7 @@ export function SignatureCard({
             className="w-full h-full"
           />
           <div className="absolute top-2 right-2 flex space-x-2">
-            {hasAdvancedAnalysis && (
+            {hasAdvancedDetails && (
               <Button
                 variant="secondary"
                 size="icon"
@@ -126,7 +126,7 @@ export function SignatureCard({
         </CardContent>
       </Card>
 
-      {hasAdvancedAnalysis && (
+      {hasAdvancedDetails && (
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogContent className="max-w-3xl">
             <DialogHeader>
@@ -140,12 +140,14 @@ export function SignatureCard({
             
             <div className="grid grid-cols-1 gap-6">
               {/* Punteggio di similarità */}
-              <div className="bg-muted rounded p-4">
-                <h3 className="font-medium text-lg mb-2">
-                  {t('signatures.verification.similarityScore', 'Punteggio di somiglianza')}: {(signature.comparisonResult * 100).toFixed(1)}%
-                </h3>
-                <Progress value={signature.comparisonResult * 100} className="h-3" />
-              </div>
+              {signature.comparisonResult !== null && (
+                <div className="bg-muted rounded p-4">
+                  <h3 className="font-medium text-lg mb-2">
+                    {t('signatures.verification.similarityScore', 'Punteggio di somiglianza')}: {(signature.comparisonResult * 100).toFixed(1)}%
+                  </h3>
+                  <Progress value={signature.comparisonResult * 100} className="h-3" />
+                </div>
+              )}
               
               {/* Visualizza il grafico di confronto se disponibile */}
               {signature.comparisonChart && (
