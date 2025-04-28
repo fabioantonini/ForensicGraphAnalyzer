@@ -180,6 +180,7 @@ export default function SignaturesPage() {
   // Mutation to upload reference signature
   const uploadReference = useMutation({
     mutationFn: async (data: FileList) => {
+      console.log("Caricamento firma di riferimento iniziato");
       const formData = new FormData();
       formData.append("signature", data[0]);
       
@@ -194,6 +195,7 @@ export default function SignaturesPage() {
         throw new Error(errorData.error || "Errore durante il caricamento della firma");
       }
       
+      console.log("Firma di riferimento caricata con successo");
       return res.json();
     },
     onSuccess: () => {
@@ -230,6 +232,7 @@ export default function SignaturesPage() {
   // Mutation to upload verification signature
   const uploadVerify = useMutation({
     mutationFn: async (data: FileList) => {
+      console.log("Caricamento firma da verificare iniziato");
       const formData = new FormData();
       formData.append("signature", data[0]);
       
@@ -244,6 +247,7 @@ export default function SignaturesPage() {
         throw new Error(errorData.error || "Errore durante il caricamento della firma");
       }
       
+      console.log("Firma da verificare caricata con successo");
       return res.json();
     },
     onSuccess: () => {
