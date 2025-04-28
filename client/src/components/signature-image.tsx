@@ -17,12 +17,22 @@ export function SignatureImage({
   // Se lo stato è pending o processing, mostra il loader sovrapposto all'immagine
   const isProcessing = processingStatus === 'pending' || processingStatus === 'processing';
   
+  // Assicuriamoci che l'URL dell'immagine abbia tutte le parti necessarie
+  const imageUrl = filename.startsWith('/uploads/') 
+    ? filename 
+    : `/uploads/${filename}`;
+    
   return (
     <div className={cn("relative w-full h-full", className)}>
       <img 
-        src={`/uploads/${filename}`} 
+        src={imageUrl} 
         alt={originalFilename || 'Signature'} 
         className="w-full h-full object-contain p-2"
+        onError={(e) => {
+          console.error(`Errore nel caricamento dell'immagine: ${imageUrl}`);
+          const img = e.target as HTMLImageElement;
+          img.src = '/placeholder-image.svg'; // Fallback a un'immagine di placeholder
+        }}
       />
       
       {isProcessing && (

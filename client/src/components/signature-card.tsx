@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Trash2 } from "lucide-react";
 import { SignatureImage } from "./signature-image";
 import { Progress } from "@/components/ui/progress";
+import { useTranslation } from "react-i18next";
 
 interface SignatureCardProps {
   signature: any; 
@@ -16,6 +17,7 @@ export function SignatureCard({
   onDelete,
   showSimilarity = false
 }: SignatureCardProps) {
+  const { t } = useTranslation();
   
   // Function to get status badge color
   const getStatusColor = (status: string) => {
@@ -28,26 +30,42 @@ export function SignatureCard({
     }
   };
   
+  // Funzione per tradurre lo stato di elaborazione
+  const getStatusTranslation = (status: string) => {
+    switch(status) {
+      case 'pending': return t('signatures.status.pending', 'In attesa');
+      case 'processing': return t('signatures.status.processing', 'In elaborazione');
+      case 'completed': return t('signatures.status.completed', 'Completato');
+      case 'failed': return t('signatures.status.failed', 'Fallito');
+      default: return status;
+    }
+  };
+  
   // Function to render similarity score
   const renderSimilarityScore = (score: number | null) => {
     if (score === null) return null;
     
     let color = 'bg-red-500';
-    let text = 'Firma non autentica';
+    let textKey = 'signatures.verification.notAuthentic';
+    let defaultText = 'Firma non autentica';
     
     if (score >= 0.8) {
       color = 'bg-green-500';
-      text = 'Firma autentica';
+      textKey = 'signatures.verification.authentic';
+      defaultText = 'Firma autentica';
     } else if (score >= 0.6) {
       color = 'bg-yellow-500';
-      text = 'Firma sospetta';
+      textKey = 'signatures.verification.suspicious';
+      defaultText = 'Firma sospetta';
     }
     
     return (
       <div className="mt-2">
-        <p className="text-sm font-medium">Punteggio di somiglianza: {(score * 100).toFixed(1)}%</p>
+        <p className="text-sm font-medium">
+          {t('signatures.verification.similarityScore', 'Punteggio di somiglianza')}: {(score * 100).toFixed(1)}%
+        </p>
         <Progress value={score * 100} className="h-2 mt-1" />
-        <Badge className={`mt-2 ${color}`}>{text}</Badge>
+        <Badge className={`mt-2 ${color}`}>{t(textKey, defaultText)}</Badge>
       </div>
     );
   };
@@ -76,7 +94,7 @@ export function SignatureCard({
         </p>
         <div className="flex items-center mt-1">
           <Badge className={getStatusColor(signature.processingStatus)}>
-            {signature.processingStatus}
+            {getStatusTranslation(signature.processingStatus)}
           </Badge>
         </div>
         
