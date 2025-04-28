@@ -342,14 +342,19 @@ export default function SignaturesPage() {
     mutationFn: async () => {
       if (!selectedProject) throw new Error("Nessun progetto selezionato");
       
-      // Ottieni tutte le firme del progetto
+      // Ottieni tutte le firme del progetto usando l'endpoint debug
       const allSignatures = await queryClient.fetchQuery<Signature[]>({
-        queryKey: ["/api/signature-projects", selectedProject, "signatures"],
+        queryKey: [`/api/signature-projects/${selectedProject}/signatures-debug`],
       });
+      
+      console.log("Firme recuperate per confronto:", allSignatures);
       
       // Verifica se ci sono firme di riferimento e di verifica
       const referenceSignatures = allSignatures.filter((s) => s.isReference && s.processingStatus === 'completed');
       const verificationSignatures = allSignatures.filter((s) => !s.isReference && s.processingStatus === 'completed');
+      
+      console.log("Firme di riferimento:", referenceSignatures);
+      console.log("Firme da verificare:", verificationSignatures);
       
       if (referenceSignatures.length === 0) {
         throw new Error("Nessuna firma di riferimento completata disponibile");
@@ -382,6 +387,8 @@ export default function SignaturesPage() {
       return Promise.all(promises);
     },
     onSuccess: () => {
+      // Aggiorniamo entrambe le query per garantire che i dati siano aggiornati
+      queryClient.invalidateQueries({ queryKey: [`/api/signature-projects/${selectedProject}/signatures-debug`] });
       queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures"] });
       toast({
         title: "Successo",

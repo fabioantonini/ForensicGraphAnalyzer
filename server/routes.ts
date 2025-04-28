@@ -23,7 +23,7 @@ import { chatWithRAG, validateAPIKey } from "./openai";
 import { log } from "./vite";
 import { registerSignatureRoutes } from "./signature-routes";
 import { eq } from "drizzle-orm";
-import { db } from "./db";
+import { db, pool } from "./db";
 
 // Initialize multer for file uploads
 const upload = multer({
