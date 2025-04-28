@@ -9,6 +9,8 @@ import {
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
+import { SignatureImage } from "@/components/signature-image";
+import { SignatureCard } from "@/components/signature-card";
 import { Button } from "@/components/ui/button";
 import { 
   Dialog, 
@@ -862,33 +864,11 @@ export default function SignaturesPage() {
                       .filter((s: any) => s.isReference)
                       .sort((a: any, b: any) => a.processingStatus === 'completed' ? -1 : 1)
                       .map((signature: any) => (
-                        <Card key={signature.id} className="overflow-hidden">
-                          <div className="relative h-48 bg-gray-100">
-                            <img 
-                              src={`/uploads/${signature.filename}`} 
-                              alt={signature.originalFilename || 'Signature'}
-                              className="w-full h-full object-contain p-2"
-                            />
-                            <Button
-                              variant="destructive"
-                              size="icon"
-                              className="absolute top-2 right-2 h-7 w-7 opacity-80 hover:opacity-100"
-                              onClick={() => handleDeleteSignature(signature.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          <CardContent className="p-3">
-                            <p className="text-sm truncate" title={signature.originalFilename}>
-                              {signature.originalFilename || 'Unknown File'}
-                            </p>
-                            <div className="flex items-center mt-1">
-                              <Badge className={getStatusColor(signature.processingStatus)}>
-                                {signature.processingStatus}
-                              </Badge>
-                            </div>
-                          </CardContent>
-                        </Card>
+                        <SignatureCard 
+                          key={signature.id}
+                          signature={signature}
+                          onDelete={handleDeleteSignature}
+                        />
                       ))
                     }
                   </div>
