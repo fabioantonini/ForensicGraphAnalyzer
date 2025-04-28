@@ -55,6 +55,20 @@ async function main() {
   } catch (error) {
     console.error('Failed to create signatures table:', error);
   }
+  
+  // Aggiungi le colonne mancanti alla tabella signatures
+  try {
+    console.log('Aggiunta colonne per l\'analisi avanzata alla tabella signatures...');
+    await pool.query(`
+      ALTER TABLE signatures
+      ADD COLUMN IF NOT EXISTS comparison_chart TEXT,
+      ADD COLUMN IF NOT EXISTS analysis_report TEXT,
+      ADD COLUMN IF NOT EXISTS report_path TEXT;
+    `);
+    console.log('Colonne aggiunte con successo alla tabella signatures');
+  } catch (error) {
+    console.error('Failed to add columns to signatures table:', error);
+  }
 
   console.log('Database update completed');
   await pool.end();
