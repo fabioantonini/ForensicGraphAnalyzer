@@ -545,22 +545,28 @@ async function processSignature(signatureId: number, filePath: string) {
 
 async function processAndCompareSignature(signatureId: number, filePath: string, projectId: number) {
   try {
+    console.log(`[DEBUG] Inizio elaborazione firma ${signatureId} per progetto ${projectId}`);
+    
     // Aggiorna lo stato a 'processing'
     await storage.updateSignatureStatus(signatureId, 'processing');
     
     // Estrai i parametri dalla firma
+    console.log(`[DEBUG] Estrazione parametri da ${filePath}`);
     const parameters = await SignatureAnalyzer.extractParameters(filePath);
     
     // Aggiorna la firma con i parametri estratti
+    console.log(`[DEBUG] Aggiornamento parametri firma ${signatureId}`);
     await storage.updateSignatureParameters(signatureId, parameters);
     
     // Ottieni tutte le firme di riferimento per questo progetto
     const referenceSignatures = await storage.getProjectSignatures(projectId, true);
+    console.log(`[DEBUG] Trovate ${referenceSignatures.length} firme di riferimento`);
     
     // Filtra le firme di riferimento complete (con parametri)
     const completedReferences = referenceSignatures.filter(
       ref => ref.processingStatus === 'completed' && ref.parameters
     );
+    console.log(`[DEBUG] Trovate ${completedReferences.length} firme di riferimento completate`);
     
     if (completedReferences.length === 0) {
       throw new Error('Nessuna firma di riferimento elaborata disponibile');
@@ -570,10 +576,16 @@ async function processAndCompareSignature(signatureId: number, filePath: string,
     const referenceParameters = completedReferences.map(ref => ref.parameters!);
     
     // Confronta con le firme di riferimento
+    console.log(`[DEBUG] Confronto firma ${signatureId} con ${referenceParameters.length} firme di riferimento`);
     const similarityScore = SignatureAnalyzer.compareSignatures(parameters, referenceParameters);
+    console.log(`[DEBUG] Risultato confronto firma ${signatureId}: ${similarityScore}`);
     
     // Aggiorna il risultato del confronto
     await storage.updateSignatureComparisonResult(signatureId, similarityScore);
+    
+    // Mancava questa riga! Aggiorna lo stato a 'completed' dopo l'elaborazione
+    await storage.updateSignatureStatus(signatureId, 'completed');
+    console.log(`[DEBUG] Elaborazione firma ${signatureId} completata con successo`);
     
   } catch (error) {
     console.error(`Errore nell'elaborazione e confronto della firma ${signatureId}:`, error);
