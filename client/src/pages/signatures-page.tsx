@@ -111,18 +111,18 @@ export default function SignaturesPage() {
     enabled: !!user && !!selectedProject,
     staleTime: 0, // Forza sempre il refetch
     refetchOnMount: true, // Ricarica ad ogni montaggio del componente
-    refetchInterval: 5000, // Aggiorna ogni 5 secondi
+    refetchInterval: 2000, // Aggiorna ogni 2 secondi (più frequente di prima)
     
     // Setup di un gestore di errore personalizzato
     select: (data) => {
       // Se i dati non sono un array valido, restituisci un array vuoto
       if (!Array.isArray(data)) {
-        console.log("Dati non validi ricevuti:", data);
+        console.error("Dati non validi ricevuti (non è un array):", data);
         return [];
       }
       
       // Log dettagliato di ogni firma ricevuta
-      console.log("Firme ricevute dal server:", JSON.stringify(data, null, 2));
+      console.log(`${new Date().toISOString()} - Ricevute ${data.length} firme per il progetto ${selectedProject}`);
       
       // Controllo se riceviamo progetti invece di firme (errore comune)
       const containsProjects = data.length > 0 && 
@@ -131,6 +131,15 @@ export default function SignaturesPage() {
       if (containsProjects) {
         console.error("⚠️ ERRORE: L'API ha restituito progetti invece di firme!");
         return []; // Restituisci un array vuoto quando i dati sono di tipo errato
+      }
+      
+      // Verifica se qualcuna delle firme ha cambiato stato
+      const pendingOrProcessing = data.some(
+        sig => sig.processingStatus === 'pending' || sig.processingStatus === 'processing'
+      );
+      
+      if (pendingOrProcessing) {
+        console.log("Rilevate firme in elaborazione, continuo a monitorare...");
       }
       
       return data; // Restituisci tutti i dati, dovrebbero già essere filtrati dal server
@@ -188,15 +197,26 @@ export default function SignaturesPage() {
       return res.json();
     },
     onSuccess: () => {
-      // Usa entrambi i query key per il route standard e per il route di debug
+      // Usa il nuovo formato di query key che è stato corretto
+      queryClient.invalidateQueries({ queryKey: [`/api/signature-projects/${selectedProject}/signatures-debug`] });
+      console.log("Invalidata query dopo caricamento firma di riferimento");
+      
+      // Per compatibilità con il resto del codice manteniamo anche le vecchie
       queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures"] });
       queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures-debug"] });
+      
       referenceForm.reset();
       setIsUploadReferenceOpen(false);
       toast({
         title: "Successo",
         description: "Firma di riferimento caricata con successo",
       });
+      
+      // Forziamo un refetch immediato delle firme
+      setTimeout(() => {
+        refetchSignatures();
+        console.log("Refetch forzato delle firme");
+      }, 1000);
     },
     onError: (error: Error) => {
       toast({
@@ -227,15 +247,26 @@ export default function SignaturesPage() {
       return res.json();
     },
     onSuccess: () => {
-      // Usa entrambi i query key per il route standard e per il route di debug
+      // Usa il nuovo formato di query key che è stato corretto
+      queryClient.invalidateQueries({ queryKey: [`/api/signature-projects/${selectedProject}/signatures-debug`] });
+      console.log("Invalidata query dopo caricamento firma di verifica");
+      
+      // Per compatibilità con il resto del codice manteniamo anche le vecchie
       queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures"] });
       queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures-debug"] });
+      
       verifyForm.reset();
       setIsUploadVerifyOpen(false);
       toast({
         title: "Successo",
         description: "Firma caricata per la verifica",
       });
+      
+      // Forziamo un refetch immediato delle firme
+      setTimeout(() => {
+        refetchSignatures();
+        console.log("Refetch forzato delle firme dopo verifica");
+      }, 1000);
     },
     onError: (error: Error) => {
       toast({
@@ -349,6 +380,12 @@ export default function SignaturesPage() {
       
       console.log("Firme recuperate per confronto:", allSignatures);
       
+      // Verifica se abbiamo firme
+      if (!allSignatures || allSignatures.length === 0) {
+        console.error("Nessuna firma trovata per il progetto", selectedProject);
+        throw new Error("Nessuna firma trovata per questo progetto");
+      }
+      
       // Verifica se ci sono firme di riferimento e di verifica
       const referenceSignatures = allSignatures.filter((s) => s.isReference && s.processingStatus === 'completed');
       const verificationSignatures = allSignatures.filter((s) => !s.isReference && s.processingStatus === 'completed');
@@ -357,10 +394,12 @@ export default function SignaturesPage() {
       console.log("Firme da verificare:", verificationSignatures);
       
       if (referenceSignatures.length === 0) {
+        console.error("Nessuna firma di riferimento completata");
         throw new Error("Nessuna firma di riferimento completata disponibile");
       }
       
       if (verificationSignatures.length === 0) {
+        console.error("Nessuna firma da verificare completata");
         throw new Error("Nessuna firma da verificare disponibile o completata");
       }
       
