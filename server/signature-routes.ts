@@ -399,14 +399,14 @@ export function registerSignatureRoutes(router: Router) {
               caseInfo
             );
             
-            if (reportResult && reportResult.report_path) {
+            if (reportResult && typeof reportResult === 'object' && 'report_path' in reportResult) {
               // Aggiorna il percorso del report nella firma
               await storage.updateSignature(signature.id, {
-                reportPath: reportResult.report_path
+                reportPath: reportResult.report_path as string
               });
               
               // Servi il file
-              return res.download(reportResult.report_path);
+              return res.download(reportResult.report_path as string);
             } else {
               return res.status(500).json({ error: 'Impossibile generare il report PDF' });
             }

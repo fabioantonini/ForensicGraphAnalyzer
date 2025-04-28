@@ -365,62 +365,28 @@ export default function SignaturesPage() {
   
   // Rimosso getStatusColor perché ora è gestito dal componente SignatureCard
   
-  // Mutation to manually compare all signatures
+  // Mutation to compare all signatures using the new endpoint
   const compareAllSignatures = useMutation({
     mutationFn: async () => {
       if (!selectedProject) throw new Error("Nessun progetto selezionato");
       
-      // Ottieni tutte le firme del progetto usando l'endpoint debug
-      const allSignatures = await queryClient.fetchQuery<Signature[]>({
-        queryKey: [`/api/signature-projects/${selectedProject}/signatures-debug`],
+      console.log(`Avvio confronto multiplo per progetto ${selectedProject} usando l'endpoint compare-all`);
+      
+      // Utilizziamo il nuovo endpoint che elabora tutte le firme in una singola richiesta
+      const res = await fetch(`/api/signature-projects/${selectedProject}/compare-all`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include"
       });
       
-      console.log("Firme recuperate per confronto:", allSignatures);
-      
-      // Verifica se abbiamo firme
-      if (!allSignatures || allSignatures.length === 0) {
-        console.error("Nessuna firma trovata per il progetto", selectedProject);
-        throw new Error("Nessuna firma trovata per questo progetto");
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Errore durante il confronto delle firme");
       }
       
-      // Verifica se ci sono firme di riferimento e di verifica
-      const referenceSignatures = allSignatures.filter((s) => s.isReference && s.processingStatus === 'completed');
-      const verificationSignatures = allSignatures.filter((s) => !s.isReference && s.processingStatus === 'completed');
-      
-      console.log("Firme di riferimento:", referenceSignatures);
-      console.log("Firme da verificare:", verificationSignatures);
-      
-      if (referenceSignatures.length === 0) {
-        console.error("Nessuna firma di riferimento completata");
-        throw new Error("Nessuna firma di riferimento completata disponibile");
-      }
-      
-      if (verificationSignatures.length === 0) {
-        console.error("Nessuna firma da verificare completata");
-        throw new Error("Nessuna firma da verificare disponibile o completata");
-      }
-      
-      // Per ogni firma da verificare, richiedi un nuovo confronto
-      const promises = verificationSignatures.map(async (signature: any) => {
-        const res = await fetch(`/api/signatures/${signature.id}/compare`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({ projectId: selectedProject }),
-        });
-        
-        if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.error || "Errore durante il confronto della firma");
-        }
-        
-        return res.json();
-      });
-      
-      // Attendi che tutti i confronti siano completati
-      return Promise.all(promises);
+      return res.json();
     },
     onSuccess: () => {
       // Aggiorniamo entrambe le query per garantire che i dati siano aggiornati
