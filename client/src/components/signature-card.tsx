@@ -173,10 +173,124 @@ export function SignatureCard({
                 </div>
               )}
               
-              {/* Link al report PDF se disponibile */}
-              {signature.reportPath && (
+              {/* Visualizzazione dettagliata dei parametri di confronto */}
+              {signature.parameters && (
                 <div className="mt-4">
-                  <Button asChild>
+                  <h3 className="font-medium mb-2 text-lg">{t('signatures.analysisReport.detailedParams', 'Parametri dettagliati')}</h3>
+                  <div className="grid grid-cols-2 gap-4 bg-muted p-4 rounded">
+                    {/* Dimensioni e proporzioni */}
+                    <div>
+                      <h4 className="font-medium">{t('signatures.parameters.dimensions', 'Dimensioni e proporzioni')}</h4>
+                      <div className="space-y-2 mt-1 text-sm">
+                        <div className="flex justify-between">
+                          <span>{t('signatures.parameters.width', 'Larghezza')}:</span>
+                          <span>{signature.parameters.width} px ({(signature.parameters.width / 37.8).toFixed(1)} mm)</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>{t('signatures.parameters.height', 'Altezza')}:</span>
+                          <span>{signature.parameters.height} px ({(signature.parameters.height / 37.8).toFixed(1)} mm)</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>{t('signatures.parameters.aspectRatio', 'Proporzione')}:</span>
+                          <span>{signature.parameters.aspectRatio.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Tratti */}
+                    <div>
+                      <h4 className="font-medium">{t('signatures.parameters.strokes', 'Caratteristiche dei tratti')}</h4>
+                      <div className="space-y-2 mt-1 text-sm">
+                        <div className="flex justify-between">
+                          <span>{t('signatures.parameters.minWidth', 'Spessore min')}:</span>
+                          <span>{signature.parameters.strokeWidth.min} px</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>{t('signatures.parameters.maxWidth', 'Spessore max')}:</span>
+                          <span>{signature.parameters.strokeWidth.max} px</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>{t('signatures.parameters.meanWidth', 'Spessore medio')}:</span>
+                          <span>{signature.parameters.strokeWidth.mean.toFixed(2)} px</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Connettività */}
+                    <div>
+                      <h4 className="font-medium">{t('signatures.parameters.connectivity', 'Connettività')}</h4>
+                      <div className="space-y-2 mt-1 text-sm">
+                        <div className="flex justify-between">
+                          <span>{t('signatures.parameters.components', 'Componenti')}:</span>
+                          <span>{signature.parameters.connectivity.connectedComponents}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>{t('signatures.parameters.gaps', 'Interruzioni')}:</span>
+                          <span>{signature.parameters.connectivity.gaps}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Curvatura */}
+                    <div>
+                      <h4 className="font-medium">{t('signatures.parameters.curvature', 'Curvatura')}</h4>
+                      <div className="space-y-2 mt-1 text-sm">
+                        <div className="flex justify-between">
+                          <span>{t('signatures.parameters.sharpCorners', 'Angoli netti')}:</span>
+                          <span>{signature.parameters.curvatureMetrics.sharpCorners}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>{t('signatures.parameters.smoothCurves', 'Curve fluide')}:</span>
+                          <span>{signature.parameters.curvatureMetrics.smoothCurves}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>{t('signatures.parameters.angleChanges', 'Variazioni angolari')}:</span>
+                          <span>{signature.parameters.curvatureMetrics.totalAngleChanges.toFixed(2)}°</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Distribuzione spaziale */}
+                    <div className="col-span-2">
+                      <h4 className="font-medium">{t('signatures.parameters.spatialDistribution', 'Distribuzione spaziale')}</h4>
+                      <div className="grid grid-cols-3 gap-2 mt-1 text-sm">
+                        <div className="flex justify-between">
+                          <span>{t('signatures.parameters.density', 'Densità')}:</span>
+                          <span>{(signature.parameters.spatialDistribution.density * 100).toFixed(0)}%</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>{t('signatures.parameters.centerX', 'Centro X')}:</span>
+                          <span>{(signature.parameters.spatialDistribution.centerOfMassX * 100).toFixed(0)}%</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>{t('signatures.parameters.centerY', 'Centro Y')}:</span>
+                          <span>{(signature.parameters.spatialDistribution.centerOfMassY * 100).toFixed(0)}%</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Punti caratteristici */}
+                    <div className="col-span-2">
+                      <h4 className="font-medium">{t('signatures.parameters.featurePoints', 'Punti caratteristici')}</h4>
+                      <div className="grid grid-cols-2 gap-2 mt-1 text-sm">
+                        <div className="flex justify-between">
+                          <span>{t('signatures.parameters.loopPoints', 'Asole')}:</span>
+                          <span>{signature.parameters.featurePoints.loopPoints}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>{t('signatures.parameters.crossPoints', 'Incroci')}:</span>
+                          <span>{signature.parameters.featurePoints.crossPoints}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Generazione report PDF */}
+              <div className="mt-6 flex justify-between space-x-4">
+                {signature.reportPath ? (
+                  <Button asChild className="flex-1">
                     <a 
                       href={`/api/signatures/${signature.id}/report`} 
                       target="_blank" 
@@ -185,8 +299,17 @@ export function SignatureCard({
                       {t('signatures.analysisReport.downloadPdf', 'Scarica report PDF')}
                     </a>
                   </Button>
-                </div>
-              )}
+                ) : (
+                  !signature.isReference && signature.processingStatus === 'completed' && (
+                    <Button 
+                      className="flex-1"
+                      onClick={() => window.open(`/api/signatures/${signature.id}/generate-report`, '_blank')}
+                    >
+                      {t('signatures.analysisReport.generatePdf', 'Genera report PDF')}
+                    </Button>
+                  )
+                )}
+              </div>
             </div>
           </DialogContent>
         </Dialog>
