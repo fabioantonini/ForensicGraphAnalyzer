@@ -363,16 +363,7 @@ export default function SignaturesPage() {
     }
   };
   
-  // Function to get status badge color
-  const getStatusColor = (status: string) => {
-    switch(status) {
-      case 'pending': return 'bg-yellow-500';
-      case 'processing': return 'bg-blue-500';
-      case 'completed': return 'bg-green-500';
-      case 'failed': return 'bg-red-500';
-      default: return 'bg-gray-500';
-    }
-  };
+  // Rimosso getStatusColor perché ora è gestito dal componente SignatureCard
   
   // Mutation to manually compare all signatures
   const compareAllSignatures = useMutation({
@@ -449,29 +440,7 @@ export default function SignaturesPage() {
     },
   });
   
-  // Function to render similarity score
-  const renderSimilarityScore = (score: number | null) => {
-    if (score === null) return null;
-    
-    let color = 'bg-red-500';
-    let text = 'Firma non autentica';
-    
-    if (score >= 0.8) {
-      color = 'bg-green-500';
-      text = 'Firma autentica';
-    } else if (score >= 0.6) {
-      color = 'bg-yellow-500';
-      text = 'Firma sospetta';
-    }
-    
-    return (
-      <div className="mt-2">
-        <p className="text-sm font-medium">Punteggio di somiglianza: {(score * 100).toFixed(1)}%</p>
-        <Progress value={score * 100} className="h-2 mt-1" />
-        <Badge className={`mt-2 ${color}`}>{text}</Badge>
-      </div>
-    );
-  };
+  // Rimosso renderSimilarityScore perché ora è gestito dal componente SignatureCard
   
   return (
     <div className="container mx-auto py-6">
@@ -580,9 +549,11 @@ export default function SignaturesPage() {
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
-                <CardDescription>
-                  {project.description || t('signatures.noDescription')}
-                </CardDescription>
+                {project.description && (
+                  <CardDescription>
+                    {project.description}
+                  </CardDescription>
+                )}
               </CardHeader>
               <CardFooter className="pt-2">
                 <p className="text-xs text-muted-foreground">
@@ -920,34 +891,12 @@ export default function SignaturesPage() {
                       .filter((s: any) => !s.isReference)
                       .sort((a: any, b: any) => a.processingStatus === 'completed' ? -1 : 1)
                       .map((signature: any) => (
-                        <Card key={signature.id} className="overflow-hidden">
-                          <div className="relative h-48 bg-gray-100">
-                            <img 
-                              src={`/uploads/${signature.filename}`} 
-                              alt={signature.originalFilename || 'Signature'}
-                              className="w-full h-full object-contain p-2"
-                            />
-                            <Button
-                              variant="destructive"
-                              size="icon"
-                              className="absolute top-2 right-2 h-7 w-7 opacity-80 hover:opacity-100"
-                              onClick={() => handleDeleteSignature(signature.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          <CardContent className="p-3">
-                            <p className="text-sm truncate" title={signature.originalFilename}>
-                              {signature.originalFilename || 'Unknown File'}
-                            </p>
-                            <div className="flex items-center mt-1">
-                              <Badge className={getStatusColor(signature.processingStatus)}>
-                                {signature.processingStatus}
-                              </Badge>
-                            </div>
-                            {signature.processingStatus === 'completed' && renderSimilarityScore(signature.similarityScore)}
-                          </CardContent>
-                        </Card>
+                        <SignatureCard 
+                          key={signature.id} 
+                          signature={signature}
+                          onDelete={handleDeleteSignature}
+                          showSimilarity={true}
+                        />
                       ))
                     }
                   </div>
