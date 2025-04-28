@@ -344,6 +344,141 @@ export function registerSignatureRoutes(router: Router) {
     }
   });
   
+
+  // Endpoint per generare e scaricare un report PDF per una firma
+  router.get("/signatures/:id/generate-report", isAuthenticated, async (req, res) => {
+    try {
+      const signatureId = parseInt(req.params.id);
+      console.log(`[PDF REPORT] Richiesta generazione report per firma ${signatureId}`);
+      
+      // Verifica che la firma esista
+      const signature = await storage.getSignature(signatureId);
+      if (!signature) {
+        console.log(`[PDF REPORT] Firma ${signatureId} non trovata`);
+        return res.status(404).json({ error: "Firma non trovata" });
+      }
+      
+      // Verifica che l'utente sia autorizzato
+      const project = await storage.getSignatureProject(signature.projectId);
+      if (!project || project.userId !== req.user!.id) {
+        console.log(`[PDF REPORT] Utente non autorizzato per firma ${signatureId}`);
+        return res.status(403).json({ error: "Non autorizzato" });
+      }
+      
+      // Verifica che non sia una firma di riferimento
+      if (signature.isReference) {
+        console.log(`[PDF REPORT] La firma ${signatureId} è una firma di riferimento, non è possibile generare un report`);
+        return res.status(400).json({ error: "Non è possibile generare report per firme di riferimento" });
+      }
+      
+      // Verifica che la firma sia stata elaborata
+      if (signature.processingStatus !== "completed") {
+        console.log(`[PDF REPORT] La firma ${signatureId} non è stata completamente elaborata`);
+        return res.status(400).json({ error: "La firma non è stata completamente elaborata" });
+      }
+      
+      // Ottieni le firme di riferimento per questo progetto
+      const referenceSignatures = await storage.getProjectSignatures(signature.projectId, true);
+      const completedReferences = referenceSignatures.filter(
+        ref => ref.processingStatus === "completed" && ref.parameters
+      );
+      
+      if (completedReferences.length === 0) {
+        console.log(`[PDF REPORT] Nessuna firma di riferimento disponibile per il confronto`);
+        return res.status(400).json({ error: "Nessuna firma di riferimento disponibile per il confronto" });
+      }
+      
+      // Usiamo la prima firma di riferimento per il confronto avanzato
+      const referenceSignature = completedReferences[0];
+      console.log(`[PDF REPORT] Utilizzo firma di riferimento ${referenceSignature.id} per il confronto`);
+      
+      // Verifica la disponibilità dell'analizzatore Python avanzato
+      const isPythonAvailable = await SignaturePythonAnalyzer.checkAvailability();
+      if (!isPythonAvailable) {
+        console.log(`[PDF REPORT] Analizzatore Python non disponibile, impossibile generare report`);
+        return res.status(500).json({ error: "Servizio di analisi avanzata non disponibile" });
+      }
+      
+      // Prepara i percorsi dei file
+      const referencePath = path.join("./uploads", referenceSignature.filename);
+      const signaturePath = path.join("./uploads", signature.filename);
+      
+      // Crea informazioni sul caso
+      const caseInfo = {
+        caseName: project.name,
+        subject: `Verifica firma: ${signature.originalFilename}`,
+        date: new Date().toLocaleDateString("it-IT"),
+        documentType: "Verifica di autenticità",
+        notes: project.description || ""
+      };
+      
+      console.log(`[PDF REPORT] Avvio generazione report per firma ${signatureId}`);
+      
+      // Genera il report
+      try {
+        const reportResult = await SignaturePythonAnalyzer.generateReport(
+          signaturePath,
+          referencePath,
+          caseInfo
+        );
+        
+        if (!reportResult || !reportResult.report_path) {
+          console.log(`[PDF REPORT] Errore nella generazione del report per firma ${signatureId}`);
+          return res.status(500).json({ error: "Errore nella generazione del report" });
+        }
+        
+        console.log(`[PDF REPORT] Report generato con successo: ${reportResult.report_path}`);
+        
+        // Aggiorna il record della firma con il percorso del report
+        await storage.updateSignature(signatureId, {
+          reportPath: reportResult.report_path
+        });
+        
+        // Aggiorna anche il grafico e il report se non sono già presenti
+        if (!signature.comparisonChart && reportResult.comparison_chart) {
+          await storage.updateSignature(signatureId, {
+            comparisonChart: reportResult.comparison_chart
+          });
+        }
+        
+        if (!signature.analysisReport && reportResult.description) {
+          await storage.updateSignature(signatureId, {
+            analysisReport: reportResult.description
+          });
+        }
+        
+        // Aggiorna registro attività
+        await storage.createActivity({
+          userId: req.user!.id,
+          type: "signature_report",
+          details: `Generato report PDF per la firma "${signature.originalFilename}"`
+        });
+        
+        // Invia il file al client
+        console.log(`[PDF REPORT] Invio report PDF al client: ${reportResult.report_path}`);
+        
+        // Costruisci il nome del file per il download
+        const reportFilename = `report_${project.name.replace(/\s+/g, "_")}_${signature.originalFilename}.pdf`;
+        
+        // Invia il file in risposta
+        res.download(reportResult.report_path, reportFilename, (err) => {
+          if (err) {
+            console.error(`[PDF REPORT] Errore durante il download del report:`, err);
+            if (!res.headersSent) {
+              res.status(500).json({ error: "Errore durante il download del report" });
+            }
+          }
+        });
+      } catch (error) {
+        console.error(`[PDF REPORT] Errore durante la generazione del report:`, error);
+        res.status(500).json({ error: "Errore durante la generazione del report" });
+      }
+    } catch (error: any) {
+      console.error(`[PDF REPORT] Errore nella generazione del report:`, error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Ottieni il report PDF di una firma
   router.get("/signatures/:id/report", isAuthenticated, async (req, res) => {
     try {
