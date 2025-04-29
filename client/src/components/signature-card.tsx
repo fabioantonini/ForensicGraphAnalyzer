@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 interface SignatureCardProps {
   signature: any; 
@@ -21,6 +22,7 @@ export function SignatureCard({
   showSimilarity = false
 }: SignatureCardProps) {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
   
   // Function to get status badge color
