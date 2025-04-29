@@ -277,8 +277,8 @@ def generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, simi
     Returns:
         Path del file PDF generato
     """
-    # Assicura che il percorso di output termini con .pdf
-    pdf_output_path = output_path.replace('.docx', '.pdf')
+    # Assicura che il percorso di output sia corretto
+    pdf_output_path = output_path
     if not pdf_output_path.endswith('.pdf'):
         pdf_output_path += '.pdf'
     
