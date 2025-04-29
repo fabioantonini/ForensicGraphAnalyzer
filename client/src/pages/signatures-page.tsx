@@ -356,8 +356,16 @@ export default function SignaturesPage() {
     }
   };
   
-  // Handle signature deletion
+  // Handle signature deletion or refresh
   const handleDeleteSignature = (signatureId: number) => {
+    // Se l'ID è -1, è una richiesta di aggiornamento, non una cancellazione
+    if (signatureId === -1) {
+      console.log('Richiesta di aggiornamento ricevuta, ricaricamento firme...');
+      refetchSignatures();
+      return;
+    }
+    
+    // Altrimenti procedi con l'eliminazione normale
     if (confirm("Sei sicuro di voler eliminare questa firma?")) {
       deleteSignature.mutate(signatureId);
     }

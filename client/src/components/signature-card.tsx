@@ -309,28 +309,47 @@ export function SignatureCard({
                       className="flex-1"
                       onClick={async () => {
                         try {
+                          // Mostra un toast di avvio processo
+                          toast({
+                            title: t('signatures.analysisReport.generating', 'Generazione report in corso...'),
+                            description: t('signatures.analysisReport.pleaseWait', 'Potrebbero essere necessari alcuni secondi'),
+                            duration: 2000
+                          });
+                          
                           const response = await fetch(`/api/signatures/${signature.id}/generate-report`);
                           
                           if (response.ok) {
-                            // Avvisare l'utente che il report è stato generato e scaricare
+                            const data = await response.json();
+                            console.log('Report generato:', data);
+                                
+                            // Aggiorna la firma corrente con il nuovo percorso del report
+                            if (data.reportPath && onDelete) {
+                              // Qui utilizziamo onDelete come hack per forzare il ricaricamento delle firme
+                              // Non sta realmente eliminando nulla, ma fa in modo che il parent ricarichi
+                              setTimeout(() => {
+                                onDelete(-1); // Un ID impossibile per segnalare che non è una cancellazione ma un aggiornamento
+                              }, 500);
+                            }
+                            
+                            // Avvisare l'utente che il report è stato generato
                             toast({
                               title: t('signatures.analysisReport.generationSuccess', 'Report generato con successo'),
                               description: t('signatures.analysisReport.downloadStarting', 'Il download inizierà a breve...'),
-                              duration: 3000,
-                              variant: "success"
+                              duration: 3000
                             });
                             
                             // Attendere un attimo e poi richiedere il download
                             setTimeout(() => {
                               window.location.href = `/api/signatures/${signature.id}/report`;
-                            }, 1000);
-                            
+                            }, 1500);
                           } else {
                             // Mostrare messaggio di errore
                             const errorData = await response.json();
+                            const errorMessage = errorData.details || errorData.error || t('signatures.analysisReport.unknownError', 'Si è verificato un errore inaspettato');
+                            
                             toast({
                               title: t('signatures.analysisReport.generationFailed', 'Errore nella generazione del report'),
-                              description: errorData.error || t('signatures.analysisReport.unknownError', 'Si è verificato un errore inaspettato'),
+                              description: errorMessage,
                               duration: 5000,
                               variant: "destructive"
                             });

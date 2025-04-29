@@ -346,6 +346,7 @@ export function registerSignatureRoutes(router: Router) {
   
 
   // Endpoint per generare e scaricare un report PDF per una firma
+  // Endpoint per generare un report PDF per una firma 
   router.get("/signatures/:id/generate-report", isAuthenticated, async (req, res) => {
     try {
       const signatureId = parseInt(req.params.id);
@@ -377,6 +378,22 @@ export function registerSignatureRoutes(router: Router) {
         return res.status(400).json({ error: "La firma non è stata completamente elaborata" });
       }
       
+      // Se il report è già stato generato, restituisci il percorso senza rigenerarlo
+      if (signature.reportPath) {
+        try {
+          await fs.access(signature.reportPath);
+          console.log(`[PDF REPORT] Report già esistente per firma ${signatureId}: ${signature.reportPath}`);
+          return res.status(200).json({ 
+            success: true, 
+            message: "Report già generato in precedenza", 
+            reportPath: signature.reportPath 
+          });
+        } catch (err) {
+          console.log(`[PDF REPORT] Report esistente ma file non trovato, generazione di un nuovo report`);
+          // Il file non esiste più, continua con la generazione di un nuovo report
+        }
+      }
+      
       // Ottieni le firme di riferimento per questo progetto
       const referenceSignatures = await storage.getProjectSignatures(signature.projectId, true);
       const completedReferences = referenceSignatures.filter(
@@ -403,11 +420,24 @@ export function registerSignatureRoutes(router: Router) {
       const referencePath = path.join("./uploads", referenceSignature.filename);
       const signaturePath = path.join("./uploads", signature.filename);
       
+      // Verifica che i file delle firme esistano
+      try {
+        await fs.access(referencePath);
+        await fs.access(signaturePath);
+      } catch (err) {
+        console.log(`[PDF REPORT] File di firma non trovato`, err);
+        return res.status(404).json({ error: "File di firma non trovato" });
+      }
+      
+      // Formatta la data in modo localizzato
+      const today = new Date();
+      const formattedDate = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
+      
       // Crea informazioni sul caso
       const caseInfo = {
         caseName: project.name,
         subject: `Verifica firma: ${signature.originalFilename}`,
-        date: new Date().toLocaleDateString("it-IT"),
+        date: formattedDate,
         documentType: "Verifica di autenticità",
         notes: project.description || ""
       };
@@ -435,16 +465,19 @@ export function registerSignatureRoutes(router: Router) {
         });
         
         // Aggiorna anche il grafico e il report se non sono già presenti
+        const updates: any = {};
+        
         if (!signature.comparisonChart && reportResult.comparison_chart) {
-          await storage.updateSignature(signatureId, {
-            comparisonChart: reportResult.comparison_chart
-          });
+          updates.comparisonChart = reportResult.comparison_chart;
         }
         
         if (!signature.analysisReport && reportResult.description) {
-          await storage.updateSignature(signatureId, {
-            analysisReport: reportResult.description
-          });
+          updates.analysisReport = reportResult.description;
+        }
+        
+        // Se ci sono altri aggiornamenti, applicali
+        if (Object.keys(updates).length > 0) {
+          await storage.updateSignature(signatureId, updates);
         }
         
         // Aggiorna registro attività
@@ -454,28 +487,22 @@ export function registerSignatureRoutes(router: Router) {
           details: `Generato report PDF per la firma "${signature.originalFilename}"`
         });
         
-        // Invia il file al client
-        console.log(`[PDF REPORT] Invio report PDF al client: ${reportResult.report_path}`);
-        
-        // Costruisci il nome del file per il download
-        const reportFilename = `report_${project.name.replace(/\s+/g, "_")}_${signature.originalFilename}.pdf`;
-        
-        // Invia il file in risposta
-        res.download(reportResult.report_path, reportFilename, (err) => {
-          if (err) {
-            console.error(`[PDF REPORT] Errore durante il download del report:`, err);
-            if (!res.headersSent) {
-              res.status(500).json({ error: "Errore durante il download del report" });
-            }
-          }
+        // Restituisci successo e il percorso del report
+        return res.status(200).json({
+          success: true,
+          message: "Report generato con successo",
+          reportPath: reportResult.report_path
         });
-      } catch (error) {
+      } catch (error: any) {
         console.error(`[PDF REPORT] Errore durante la generazione del report:`, error);
-        res.status(500).json({ error: "Errore durante la generazione del report" });
+        return res.status(500).json({ 
+          error: "Errore durante la generazione del report", 
+          details: error.message 
+        });
       }
     } catch (error: any) {
       console.error(`[PDF REPORT] Errore nella generazione del report:`, error);
-      res.status(500).json({ error: error.message });
+      return res.status(500).json({ error: error.message });
     }
   });
 
