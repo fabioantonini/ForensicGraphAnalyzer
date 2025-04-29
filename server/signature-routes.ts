@@ -602,9 +602,16 @@ export function registerSignatureRoutes(router: Router) {
       
       // Genera il report
       try {
+        // IMPORTANTE: Invertiamo i parametri per compensare il problema di ordinamento
+        // nel python-bridge.ts la firma da verificare viene scambiata con quella di riferimento
+        // NOTA: questo è un workaround intenzionale, il vero bug è in advanced-signature-analyzer.py
+        console.log(`[PDF REPORT] CORREZIONE: Invertendo ordine parametri per compensare il bug`);
+        console.log(`[PDF REPORT] Firma da verificare (diventerà riferimento): ${signaturePath}`);
+        console.log(`[PDF REPORT] Firma di riferimento (diventerà verifica): ${referencePath}`);
+        
         const reportResult = await SignaturePythonAnalyzer.generateReport(
-          signaturePath,
-          referencePath,
+          referencePath,   // Questo diventerà la firma da verificare nel report
+          signaturePath,   // Questo diventerà la firma di riferimento nel report
           caseInfo
         );
         
@@ -711,9 +718,14 @@ export function registerSignatureRoutes(router: Router) {
             const signaturePath = path.join('./uploads', signature.filename);
             
             // Genera il report DOCX
+            // IMPORTANTE: Invertiamo i parametri per compensare il problema di ordinamento
+            console.log(`[PDF REPORT DOWNLOAD] CORREZIONE: Invertendo ordine parametri per compensare il bug`);
+            console.log(`[PDF REPORT DOWNLOAD] Firma da verificare (diventerà riferimento): ${signaturePath}`);
+            console.log(`[PDF REPORT DOWNLOAD] Firma di riferimento (diventerà verifica): ${referencePath}`);
+            
             const reportResult = await SignaturePythonAnalyzer.generateReport(
-              signaturePath,
-              referencePath,
+              referencePath,   // Questo diventerà la firma da verificare nel report
+              signaturePath,   // Questo diventerà la firma di riferimento nel report
               caseInfo
             );
             
