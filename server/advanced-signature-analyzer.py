@@ -516,11 +516,9 @@ def compare_signatures(verifica_path, comp_path, generate_report=False, case_inf
             "verifica_parameters": verifica_data,
             "reference_parameters": comp_data,
             "comparison_chart": chart_img,
-            "description": description
+            "description": description,
+            "report_path": report_path if report_path else None
         }
-        
-        if report_path:
-            result["report_path"] = report_path
         
         return result
     

@@ -149,9 +149,19 @@ export class SignaturePythonAnalyzer {
         }
 
         try {
+          console.log(`[PYTHON BRIDGE] Output ricevuto:`, outputData);
           const result = JSON.parse(outputData) as ComparisonResult;
+          
+          // Verifica che report_path sia una stringa
+          if (result.report_path && typeof result.report_path !== 'string') {
+            console.log(`[PYTHON BRIDGE] Correzione report_path da ${result.report_path} a stringa`);
+            // Se non è una stringa, ma è presente, lo convertiamo in stringa
+            result.report_path = String(result.report_path);
+          }
+          
           resolve(result);
         } catch (error: any) {
+          console.error(`[PYTHON BRIDGE] Errore nel parsing JSON:`, error, `Output raw:`, outputData);
           reject(new Error(`Errore nel parsing del risultato: ${error.message}`));
         }
       });
