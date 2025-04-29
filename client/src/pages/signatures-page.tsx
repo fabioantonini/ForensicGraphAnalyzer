@@ -834,7 +834,10 @@ export default function SignaturesPage() {
           </Card>
           
           <div className="mb-6">
-            <h3 className="text-xl font-semibold mb-3">{t('signatures.referenceSignatures')}</h3>
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-xl font-semibold">{t('signatures.referenceSignatures')}</h3>
+              <SignatureMethodologyDialog />
+            </div>
             {signaturesLoading ? (
               <div className="flex justify-center items-center h-40">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
