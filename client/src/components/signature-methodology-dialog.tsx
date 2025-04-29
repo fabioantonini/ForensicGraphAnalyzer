@@ -24,8 +24,8 @@ export function SignatureMethodologyDialog() {
           {t('signatures.methodology.button', 'Metodologia di analisi')}
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="max-w-4xl h-[80vh] flex flex-col p-6 overflow-hidden">
+        <DialogHeader className="pb-4">
           <DialogTitle>
             {t('signatures.methodology.title', 'Metodologia di analisi delle firme - GrapholexInsight')}
           </DialogTitle>
@@ -34,7 +34,7 @@ export function SignatureMethodologyDialog() {
           </DialogDescription>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 pr-4 mt-6">
+        <ScrollArea className="flex-1 pr-6 overflow-y-auto">
           <div className="space-y-6">
             <section>
               <h3 className="text-lg font-semibold mb-2">
