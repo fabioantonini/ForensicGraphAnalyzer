@@ -460,7 +460,7 @@ def compare_signatures(verifica_path, comp_path, generate_report=False, case_inf
     Args:
         verifica_path: Percorso della firma da verificare
         comp_path: Percorso della firma di riferimento
-        generate_report: Se True, genera anche un report DOCX
+        generate_report: Se True, genera anche un report PDF
         case_info: Informazioni sul caso per il report
         
     Returns:
@@ -498,10 +498,11 @@ def compare_signatures(verifica_path, comp_path, generate_report=False, case_inf
         report_path = None
         if generate_report:
             output_dir = tempfile.mkdtemp()
-            report_docx_path = os.path.join(output_dir, f"report_firma_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx")
+            report_path_base = os.path.join(output_dir, f"report_firma_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
+            report_pdf_path = f"{report_path_base}.pdf"
             try:
                 # Genera il report PDF
-                report_path = generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, similarity, report_docx_path, case_info)
+                report_path = generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, similarity, report_pdf_path, case_info)
                 print(f"Report generato con successo: {report_path}")
             except Exception as e:
                 print(f"Errore nella generazione del report: {str(e)}", file=sys.stderr)

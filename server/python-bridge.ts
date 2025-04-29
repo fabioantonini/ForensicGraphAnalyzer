@@ -100,7 +100,7 @@ export class SignaturePythonAnalyzer {
    * Confronta due firme utilizzando lo script Python avanzato
    * @param verificaPath Percorso della firma da verificare
    * @param referencePath Percorso della firma di riferimento
-   * @param generateReport Se true, genera un report DOCX
+   * @param generateReport Se true, genera un report PDF
    * @param caseInfo Informazioni opzionali sul caso per il report
    * @returns Promise con i risultati del confronto
    */
@@ -159,7 +159,7 @@ export class SignaturePythonAnalyzer {
   }
 
   /**
-   * Genera un report comparativo in formato DOCX
+   * Genera un report comparativo in formato PDF
    * @param verificaPath Percorso della firma da verificare
    * @param referencePath Percorso della firma di riferimento
    * @param caseInfo Informazioni sul caso per il report
