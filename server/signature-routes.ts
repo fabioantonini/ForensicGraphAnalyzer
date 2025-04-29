@@ -113,16 +113,31 @@ export function registerSignatureRoutes(router: Router) {
         try {
           console.log(`[DEBUG REPORT-ALL] Generazione report per firma ${signature.id}`);
           
-          // Usiamo la prima firma di riferimento per il confronto avanzato
-          const referenceSignature = completedReferences[0];
-          const referencePath = path.join('./uploads', referenceSignature.filename);
+          // Percorso della firma da verificare
           const signaturePath = path.join('./uploads', signature.filename);
+          
+          // Calcoliamo il report usando tutte le firme di riferimento, come fa "Confronta Tutte"
+          // Creiamo un array con i percorsi di tutte le firme di riferimento
+          const referencePaths = completedReferences.map(ref => path.join('./uploads', ref.filename));
+          
+          // Utilizza la prima firma di riferimento come principale per il report
+          // ma il risultato terrà conto di tutte le firme di riferimento
+          const primaryReferencePath = referencePaths[0];
+          
+          // Aggiorniamo le info sul caso per indicare che è un confronto con multiple firme di riferimento
+          const enhancedCaseInfo = {
+            ...caseInfo,
+            notes: caseInfo.notes + (completedReferences.length > 1 ? 
+              `\nConfrontata con ${completedReferences.length} firme di riferimento.` : '')
+          };
           
           // Genera il report PDF
           const reportResult = await SignaturePythonAnalyzer.generateReport(
             signaturePath,
-            referencePath,
-            caseInfo
+            primaryReferencePath,
+            enhancedCaseInfo,
+            // Passando tutte le firme di riferimento aggiuntive
+            referencePaths.slice(1)
           );
           
           // Aggiorna la firma con il percorso del report
