@@ -121,8 +121,17 @@ export function registerSignatureRoutes(router: Router) {
           const referencePaths = completedReferences.map(ref => path.join('./uploads', ref.filename));
           
           // Utilizza la prima firma di riferimento come principale per il report
-          // ma il risultato terrà conto di tutte le firme di riferimento
           const primaryReferencePath = referencePaths[0];
+          
+          // Le firme di riferimento aggiuntive sono tutte tranne la prima
+          const additionalReferencePaths = referencePaths.length > 1 ? referencePaths.slice(1) : [];
+          
+          // Debug
+          console.log(`[DEBUG REPORT-ALL] Firma da verificare: ${signature.filename}`);
+          console.log(`[DEBUG REPORT-ALL] Firma di riferimento principale: ${completedReferences[0].filename}`);
+          if (additionalReferencePaths.length > 0) {
+            console.log(`[DEBUG REPORT-ALL] Firme di riferimento aggiuntive: ${additionalReferencePaths.length}`);
+          }
           
           // Aggiorniamo le info sul caso per indicare che è un confronto con multiple firme di riferimento
           const enhancedCaseInfo = {
@@ -131,13 +140,13 @@ export function registerSignatureRoutes(router: Router) {
               `\nConfrontata con ${completedReferences.length} firme di riferimento.` : '')
           };
           
-          // Genera il report PDF
+          // Genera il report PDF - Importante: la firma da verificare deve essere la prima,
+          // NON una delle firme di riferimento
           const reportResult = await SignaturePythonAnalyzer.generateReport(
-            signaturePath,
-            primaryReferencePath,
-            enhancedCaseInfo,
-            // Passando tutte le firme di riferimento aggiuntive
-            referencePaths.slice(1)
+            signaturePath,           // Firma da verificare
+            primaryReferencePath,    // Prima firma di riferimento come principale
+            enhancedCaseInfo,        // Informazioni sul caso
+            additionalReferencePaths // Eventuali firme di riferimento aggiuntive
           );
           
           // Aggiorna la firma con il percorso del report
