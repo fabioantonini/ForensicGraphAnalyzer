@@ -21,6 +21,7 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from docx import Document
 from PIL import Image
+from docx2pdf import convert
 
 # Costante DPI
 DPI = 300
@@ -333,9 +334,19 @@ def generate_docx_report(verifica_path, comp_path, verifica_data, comp_data, sim
         if line.strip():
             doc.add_paragraph(line)
     
-    # Salva il documento
+    # Salva il documento DOCX
     doc.save(output_path)
-    return output_path
+    
+    try:
+        # Converti in PDF
+        pdf_output_path = output_path.replace('.docx', '.pdf')
+        convert(output_path, pdf_output_path)
+        print(f"Documento convertito con successo: {pdf_output_path}")
+        return pdf_output_path
+    except Exception as e:
+        print(f"Errore nella conversione in PDF: {str(e)}", file=sys.stderr)
+        # In caso di errore nella conversione, restituisce comunque il file DOCX
+        return output_path
 
 def compare_signatures(verifica_path, comp_path, generate_report=False, case_info=None):
     """
@@ -378,12 +389,17 @@ def compare_signatures(verifica_path, comp_path, generate_report=False, case_inf
         # Crea il report descrittivo
         description = create_descriptive_report(verifica_data, comp_data)
         
-        # Genera il report DOCX se richiesto
+        # Genera il report se richiesto
         report_path = None
         if generate_report:
             output_dir = tempfile.mkdtemp()
-            report_path = os.path.join(output_dir, f"report_firma_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx")
-            generate_docx_report(verifica_path, comp_path, verifica_data, comp_data, similarity, report_path, case_info)
+            report_docx_path = os.path.join(output_dir, f"report_firma_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx")
+            try:
+                # Genera il report (DOCX o PDF)
+                report_path = generate_docx_report(verifica_path, comp_path, verifica_data, comp_data, similarity, report_docx_path, case_info)
+                print(f"Report generato con successo: {report_path}")
+            except Exception as e:
+                print(f"Errore nella generazione del report: {str(e)}", file=sys.stderr)
         
         # Prepara il risultato
         result = {
