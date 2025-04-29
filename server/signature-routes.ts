@@ -46,6 +46,138 @@ const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
 };
 
 export function registerSignatureRoutes(router: Router) {
+  // Genera report PDF per tutte le firme da verificare in un progetto
+  router.post("/signature-projects/:id/generate-all-reports", isAuthenticated, async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      
+      console.log(`[DEBUG REPORT-ALL] Avvio generazione report per tutte le firme nel progetto ${projectId}`);
+      
+      const project = await storage.getSignatureProject(projectId);
+      if (!project || project.userId !== req.user!.id) {
+        return res.status(403).json({ error: 'Non autorizzato' });
+      }
+      
+      console.log(`[DEBUG REPORT-ALL] Recupero firme da verificare per progetto ${projectId}`);
+      
+      // Ottieni tutte le firme da verificare completate
+      const verificationSignatures = await storage.getProjectSignatures(projectId, false);
+      const completedVerifications = verificationSignatures.filter(
+        sig => sig.processingStatus === 'completed' && sig.parameters
+      );
+      
+      console.log(`[DEBUG REPORT-ALL] Trovate ${completedVerifications.length} firme da verificare completate`);
+      
+      if (completedVerifications.length === 0) {
+        return res.status(400).json({
+          error: 'Nessuna firma da verificare elaborata disponibile'
+        });
+      }
+      
+      // Ottieni le firme di riferimento completate
+      const referenceSignatures = await storage.getProjectSignatures(projectId, true);
+      const completedReferences = referenceSignatures.filter(
+        sig => sig.processingStatus === 'completed' && sig.parameters
+      );
+      
+      console.log(`[DEBUG REPORT-ALL] Trovate ${completedReferences.length} firme di riferimento completate`);
+      
+      if (completedReferences.length === 0) {
+        return res.status(400).json({
+          error: 'Nessuna firma di riferimento elaborata disponibile'
+        });
+      }
+      
+      // Verifica la disponibilità dell'analizzatore Python avanzato
+      const isPythonAvailable = await SignaturePythonAnalyzer.checkAvailability();
+      if (!isPythonAvailable) {
+        return res.status(500).json({
+          error: 'Analizzatore avanzato non disponibile, impossibile generare i report'
+        });
+      }
+      
+      // Crea le informazioni sul caso
+      const caseInfo = {
+        caseName: project.name,
+        subject: `Verifica firme multiple`,
+        date: new Date().toLocaleDateString('it-IT'),
+        documentType: 'Verifica di firma',
+        notes: project.description || ""
+      };
+      
+      console.log(`[DEBUG REPORT-ALL] Inizio generazione report per ${completedVerifications.length} firme`);
+      
+      // Utilizziamo un ciclo for standard invece di Promise.all per garantire migliore gestione degli errori
+      const results = [];
+      for (const signature of completedVerifications) {
+        try {
+          console.log(`[DEBUG REPORT-ALL] Generazione report per firma ${signature.id}`);
+          
+          // Usiamo la prima firma di riferimento per il confronto avanzato
+          const referenceSignature = completedReferences[0];
+          const referencePath = path.join('./uploads', referenceSignature.filename);
+          const signaturePath = path.join('./uploads', signature.filename);
+          
+          // Genera il report PDF
+          const reportResult = await SignaturePythonAnalyzer.generateReport(
+            signaturePath,
+            referencePath,
+            caseInfo
+          );
+          
+          // Aggiorna la firma con il percorso del report
+          if (reportResult && reportResult.report_path) {
+            await storage.updateSignature(signature.id, {
+              reportPath: reportResult.report_path
+            });
+            
+            console.log(`[DEBUG REPORT-ALL] Report generato con successo per firma ${signature.id}`);
+            
+            // Ottieni la firma aggiornata
+            const updatedSignature = await storage.getSignature(signature.id);
+            results.push({
+              id: signature.id,
+              reportPath: updatedSignature?.reportPath,
+              success: true
+            });
+          } else {
+            console.error(`[DEBUG REPORT-ALL] Errore durante la generazione del report per firma ${signature.id}:`, reportResult?.error || 'Nessun percorso di report restituito');
+            results.push({
+              id: signature.id,
+              success: false,
+              error: reportResult?.error || 'Generazione report fallita'
+            });
+          }
+        } catch (error: any) {
+          console.error(`[DEBUG REPORT-ALL] Errore per firma ${signature.id}:`, error.message);
+          results.push({
+            id: signature.id,
+            success: false,
+            error: error.message
+          });
+        }
+      }
+      
+      // Aggiorna il registro attività
+      await storage.createActivity({
+        userId: req.user!.id,
+        type: 'report_generation',
+        details: `Generati ${results.filter(r => r.success).length} report PDF nel progetto "${project.name}"`
+      });
+      
+      console.log(`[DEBUG REPORT-ALL] Generazione report completata per ${results.filter(r => r.success).length}/${results.length} firme`);
+      res.json({
+        total: results.length,
+        successful: results.filter(r => r.success).length,
+        results: results
+      });
+    } catch (error: any) {
+      console.error(`[DEBUG REPORT-ALL] Errore generale nella generazione dei report:`, error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  
   // Crea un nuovo progetto firma
   router.post("/signature-projects", isAuthenticated, async (req, res) => {
     try {
