@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { SignatureImage } from "@/components/signature-image";
 import { SignatureCard } from "@/components/signature-card";
+import { SignatureMethodologyDialog } from "@/components/signature-methodology-dialog";
 import { Button } from "@/components/ui/button";
 import { 
   Dialog, 
