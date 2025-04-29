@@ -373,6 +373,58 @@ export default function SignaturesPage() {
   
   // Rimosso getStatusColor perché ora è gestito dal componente SignatureCard
   
+  // Mutation to generate reports for all verification signatures at once
+  const generateAllReports = useMutation({
+    mutationFn: async () => {
+      if (!selectedProject) throw new Error("Nessun progetto selezionato");
+      
+      console.log(`Avvio generazione report per tutte le firme nel progetto ${selectedProject}`);
+      
+      // Utilizziamo il nuovo endpoint che genera report per tutte le firme in una singola richiesta
+      const res = await fetch(`/api/signature-projects/${selectedProject}/generate-all-reports`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include"
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Errore durante la generazione dei report");
+      }
+      
+      return res.json();
+    },
+    onSuccess: (data) => {
+      // Aggiorniamo entrambe le query per garantire che i dati siano aggiornati
+      queryClient.invalidateQueries({ queryKey: [`/api/signature-projects/${selectedProject}/signatures-debug`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures"] });
+      
+      toast({
+        title: "Successo",
+        description: `Generati ${data.successful} report di ${data.total} firme`,
+      });
+      
+      // Se abbiamo generato almeno un report, offriamo un link per scaricare il primo
+      if (data.successful > 0 && data.results.some(r => r.success && r.reportPath)) {
+        const firstSuccessfulReport = data.results.find(r => r.success && r.reportPath);
+        if (firstSuccessfulReport) {
+          setTimeout(() => {
+            window.location.href = `/api/signatures/${firstSuccessfulReport.id}/report`;
+          }, 1500);
+        }
+      }
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Errore",
+        description: `Errore durante la generazione dei report: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+  
   // Mutation to compare all signatures using the new endpoint
   const compareAllSignatures = useMutation({
     mutationFn: async () => {
@@ -662,6 +714,15 @@ export default function SignaturesPage() {
               >
                 {compareAllSignatures.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {t('signatures.compareAll')}
+              </Button>
+              
+              <Button 
+                variant="secondary"
+                onClick={() => generateAllReports.mutate()}
+                disabled={generateAllReports.isPending}
+              >
+                {generateAllReports.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {t('signatures.generateAllReports', 'Genera Report PDF')}
               </Button>
             </div>
           </div>
