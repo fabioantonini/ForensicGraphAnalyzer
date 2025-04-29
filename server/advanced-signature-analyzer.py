@@ -21,7 +21,12 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from docx import Document
 from PIL import Image
-from docx2pdf import convert
+import PyPDF2
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image as ReportlabImage, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib import colors
+from reportlab.lib.units import inch, cm
 
 # Costante DPI
 DPI = 300
@@ -256,9 +261,9 @@ def create_descriptive_report(verifica_data, comp_data):
 
     return descrizione
 
-def generate_docx_report(verifica_path, comp_path, verifica_data, comp_data, similarity, output_path, case_info=None):
+def generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, similarity, output_path, case_info=None):
     """
-    Genera un report DOCX completo del confronto tra firme
+    Genera un report PDF completo del confronto tra firme usando ReportLab
     
     Args:
         verifica_path: Percorso della firma da verificare
@@ -266,87 +271,187 @@ def generate_docx_report(verifica_path, comp_path, verifica_data, comp_data, sim
         verifica_data: Parametri della firma da verificare
         comp_data: Parametri della firma di riferimento
         similarity: Valore di similitudine SSIM
-        output_path: Percorso dove salvare il report
+        output_path: Percorso dove salvare il report (verrà convertito in .pdf)
         case_info: Informazioni sul caso (opzionale)
         
     Returns:
-        Path del file DOCX generato
+        Path del file PDF generato
     """
-    doc = Document()
-    doc.add_heading("Report Analisi Grafologica Forense", 0)
+    # Assicura che il percorso di output termini con .pdf
+    pdf_output_path = output_path.replace('.docx', '.pdf')
+    if not pdf_output_path.endswith('.pdf'):
+        pdf_output_path += '.pdf'
     
-    # Aggiungi informazioni sul caso
-    doc.add_heading("Informazioni caso", level=1)
+    # Stili
+    styles = getSampleStyleSheet()
+    title_style = styles['Title']
+    heading1_style = styles['Heading1']
+    heading2_style = styles['Heading2']
+    normal_style = styles['Normal']
+    bold_style = ParagraphStyle('Bold', parent=normal_style, fontName='Helvetica-Bold')
+    
+    # Crea il documento
+    doc = SimpleDocTemplate(pdf_output_path, pagesize=A4, 
+                          rightMargin=72, leftMargin=72,
+                          topMargin=72, bottomMargin=72)
+    
+    # Elementi da aggiungere al documento
+    elements = []
+    
+    # Titolo
+    elements.append(Paragraph("Report Analisi Grafologica Forense", title_style))
+    elements.append(Spacer(1, 12))
+    
+    # Informazioni caso
+    elements.append(Paragraph("Informazioni caso", heading1_style))
+    elements.append(Spacer(1, 6))
+    
     if case_info:
         for key, value in case_info.items():
-            doc.add_paragraph(f"{key}: {value}")
+            elements.append(Paragraph(f"{key}: {value}", normal_style))
+            elements.append(Spacer(1, 3))
     else:
-        doc.add_paragraph(f"Data analisi: {datetime.now().strftime('%d/%m/%Y')}")
+        elements.append(Paragraph(f"Data analisi: {datetime.now().strftime('%d/%m/%Y')}", normal_style))
     
-    # Aggiungi immagini delle firme
-    doc.add_heading("Firme analizzate", level=1)
-    p = doc.add_paragraph()
-    p.add_run("Firma di riferimento:").bold = True
-    doc.add_picture(comp_path, width=4000000)  # Dimensione in EMU
+    elements.append(Spacer(1, 12))
     
-    p = doc.add_paragraph()
-    p.add_run("Firma in esame:").bold = True
-    doc.add_picture(verifica_path, width=4000000)  # Dimensione in EMU
+    # Firme analizzate
+    elements.append(Paragraph("Firme analizzate", heading1_style))
+    elements.append(Spacer(1, 6))
     
-    # Aggiungi risultati di similitudine
-    doc.add_heading("Risultati del confronto", level=1)
-    doc.add_paragraph(f"Indice di similitudine SSIM: {similarity*100:.2f}%")
+    # Firma di riferimento
+    elements.append(Paragraph("Firma di riferimento:", bold_style))
+    img = Image.open(comp_path)
+    img_width, img_height = img.size
+    aspect = img_height / float(img_width)
+    max_width = 400  # Massima larghezza in punti
+    img_width = min(max_width, img_width)
+    img_height = img_width * aspect
+    
+    elements.append(ReportlabImage(comp_path, width=img_width, height=img_height))
+    elements.append(Spacer(1, 12))
+    
+    # Firma in esame
+    elements.append(Paragraph("Firma in esame:", bold_style))
+    img = Image.open(verifica_path)
+    img_width, img_height = img.size
+    aspect = img_height / float(img_width)
+    img_width = min(max_width, img_width)
+    img_height = img_width * aspect
+    
+    elements.append(ReportlabImage(verifica_path, width=img_width, height=img_height))
+    elements.append(Spacer(1, 12))
+    
+    # Risultati del confronto
+    elements.append(Paragraph("Risultati del confronto", heading1_style))
+    elements.append(Spacer(1, 6))
+    elements.append(Paragraph(f"Indice di similitudine SSIM: {similarity*100:.2f}%", normal_style))
     
     verdict = "Alta probabilità di autenticità" if similarity >= 0.8 else \
               "Sospetta" if similarity >= 0.6 else \
               "Bassa probabilità di autenticità"
-    p = doc.add_paragraph(f"Valutazione: ")
-    p.add_run(verdict).bold = True
+    elements.append(Paragraph(f"Valutazione: <b>{verdict}</b>", normal_style))
+    elements.append(Spacer(1, 12))
     
-    # Aggingi tabella di parametri
-    doc.add_heading("Parametri comparati", level=1)
-    table = doc.add_table(rows=1, cols=3)
-    table.style = 'Table Grid'
+    # Tabella parametri
+    elements.append(Paragraph("Parametri comparati", heading1_style))
+    elements.append(Spacer(1, 6))
     
-    hdr_cells = table.rows[0].cells
-    hdr_cells[0].text = 'Parametro'
-    hdr_cells[1].text = 'Firma riferimento'
-    hdr_cells[2].text = 'Firma in esame'
+    # Crea la tabella
+    table_data = [["Parametro", "Firma riferimento", "Firma in esame"]]
     
     for key in verifica_data.keys():
-        row_cells = table.add_row().cells
-        row_cells[0].text = key
-        
         val_c = comp_data.get(key)
         val_v = verifica_data.get(key)
         
         if isinstance(val_c, (int, float)) and not isinstance(val_c, bool):
-            row_cells[1].text = f"{val_c:.2f}"
-            row_cells[2].text = f"{val_v:.2f}"
+            table_data.append([key, f"{val_c:.2f}", f"{val_v:.2f}"])
         else:
-            row_cells[1].text = str(val_c)
-            row_cells[2].text = str(val_v)
+            table_data.append([key, str(val_c), str(val_v)])
     
-    # Aggiungi report descrittivo
-    doc.add_heading("Analisi Tecnica", level=1)
+    # Crea tabella
+    table = Table(table_data, colWidths=[150, 150, 150])
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+    ]))
+    
+    elements.append(table)
+    elements.append(Spacer(1, 12))
+    
+    # Metodologia di comparazione
+    elements.append(Paragraph("Metodologia di Comparazione", heading1_style))
+    elements.append(Spacer(1, 6))
+    
+    methodology_text = """
+    <b>Metodo di analisi e comparazione delle firme:</b>
+    
+    L'analisi delle firme si basa su due approcci complementari:
+    
+    1. <b>Analisi dell'immagine (SSIM):</b> Viene calcolato l'indice di similarità strutturale (SSIM) tra le due immagini, che misura la somiglianza visiva complessiva considerando luminosità, contrasto e struttura.
+    
+    2. <b>Analisi dei parametri grafologici:</b> Vengono estratti e confrontati i seguenti parametri chiave:
+       • <i>Proporzione</i> - Rapporto tra larghezza e altezza della firma (15%)
+       • <i>Inclinazione</i> - Angolazione complessiva dei tratti (10%)
+       • <i>Pressione</i> - Intensità e variazione della pressione durante la scrittura (15%)
+       • <i>Curvatura</i> - Grado di curvatura dei tratti della firma (20%)
+       • <i>Dimensioni asole</i> - Dimensione media degli elementi circolari nella firma (10%)
+       • <i>Spaziatura</i> - Distribuzione degli spazi tra gli elementi (10%)
+       • <i>Velocità</i> - Stima della velocità di esecuzione basata sulla fluidità dei tratti (10%)
+       • <i>Connessioni</i> - Modalità di collegamento tra le lettere (10%)
+    
+    Ogni parametro contribuisce con un peso specifico (indicato tra parentesi) al calcolo complessivo della compatibilità.
+    
+    Il verdetto finale tiene conto sia della similarità SSIM che della compatibilità parametrica, con una soglia di accettazione dell'80% per l'autenticità e tra 60-80% per le firme sospette.
+    """
+    
+    elements.append(Paragraph(methodology_text, normal_style))
+    elements.append(Spacer(1, 12))
+    
+    # Analisi tecnica
+    elements.append(Paragraph("Analisi Tecnica", heading1_style))
+    elements.append(Spacer(1, 6))
+    
     description = create_descriptive_report(verifica_data, comp_data)
     for line in description.split('\n'):
         if line.strip():
-            doc.add_paragraph(line)
+            elements.append(Paragraph(line, normal_style))
+            elements.append(Spacer(1, 3))
     
-    # Salva il documento DOCX
-    doc.save(output_path)
+    # Grafici di confronto
+    # Crea una figura temporanea per il grafico e includila nel report
+    chart_img_base64 = create_comparison_chart(verifica_data, comp_data)
+    chart_data = base64.b64decode(chart_img_base64)
     
+    # Salva temporaneamente l'immagine del grafico
+    chart_temp_path = os.path.join(tempfile.gettempdir(), f"chart_{os.path.basename(pdf_output_path)}.png")
+    with open(chart_temp_path, 'wb') as f:
+        f.write(chart_data)
+        
+    elements.append(Spacer(1, 12))
+    elements.append(Paragraph("Grafico di compatibilità", heading2_style))
+    elements.append(Spacer(1, 6))
+    elements.append(ReportlabImage(chart_temp_path, width=450, height=250))
+    
+    # Genera il documento PDF
     try:
-        # Converti in PDF
-        pdf_output_path = output_path.replace('.docx', '.pdf')
-        convert(output_path, pdf_output_path)
-        print(f"Documento convertito con successo: {pdf_output_path}")
+        doc.build(elements)
+        print(f"Report PDF generato con successo: {pdf_output_path}")
+        
+        # Rimuovi il file temporaneo del grafico
+        try:
+            os.remove(chart_temp_path)
+        except:
+            pass
+            
         return pdf_output_path
     except Exception as e:
-        print(f"Errore nella conversione in PDF: {str(e)}", file=sys.stderr)
-        # In caso di errore nella conversione, restituisce comunque il file DOCX
-        return output_path
+        print(f"Errore nella generazione del PDF: {str(e)}", file=sys.stderr)
+        return None
 
 def compare_signatures(verifica_path, comp_path, generate_report=False, case_info=None):
     """
@@ -395,8 +500,8 @@ def compare_signatures(verifica_path, comp_path, generate_report=False, case_inf
             output_dir = tempfile.mkdtemp()
             report_docx_path = os.path.join(output_dir, f"report_firma_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx")
             try:
-                # Genera il report (DOCX o PDF)
-                report_path = generate_docx_report(verifica_path, comp_path, verifica_data, comp_data, similarity, report_docx_path, case_info)
+                # Genera il report PDF
+                report_path = generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, similarity, report_docx_path, case_info)
                 print(f"Report generato con successo: {report_path}")
             except Exception as e:
                 print(f"Errore nella generazione del report: {str(e)}", file=sys.stderr)
