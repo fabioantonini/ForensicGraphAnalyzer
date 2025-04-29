@@ -440,7 +440,8 @@ def generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, simi
     # Genera il documento PDF
     try:
         doc.build(elements)
-        print(f"Report PDF generato con successo: {pdf_output_path}")
+        # Rimuoviamo questa stampa per evitare problemi con l'output JSON
+        # print(f"Report PDF generato con successo: {pdf_output_path}")
         
         # Rimuovi il file temporaneo del grafico
         try:
@@ -503,7 +504,7 @@ def compare_signatures(verifica_path, comp_path, generate_report=False, case_inf
             try:
                 # Genera il report PDF
                 report_path = generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, similarity, report_pdf_path, case_info)
-                print(f"Report generato con successo: {report_path}")
+                # Nessun output qui per evitare problemi con JSON
             except Exception as e:
                 print(f"Errore nella generazione del report: {str(e)}", file=sys.stderr)
         
