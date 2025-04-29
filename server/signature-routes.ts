@@ -830,9 +830,14 @@ export function registerSignatureRoutes(router: Router) {
           };
           
           // Esegui il confronto avanzato
+          // IMPORTANTE: Invertiamo i parametri per compensare il problema di ordinamento
+          console.log(`[CONFRONTO POPUP] CORREZIONE: Invertendo ordine parametri per compensare il bug`);
+          console.log(`[CONFRONTO POPUP] Firma da verificare (diventerà riferimento): ${signaturePath}`);
+          console.log(`[CONFRONTO POPUP] Firma di riferimento (diventerà verifica): ${referencePath}`);
+          
           const comparisonResult = await SignaturePythonAnalyzer.compareSignatures(
-            signaturePath,
-            referencePath,
+            referencePath,   // Questo diventerà la firma da verificare nel report
+            signaturePath,   // Questo diventerà la firma di riferimento nel report
             false, // Non generare report DOCX automaticamente
             caseInfo
           );
@@ -1006,9 +1011,14 @@ export function registerSignatureRoutes(router: Router) {
               const signaturePath = path.join('./uploads', signature.filename);
               
               // Esegui il confronto avanzato
+              // IMPORTANTE: Invertiamo i parametri per compensare il problema di ordinamento
+              console.log(`[COMPARE-ALL] CORREZIONE: Invertendo ordine parametri per compensare il bug`);
+              console.log(`[COMPARE-ALL] Firma da verificare (diventerà riferimento): ${signaturePath}`);
+              console.log(`[COMPARE-ALL] Firma di riferimento (diventerà verifica): ${referencePath}`);
+              
               const comparisonResult = await SignaturePythonAnalyzer.compareSignatures(
-                signaturePath,
-                referencePath,
+                referencePath,   // Questo diventerà la firma da verificare nel report
+                signaturePath,   // Questo diventerà la firma di riferimento nel report
                 false, // Non generare report DOCX automaticamente
                 caseInfo
               );
