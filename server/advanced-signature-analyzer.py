@@ -262,6 +262,10 @@ def create_descriptive_report(verifica_data, comp_data):
     return descrizione
 
 def generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, similarity, output_path, case_info=None):
+    # Debug info
+    print(f"DEBUG_REPORT verifica_path={verifica_path}", file=sys.stderr)
+    print(f"DEBUG_REPORT comp_path={comp_path}", file=sys.stderr)
+    
     """
     Genera un report PDF completo del confronto tra firme usando ReportLab
     
@@ -319,27 +323,28 @@ def generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, simi
     elements.append(Paragraph("Firme analizzate", heading1_style))
     elements.append(Spacer(1, 6))
     
-    # Firma di riferimento
-    elements.append(Paragraph("Firma di riferimento:", bold_style))
-    img = Image.open(comp_path)
+    # INVERTITO ORDINE: Prima mostriamo la firma in esame, poi quella di riferimento
+    # Firma in esame (prima)
+    elements.append(Paragraph("Firma in esame:", bold_style))
+    img = Image.open(verifica_path)
     img_width, img_height = img.size
     aspect = img_height / float(img_width)
     max_width = 400  # Massima larghezza in punti
     img_width = min(max_width, img_width)
     img_height = img_width * aspect
     
-    elements.append(ReportlabImage(comp_path, width=img_width, height=img_height))
+    elements.append(ReportlabImage(verifica_path, width=img_width, height=img_height))
     elements.append(Spacer(1, 12))
     
-    # Firma in esame
-    elements.append(Paragraph("Firma in esame:", bold_style))
-    img = Image.open(verifica_path)
+    # Firma di riferimento (seconda)
+    elements.append(Paragraph("Firma di riferimento:", bold_style))
+    img = Image.open(comp_path)
     img_width, img_height = img.size
     aspect = img_height / float(img_width)
     img_width = min(max_width, img_width)
     img_height = img_width * aspect
     
-    elements.append(ReportlabImage(verifica_path, width=img_width, height=img_height))
+    elements.append(ReportlabImage(comp_path, width=img_width, height=img_height))
     elements.append(Spacer(1, 12))
     
     # Risultati del confronto
