@@ -183,16 +183,17 @@ export class SignaturePythonAnalyzer {
     additionalReferencePaths?: string[]
   ): Promise<ComparisonResult> {
     try {
-      console.log(`[PYTHON BRIDGE] Generazione report per confronto tra ${verificaPath} e ${referencePath}`);
+      console.log(`[PYTHON BRIDGE] Generazione report per firma verifica: ${verificaPath}`);
+      console.log(`[PYTHON BRIDGE] Firma riferimento principale: ${referencePath}`);
       
       if (additionalReferencePaths && additionalReferencePaths.length > 0) {
         console.log(`[PYTHON BRIDGE] Incluse ${additionalReferencePaths.length} firme di riferimento aggiuntive`);
       }
       
-      // Al momento l'implementazione sottostante in Python non supporta ancora
-      // l'analisi con multiple firme di riferimento, quindi utilizziamo solo la principale
-      // TODO: Aggiornare lo script Python per supportare confronti multipli
-      const result = await this.compareSignatures(verificaPath, referencePath, true, caseInfo);
+      // IMPORTANTE: Qui c'è un problema - lo script Python scambia i percorsi delle firme
+      // Invertiamo intenzionalmente l'ordine dei parametri per compensare
+      console.log(`[PYTHON BRIDGE] CORREZIONE: Invertendo l'ordine dei parametri per compensare il bug`);
+      const result = await this.compareSignatures(referencePath, verificaPath, true, caseInfo);
       
       if (!result.report_path) {
         console.log('[PYTHON BRIDGE] Report generato ma percorso non presente nel risultato');
