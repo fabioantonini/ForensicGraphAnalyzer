@@ -140,11 +140,15 @@ export function registerSignatureRoutes(router: Router) {
               `\nConfrontata con ${completedReferences.length} firme di riferimento.` : '')
           };
           
-          // Genera il report PDF - Importante: la firma da verificare deve essere la prima,
-          // NON una delle firme di riferimento
+          // Genera il report PDF
+          // IMPORTANTE: Invertiamo i parametri per compensare il problema di ordinamento
+          console.log(`[REPORT-ALL] CORREZIONE: Invertendo ordine parametri per compensare il bug`);
+          console.log(`[REPORT-ALL] Firma da verificare (diventerà riferimento): ${signaturePath}`);
+          console.log(`[REPORT-ALL] Firma di riferimento (diventerà verifica): ${primaryReferencePath}`);
+          
           const reportResult = await SignaturePythonAnalyzer.generateReport(
-            signaturePath,           // Firma da verificare
-            primaryReferencePath,    // Prima firma di riferimento come principale
+            primaryReferencePath,    // Questo diventerà la firma da verificare nel report
+            signaturePath,           // Questo diventerà la firma di riferimento nel report
             enhancedCaseInfo,        // Informazioni sul caso
             additionalReferencePaths // Eventuali firme di riferimento aggiuntive
           );
