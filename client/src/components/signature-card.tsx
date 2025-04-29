@@ -305,7 +305,44 @@ export function SignatureCard({
                   !signature.isReference && signature.processingStatus === 'completed' && (
                     <Button 
                       className="flex-1"
-                      onClick={() => window.open(`/api/signatures/${signature.id}/generate-report`, '_blank')}
+                      onClick={async () => {
+                        try {
+                          const response = await fetch(`/api/signatures/${signature.id}/generate-report`);
+                          
+                          if (response.ok) {
+                            // Avvisare l'utente che il report è stato generato e scaricare
+                            toast({
+                              title: t('signatures.analysisReport.generationSuccess', 'Report generato con successo'),
+                              description: t('signatures.analysisReport.downloadStarting', 'Il download inizierà a breve...'),
+                              duration: 3000,
+                              variant: "success"
+                            });
+                            
+                            // Attendere un attimo e poi richiedere il download
+                            setTimeout(() => {
+                              window.location.href = `/api/signatures/${signature.id}/report`;
+                            }, 1000);
+                            
+                          } else {
+                            // Mostrare messaggio di errore
+                            const errorData = await response.json();
+                            toast({
+                              title: t('signatures.analysisReport.generationFailed', 'Errore nella generazione del report'),
+                              description: errorData.error || t('signatures.analysisReport.unknownError', 'Si è verificato un errore inaspettato'),
+                              duration: 5000,
+                              variant: "destructive"
+                            });
+                          }
+                        } catch (error) {
+                          console.error('Errore nella generazione del report:', error);
+                          toast({
+                            title: t('signatures.analysisReport.generationFailed', 'Errore nella generazione del report'),
+                            description: t('signatures.analysisReport.connectionError', 'Errore di connessione al server'),
+                            duration: 5000,
+                            variant: "destructive"
+                          });
+                        }
+                      }}
                     >
                       {t('signatures.analysisReport.generatePdf', 'Genera report PDF')}
                     </Button>

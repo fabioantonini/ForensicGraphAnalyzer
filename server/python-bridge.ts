@@ -163,20 +163,24 @@ export class SignaturePythonAnalyzer {
    * @param verificaPath Percorso della firma da verificare
    * @param referencePath Percorso della firma di riferimento
    * @param caseInfo Informazioni sul caso per il report
-   * @returns Promise con il percorso del file DOCX generato
+   * @returns Promise con il risultato del confronto, incluso il percorso del report
    */
   public static async generateReport(
     verificaPath: string,
     referencePath: string,
     caseInfo?: CaseInfo
-  ): Promise<string> {
+  ): Promise<ComparisonResult> {
     try {
+      console.log(`[PYTHON BRIDGE] Generazione report per confronto tra ${verificaPath} e ${referencePath}`);
       const result = await this.compareSignatures(verificaPath, referencePath, true, caseInfo);
-      if (result.report_path) {
-        return result.report_path;
+      if (!result.report_path) {
+        console.log('[PYTHON BRIDGE] Report generato ma percorso non presente nel risultato');
+        throw new Error('Percorso del report non presente nel risultato');
       }
-      throw new Error('Percorso del report non presente nel risultato');
+      console.log(`[PYTHON BRIDGE] Report generato con successo: ${result.report_path}`);
+      return result;
     } catch (error: any) {
+      console.error(`[PYTHON BRIDGE] Errore nella generazione del report: ${error.message}`);
       throw new Error(`Errore nella generazione del report: ${error.message}`);
     }
   }
