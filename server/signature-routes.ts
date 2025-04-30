@@ -835,12 +835,12 @@ export function registerSignatureRoutes(router: Router) {
               similarity: number, 
               comparison_chart: string | null, 
               description: string | null, 
-              report_path: string | null 
+              report_path: string | undefined 
             } = {
               similarity: signature.comparisonResult ?? 0.7, // Usa il valore esistente o un valore predefinito
               comparison_chart: signature.comparisonChart,
               description: signature.analysisReport,
-              report_path: null // Sarà generato più avanti
+              report_path: undefined // Sarà generato più avanti, usiamo undefined invece di null per evitare errori di tipo
             };
             
             try {
