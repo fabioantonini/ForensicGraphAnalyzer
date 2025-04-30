@@ -754,7 +754,7 @@ export function registerSignatureRoutes(router: Router) {
             if (reportResult && typeof reportResult === 'object' && (!reportResult.report_path || typeof reportResult.report_path !== 'string')) {
               if (reportResult.similarity !== undefined && reportResult.comparison_chart) {
                 console.log(`[PDF REPORT DOWNLOAD] Creazione percorso report temporaneo dato che abbiamo altri dati validi`);
-                const tempReportPath = `/uploads/reports/temp_report_${Date.now()}.pdf`;
+                const tempReportPath = path.join(process.cwd(), 'uploads', 'reports', `temp_report_${Date.now()}.pdf`);
                 reportResult.report_path = tempReportPath;
               }
             }

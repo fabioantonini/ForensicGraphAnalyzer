@@ -213,7 +213,7 @@ export class SignaturePythonAnalyzer {
           console.log('[PYTHON BRIDGE] Tentativo di recupero: creando un percorso temporaneo per il report');
           
           // Creiamo un percorso fittizio che verrà sostituito più tardi nella chiamata API reale
-          const tempReportPath = `/uploads/reports/temp_report_${Date.now()}.pdf`;
+          const tempReportPath = path.join(process.cwd(), 'uploads', 'reports', `temp_report_${Date.now()}.pdf`);
           result.report_path = tempReportPath;
           
           console.log(`[PYTHON BRIDGE] Percorso temporaneo creato: ${tempReportPath}`);
