@@ -8,11 +8,29 @@ import { SignaturePythonAnalyzer } from "./python-bridge";
 import { insertSignatureProjectSchema, insertSignatureSchema } from "@shared/schema";
 import { log } from "./vite";
 
+// Assicuriamoci che le directory esistano
+try {
+  // Crea la directory delle firme e dei report
+  fs.mkdir(path.join(process.cwd(), 'uploads'), { recursive: true });
+  fs.mkdir(path.join(process.cwd(), 'uploads', 'reports'), { recursive: true });
+  console.log('[INIT] Directory uploads e reports inizializzate');
+} catch (error) {
+  console.log('[INIT] Errore nella creazione delle directory:', error);
+}
+
 // Configurazione di multer per gestire upload di immagini
 const upload = multer({
   storage: multer.diskStorage({
     destination: (req, file, cb) => {
-      cb(null, './uploads');
+      // Crea la directory e poi procedi
+      fs.mkdir(path.join(process.cwd(), 'uploads'), { recursive: true })
+        .then(() => {
+          cb(null, path.join(process.cwd(), 'uploads'));
+        })
+        .catch(err => {
+          console.error('[UPLOAD] Errore nella creazione della directory:', err);
+          cb(null, path.join(process.cwd(), 'uploads'));
+        });
     },
     filename: (req, file, cb) => {
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
