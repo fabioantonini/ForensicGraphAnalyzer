@@ -901,7 +901,7 @@ export function registerSignatureRoutes(router: Router) {
               
               try {
                 // Verifica che l'immagine esista
-                await fs.access(signatureImagePath);
+                await fsExtra.access(signatureImagePath);
                 
                 // Calcola le dimensioni per l'immagine
                 doc.image(signatureImagePath, {
@@ -923,7 +923,7 @@ export function registerSignatureRoutes(router: Router) {
                 // Crea un file temporaneo per l'immagine del grafico
                 const chartImagePath = path.join(process.cwd(), 'uploads', 'temp_chart.png');
                 try {
-                  await fs.writeFile(chartImagePath, Buffer.from(signature.comparisonChart, 'base64'));
+                  await fsExtra.writeFile(chartImagePath, Buffer.from(signature.comparisonChart, 'base64'));
                   
                   // Aggiungi l'immagine del grafico
                   doc.image(chartImagePath, {
@@ -934,7 +934,7 @@ export function registerSignatureRoutes(router: Router) {
                   
                   // Pulisci il file temporaneo
                   try {
-                    await fs.unlink(chartImagePath);
+                    await fsExtra.unlink(chartImagePath);
                   } catch (e) {
                     // Ignora eventuali errori nella pulizia
                   }
