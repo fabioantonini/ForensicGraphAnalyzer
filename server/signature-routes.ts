@@ -765,8 +765,18 @@ export function registerSignatureRoutes(router: Router) {
                 reportPath: reportResult.report_path as string
               });
               
-              // Servi il file
-              return res.download(reportResult.report_path as string);
+              // Verifica se il percorso è assoluto e se esiste
+              try {
+                const reportPath = reportResult.report_path as string;
+                await fs.access(reportPath);
+                console.log(`[PDF REPORT] File verificato e accessibile: ${reportPath}`);
+                
+                // Servi il file
+                return res.download(reportPath);
+              } catch (err) {
+                console.error(`[PDF REPORT] File non accessibile: ${reportResult.report_path}`, err);
+                return res.status(500).json({ error: 'File generato ma non accessibile' });
+              }
             } else {
               return res.status(500).json({ error: 'Impossibile generare il report PDF' });
             }
@@ -1027,8 +1037,18 @@ export function registerSignatureRoutes(router: Router) {
         }
       }
       
-      // Invia il file come download
-      res.download(signature.reportPath);
+      // Verifica che il file esista e sia accessibile
+      try {
+        console.log(`[PDF REPORT] Tentativo di scaricare il file: ${signature.reportPath}`);
+        await fs.access(signature.reportPath);
+        console.log(`[PDF REPORT] Accesso confermato, file esistente: ${signature.reportPath}`);
+        
+        // Invia il file come download
+        return res.download(signature.reportPath);
+      } catch (accessError) {
+        console.error(`[PDF REPORT] ERRORE: File non accessibile:`, accessError);
+        return res.status(500).json({ error: 'Report esistente ma non accessibile.' });
+      }
     } catch (error: any) {
       log(`Errore nell'accesso al report: ${error.message}`, 'signatures');
       res.status(500).json({ error: error.message });
