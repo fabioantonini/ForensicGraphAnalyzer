@@ -783,7 +783,84 @@ export function registerSignatureRoutes(router: Router) {
       try {
         await fs.access(signature.reportPath);
       } catch (error) {
-        return res.status(404).json({ error: 'File del report non trovato' });
+        console.log(`[PDF REPORT] File non trovato: ${signature.reportPath}, tentativo di ri-generazione`);
+        
+        // Se il percorso contiene temp_report_, dobbiamo generare il file
+        if (signature.reportPath.includes('temp_report_')) {
+          try {
+            console.log(`[PDF REPORT] Rilevato percorso temporaneo, tentativo di generazione on-demand`);
+            
+            // Ottieni la firma di riferimento
+            const referenceSignatures = await storage.getProjectSignatures(signature.projectId, true);
+            
+            // Prendi la prima firma di riferimento elaborata
+            const referenceSignature = referenceSignatures.find(
+              ref => ref.processingStatus === 'completed' && ref.parameters
+            );
+            
+            if (!referenceSignature) {
+              return res.status(400).json({ error: 'Nessuna firma di riferimento disponibile per generare il report' });
+            }
+            
+            // Percorsi delle immagini
+            const referencePath = path.join('./uploads', referenceSignature.filename);
+            const signaturePath = path.join('./uploads', signature.filename);
+            
+            // Crea le informazioni sul caso
+            const caseInfo = {
+              caseName: `Analisi firma - Progetto ${signature.projectId}`,
+              subject: `Firma ${signature.originalFilename}`,
+              date: new Date().toLocaleDateString('it-IT'),
+              documentType: 'Verifica di firma',
+              notes: "Report generato automaticamente"
+            };
+            
+            // Crea una directory temporanea per i report se non esiste
+            const reportDir = path.join(process.cwd(), 'uploads', 'reports');
+            try {
+              await fs.mkdir(reportDir, { recursive: true });
+            } catch (error) {
+              const mkdirError = error as Error;
+              console.log(`[PDF REPORT] Errore nella creazione della directory: ${mkdirError.message}`);
+            }
+            
+            // Genera un nome file reale basato sul timestamp del nome temporaneo
+            const timestamp = signature.reportPath.split('temp_report_')[1].split('.')[0];
+            const realReportPath = path.join(process.cwd(), 'uploads', 'reports', `report_${timestamp}.pdf`);
+            
+            console.log(`[PDF REPORT] Generazione report reale in: ${realReportPath}`);
+            
+            // Utilizza il modulo Python per generare il report
+            console.log(`[PDF REPORT REGEN] CORREZIONE: Invertendo ordine parametri per compensare il bug`);
+            const comparisonResult = await SignaturePythonAnalyzer.compareSignatures(
+              referencePath,   // Questo diventerà la firma da verificare nel report
+              signaturePath,   // Questo diventerà la firma di riferimento nel report
+              true,            // Genera il report
+              caseInfo
+            );
+            
+            if (comparisonResult && comparisonResult.report_path) {
+              console.log(`[PDF REPORT] Report generato con successo: ${comparisonResult.report_path}`);
+              
+              // Aggiorna il percorso nel database
+              await storage.updateSignature(signature.id, {
+                reportPath: comparisonResult.report_path
+              });
+              
+              // Invia il file generato
+              return res.download(comparisonResult.report_path);
+            } else {
+              return res.status(500).json({ error: 'Impossibile generare il report PDF on-demand' });
+            }
+          } catch (genError: any) {
+            console.error(`[PDF REPORT] Errore nella generazione on-demand:`, genError);
+            return res.status(500).json({ 
+              error: `Errore nella generazione on-demand del report: ${genError.message}` 
+            });
+          }
+        } else {
+          return res.status(404).json({ error: 'File del report non trovato' });
+        }
       }
       
       // Invia il file come download
