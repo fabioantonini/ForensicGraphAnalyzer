@@ -930,7 +930,15 @@ export function registerSignatureRoutes(router: Router) {
                 return res.download(outputPath);
               } catch (finalErr) {
                 console.error(`[PDF REPORT] Impossibile generare PDF on-demand:`, finalErr);
-                return res.status(500).json({ error: 'Impossibile generare il report PDF on-demand' });
+                // Aggiungi dettagli completi sull'errore nei log
+                console.error(`[PDF REPORT] STACK TRACE COMPLETO:`, finalErr.stack);
+                console.error(`[PDF REPORT] MESSAGGIO COMPLETO:`, finalErr.message);
+                console.error(`[PDF REPORT] TIPO ERRORE:`, finalErr.name);
+                console.error(`[PDF REPORT] STRINGIFIED:`, JSON.stringify(finalErr));
+                
+                return res.status(500).json({ 
+                  error: `Impossibile generare il report PDF on-demand: ${finalErr.message}` 
+                });
               }
             } else {
               return res.status(500).json({ error: 'Impossibile generare il report PDF' });
@@ -1148,6 +1156,10 @@ export function registerSignatureRoutes(router: Router) {
               comparisonResult.report_path = outputPath;
             } catch (pdfError) {
               console.error(`[PDF REPORT] Errore nella generazione del PDF:`, pdfError);
+              console.error(`[PDF REPORT] STACK TRACE COMPLETO:`, pdfError.stack);
+              console.error(`[PDF REPORT] MESSAGGIO COMPLETO:`, pdfError.message);
+              console.error(`[PDF REPORT] TIPO ERRORE:`, pdfError.name);
+              console.error(`[PDF REPORT] STRINGIFIED:`, JSON.stringify(pdfError));
               console.log(`[PDF REPORT] Tentativo alternativo con il modulo Python`);
               
               // Se fallisce, tentiamo con il modulo Python come backup
