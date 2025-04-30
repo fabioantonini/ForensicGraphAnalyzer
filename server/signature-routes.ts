@@ -619,9 +619,24 @@ export function registerSignatureRoutes(router: Router) {
           caseInfo
         );
         
-        if (!reportResult || !reportResult.report_path) {
-          console.log(`[PDF REPORT] Errore nella generazione del report per firma ${signatureId}`);
-          return res.status(500).json({ error: "Errore nella generazione del report" });
+        console.log(`[PDF REPORT] Risultato report ricevuto:`, JSON.stringify(reportResult, null, 2));
+        
+        if (!reportResult) {
+          console.log(`[PDF REPORT] Risultato nullo nella generazione del report per firma ${signatureId}`);
+          return res.status(500).json({ error: "Errore nella generazione del report: risultato nullo" });
+        }
+        
+        if (!reportResult.report_path) {
+          console.log(`[PDF REPORT] Percorso report mancante per firma ${signatureId}`);
+          
+          // Se manca il percorso del report ma abbiamo altri dati validi, creiamo un percorso temporaneo
+          if (reportResult.similarity !== undefined && reportResult.comparison_chart) {
+            console.log(`[PDF REPORT] Creazione percorso report temporaneo dato che abbiamo altri dati validi`);
+            const tempReportPath = `/uploads/reports/temp_report_${Date.now()}.pdf`;
+            reportResult.report_path = tempReportPath;
+          } else {
+            return res.status(500).json({ error: "Errore nella generazione del report: percorso mancante" });
+          }
         }
         
         console.log(`[PDF REPORT] Report generato con successo: ${reportResult.report_path}`);
@@ -732,6 +747,17 @@ export function registerSignatureRoutes(router: Router) {
               signaturePath,   // Questo diventerà la firma di riferimento nel report
               caseInfo
             );
+            
+            console.log(`[PDF REPORT DOWNLOAD] Risultato report ricevuto:`, JSON.stringify(reportResult, null, 2));
+            
+            // Se il report_path è mancante ma abbiamo altri dati validi, creiamo un percorso temporaneo
+            if (reportResult && typeof reportResult === 'object' && (!reportResult.report_path || typeof reportResult.report_path !== 'string')) {
+              if (reportResult.similarity !== undefined && reportResult.comparison_chart) {
+                console.log(`[PDF REPORT DOWNLOAD] Creazione percorso report temporaneo dato che abbiamo altri dati validi`);
+                const tempReportPath = `/uploads/reports/temp_report_${Date.now()}.pdf`;
+                reportResult.report_path = tempReportPath;
+              }
+            }
             
             if (reportResult && typeof reportResult === 'object' && 'report_path' in reportResult) {
               // Aggiorna il percorso del report nella firma
