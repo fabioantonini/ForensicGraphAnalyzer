@@ -709,23 +709,41 @@ export default function SignaturesPage() {
                 </DialogContent>
               </Dialog>
               
-              <Button 
-                variant="default"
-                onClick={() => compareAllSignatures.mutate()}
-                disabled={compareAllSignatures.isPending}
-              >
-                {compareAllSignatures.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {t('signatures.compareAll')}
-              </Button>
+              <div className="flex items-center">
+                <Button 
+                  variant="default"
+                  onClick={() => compareAllSignatures.mutate()}
+                  disabled={compareAllSignatures.isPending}
+                >
+                  {compareAllSignatures.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {t('signatures.compareAll')}
+                </Button>
+                <HelpTooltip 
+                  content=""
+                  translationKey="signatures.help.compareAllDesc" 
+                  defaultContent="Confronta tutte le firme da verificare con tutte le firme di riferimento. Il confronto analizza molteplici parametri grafologici per determinare la probabilità di autenticità."
+                  iconSize={16}
+                  className="ml-2"
+                />
+              </div>
               
-              <Button 
-                variant="secondary"
-                onClick={() => generateAllReports.mutate()}
-                disabled={generateAllReports.isPending}
-              >
-                {generateAllReports.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {t('signatures.generateAllReports', 'Genera Report PDF')}
-              </Button>
+              <div className="flex items-center">
+                <Button 
+                  variant="secondary"
+                  onClick={() => generateAllReports.mutate()}
+                  disabled={generateAllReports.isPending}
+                >
+                  {generateAllReports.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {t('signatures.generateAllReports', 'Genera Report PDF')}
+                </Button>
+                <HelpTooltip 
+                  content=""
+                  translationKey="signatures.help.generateAllReportsDesc" 
+                  defaultContent="Genera report PDF dettagliati per tutte le firme da verificare. I report includono immagini comparative, parametri di analisi e conclusioni sull'autenticità."
+                  iconSize={16}
+                  className="ml-2"
+                />
+              </div>
             </div>
           </div>
           
@@ -871,9 +889,18 @@ export default function SignaturesPage() {
                       <p className="text-center text-sm text-muted-foreground mb-4">
                         {t('signatures.noReferenceSignaturesDescription')}
                       </p>
-                      <Button onClick={() => setIsUploadReferenceOpen(true)}>
-                        {t('signatures.uploadFirstReference')}
-                      </Button>
+                      <div className="flex items-center">
+                        <Button onClick={() => setIsUploadReferenceOpen(true)}>
+                          {t('signatures.uploadFirstReference')}
+                        </Button>
+                        <HelpTooltip 
+                          content=""
+                          translationKey="signatures.help.uploadReferenceDesc" 
+                          defaultContent="Carica firme autentiche di riferimento. Queste firme saranno usate come base per il confronto con le firme da verificare."
+                          iconSize={16}
+                          className="ml-2"
+                        />
+                      </div>
                     </CardContent>
                   </Card>
                 ) : (
@@ -935,9 +962,18 @@ export default function SignaturesPage() {
                       <p className="text-center text-sm text-muted-foreground mb-4">
                         {t('signatures.noVerifySignaturesDescription')}
                       </p>
-                      <Button onClick={() => setIsUploadVerifyOpen(true)}>
-                        {t('signatures.uploadFirstVerify')}
-                      </Button>
+                      <div className="flex items-center">
+                        <Button onClick={() => setIsUploadVerifyOpen(true)}>
+                          {t('signatures.uploadFirstVerify')}
+                        </Button>
+                        <HelpTooltip 
+                          content=""
+                          translationKey="signatures.help.uploadVerifyDesc" 
+                          defaultContent="Carica firme da verificare. Queste firme saranno confrontate con le firme di riferimento per determinarne l'autenticità."
+                          iconSize={16}
+                          className="ml-2"
+                        />
+                      </div>
                     </CardContent>
                   </Card>
                 ) : (
