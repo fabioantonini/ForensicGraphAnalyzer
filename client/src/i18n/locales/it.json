@@ -268,6 +268,32 @@
     "needReferenceFirst": "Hai bisogno prima di firme di riferimento",
     "uploadFirstReference": "Carica prima firma di riferimento",
     "uploadFirstVerify": "Carica prima firma da verificare",
-    "compareAll": "Confronta Tutte"
+    "compareAll": "Confronta Tutte",
+    "help": {
+      "referenceSignaturesTitle": "Firme di Riferimento",
+      "referenceSignaturesDesc": "Le firme di riferimento sono esempi autentici della firma del soggetto. Carica almeno una firma di riferimento per avviare il processo di verifica.",
+      "verificationSignaturesTitle": "Firme da Verificare",
+      "verificationSignaturesDesc": "Queste sono le firme di cui desideri verificare l'autenticità. Verranno confrontate con le firme di riferimento per determinare la probabilità di autenticità.",
+      "uploadReferenceTitle": "Carica Firma di Riferimento",
+      "uploadReferenceDesc": "Aggiungi una firma autentica come esempio di riferimento. Più firme di riferimento carichi, più precisa sarà l'analisi.",
+      "uploadVerifyTitle": "Carica Firma da Verificare",
+      "uploadVerifyDesc": "Aggiungi una firma che desideri verificare. Verrà confrontata con tutte le firme di riferimento disponibili.",
+      "compareAllTitle": "Confronta Tutte le Firme",
+      "compareAllDesc": "Avvia un confronto batch tra tutte le firme da verificare e quelle di riferimento. I risultati mostreranno il punteggio di somiglianza per ciascuna firma.",
+      "generateReportTitle": "Genera Report PDF",
+      "generateReportDesc": "Crea un report forense dettagliato in PDF con analisi complete di tutte le firme e i relativi confronti parametrici.",
+      "similarityScoreTitle": "Punteggio di Somiglianza",
+      "similarityScoreDesc": "Un punteggio maggiore dell'80% indica alta probabilità di autenticità. Tra 60-80% è incerto. Sotto il 60% suggerisce una firma non autentica.",
+      "aspectRatioTitle": "Rapporto d'Aspetto",
+      "aspectRatioDesc": "Misura le proporzioni complessive della firma (larghezza/altezza). Questo parametro è difficile da replicare esattamente nelle falsificazioni.",
+      "strokeFeaturesTitle": "Caratteristiche dei Tratti",
+      "strokeFeaturesDesc": "Analizza lo spessore del tratto, la pressione, e le variazioni nello spessore, che riflettono il modo individuale di scrivere.",
+      "curvatureTitle": "Curvatura",
+      "curvatureDesc": "Esamina gli angoli e le curve nella firma, che sono difficili da imitare correttamente nelle falsificazioni.",
+      "spatialDistributionTitle": "Distribuzione Spaziale",
+      "spatialDistributionDesc": "Come la firma occupa lo spazio e la distribuzione del peso grafico, inclusa la posizione del centro di massa.",
+      "connectivityTitle": "Connettività",
+      "connectivityDesc": "Analizza la continuità e frammentazione dei tratti, rivelando il naturale flusso della mano di chi scrive."
+    }
   }
 }
