@@ -130,7 +130,7 @@ export function SignatureCard({
 
       {hasAdvancedDetails && (
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogContent className="max-w-3xl">
+          <DialogContent className="max-w-3xl max-h-[90vh]">
             <DialogHeader>
               <DialogTitle>
                 {t('signatures.analysisReport.title', 'Rapporto di analisi firma')} - {signature.originalFilename}
@@ -140,7 +140,8 @@ export function SignatureCard({
               </DialogDescription>
             </DialogHeader>
             
-            <div className="grid grid-cols-1 gap-6">
+            <ScrollArea className="pr-4 max-h-[calc(90vh-120px)]">
+              <div className="grid grid-cols-1 gap-6">
               {/* Punteggio di similarità */}
               {signature.comparisonResult !== null && (
                 <div className="bg-muted rounded p-4">
@@ -403,6 +404,7 @@ export function SignatureCard({
                 )}
               </div>
             </div>
+            </ScrollArea>
           </DialogContent>
         </Dialog>
       )}
