@@ -12,6 +12,7 @@ import {
 import { SignatureImage } from "@/components/signature-image";
 import { SignatureCard } from "@/components/signature-card";
 import { SignatureMethodologyDialog } from "@/components/signature-methodology-dialog";
+import { HelpTooltip } from "@/components/help-tooltip";
 import { Button } from "@/components/ui/button";
 import { 
   Dialog, 
@@ -835,7 +836,15 @@ export default function SignaturesPage() {
           
           <div className="mb-6">
             <div className="flex justify-between items-center mb-3">
-              <h3 className="text-xl font-semibold">{t('signatures.referenceSignatures')}</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-xl font-semibold">{t('signatures.referenceSignatures')}</h3>
+                <HelpTooltip 
+                  content=""
+                  translationKey="signatures.help.referenceSignaturesDesc" 
+                  defaultContent="Le firme di riferimento sono esempi autentici della firma del soggetto. Carica almeno una firma di riferimento per avviare il processo di verifica."
+                  iconSize={18}
+                />
+              </div>
               <SignatureMethodologyDialog />
             </div>
             {signaturesLoading ? (
@@ -890,7 +899,15 @@ export default function SignaturesPage() {
           <Separator className="my-6" />
           
           <div>
-            <h3 className="text-xl font-semibold mb-3">{t('signatures.verificationsSignatures')}</h3>
+            <div className="flex items-center gap-2 mb-3">
+              <h3 className="text-xl font-semibold">{t('signatures.verificationsSignatures')}</h3>
+              <HelpTooltip 
+                content=""
+                translationKey="signatures.help.verificationSignaturesDesc" 
+                defaultContent="Queste sono le firme di cui desideri verificare l'autenticità. Verranno confrontate con le firme di riferimento per determinare la probabilità di autenticità."
+                iconSize={18}
+              />
+            </div>
             {signaturesLoading ? (
               <div className="flex justify-center items-center h-40">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
