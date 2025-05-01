@@ -694,6 +694,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getProjectSignatures(projectId: number, referenceOnly?: boolean): Promise<Signature[]> {
+    // Log completo per debug problemi di segregazione progetti
+    console.log(`[STORAGE] Richiesta firme per progetto ${projectId} (referenceOnly: ${referenceOnly})`);
+    
     let query = db
       .select()
       .from(signatures)
@@ -703,7 +706,23 @@ export class DatabaseStorage implements IStorage {
       query = query.where(eq(signatures.isReference, true));
     }
     
-    return await query.orderBy(desc(signatures.createdAt));
+    const results = await query.orderBy(desc(signatures.createdAt));
+    
+    // Verifica che tutte le firme appartengano effettivamente al progetto richiesto
+    const differentProjectSignatures = results.filter(sig => sig.projectId !== projectId);
+    if (differentProjectSignatures.length > 0) {
+      console.error(`[CRITICAL ERROR] Trovate ${differentProjectSignatures.length} firme di progetti diversi!`);
+      console.error(`[CRITICAL ERROR] ID progetti erroneamente inclusi: ${[...new Set(differentProjectSignatures.map(s => s.projectId))].join(', ')}`);
+      console.error(`[CRITICAL ERROR] Dettagli firme errate: ${JSON.stringify(differentProjectSignatures.map(s => ({ id: s.id, projectId: s.projectId })), null, 2)}`);
+      
+      // Filtra manualmente i risultati
+      const filteredResults = results.filter(sig => sig.projectId === projectId);
+      console.log(`[STORAGE] Firme filtrate dopo la verifica: ${filteredResults.length} (rimosse ${results.length - filteredResults.length})`);
+      return filteredResults;
+    }
+    
+    console.log(`[STORAGE] Restituite ${results.length} firme per il progetto ${projectId}`);
+    return results;
   }
 
   async updateSignatureParameters(id: number, parameters: SignatureParameters): Promise<Signature> {
