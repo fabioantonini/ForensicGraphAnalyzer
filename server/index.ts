@@ -2,6 +2,8 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import path from "path";
+import fsExtra from 'fs-extra';
+import { ensureReportDirectory } from "./pdf-utils";
 
 const app = express();
 app.use(express.json());
@@ -39,6 +41,14 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Assicurati che le directory per i report esistano
+  try {
+    await ensureReportDirectory();
+    log("Directory per i report inizializzata", "pdf-utils");
+  } catch (error) {
+    console.error("Errore nell'inizializzazione della directory per i report:", error);
+  }
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
