@@ -261,10 +261,11 @@ def create_descriptive_report(verifica_data, comp_data):
 
     return descrizione
 
-def generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, similarity, output_path, case_info=None):
+def generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, similarity, output_path, case_info=None, project_id=None):
     # Debug info
     print(f"DEBUG_REPORT verifica_path={verifica_path}", file=sys.stderr)
     print(f"DEBUG_REPORT comp_path={comp_path}", file=sys.stderr)
+    print(f"DEBUG_REPORT project_id={project_id}", file=sys.stderr)
     
     """
     Genera un report PDF completo del confronto tra firme usando ReportLab
@@ -277,6 +278,7 @@ def generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, simi
         similarity: Valore di similitudine SSIM
         output_path: Percorso dove salvare il report (verrà convertito in .pdf)
         case_info: Informazioni sul caso (opzionale)
+        project_id: ID del progetto per garantire l'isolamento dei dati (opzionale)
         
     Returns:
         Path del file PDF generato
@@ -303,7 +305,10 @@ def generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, simi
     elements = []
     
     # Titolo
-    elements.append(Paragraph("Report Analisi Grafologica Forense", title_style))
+    title_text = "Report Analisi Grafologica Forense"
+    if project_id is not None:
+        title_text += f" - Progetto ID: {project_id}"
+    elements.append(Paragraph(title_text, title_style))
     elements.append(Spacer(1, 12))
     
     # Informazioni caso
@@ -519,7 +524,16 @@ def compare_signatures(verifica_path, comp_path, generate_report=False, case_inf
             report_pdf_path = f"{report_path_base}.pdf"
             try:
                 # Genera il report PDF
-                report_path = generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, similarity, report_pdf_path, case_info)
+                # Se l'ID del progetto è presente, lo includiamo nel nome del file
+                if project_id is not None:
+                    # Aggiorniamo il nome del file per includere l'ID del progetto
+                    output_dir = os.path.dirname(report_pdf_path)
+                    report_filename = f"report_firma_project_{project_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+                    report_pdf_path = os.path.join(output_dir, report_filename)
+                    print(f"Report path aggiornato con project_id={project_id}: {report_pdf_path}", file=sys.stderr)
+                
+                # Passiamo l'ID del progetto alla funzione di generazione del report
+                report_path = generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, similarity, report_pdf_path, case_info, project_id)
                 # Nessun output qui per evitare problemi con JSON
             except Exception as e:
                 print(f"Errore nella generazione del report: {str(e)}", file=sys.stderr)
