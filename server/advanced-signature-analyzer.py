@@ -469,7 +469,7 @@ def generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, simi
         print(f"Errore nella generazione del PDF: {str(e)}", file=sys.stderr)
         return None
 
-def compare_signatures(verifica_path, comp_path, generate_report=False, case_info=None):
+def compare_signatures(verifica_path, comp_path, generate_report=False, case_info=None, project_id=None):
     """
     Funzione principale per confrontare firme
     
@@ -478,6 +478,7 @@ def compare_signatures(verifica_path, comp_path, generate_report=False, case_inf
         comp_path: Percorso della firma di riferimento
         generate_report: Se True, genera anche un report PDF
         case_info: Informazioni sul caso per il report
+        project_id: ID del progetto per garantire l'isolamento dei dati
         
     Returns:
         Dizionario con i risultati dell'analisi
@@ -570,14 +571,39 @@ def adapt_parameters_for_json(params):
 # Funzione principale per l'esecuzione come script
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        print("Uso: python advanced-signature-analyzer.py <firma_verifica> <firma_comp> [--report]", file=sys.stderr)
+        print("Uso: python advanced-signature-analyzer.py <firma_verifica> <firma_comp> [--report] [--case-info <json>] [--project-id <id>]", file=sys.stderr)
         sys.exit(1)
     
     verifica_path = sys.argv[1]
     comp_path = sys.argv[2]
     generate_report = "--report" in sys.argv
     
-    result = compare_signatures(verifica_path, comp_path, generate_report)
+    # Recupera le informazioni sul caso se presenti
+    case_info = None
+    if "--case-info" in sys.argv:
+        try:
+            idx = sys.argv.index("--case-info")
+            if idx + 1 < len(sys.argv):
+                case_info = json.loads(sys.argv[idx + 1])
+                print(f"Case info recuperate: {case_info}", file=sys.stderr)
+        except Exception as e:
+            print(f"Errore nel parsing delle informazioni sul caso: {e}", file=sys.stderr)
+    
+    # Recupera l'ID del progetto se presente
+    project_id = None
+    if "--project-id" in sys.argv:
+        try:
+            idx = sys.argv.index("--project-id")
+            if idx + 1 < len(sys.argv):
+                project_id = int(sys.argv[idx + 1])
+                print(f"Project ID recuperato: {project_id}", file=sys.stderr)
+        except Exception as e:
+            print(f"Errore nel parsing dell'ID del progetto: {e}", file=sys.stderr)
+    
+    # Log per debugging
+    print(f"Confronto tra firme con path1={verifica_path}, path2={comp_path}, generate_report={generate_report}, project_id={project_id}", file=sys.stderr)
+    
+    result = compare_signatures(verifica_path, comp_path, generate_report, case_info, project_id)
     
     # Adatta i parametri per JSON
     if "verifica_parameters" in result:
