@@ -638,8 +638,12 @@ export function registerSignatureRoutes(router: Router) {
         const reportResult = await SignaturePythonAnalyzer.generateReport(
           referencePath,   // Questo diventerà la firma da verificare nel report
           signaturePath,   // Questo diventerà la firma di riferimento nel report
-          caseInfo
+          caseInfo,
+          undefined,      // Nessuna firma di riferimento aggiuntiva
+          signature.projectId  // Passiamo l'ID del progetto per garantire l'isolamento
         );
+        
+        console.log(`[PDF REPORT] Generazione report con projectId=${signature.projectId}`);
         
         console.log(`[PDF REPORT] Risultato report ricevuto:`, JSON.stringify(reportResult, null, 2));
         
@@ -767,8 +771,12 @@ export function registerSignatureRoutes(router: Router) {
             const reportResult = await SignaturePythonAnalyzer.generateReport(
               referencePath,   // Questo diventerà la firma da verificare nel report
               signaturePath,   // Questo diventerà la firma di riferimento nel report
-              caseInfo
+              caseInfo,
+              undefined,      // Nessuna firma di riferimento aggiuntiva
+              signature.projectId  // Passiamo l'ID del progetto per garantire l'isolamento
             );
+            
+            console.log(`[PDF REPORT DOWNLOAD] Generazione report con projectId=${signature.projectId}`);
             
             console.log(`[PDF REPORT DOWNLOAD] Risultato report ricevuto:`, JSON.stringify(reportResult, null, 2));
             
