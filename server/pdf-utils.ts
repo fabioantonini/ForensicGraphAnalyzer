@@ -6,6 +6,7 @@ import path from 'path';
 import * as fs from 'fs/promises';
 import { createWriteStream, constants } from 'fs';
 import { log } from './vite';
+import PDFDocument from 'pdfkit';
 
 // Path per i file temporanei
 const REPORTS_DIR = path.join(process.cwd(), 'uploads', 'reports');
@@ -85,8 +86,7 @@ export async function generateSignatureReportPDF(data: {
   analysisReport: string | null
 }): Promise<{ success: boolean, reportPath?: string, error?: string }> {
   try {
-    // Importiamo pdfkit direttamente
-    const PDFDocument = require('pdfkit');
+    // Utilizziamo PDFDocument già importato globalmente
     
     // Assicuriamoci che la directory esista
     await ensureReportDirectory();

@@ -330,8 +330,9 @@ def generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, simi
     img_width, img_height = img.size
     aspect = img_height / float(img_width)
     max_width = 400  # Massima larghezza in punti
+    max_height = 250  # Massima altezza per evitare "Flowable too large"
     img_width = min(max_width, img_width)
-    img_height = img_width * aspect
+    img_height = min(max_height, img_width * aspect)
     
     elements.append(ReportlabImage(verifica_path, width=img_width, height=img_height))
     elements.append(Spacer(1, 12))
@@ -342,7 +343,7 @@ def generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, simi
     img_width, img_height = img.size
     aspect = img_height / float(img_width)
     img_width = min(max_width, img_width)
-    img_height = img_width * aspect
+    img_height = min(max_height, img_width * aspect)
     
     elements.append(ReportlabImage(comp_path, width=img_width, height=img_height))
     elements.append(Spacer(1, 12))
@@ -440,7 +441,16 @@ def generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, simi
     elements.append(Spacer(1, 12))
     elements.append(Paragraph("Grafico di compatibilità", heading2_style))
     elements.append(Spacer(1, 6))
-    elements.append(ReportlabImage(chart_temp_path, width=450, height=250))
+    # Anche per il grafico di comparazione, impostiamo una dimensione massima
+    img = Image.open(chart_temp_path)
+    img_width, img_height = img.size
+    aspect = img_height / float(img_width)
+    max_width = 450  # Massima larghezza in punti
+    max_height = 250  # Massima altezza per evitare "Flowable too large"
+    img_width = min(max_width, img_width)
+    img_height = min(max_height, img_width * aspect)
+    
+    elements.append(ReportlabImage(chart_temp_path, width=img_width, height=img_height))
     
     # Genera il documento PDF
     try:
