@@ -4,7 +4,7 @@
 
 import path from 'path';
 import * as fs from 'fs/promises';
-import fsExtra from 'fs-extra';
+import { createWriteStream, constants } from 'fs';
 import { log } from './vite';
 
 // Path per i file temporanei
@@ -13,7 +13,7 @@ const REPORTS_DIR = path.join(process.cwd(), 'uploads', 'reports');
 // Assicura che la directory dei report esista
 export async function ensureReportDirectory() {
   try {
-    await fsExtra.ensureDir(REPORTS_DIR);
+    await fs.mkdir(REPORTS_DIR, { recursive: true });
     log(`Directory reports inizializzata: ${REPORTS_DIR}`, 'pdf-utils');
     return true;
   } catch (error) {
@@ -40,7 +40,7 @@ export function generateReportPath(filename: string) {
 // Verifica se un file esiste
 export async function fileExists(filePath: string): Promise<boolean> {
   try {
-    await fsExtra.access(filePath, fsExtra.constants.F_OK);
+    await fs.access(filePath, constants.F_OK);
     return true;
   } catch {
     return false;
@@ -51,7 +51,7 @@ export async function fileExists(filePath: string): Promise<boolean> {
 export async function cleanupTempFile(filePath: string): Promise<boolean> {
   try {
     if (await fileExists(filePath)) {
-      await fsExtra.unlink(filePath);
+      await fs.unlink(filePath);
       return true;
     }
     return false;

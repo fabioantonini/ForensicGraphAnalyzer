@@ -8,6 +8,9 @@ import { SignaturePythonAnalyzer } from "./python-bridge";
 import { insertSignatureProjectSchema, insertSignatureSchema } from "@shared/schema";
 import { log } from "./vite";
 
+// Per compatibilità retroattiva, inizialmente usiamo solo fs standard
+import { createWriteStream } from "fs";
+
 // Assicuriamoci che le directory esistano
 try {
   // Crea la directory delle firme e dei report
@@ -954,7 +957,7 @@ export function registerSignatureRoutes(router: Router) {
       
       // Verifica che il file esista
       try {
-        await fsExtra.access(signature.reportPath);
+        await fs.access(signature.reportPath);
         console.log(`[PDF REPORT] File del report trovato: ${signature.reportPath}`);  
       } catch (error) {
         console.log(`[PDF REPORT] File non trovato: ${signature.reportPath}, tentativo di ri-generazione`);
@@ -1024,17 +1027,15 @@ export function registerSignatureRoutes(router: Router) {
               // Importiamo pdfkit direttamente con tipizzazione
               // @ts-ignore
               const PDFDocument = require('pdfkit');
-              // @ts-ignore
-              const fsExtra = require('fs-extra');
               
               // Prepara il percorso del file PDF
               const outputPath = path.join(process.cwd(), 'uploads', 'reports', `report_${Date.now()}.pdf`);
               
               // Assicuriamoci che la directory esista
-              await fsExtra.ensureDir(path.join(process.cwd(), 'uploads', 'reports'));
+              await fs.mkdir(path.join(process.cwd(), 'uploads', 'reports'), { recursive: true });
               
               // Crea una stream di scrittura
-              const pdfStream = fsExtra.createWriteStream(outputPath);
+              const pdfStream = createWriteStream(outputPath);
               
               // Crea un nuovo documento PDF
               const doc = new PDFDocument({
@@ -1075,7 +1076,7 @@ export function registerSignatureRoutes(router: Router) {
               
               try {
                 // Verifica che l'immagine esista
-                await fsExtra.access(signatureImagePath);
+                await fs.access(signatureImagePath);
                 
                 // Calcola le dimensioni per l'immagine
                 doc.image(signatureImagePath, {
@@ -1097,7 +1098,7 @@ export function registerSignatureRoutes(router: Router) {
                 // Crea un file temporaneo per l'immagine del grafico
                 const chartImagePath = path.join(process.cwd(), 'uploads', 'temp_chart.png');
                 try {
-                  await fsExtra.writeFile(chartImagePath, Buffer.from(signature.comparisonChart, 'base64'));
+                  await fs.writeFile(chartImagePath, Buffer.from(signature.comparisonChart, 'base64'));
                   
                   // Aggiungi l'immagine del grafico
                   doc.image(chartImagePath, {
@@ -1108,7 +1109,7 @@ export function registerSignatureRoutes(router: Router) {
                   
                   // Pulisci il file temporaneo
                   try {
-                    await fsExtra.unlink(chartImagePath);
+                    await fs.unlink(chartImagePath);
                   } catch (e) {
                     // Ignora eventuali errori nella pulizia
                   }
