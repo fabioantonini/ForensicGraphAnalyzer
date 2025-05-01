@@ -1174,8 +1174,10 @@ export function registerSignatureRoutes(router: Router) {
                   referencePath,   // Questo diventerà la firma da verificare nel report
                   signaturePath,   // Questo diventerà la firma di riferimento nel report
                   true,            // Genera il report
-                  caseInfo
+                  caseInfo,
+                  signature.projectId // Passiamo l'ID del progetto per assicurare l'isolamento dei dati
                 );
+                console.log(`[PDF REPORT] Utilizzando projectId ${signature.projectId} per garantire l'isolamento dei dati`);
                 
                 if (pythonResult && pythonResult.report_path) {
                   comparisonResult.report_path = pythonResult.report_path;
@@ -1302,8 +1304,10 @@ export function registerSignatureRoutes(router: Router) {
             referencePath,   // Questo diventerà la firma da verificare nel report
             signaturePath,   // Questo diventerà la firma di riferimento nel report
             false, // Non generare report DOCX automaticamente
-            caseInfo
+            caseInfo,
+            project.id // Passiamo l'ID del progetto per assicurare l'isolamento dei dati
           );
+          console.log(`[CONFRONTO POPUP] Utilizzando projectId ${project.id} per garantire l'isolamento dei dati`);
           
           similarityScore = comparisonResult.similarity;
           
@@ -1483,8 +1487,10 @@ export function registerSignatureRoutes(router: Router) {
                 referencePath,   // Questo diventerà la firma da verificare nel report
                 signaturePath,   // Questo diventerà la firma di riferimento nel report
                 false, // Non generare report DOCX automaticamente
-                caseInfo
+                caseInfo,
+                projectId // Passiamo l'ID del progetto per assicurare l'isolamento dei dati
               );
+              console.log(`[COMPARE-ALL] Utilizzando projectId ${projectId} per garantire l'isolamento dei dati`);
               
               similarityScore = comparisonResult.similarity;
               

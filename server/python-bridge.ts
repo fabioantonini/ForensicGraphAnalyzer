@@ -102,13 +102,15 @@ export class SignaturePythonAnalyzer {
    * @param referencePath Percorso della firma di riferimento
    * @param generateReport Se true, genera un report PDF
    * @param caseInfo Informazioni opzionali sul caso per il report
+   * @param projectId ID opzionale del progetto per assicurare l'isolamento dei dati
    * @returns Promise con i risultati del confronto
    */
   public static async compareSignatures(
     verificaPath: string,
     referencePath: string,
     generateReport: boolean = false,
-    caseInfo?: CaseInfo
+    caseInfo?: CaseInfo,
+    projectId?: number
   ): Promise<ComparisonResult> {
     return new Promise((resolve, reject) => {
       const args = [
@@ -125,6 +127,13 @@ export class SignaturePythonAnalyzer {
       if (caseInfo) {
         args.push('--case-info');
         args.push(JSON.stringify(caseInfo));
+      }
+      
+      // Se c'è l'ID del progetto, lo passiamo per isolamento dati
+      if (projectId) {
+        args.push('--project-id');
+        args.push(projectId.toString());
+        console.log(`[PYTHON BRIDGE] Passaggio del project ID ${projectId} allo script Python per isolamento dati`);
       }
 
       const process = spawn('python3', args);
@@ -174,13 +183,15 @@ export class SignaturePythonAnalyzer {
    * @param referencePath Percorso della firma di riferimento principale
    * @param caseInfo Informazioni sul caso per il report
    * @param additionalReferencePaths Array opzionale di percorsi di firme di riferimento aggiuntive
+   * @param projectId ID del progetto per garantire l'isolamento dei dati
    * @returns Promise con il risultato del confronto, incluso il percorso del report
    */
   public static async generateReport(
     verificaPath: string,
     referencePath: string,
     caseInfo?: CaseInfo,
-    additionalReferencePaths?: string[]
+    additionalReferencePaths?: string[],
+    projectId?: number
   ): Promise<ComparisonResult> {
     try {
       console.log(`[PYTHON BRIDGE] Generazione report per firma verifica: ${verificaPath}`);
@@ -195,7 +206,7 @@ export class SignaturePythonAnalyzer {
       console.log(`[PYTHON BRIDGE] CORREZIONE: Invertendo l'ordine dei parametri per compensare il bug`);
       
       // Forziamo la generazione del report, assicurandoci che il flag sia impostato a true
-      const result = await this.compareSignatures(referencePath, verificaPath, true, caseInfo);
+      const result = await this.compareSignatures(referencePath, verificaPath, true, caseInfo, projectId);
       
       // Verifica approfondita del risultato
       console.log(`[PYTHON BRIDGE] Risultato completo:`, JSON.stringify(result, null, 2));
