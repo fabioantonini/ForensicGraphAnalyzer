@@ -7,6 +7,7 @@ import { SignatureAnalyzer } from "./signature-analyzer";
 import { SignaturePythonAnalyzer } from "./python-bridge";
 import { insertSignatureProjectSchema, insertSignatureSchema } from "@shared/schema";
 import { log } from "./vite";
+import PDFDocument from "pdfkit";
 
 // Per compatibilità retroattiva, inizialmente usiamo solo fs standard
 import { createWriteStream, constants } from "fs";
@@ -790,9 +791,8 @@ export function registerSignatureRoutes(router: Router) {
               try {
                 console.log(`[PDF REPORT] Generazione PDF alternativa on-demand usando il comparisonChart`);
                 
-                // Importiamo pdfkit direttamente con tipizzazione
-                // @ts-ignore
-                const PDFDocument = require('pdfkit');
+                // Utilizziamo PDFDocument già importato globalmente
+                // L'importazione è stata spostata in cima al file
                 // Prepara il percorso del file PDF
                 const outputPath = path.join(process.cwd(), 'uploads', 'reports', `report_${Date.now()}.pdf`);
                 
@@ -1021,9 +1021,8 @@ export function registerSignatureRoutes(router: Router) {
               // Crea un file PDF di base usando il comparisonChart esistente
               console.log(`[PDF REPORT] Generazione di un PDF semplice usando dati esistenti`);
               
-              // Importiamo pdfkit direttamente con tipizzazione
-              // @ts-ignore
-              const PDFDocument = require('pdfkit');
+              // Utilizziamo PDFDocument già importato globalmente
+              // L'importazione è stata spostata in cima al file
               
               // Prepara il percorso del file PDF
               const outputPath = path.join(process.cwd(), 'uploads', 'reports', `report_${Date.now()}.pdf`);
