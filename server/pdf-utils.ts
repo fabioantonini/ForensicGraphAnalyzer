@@ -66,7 +66,7 @@ export async function createBase64TempFile(base64String: string, extension: stri
   try {
     await ensureReportDirectory();
     const tempFilePath = path.join(REPORTS_DIR, `temp_${Date.now()}.${extension}`);
-    await fsExtra.writeFile(tempFilePath, Buffer.from(base64String, 'base64'));
+    await fs.writeFile(tempFilePath, Buffer.from(base64String, 'base64'));
     return tempFilePath;
   } catch (error) {
     console.error(`[PDF] Errore nella creazione del file temporaneo:`, error);
@@ -96,7 +96,7 @@ export async function generateSignatureReportPDF(data: {
     const outputPath = generateReportPath(filename);
     
     // Crea una stream di scrittura
-    const pdfStream = fsExtra.createWriteStream(outputPath);
+    const pdfStream = createWriteStream(outputPath);
     
     // Crea un nuovo documento PDF
     const doc = new PDFDocument({
