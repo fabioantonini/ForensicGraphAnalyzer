@@ -964,12 +964,19 @@ export function registerSignatureRoutes(router: Router) {
           try {
             console.log(`[PDF REPORT] Rilevato percorso temporaneo, tentativo di generazione on-demand`);
             
-            // Ottieni la firma di riferimento
+            // Ottieni la firma di riferimento DELLO STESSO PROGETTO
+            console.log(`[PDF REPORT] Recupero firme di riferimento per il progetto ${signature.projectId}`);
             const referenceSignatures = await storage.getProjectSignatures(signature.projectId, true);
+            console.log(`[PDF REPORT] Trovate ${referenceSignatures.length} firme di riferimento per il progetto ${signature.projectId}`);
             
-            // Prendi la prima firma di riferimento elaborata
+            // Stampa le firme per debug
+            if (referenceSignatures.length > 0) {
+              console.log(`[PDF REPORT] Prima firma di riferimento: ID=${referenceSignatures[0].id}, Progetto=${referenceSignatures[0].projectId}, Filename=${referenceSignatures[0].filename}`);
+            }
+            
+            // Prendi la prima firma di riferimento elaborata DELLO STESSO PROGETTO
             const referenceSignature = referenceSignatures.find(
-              ref => ref.processingStatus === 'completed' && ref.parameters
+              ref => ref.processingStatus === 'completed' && ref.parameters && ref.projectId === signature.projectId
             );
             
             if (!referenceSignature) {
