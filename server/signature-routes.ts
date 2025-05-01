@@ -954,7 +954,8 @@ export function registerSignatureRoutes(router: Router) {
       
       // Verifica che il file esista
       try {
-        await fs.access(signature.reportPath);
+        await fsExtra.access(signature.reportPath);
+        console.log(`[PDF REPORT] File del report trovato: ${signature.reportPath}`);  
       } catch (error) {
         console.log(`[PDF REPORT] File non trovato: ${signature.reportPath}, tentativo di ri-generazione`);
         
