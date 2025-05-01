@@ -923,12 +923,12 @@ export function registerSignatureRoutes(router: Router) {
                 });
                 
                 // Verifica che il file esista
-                await fsExtra.access(outputPath);
+                await fs.access(outputPath, constants.F_OK);
                 console.log(`[PDF REPORT] File verificato e accessibile: ${outputPath}`);
                 
                 // Servi il file
                 return res.download(outputPath);
-              } catch (finalErr) {
+              } catch (finalErr: any) {
                 console.error(`[PDF REPORT] Impossibile generare PDF on-demand:`, finalErr);
                 // Aggiungi dettagli completi sull'errore nei log
                 console.error(`[PDF REPORT] STACK TRACE COMPLETO:`, finalErr.stack);
@@ -1153,7 +1153,7 @@ export function registerSignatureRoutes(router: Router) {
               
               // Aggiorna il percorso del report
               comparisonResult.report_path = outputPath;
-            } catch (pdfError) {
+            } catch (pdfError: any) {
               console.error(`[PDF REPORT] Errore nella generazione del PDF:`, pdfError);
               console.error(`[PDF REPORT] STACK TRACE COMPLETO:`, pdfError.stack);
               console.error(`[PDF REPORT] MESSAGGIO COMPLETO:`, pdfError.message);
