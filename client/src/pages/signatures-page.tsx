@@ -445,8 +445,8 @@ export default function SignaturesPage() {
       return res.json();
     },
     onSuccess: () => {
-      // Aggiorniamo entrambe le query per garantire che i dati siano aggiornati
-      queryClient.invalidateQueries({ queryKey: [`/api/signature-projects/${selectedProject}/signatures-debug`] });
+      // Aggiorniamo la query per garantire che i dati siano aggiornati
+      queryClient.invalidateQueries({ queryKey: [`/api/signature-projects/${selectedProject}/signatures`] });
       queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures"] });
       toast({
         title: "Successo",
