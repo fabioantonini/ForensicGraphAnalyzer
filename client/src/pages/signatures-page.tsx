@@ -109,13 +109,11 @@ export default function SignaturesPage() {
     isLoading: signaturesLoading,
     refetch: refetchSignatures
   } = useQuery<Signature[]>({
-    // MODIFICA CRITICA: usa un URL completo per l'endpoint di debug
-    // Non usare più il pattern di generazione delle query key (che mette solo la prima parte in fetch)
-    queryKey: [`/api/signature-projects/${selectedProject}/signatures-debug`],
+    queryKey: [`/api/signature-projects/${selectedProject}/signatures`],
     enabled: !!user && !!selectedProject,
-    staleTime: 0, // Forza sempre il refetch
+    staleTime: 10000, // Ricarica dopo 10 secondi
     refetchOnMount: true, // Ricarica ad ogni montaggio del componente
-    refetchInterval: 2000, // Aggiorna ogni 2 secondi (più frequente di prima)
+    refetchInterval: 5000, // Aggiorna ogni 5 secondi
     
     // Setup di un gestore di errore personalizzato
     select: (data) => {
@@ -203,13 +201,11 @@ export default function SignaturesPage() {
       return res.json();
     },
     onSuccess: () => {
-      // Usa il nuovo formato di query key che è stato corretto
-      queryClient.invalidateQueries({ queryKey: [`/api/signature-projects/${selectedProject}/signatures-debug`] });
-      console.log("Invalidata query dopo caricamento firma di riferimento");
+      // Invalida la query per aggiornare i dati delle firme
+      queryClient.invalidateQueries({ queryKey: [`/api/signature-projects/${selectedProject}/signatures`] });
       
-      // Per compatibilità con il resto del codice manteniamo anche le vecchie
+      // Per compatibilità con il resto del codice manteniamo anche la vecchia
       queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures-debug"] });
       
       referenceForm.reset();
       setIsUploadReferenceOpen(false);
@@ -409,8 +405,8 @@ export default function SignaturesPage() {
       });
       
       // Se abbiamo generato almeno un report, offriamo un link per scaricare il primo
-      if (data.successful > 0 && data.results.some(r => r.success && r.reportPath)) {
-        const firstSuccessfulReport = data.results.find(r => r.success && r.reportPath);
+      if (data.successful > 0 && data.results.some((r: any) => r.success && r.reportPath)) {
+        const firstSuccessfulReport = data.results.find((r: any) => r.success && r.reportPath);
         if (firstSuccessfulReport) {
           setTimeout(() => {
             window.location.href = `/api/signatures/${firstSuccessfulReport.id}/report`;
