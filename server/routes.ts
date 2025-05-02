@@ -57,48 +57,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const router = Router();
   registerSignatureRoutes(router);
   
-  // ROUTE DI DEBUG PER RISOLVERE IL PROBLEMA DELLE FIRME
-  router.get("/signature-projects/:id/signatures-debug", isAuthenticated, async (req, res) => {
-    try {
-      const projectId = parseInt(req.params.id);
-      console.log(`[DEBUG FORZATO] Richiesta firme per progetto ${projectId}`);
-      
-      // Verifica credenziali utente
-      const userId = req.user!.id;
-      console.log(`[DEBUG FORZATO] Utente ${userId} richiede firme per progetto ${projectId}`);
-      
-      // Esegui query SQL diretta per evitare problemi di mappatura di Drizzle
-      const { rows } = await pool.query(`
-        SELECT * FROM signatures WHERE project_id = $1
-      `, [projectId]);
-      
-      console.log(`[DEBUG FORZATO] Trovate ${rows.length} firme per progetto ${projectId}`);
-      if (rows.length > 0) {
-        console.log(`[DEBUG FORZATO] Prima firma:`, JSON.stringify(rows[0]));
-      }
-      
-      // Trasforma il risultato in array di oggetti JSON con camelCase
-      const result = rows.map(sig => ({
-        id: sig.id,
-        projectId: sig.project_id,
-        filename: sig.filename,
-        originalFilename: sig.original_filename,
-        fileType: sig.file_type,
-        fileSize: sig.file_size,
-        isReference: sig.is_reference,
-        parameters: sig.parameters,
-        processingStatus: sig.processing_status,
-        comparisonResult: sig.comparison_result,
-        createdAt: sig.created_at,
-        updatedAt: sig.updated_at
-      }));
-      
-      console.log(`[DEBUG FORZATO] Invio risposta con ${result.length} firme`);
-      res.json(result);
-    } catch (error: any) {
-      console.error(`[DEBUG FORZATO] Errore:`, error);
-      res.status(500).json({ error: error.message });
-    }
+  // Risposta API per indicare quale versione di codice sta eseguendo
+  router.get("/api/version", (req, res) => {
+    res.json({
+      version: "1.0.0",
+      updated: "2025-05-02",
+      features: ["Project isolation", "Full PDF report generation", "Reference signatures validation"]
+    });
   });
   
   app.use("/api", router);

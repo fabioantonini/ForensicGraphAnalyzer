@@ -435,44 +435,27 @@ export function registerSignatureRoutes(router: Router) {
   // Ottieni tutte le firme di un progetto
   router.get("/signature-projects/:id/signatures", isAuthenticated, async (req, res) => {
     try {
-      // RISOLUZIONE CRITICA: Stava restituendo i progetti invece delle firme
-      // Questo era un bug critico che causava il problema delle "firme fantasma"
       const projectId = parseInt(req.params.id);
-      console.log(`[DEBUG] Richiesta firme per progetto ${projectId}`);
       
       // Verifica se il parametro di percorso è un ID di progetto valido
       if (isNaN(projectId)) {
-        console.log(`[ERROR] ID progetto non valido: ${req.params.id}`);
         return res.status(400).json({ error: 'ID progetto non valido' });
       }
       
       const project = await storage.getSignatureProject(projectId);
       
       if (!project) {
-        console.log(`[DEBUG] Progetto ${projectId} non trovato`);
         return res.status(404).json({ error: 'Progetto non trovato' });
       }
       
       // Verifica che il progetto appartenga all'utente corrente
       if (project.userId !== req.user!.id) {
-        console.log(`[DEBUG] Utente ${req.user!.id} non autorizzato per progetto ${projectId} (proprietario: ${project.userId})`);
         return res.status(403).json({ error: 'Non autorizzato' });
       }
       
       // Ottieni le firme associate a questo progetto
       const referenceOnly = req.query.referenceOnly === 'true';
-      
-      // Query al database per ottenere le firme
-      console.log(`[DEBUG] Esecuzione query per firme del progetto ${projectId} (referenceOnly: ${referenceOnly})`);
       const signatures = await storage.getProjectSignatures(projectId, referenceOnly);
-      
-      // Log dettagliato
-      console.log(`[DEBUG] Trovate ${signatures.length} firme per progetto ${projectId}`);
-      if (signatures.length > 0) {
-        console.log(`[DEBUG] Prima firma: ID=${signatures[0].id}, projectId=${signatures[0].projectId}, isReference=${signatures[0].isReference}`);
-      } else {
-        console.log(`[DEBUG] Nessuna firma trovata per progetto ${projectId}`);
-      }
       
       // Restituisci un array vuoto se non ci sono firme
       if (!signatures || signatures.length === 0) {
@@ -496,10 +479,8 @@ export function registerSignatureRoutes(router: Router) {
         updatedAt: sig.updatedAt
       }));
       
-      console.log(`[DEBUG] Risposta API: ${result.length} firme per progetto ${projectId}`);
       res.json(result);
     } catch (error: any) {
-      console.error(`[DEBUG] Errore nel recupero firme:`, error);
       res.status(500).json({ error: error.message });
     }
   });
