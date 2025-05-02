@@ -33,7 +33,7 @@ export function HelpTooltip({
   
   // Se è fornita una chiave di traduzione, usala per ottenere il contenuto
   const tooltipContent = translationKey 
-    ? t(translationKey, defaultContent || content) 
+    ? t(translationKey, { defaultValue: defaultContent || content }) 
     : content;
 
   return (

@@ -251,13 +251,11 @@ export default function SignaturesPage() {
       return res.json();
     },
     onSuccess: () => {
-      // Usa il nuovo formato di query key che è stato corretto
-      queryClient.invalidateQueries({ queryKey: [`/api/signature-projects/${selectedProject}/signatures-debug`] });
-      console.log("Invalidata query dopo caricamento firma di verifica");
+      // Invalida la query per aggiornare i dati delle firme
+      queryClient.invalidateQueries({ queryKey: [`/api/signature-projects/${selectedProject}/signatures`] });
       
-      // Per compatibilità con il resto del codice manteniamo anche le vecchie
+      // Per compatibilità con il resto del codice manteniamo anche la vecchia
       queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures-debug"] });
       
       verifyForm.reset();
       setIsUploadVerifyOpen(false);
@@ -395,8 +393,8 @@ export default function SignaturesPage() {
       return res.json();
     },
     onSuccess: (data) => {
-      // Aggiorniamo entrambe le query per garantire che i dati siano aggiornati
-      queryClient.invalidateQueries({ queryKey: [`/api/signature-projects/${selectedProject}/signatures-debug`] });
+      // Aggiorniamo la query per garantire che i dati siano aggiornati
+      queryClient.invalidateQueries({ queryKey: [`/api/signature-projects/${selectedProject}/signatures`] });
       queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures"] });
       
       toast({
@@ -743,110 +741,7 @@ export default function SignaturesPage() {
             </div>
           </div>
           
-          {/* Debugging Info */}
-          <Card className="bg-blue-50 mb-6 border border-blue-200">
-            <CardContent className="p-4">
-              <div className="flex justify-between items-start">
-                <h4 className="text-sm font-semibold text-blue-800 mb-2">Debug Info:</h4>
-                <Button 
-                  variant="destructive" 
-                  size="sm"
-                  className="text-xs"
-                  onClick={() => {
-                    const confirmDelete = confirm("Sei sicuro di voler eliminare completamente il progetto? Questa operazione eliminerà il progetto attuale e ne creerà uno nuovo con lo stesso nome. Questo è l'unico modo per rimuovere eventuali firme fantasma.");
-                    
-                    if (confirmDelete) {
-                      if (!selectedProject) {
-                        toast({
-                          title: "Errore",
-                          description: "Nessun progetto selezionato",
-                          variant: "destructive"
-                        });
-                        return;
-                      }
-                      
-                      toast({
-                        title: "Ricreazione in corso",
-                        description: "Eliminazione e ricreazione del progetto...",
-                      });
-                      
-                      // Salviamo i dettagli del progetto prima di eliminarlo
-                      const currentProject = projects.find(p => p.id === selectedProject);
-                      
-                      if (!currentProject) {
-                        toast({
-                          title: "Errore",
-                          description: "Progetto non trovato",
-                          variant: "destructive"
-                        });
-                        return;
-                      }
-                      
-                      const projectName = currentProject.name;
-                      const projectDescription = currentProject.description || '';
-                      
-                      // SOLUZIONE RADICALE: Elimina e ricrea il progetto
-                      // Questo è garantito per risolvere il problema delle firme fantasma
-                      deleteProject.mutateAsync(selectedProject)
-                        .then(() => {
-                          toast({
-                            title: "Progetto eliminato",
-                            description: "Creazione del nuovo progetto in corso...",
-                          });
-                          
-                          // Forza l'invalidazione della cache prima di creare il nuovo progetto
-                          queryClient.removeQueries();
-                          queryClient.invalidateQueries();
-                          
-                          // Crea un nuovo progetto con lo stesso nome
-                          return createProject.mutateAsync({ 
-                            name: projectName, 
-                            description: projectDescription 
-                          });
-                        })
-                        .then((newProject) => {
-                          // Forza nuovamente l'invalidazione della cache dopo la creazione
-                          queryClient.invalidateQueries();
-                          
-                          toast({
-                            title: "Operazione completata",
-                            description: `Il progetto "${projectName}" è stato ricreato pulito`,
-                          });
-                          
-                          // Seleziona automaticamente il nuovo progetto
-                          if (newProject && newProject.id) {
-                            setSelectedProject(newProject.id);
-                          }
-                        })
-                        .catch(err => {
-                          console.error("Errore durante la ricreazione del progetto:", err);
-                          toast({
-                            title: "Errore",
-                            description: "Impossibile completare l'operazione",
-                            variant: "destructive"
-                          });
-                        });
-                    }
-                  }}
-                >
-                  Ripulisci progetto
-                </Button>
-              </div>
-              <pre className="text-xs bg-white p-2 rounded overflow-auto max-h-32">
-                {JSON.stringify({
-                  totalSignatures: Array.isArray(signatures) ? signatures.length : 0,
-                  referenceSignatures: Array.isArray(signatures) ? signatures.filter((s: any) => s.isReference).length : 0,
-                  verifySignatures: Array.isArray(signatures) ? signatures.filter((s: any) => !s.isReference).length : 0,
-                  signatureDetails: Array.isArray(signatures) ? signatures.map((s: any) => ({
-                    id: s.id,
-                    filename: s.filename,
-                    type: s.isReference ? 'reference' : 'verify',
-                    status: s.processingStatus
-                  })) : []
-                }, null, 2)}
-              </pre>
-            </CardContent>
-          </Card>
+
           
           <div className="mb-6">
             <div className="flex justify-between items-center mb-3">
