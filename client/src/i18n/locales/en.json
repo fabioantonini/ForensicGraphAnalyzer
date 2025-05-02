@@ -268,6 +268,32 @@
     "needReferenceFirst": "You need reference signatures first",
     "uploadFirstReference": "Upload first reference signature",
     "uploadFirstVerify": "Upload first verification signature",
-    "compareAll": "Compare All"
+    "compareAll": "Compare All",
+    "help": {
+      "referenceSignaturesTitle": "Reference Signatures",
+      "referenceSignaturesDesc": "Reference signatures are authentic examples of the subject's signature. Upload at least one reference signature to start the verification process.",
+      "verificationSignaturesTitle": "Verification Signatures",
+      "verificationSignaturesDesc": "These are the signatures you want to verify for authenticity. They will be compared against reference signatures to determine the likelihood of authenticity.",
+      "uploadReferenceTitle": "Upload Reference Signature",
+      "uploadReferenceDesc": "Add an authentic signature as a reference example. The more reference signatures you upload, the more accurate the analysis will be.",
+      "uploadVerifyTitle": "Upload Signature for Verification",
+      "uploadVerifyDesc": "Add a signature you want to verify. It will be compared against all available reference signatures.",
+      "compareAllTitle": "Compare All Signatures",
+      "compareAllDesc": "Start a batch comparison between all verification signatures and reference signatures. Results will show the similarity score for each signature.",
+      "generateReportTitle": "Generate PDF Report",
+      "generateAllReportsDesc": "Create a detailed forensic PDF report with comprehensive analysis of all signatures and their parametric comparisons.",
+      "similarityScoreTitle": "Similarity Score",
+      "similarityScoreDesc": "A score higher than 80% indicates high probability of authenticity. Between 60-80% is uncertain. Below 60% suggests a non-authentic signature.",
+      "aspectRatioTitle": "Aspect Ratio",
+      "aspectRatioDesc": "Measures the overall proportions of the signature (width/height). This parameter is difficult to replicate exactly in forgeries.",
+      "strokeFeaturesTitle": "Stroke Features",
+      "strokeFeaturesDesc": "Analyzes stroke thickness, pressure, and variations in width, which reflect the individual way of writing.",
+      "curvatureTitle": "Curvature",
+      "curvatureDesc": "Examines the angles and curves in the signature, which are difficult to imitate correctly in forgeries.",
+      "spatialDistributionTitle": "Spatial Distribution",
+      "spatialDistributionDesc": "How the signature occupies space and the distribution of graphic weight, including the position of the center of mass.",
+      "connectivityTitle": "Connectivity",
+      "connectivityDesc": "Analyzes the continuity and fragmentation of strokes, revealing the natural flow of the writer's hand."
+    }
   }
 }
