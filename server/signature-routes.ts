@@ -73,22 +73,16 @@ export function registerSignatureRoutes(router: Router) {
     try {
       const projectId = parseInt(req.params.id);
       
-      console.log(`[DEBUG REPORT-ALL] Avvio generazione report per tutte le firme nel progetto ${projectId}`);
-      
       const project = await storage.getSignatureProject(projectId);
       if (!project || project.userId !== req.user!.id) {
         return res.status(403).json({ error: 'Non autorizzato' });
       }
-      
-      console.log(`[DEBUG REPORT-ALL] Recupero firme da verificare per progetto ${projectId}`);
       
       // Ottieni tutte le firme da verificare completate
       const verificationSignatures = await storage.getProjectSignatures(projectId, false);
       const completedVerifications = verificationSignatures.filter(
         sig => sig.processingStatus === 'completed' && sig.parameters
       );
-      
-      console.log(`[DEBUG REPORT-ALL] Trovate ${completedVerifications.length} firme da verificare completate`);
       
       if (completedVerifications.length === 0) {
         return res.status(400).json({
@@ -101,8 +95,6 @@ export function registerSignatureRoutes(router: Router) {
       const completedReferences = referenceSignatures.filter(
         sig => sig.processingStatus === 'completed' && sig.parameters
       );
-      
-      console.log(`[DEBUG REPORT-ALL] Trovate ${completedReferences.length} firme di riferimento completate`);
       
       if (completedReferences.length === 0) {
         return res.status(400).json({
@@ -127,14 +119,10 @@ export function registerSignatureRoutes(router: Router) {
         notes: project.description || ""
       };
       
-      console.log(`[DEBUG REPORT-ALL] Inizio generazione report per ${completedVerifications.length} firme`);
-      
       // Utilizziamo un ciclo for standard invece di Promise.all per garantire migliore gestione degli errori
       const results = [];
       for (const signature of completedVerifications) {
         try {
-          console.log(`[DEBUG REPORT-ALL] Generazione report per firma ${signature.id}`);
-          
           // Percorso della firma da verificare
           const signaturePath = path.join('./uploads', signature.filename);
           
@@ -148,13 +136,6 @@ export function registerSignatureRoutes(router: Router) {
           // Le firme di riferimento aggiuntive sono tutte tranne la prima
           const additionalReferencePaths = referencePaths.length > 1 ? referencePaths.slice(1) : [];
           
-          // Debug
-          console.log(`[DEBUG REPORT-ALL] Firma da verificare: ${signature.filename}`);
-          console.log(`[DEBUG REPORT-ALL] Firma di riferimento principale: ${completedReferences[0].filename}`);
-          if (additionalReferencePaths.length > 0) {
-            console.log(`[DEBUG REPORT-ALL] Firme di riferimento aggiuntive: ${additionalReferencePaths.length}`);
-          }
-          
           // Aggiorniamo le info sul caso per indicare che è un confronto con multiple firme di riferimento
           const enhancedCaseInfo = {
             ...caseInfo,
@@ -164,15 +145,12 @@ export function registerSignatureRoutes(router: Router) {
           
           // Genera il report PDF
           // IMPORTANTE: Invertiamo i parametri per compensare il problema di ordinamento
-          console.log(`[REPORT-ALL] CORREZIONE: Invertendo ordine parametri per compensare il bug`);
-          console.log(`[REPORT-ALL] Firma da verificare (diventerà riferimento): ${signaturePath}`);
-          console.log(`[REPORT-ALL] Firma di riferimento (diventerà verifica): ${primaryReferencePath}`);
-          
           const reportResult = await SignaturePythonAnalyzer.generateReport(
             primaryReferencePath,    // Questo diventerà la firma da verificare nel report
             signaturePath,           // Questo diventerà la firma di riferimento nel report
             enhancedCaseInfo,        // Informazioni sul caso
-            additionalReferencePaths // Eventuali firme di riferimento aggiuntive
+            additionalReferencePaths, // Eventuali firme di riferimento aggiuntive
+            signature.projectId      // ID del progetto per l'isolamento
           );
           
           // Aggiorna la firma con il percorso del report
@@ -180,8 +158,6 @@ export function registerSignatureRoutes(router: Router) {
             await storage.updateSignature(signature.id, {
               reportPath: reportResult.report_path
             });
-            
-            console.log(`[DEBUG REPORT-ALL] Report generato con successo per firma ${signature.id}`);
             
             // Ottieni la firma aggiornata
             const updatedSignature = await storage.getSignature(signature.id);
@@ -191,7 +167,6 @@ export function registerSignatureRoutes(router: Router) {
               success: true
             });
           } else {
-            console.error(`[DEBUG REPORT-ALL] Errore durante la generazione del report per firma ${signature.id}:`, reportResult?.error || 'Nessun percorso di report restituito');
             results.push({
               id: signature.id,
               success: false,
@@ -199,7 +174,6 @@ export function registerSignatureRoutes(router: Router) {
             });
           }
         } catch (error: any) {
-          console.error(`[DEBUG REPORT-ALL] Errore per firma ${signature.id}:`, error.message);
           results.push({
             id: signature.id,
             success: false,
@@ -214,15 +188,12 @@ export function registerSignatureRoutes(router: Router) {
         type: 'report_generation',
         details: `Generati ${results.filter(r => r.success).length} report PDF nel progetto "${project.name}"`
       });
-      
-      console.log(`[DEBUG REPORT-ALL] Generazione report completata per ${results.filter(r => r.success).length}/${results.length} firme`);
       res.json({
         total: results.length,
         successful: results.filter(r => r.success).length,
         results: results
       });
     } catch (error: any) {
-      console.error(`[DEBUG REPORT-ALL] Errore generale nella generazione dei report:`, error);
       res.status(500).json({ error: error.message });
     }
   });
