@@ -121,6 +121,7 @@ export class MemStorage implements IStorage {
     this.queries = new Map();
     this.signatureProjects = new Map();
     this.signatures = new Map();
+    this.reportTemplates = new Map();
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
     });
@@ -130,6 +131,7 @@ export class MemStorage implements IStorage {
     this.nextQueryId = 1;
     this.nextSignatureProjectId = 1;
     this.nextSignatureId = 1;
+    this.nextReportTemplateId = 1;
   }
 
   // User methods
@@ -610,6 +612,76 @@ export class MemStorage implements IStorage {
   async deleteSignature(id: number): Promise<void> {
     this.signatures.delete(id);
   }
+
+  // Report Template methods
+  async createReportTemplate(templateData: InsertReportTemplate): Promise<ReportTemplate> {
+    const id = this.nextReportTemplateId++;
+    const now = new Date();
+    const template: ReportTemplate = {
+      ...templateData,
+      id,
+      createdAt: now,
+      updatedAt: now,
+    };
+    this.reportTemplates.set(id, template);
+    return template;
+  }
+
+  async getReportTemplate(id: number): Promise<ReportTemplate | undefined> {
+    return this.reportTemplates.get(id);
+  }
+
+  async getUserReportTemplates(userId: number): Promise<ReportTemplate[]> {
+    const userTemplates = Array.from(this.reportTemplates.values()).filter(
+      (template) => template.userId === userId
+    );
+    
+    // Sort by creation date (newest first)
+    return userTemplates.sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+    );
+  }
+
+  async getPublicReportTemplates(): Promise<ReportTemplate[]> {
+    const publicTemplates = Array.from(this.reportTemplates.values()).filter(
+      (template) => template.isPublic === true
+    );
+    
+    // Sort by creation date (newest first)
+    return publicTemplates.sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+    );
+  }
+
+  async updateReportTemplate(id: number, data: {
+    name?: string;
+    description?: string;
+    isPublic?: boolean;
+    template?: any;
+    thumbnailUrl?: string;
+  }): Promise<ReportTemplate> {
+    const template = await this.getReportTemplate(id);
+    if (!template) {
+      throw new Error(`Report template with ID ${id} not found`);
+    }
+    
+    const updatedTemplate: ReportTemplate = {
+      ...template,
+      ...(data.name !== undefined && { name: data.name }),
+      ...(data.description !== undefined && { description: data.description }),
+      ...(data.isPublic !== undefined && { isPublic: data.isPublic }),
+      ...(data.template !== undefined && { template: data.template }),
+      ...(data.thumbnailUrl !== undefined && { thumbnailUrl: data.thumbnailUrl }),
+      updatedAt: new Date(),
+    };
+    
+    this.reportTemplates.set(id, updatedTemplate);
+    return updatedTemplate;
+  }
+
+  async deleteReportTemplate(id: number): Promise<void> {
+    this.reportTemplates.delete(id);
+  }
 }
 
 export class DatabaseStorage implements IStorage {
@@ -998,6 +1070,72 @@ export class DatabaseStorage implements IStorage {
 
   async deleteDocument(id: number): Promise<void> {
     await db.delete(documents).where(eq(documents.id, id));
+  }
+  
+  // Report Template methods
+  async createReportTemplate(templateData: InsertReportTemplate): Promise<ReportTemplate> {
+    const [template] = await db
+      .insert(reportTemplates)
+      .values(templateData)
+      .returning();
+    return template;
+  }
+
+  async getReportTemplate(id: number): Promise<ReportTemplate | undefined> {
+    const [template] = await db
+      .select()
+      .from(reportTemplates)
+      .where(eq(reportTemplates.id, id));
+    return template;
+  }
+
+  async getUserReportTemplates(userId: number): Promise<ReportTemplate[]> {
+    return await db
+      .select()
+      .from(reportTemplates)
+      .where(eq(reportTemplates.userId, userId))
+      .orderBy(desc(reportTemplates.createdAt));
+  }
+
+  async getPublicReportTemplates(): Promise<ReportTemplate[]> {
+    return await db
+      .select()
+      .from(reportTemplates)
+      .where(eq(reportTemplates.isPublic, true))
+      .orderBy(desc(reportTemplates.createdAt));
+  }
+
+  async updateReportTemplate(id: number, data: {
+    name?: string;
+    description?: string;
+    isPublic?: boolean;
+    template?: any;
+    thumbnailUrl?: string;
+  }): Promise<ReportTemplate> {
+    const [template] = await db
+      .update(reportTemplates)
+      .set({
+        ...(data.name !== undefined && { name: data.name }),
+        ...(data.description !== undefined && { description: data.description }),
+        ...(data.isPublic !== undefined && { isPublic: data.isPublic }),
+        ...(data.template !== undefined && { template: data.template }),
+        ...(data.thumbnailUrl !== undefined && { thumbnailUrl: data.thumbnailUrl }),
+        updatedAt: new Date()
+      })
+      .where(eq(reportTemplates.id, id))
+      .returning();
+    
+    if (!template) {
+      throw new Error(`Report template with ID ${id} not found`);
+    }
+    
+    return template;
+  }
+
+  async deleteReportTemplate(id: number): Promise<void> {
+    await db
+      .delete(reportTemplates)
+      .where(eq(reportTemplates.id, id));
   }
 
   async getMultipleDocuments(ids: number[]): Promise<Document[]> {
