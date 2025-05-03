@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import multer from "multer";
-import { Document, User, insertQuerySchema, signatures } from "@shared/schema";
+import { Document, User, insertQuerySchema, signatures, InsertReportTemplate } from "@shared/schema";
 import { 
   isValidFileType, 
   generateFilename, 
@@ -488,6 +488,148 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const activities = await storage.getRecentActivity(userId, limit);
       res.json(activities);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Report Template API Routes
+  // Get all report templates for current user
+  app.get("/api/report-templates", isAuthenticated, async (req, res, next) => {
+    try {
+      const userId = req.user!.id;
+      const templates = await storage.getUserReportTemplates(userId);
+      res.json(templates);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Get public report templates
+  app.get("/api/report-templates/public", isAuthenticated, async (req, res, next) => {
+    try {
+      const templates = await storage.getPublicReportTemplates();
+      res.json(templates);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Get a specific report template
+  app.get("/api/report-templates/:id", isAuthenticated, async (req, res, next) => {
+    try {
+      const templateId = parseInt(req.params.id);
+      const template = await storage.getReportTemplate(templateId);
+      
+      if (!template) {
+        return res.status(404).json({ error: "Report template not found" });
+      }
+      
+      const userId = req.user!.id;
+      // Only allow access if the template belongs to the user or is public
+      if (template.userId !== userId && !template.isPublic) {
+        return res.status(403).json({ error: "You don't have permission to access this template" });
+      }
+      
+      res.json(template);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Create a new report template
+  app.post("/api/report-templates", isAuthenticated, async (req, res, next) => {
+    try {
+      const userId = req.user!.id;
+      const { name, description, template, isPublic, thumbnailUrl } = req.body;
+      
+      const newTemplate = await storage.createReportTemplate({
+        userId,
+        name,
+        description: description || null,
+        template,
+        isPublic: isPublic || false,
+        thumbnailUrl: thumbnailUrl || null,
+      });
+      
+      // Log activity
+      await storage.createActivity({
+        userId,
+        type: "template_created",
+        details: `Created report template: ${name}`
+      });
+      
+      res.status(201).json(newTemplate);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Update a report template
+  app.put("/api/report-templates/:id", isAuthenticated, async (req, res, next) => {
+    try {
+      const templateId = parseInt(req.params.id);
+      const userId = req.user!.id;
+      
+      // Check if template exists and belongs to the user
+      const existingTemplate = await storage.getReportTemplate(templateId);
+      if (!existingTemplate) {
+        return res.status(404).json({ error: "Report template not found" });
+      }
+      
+      if (existingTemplate.userId !== userId) {
+        return res.status(403).json({ error: "You don't have permission to update this template" });
+      }
+      
+      const { name, description, template, isPublic, thumbnailUrl } = req.body;
+      
+      const updatedTemplate = await storage.updateReportTemplate(templateId, {
+        name,
+        description,
+        template, 
+        isPublic,
+        thumbnailUrl
+      });
+      
+      // Log activity
+      await storage.createActivity({
+        userId,
+        type: "template_updated",
+        details: `Updated report template: ${updatedTemplate.name}`
+      });
+      
+      res.json(updatedTemplate);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Delete a report template
+  app.delete("/api/report-templates/:id", isAuthenticated, async (req, res, next) => {
+    try {
+      const templateId = parseInt(req.params.id);
+      const userId = req.user!.id;
+      
+      // Check if template exists and belongs to the user
+      const existingTemplate = await storage.getReportTemplate(templateId);
+      if (!existingTemplate) {
+        return res.status(404).json({ error: "Report template not found" });
+      }
+      
+      if (existingTemplate.userId !== userId) {
+        return res.status(403).json({ error: "You don't have permission to delete this template" });
+      }
+      
+      await storage.deleteReportTemplate(templateId);
+      
+      // Log activity
+      await storage.createActivity({
+        userId,
+        type: "template_deleted",
+        details: `Deleted report template: ${existingTemplate.name}`
+      });
+      
+      res.status(204).end();
     } catch (err) {
       next(err);
     }
