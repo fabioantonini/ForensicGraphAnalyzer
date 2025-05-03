@@ -117,6 +117,35 @@ export const insertQuerySchema = createInsertSchema(queries).pick({
   documentIds: true,
 });
 
+// Report template schema
+export const reportTemplates = pgTable("report_templates", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  name: text("name").notNull(),
+  description: text("description"),
+  isPublic: boolean("is_public").default(false),
+  template: json("template").notNull(),
+  thumbnailUrl: text("thumbnail_url"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const reportTemplatesRelations = relations(reportTemplates, ({ one }) => ({
+  user: one(users, {
+    fields: [reportTemplates.userId],
+    references: [users.id],
+  }),
+}));
+
+export const insertReportTemplateSchema = createInsertSchema(reportTemplates).pick({
+  userId: true,
+  name: true,
+  description: true,
+  isPublic: true,
+  template: true,
+  thumbnailUrl: true,
+});
+
 // Type definitions
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -130,6 +159,10 @@ export type InsertActivity = z.infer<typeof insertActivitySchema>;
 
 export type Query = typeof queries.$inferSelect;
 export type InsertQuery = z.infer<typeof insertQuerySchema>;
+
+export type ReportTemplate = typeof reportTemplates.$inferSelect;
+export type InsertReportTemplate = z.infer<typeof insertReportTemplateSchema>;
+
 
 // Type definition for signature parameters
 export interface SignatureParameters {

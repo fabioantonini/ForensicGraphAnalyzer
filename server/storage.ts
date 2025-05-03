@@ -2,7 +2,8 @@ import {
   User, InsertUser, Document, InsertDocument, Activity,
   InsertActivity, Query, InsertQuery, users, documents, activities, queries,
   SignatureProject, InsertSignatureProject, Signature, InsertSignature,
-  signatureProjects, signatures, SignatureParameters
+  signatureProjects, signatures, SignatureParameters, ReportTemplate, InsertReportTemplate,
+  reportTemplates
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -78,6 +79,20 @@ export interface IStorage {
   }): Promise<Signature>;
   deleteSignature(id: number): Promise<void>;
 
+  // Report Template methods
+  createReportTemplate(template: InsertReportTemplate): Promise<ReportTemplate>;
+  getReportTemplate(id: number): Promise<ReportTemplate | undefined>;
+  getUserReportTemplates(userId: number): Promise<ReportTemplate[]>;
+  getPublicReportTemplates(): Promise<ReportTemplate[]>;
+  updateReportTemplate(id: number, data: {
+    name?: string;
+    description?: string;
+    isPublic?: boolean;
+    template?: any;
+    thumbnailUrl?: string;
+  }): Promise<ReportTemplate>;
+  deleteReportTemplate(id: number): Promise<void>;
+
   // Session store
   sessionStore: any;
 }
@@ -89,6 +104,7 @@ export class MemStorage implements IStorage {
   private queries: Map<number, Query>;
   private signatureProjects: Map<number, SignatureProject>;
   private signatures: Map<number, Signature>;
+  private reportTemplates: Map<number, ReportTemplate>;
   public sessionStore: any;
   private nextUserId: number;
   private nextDocumentId: number;
@@ -96,6 +112,7 @@ export class MemStorage implements IStorage {
   private nextQueryId: number;
   private nextSignatureProjectId: number;
   private nextSignatureId: number;
+  private nextReportTemplateId: number;
 
   constructor() {
     this.users = new Map();
