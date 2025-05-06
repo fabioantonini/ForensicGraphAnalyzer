@@ -38,6 +38,7 @@ export interface IStorage {
     dateRange?: string;
   }): Promise<Document[]>;
   updateDocumentIndexStatus(id: number, indexed: boolean): Promise<Document>;
+  updateDocumentContent(id: number, content: string): Promise<Document>;
   deleteDocument(id: number): Promise<void>;
   getMultipleDocuments(ids: number[]): Promise<Document[]>;
   getDocumentCount(userId: number): Promise<number>;
@@ -307,6 +308,22 @@ export class MemStorage implements IStorage {
     const updatedDocument: Document = {
       ...document,
       indexed,
+      updatedAt: new Date(),
+    };
+    
+    this.documents.set(id, updatedDocument);
+    return updatedDocument;
+  }
+
+  async updateDocumentContent(id: number, content: string): Promise<Document> {
+    const document = await this.getDocument(id);
+    if (!document) {
+      throw new Error(`Document with ID ${id} not found`);
+    }
+    
+    const updatedDocument: Document = {
+      ...document,
+      content,
       updatedAt: new Date(),
     };
     

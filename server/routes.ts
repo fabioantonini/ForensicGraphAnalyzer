@@ -4,6 +4,8 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import multer from "multer";
 import { Document, User, insertQuerySchema, signatures, InsertReportTemplate } from "@shared/schema";
+import path from "path";
+import fs from "fs/promises";
 import { 
   isValidFileType, 
   generateFilename, 
@@ -329,6 +331,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       res.status(204).send();
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Reprocess document (extract text and update the index)
+  app.post("/api/documents/:id/reprocess", isAuthenticated, async (req, res, next) => {
+    try {
+      const userId = req.user!.id;
+      const documentId = parseInt(req.params.id);
+      const user = await storage.getUser(userId) as User;
+      
+      if (isNaN(documentId)) {
+        return res.status(400).json({ message: "Invalid document ID" });
+      }
+      
+      const document = await storage.getDocument(documentId);
+      
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+      
+      // Check if document belongs to user
+      if (document.userId !== userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      // Check if file exists
+      const filepath = path.join(process.cwd(), 'uploads', document.filename);
+      let fileExists = true;
+      try {
+        await fs.access(filepath);
+      } catch (error) {
+        fileExists = false;
+        log(`Document file not found on server: ${filepath}`, "express");
+        return res.status(404).json({ message: "Document file not found on server" });
+      }
+      
+      // Remove from ChromaDB first (if possible) to prevent duplicates
+      if (document.indexed) {
+        const apiKeyForDelete = user.openaiApiKey || undefined; // undefined will trigger system key use
+        await removeDocumentFromCollection(userId, documentId, apiKeyForDelete);
+      }
+      
+      // Process the file to extract text
+      let content = '';
+      try {
+        log(`Processing file: ${filepath}`, "express");
+        content = await processFile(filepath, document.fileType);
+      } catch (error) {
+        log(`Error reprocessing document content: ${error}`, "express");
+        return res.status(500).json({ message: "Failed to process document content" });
+      }
+      
+      // Update document with extracted content
+      await storage.updateDocumentIndexStatus(documentId, false); // First update indexed status
+      await storage.updateDocumentContent(documentId, content); // Then update content
+      
+      // Add document back to ChromaDB with updated content
+      const apiKeyToUse = user.openaiApiKey || undefined; // undefined will trigger system key use
+      log(`Adding document back to ChromaDB with updated content`, "express");
+      const indexed = await addDocumentToCollection(userId, document, apiKeyToUse);
+      
+      // Update document indexed status
+      if (indexed) {
+        await storage.updateDocumentIndexStatus(documentId, true);
+      }
+      
+      // Log activity
+      await storage.createActivity({
+        userId,
+        type: "reprocess",
+        details: `Reprocessed document: ${document.originalFilename}`
+      });
+      
+      const updatedDocument = await storage.getDocument(documentId);
+      res.json({
+        id: updatedDocument?.id,
+        filename: updatedDocument?.originalFilename,
+        fileType: updatedDocument?.fileType,
+        createdAt: updatedDocument?.createdAt,
+        updatedAt: updatedDocument?.updatedAt,
+        indexed: updatedDocument?.indexed
+      });
     } catch (err) {
       next(err);
     }

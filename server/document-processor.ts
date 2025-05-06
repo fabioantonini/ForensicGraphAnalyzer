@@ -4,15 +4,31 @@ import { randomBytes } from 'crypto';
 import mammoth from 'mammoth';
 import { log } from './vite';
 
-// Create a fallback implementation for pdf-parse
-const pdfParse = async (buffer: Buffer, options?: any) => ({ 
-  text: "PDF parsing is currently unavailable. Please install the 'pdf-parse' package for PDF support.",
-  numpages: 0,
-  numrender: 0,
-  info: {},
-  metadata: {},
-  version: "0.0.0"
-});
+// Dynamic import for pdf-parse to avoid initialization issues
+let pdfParse: (buffer: Buffer, options?: any) => Promise<{ text: string, numpages: number, info: any, metadata: any, version: string, numrender: number }>;
+
+// Function to initialize pdf-parse when needed
+async function getPdfParse() {
+  if (!pdfParse) {
+    try {
+      // Using a more reliable dynamic import pattern
+      const pdfParsePkg = await import('pdf-parse');
+      pdfParse = pdfParsePkg.default;
+    } catch (error) {
+      log(`Error loading pdf-parse: ${error}`, "document-processor");
+      // Fallback implementation
+      pdfParse = async () => ({ 
+        text: "PDF parsing failed to initialize",
+        numpages: 0,
+        numrender: 0,
+        info: {},
+        metadata: {},
+        version: "0.0.0"
+      });
+    }
+  }
+  return pdfParse;
+}
 
 // File type verification
 export function isValidFileType(mimetype: string): boolean {
@@ -54,28 +70,31 @@ export async function saveFile(buffer: Buffer, filename: string): Promise<string
 export async function extractTextFromPDF(filepath: string): Promise<string> {
   try {
     const buffer = await fs.readFile(filepath);
+    
+    // Get the pdf-parse function dynamically
+    const pdfParser = await getPdfParse();
+    
     // Define our own options to avoid requiring test files
     const options = {
-      pagerender: (pageData: any) => {
-        return pageData.getTextContent()
-          .then((textContent: any) => {
-            let lastY, text = '';
-            for (let item of textContent.items) {
-              if (lastY == item.transform[5] || !lastY)
-                text += item.str;
-              else
-                text += '\n' + item.str;
-              lastY = item.transform[5];
-            }
-            return text;
-          });
-      }
+      // Simple text extraction without custom rendering to avoid dependencies
+      // This may result in less formatted text but is more reliable
     };
-    const pdfData = await pdfParse(buffer, options);
+    
+    log(`Extracting text from PDF file: ${filepath}`, "document-processor");
+    const pdfData = await pdfParser(buffer, options);
+    
+    if (!pdfData.text || pdfData.text.includes("parsing failed")) {
+      log(`PDF extraction returned empty or error text`, "document-processor");
+      // Fallback to a simpler approach - try to extract text without custom options
+      const basicData = await pdfParser(buffer);
+      return basicData.text || "PDF text extraction failed";
+    }
+    
     return pdfData.text;
   } catch (error) {
     log(`Error extracting text from PDF: ${error}`, "document-processor");
-    throw new Error('Failed to extract text from PDF');
+    // Return a more helpful error message
+    return `Failed to extract text from PDF. Error: ${error.message}`;
   }
 }
 
