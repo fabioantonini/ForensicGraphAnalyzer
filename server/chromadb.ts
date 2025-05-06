@@ -2,10 +2,14 @@ import { ChromaClient, Collection, OpenAIEmbeddingFunction } from 'chromadb';
 import { Document } from '@shared/schema';
 import { log } from './vite';
 
-// Initialize ChromaDB client with in-memory storage
-// For Replit's environment, we need to use a specific configuration
+// ChromaDB server configuration
+const CHROMA_SERVER_HOST = process.env.CHROMA_SERVER_HOST || 'localhost';
+const CHROMA_SERVER_PORT = process.env.CHROMA_SERVER_PORT || '8000';
+const CHROMA_SERVER_URL = `http://${CHROMA_SERVER_HOST}:${CHROMA_SERVER_PORT}`;
+
+// Initialize ChromaDB client with connection to external server
 const chromaClient = new ChromaClient({
-  path: "http://localhost:8000", // Default local path
+  path: CHROMA_SERVER_URL,
   fetchOptions: {
     headers: {
       'Content-Type': 'application/json',
@@ -13,8 +17,7 @@ const chromaClient = new ChromaClient({
   },
 });
 
-// Map to store user-specific collections (this will act as our in-memory fallback)
-// When ChromaDB is unavailable, we'll use this for simulated operations
+// Map to store user-specific collections (for our in-memory fallback)
 const userCollections = new Map<number, Collection>();
 let isChromaAvailable = false;
 
@@ -30,14 +33,24 @@ const inMemoryDocuments = new Map<string, InMemoryDocument>();
 // Initialize ChromaDB service
 export async function initializeChromaDB() {
   try {
-    log("Initializing ChromaDB with in-memory storage...", "chromadb");
-    await chromaClient.heartbeat();
-    log("ChromaDB initialized successfully", "chromadb");
+    log(`Connecting to ChromaDB server at ${CHROMA_SERVER_URL}...`, "chromadb");
+    const heartbeat = await chromaClient.heartbeat();
+    log(`ChromaDB connected successfully. Heartbeat: ${heartbeat}`, "chromadb");
+    
+    // Verifica se il server è configurato per la persistenza
+    try {
+      // Controlla se il server ha già delle collections (indicazione di persistenza)
+      const collections = await chromaClient.listCollections();
+      log(`Server has ${collections.length} existing collections`, "chromadb");
+    } catch (collectionError) {
+      log(`Could not verify collections: ${collectionError}`, "chromadb");
+    }
+    
     isChromaAvailable = true;
     return true;
   } catch (error) {
-    log(`ChromaDB initialization failed: ${error}`, "chromadb");
-    log("Using in-memory fallback for document storage", "chromadb");
+    log(`ChromaDB connection failed: ${error}`, "chromadb");
+    log("Falling back to in-memory document storage", "chromadb");
     isChromaAvailable = false;
     return false;
   }
@@ -45,36 +58,32 @@ export async function initializeChromaDB() {
 
 // Get or create a collection for a user
 export async function getUserCollection(userId: number, apiKey?: string): Promise<Collection> {
+  // Check if we already have a cached collection for this user
   if (userCollections.has(userId)) {
     return userCollections.get(userId)!;
   }
 
-  // For testing, create a mock collection if needed
-  // In a real application, we would create a proper collection with ChromaDB
-  // This is just a placeholder to prevent errors
-  const mockCollection = {
-    name: `user_${userId}_documents`,
-    // Add any other properties needed for your mock implementation
-  } as unknown as Collection;
-  
-  userCollections.set(userId, mockCollection);
-  return mockCollection;
-  
-  // Original implementation - disabled for testing
-  /*
-  // If ChromaDB is not available, throw error that will be caught by the calling function
+  // If ChromaDB is not available, create a mock collection for fallback mode
   if (!isChromaAvailable) {
-    throw new Error("ChromaDB is not available, using in-memory fallback");
+    log(`ChromaDB server not available, using mock collection for user ${userId}`, "chromadb");
+    const mockCollection = {
+      name: `user_${userId}_documents`,
+      // Add properties needed for mock implementation
+    } as unknown as Collection;
+    
+    userCollections.set(userId, mockCollection);
+    return mockCollection;
   }
 
   try {
-    // Create embedding function using the user's OpenAI API key
+    // Create embedding function using the user's OpenAI API key or system default
     const embeddingFunction = new OpenAIEmbeddingFunction({
-      openai_api_key: apiKey,
+      openai_api_key: apiKey || process.env.OPENAI_API_KEY,
       openai_model: "text-embedding-ada-002"
     });
 
-    // Create a new collection for the user
+    // Try to get or create a real collection in ChromaDB
+    log(`Creating real ChromaDB collection for user ${userId}`, "chromadb");
     const collection = await chromaClient.getOrCreateCollection({
       name: `user_${userId}_documents`,
       embeddingFunction,
@@ -84,20 +93,27 @@ export async function getUserCollection(userId: number, apiKey?: string): Promis
     return collection;
   } catch (error) {
     log(`Error creating collection for user ${userId}: ${error}`, "chromadb");
-    throw error;
+    // Fall back to mock collection if there's an error with real ChromaDB
+    log(`Falling back to mock collection for user ${userId}`, "chromadb");
+    const mockCollection = {
+      name: `user_${userId}_documents`,
+    } as unknown as Collection;
+    
+    userCollections.set(userId, mockCollection);
+    return mockCollection;
   }
-  */
 }
 
 // Add a document to the user's collection
 export async function addDocumentToCollection(
   userId: number, 
   document: Document, 
-  apiKey?: string  // Made optional
+  apiKey?: string  // Optional - uses system API key if not provided
 ): Promise<boolean> {
   try {
-    // Always use in-memory fallback for testing
     const docId = `doc_${document.id}`;
+    
+    // First, always store in in-memory as fallback regardless of ChromaDB availability
     inMemoryDocuments.set(docId, {
       id: docId,
       content: document.content,
@@ -109,41 +125,21 @@ export async function addDocumentToCollection(
       },
       userId: userId
     });
-    log(`Document ${document.id} added to in-memory storage for user ${userId}`, "chromadb");
-    return true;
     
-    // Original code - disabled for testing
-    /*
-    if (!apiKey) {
-      throw new Error("OpenAI API key is required");
-    }
-
+    // If ChromaDB is not available, just use the in-memory fallback
     if (!isChromaAvailable) {
-      // Use in-memory fallback when ChromaDB is unavailable
-      const docId = `doc_${document.id}`;
-      inMemoryDocuments.set(docId, {
-        id: docId,
-        content: document.content,
-        metadata: {
-          filename: document.originalFilename,
-          fileType: document.fileType,
-          documentId: document.id,
-          userId: userId
-        },
-        userId: userId
-      });
-      log(`Document ${document.id} added to in-memory storage for user ${userId}`, "chromadb");
+      log(`ChromaDB not available, document ${document.id} added only to in-memory storage for user ${userId}`, "chromadb");
       return true;
     }
-    */
-
-    // If ChromaDB is available, use it
+    
+    // Try to add to ChromaDB persistent storage
     try {
+      log(`Adding document ${document.id} to persistent ChromaDB for user ${userId}`, "chromadb");
       const collection = await getUserCollection(userId, apiKey);
       
       // Add document to collection
       await collection.add({
-        ids: [`doc_${document.id}`],
+        ids: [docId],
         metadatas: [{
           filename: document.originalFilename,
           fileType: document.fileType,
@@ -153,25 +149,11 @@ export async function addDocumentToCollection(
         documents: [document.content]
       });
       
-      log(`Document ${document.id} added to collection for user ${userId}`, "chromadb");
+      log(`Document ${document.id} successfully added to persistent ChromaDB for user ${userId}`, "chromadb");
       return true;
     } catch (error) {
-      log(`Failed to add document to ChromaDB, using in-memory fallback: ${error}`, "chromadb");
-      
-      // Fallback to in-memory if ChromaDB operation fails
-      const docId = `doc_${document.id}`;
-      inMemoryDocuments.set(docId, {
-        id: docId,
-        content: document.content,
-        metadata: {
-          filename: document.originalFilename,
-          fileType: document.fileType,
-          documentId: document.id,
-          userId: userId
-        },
-        userId: userId
-      });
-      log(`Document ${document.id} added to in-memory storage for user ${userId}`, "chromadb");
+      log(`Failed to add document to ChromaDB, using in-memory fallback only: ${error}`, "chromadb");
+      // We already added to in-memory storage, so we can still return true
       return true;
     }
   } catch (error) {
