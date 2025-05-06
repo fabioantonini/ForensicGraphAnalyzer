@@ -13,11 +13,12 @@ if (!fs.existsSync(CHROMA_PERSISTENCE_DIR)) {
   log(`Directory di persistenza ChromaDB creata: ${CHROMA_PERSISTENCE_DIR}`, "chromadb");
 }
 
-// Configurazione del client persistente di ChromaDB
-// Il client JavaScript non supporta ancora completamente l'accesso diretto a file di persistenza
-// quindi utilizziamo il client standard che tenta di connettersi a localhost:8000 (o usa HTTP)
-let chromaClient = new ChromaClient();
-log(`Client ChromaDB creato in modalità standard`, "chromadb");
+// Configurazione del client ChromaDB per connettersi al server HTTP
+// Definiamo esplicitamente l'host e la porta per garantire la corretta connessione
+let chromaClient = new ChromaClient({
+  path: 'http://localhost:8000'
+});
+log(`Client ChromaDB creato in modalità HTTP su http://localhost:8000`, "chromadb");
 
 
 // Map to store user-specific collections (for our in-memory fallback)

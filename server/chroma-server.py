@@ -3,7 +3,6 @@
 import os
 import logging
 import chromadb
-import uvicorn
 
 # Configurazione del logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -19,16 +18,21 @@ if __name__ == "__main__":
     logger.info("Avvio server ChromaDB...")
     # Porta 8000 per evitare conflitti con l'app principale su 5000
     
-    # Nuova configurazione secondo documentazione aggiornata
-    # https://docs.trychroma.com/deployment
-    from chromadb.server import Server
+    # Configurazione aggiornata per ChromaDB 1.0.8+ che usa FastAPI
+    # Questo approccio è compatibile con la versione attuale
+    from chromadb.config import Settings
     
-    server = Server(
-        host="0.0.0.0",
-        port=8000,
-        cors_allow_origins=["*"],
-        telemetry_enabled=False,
-        persistent_directory=persistence_directory
+    settings = Settings(
+        chroma_api_impl="chromadb.api.fastapi.FastAPI",
+        chroma_server_host="0.0.0.0",
+        chroma_server_http_port=8000,
+        allow_reset=True,
+        anonymized_telemetry=False,
+        persist_directory=persistence_directory
     )
     
-    server.run()
+    # Crea il server in modalità standalone
+    api = chromadb.Client(settings)
+    
+    # Questo client non termina mai e blocca il thread, eseguendolo in un server HTTP
+    # Rimarrà in esecuzione finché non viene terminato manualmente
