@@ -206,7 +206,7 @@ export async function queryCollection(
   userId: number, 
   query: string, 
   documentIds: number[],
-  apiKey?: string, // Made optional
+  apiKey?: string, // Optional - uses system API key if not provided
   k: number = 5
 ): Promise<{
   documents: string[];
@@ -215,7 +215,55 @@ export async function queryCollection(
   distances: number[];
 }> {
   try {
-    // Always use in-memory fallback for testing
+    // Map documentIds to ChromaDB document IDs format
+    const docIds = documentIds && documentIds.length > 0 
+      ? documentIds.map(id => `doc_${id}`) 
+      : [];
+    
+    // If ChromaDB is available, try to use it for semantic search
+    if (isChromaAvailable) {
+      try {
+        log(`Querying persistent ChromaDB for user ${userId}`, "chromadb");
+        const collection = await getUserCollection(userId, apiKey);
+        
+        // Prepare filter for user-specific documents and optional document IDs
+        const filter: Record<string, any> = { userId: userId };
+        
+        // Perform the query on the ChromaDB collection
+        const results = await collection.query({
+          queryTexts: [query],
+          nResults: k,
+          where: docIds.length > 0 ? { documentId: { $in: documentIds.map(String) } } : undefined,
+          include: ["metadatas", "documents", "distances"] as any
+        });
+        
+        if (results.ids[0] && results.ids[0].length > 0) {
+          log(`Found ${results.ids[0].length} relevant documents in ChromaDB for query: "${query}"`, "chromadb");
+          
+          // Ensure that all results are non-null
+          const filteredIdx = [];
+          for (let i = 0; i < results.ids[0].length; i++) {
+            if (results.documents && results.documents[0] && results.documents[0][i]) {
+              filteredIdx.push(i);
+              log(`  - ${results.metadatas?.[0]?.[i]?.filename || 'Unknown'} (distance: ${results.distances?.[0]?.[i] || 'N/A'})`, "chromadb");
+            }
+          }
+          
+          // Create safe filtered results
+          return {
+            documents: filteredIdx.map(i => (results.documents?.[0]?.[i] || "") as string),
+            metadatas: filteredIdx.map(i => results.metadatas?.[0]?.[i] || {}),
+            ids: filteredIdx.map(i => results.ids[0][i]),
+            distances: filteredIdx.map(i => results.distances?.[0]?.[i] || 1.0)
+          };
+        }
+      } catch (error) {
+        log(`ChromaDB query failed, falling back to in-memory search: ${error}`, "chromadb");
+        // Continue with fallback
+      }
+    }
+    
+    // Fallback to in-memory search when ChromaDB is unavailable or query fails
     log(`Using in-memory documents for query from user ${userId}`, "chromadb");
     
     // Filter documents by user and requested document IDs
