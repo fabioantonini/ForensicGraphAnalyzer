@@ -52,6 +52,34 @@ app.use((req, res, next) => {
     console.error("Errore nell'inizializzazione della directory per i report:", error);
   }
   
+  // Inizializza ChromaDB all'avvio
+  try {
+    log("Inizializzazione ChromaDB persistente...", "chromadb");
+    
+    // Verifica se è necessario eseguire lo script start-chroma.sh
+    const chromaPidExists = fs.existsSync(path.join(process.cwd(), 'chroma.pid'));
+    
+    if (!chromaPidExists) {
+      log("Esecuzione script di inizializzazione ChromaDB...", "chromadb");
+      try {
+        // Esegui lo script di inizializzazione
+        execSync('./start-chroma.sh', { stdio: 'inherit' });
+        log("ChromaDB persistente inizializzato con successo", "chromadb");
+      } catch (error) {
+        log(`Errore durante l'inizializzazione di ChromaDB: ${error}`, "chromadb");
+        log("L'applicazione continuerà usando il fallback in-memory", "chromadb");
+      }
+    } else {
+      log("ChromaDB già inizializzato, flag chroma.pid trovato", "chromadb");
+    }
+    
+    // Inizializza il client ChromaDB (sia che il server sia disponibile o meno)
+    await initializeChromaDB();
+  } catch (error) {
+    log(`Errore durante l'inizializzazione di ChromaDB: ${error}`, "chromadb");
+    log("L'applicazione continuerà usando il fallback in-memory", "chromadb");
+  }
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

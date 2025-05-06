@@ -15,7 +15,9 @@ os.makedirs(persistence_directory, exist_ok=True)
 logger.info(f"Inizializzazione ChromaDB con persistenza in: {persistence_directory}")
 
 # Configurazione client ChromaDB con persistenza
+# Avvia anche un server embedded su una porta specifica che può essere usata dal client JavaScript
 client = chromadb.PersistentClient(path=persistence_directory)
+chromadb.Server(port=8000, directory=persistence_directory).start()
 
 # Test di funzionalità
 # Crea una collection di test
