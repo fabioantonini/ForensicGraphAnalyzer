@@ -13,12 +13,16 @@ if (!fs.existsSync(CHROMA_PERSISTENCE_DIR)) {
   log(`Directory di persistenza ChromaDB creata: ${CHROMA_PERSISTENCE_DIR}`, "chromadb");
 }
 
-// Inizializza direttamente il client ChromaDB con persistenza
-// Nota: in ChromaDB 1.0.8+ è raccomandato usare PersistentClient invece di Server+Client
-// ma l'API JavaScript non supporta ancora direttamente PersistentClient
-// quindi usiamo ancora ChromaClient ma senza un server HTTP (utilizzo diretto della biblioteca)
-// Questo utilizza un'implementazione in-memory che può ancora accedere ai dati persistenti
-const chromaClient = new ChromaClient();
+// Configurazione del client persistente di ChromaDB
+// Prova a usare il client persistente direttamente, ma con fallback a un client in-memory
+try {
+  const chromaClient = new ChromaClient({
+    path: CHROMA_PERSISTENCE_DIR
+  });
+} catch (error) {
+  log(`Errore nella creazione di ChromaClient: ${error}`, "chromadb");
+  const chromaClient = new ChromaClient();
+}
 
 
 // Map to store user-specific collections (for our in-memory fallback)
@@ -36,32 +40,41 @@ const inMemoryDocuments = new Map<string, InMemoryDocument>();
 
 // Initialize ChromaDB service
 export async function initializeChromaDB() {
-  try {
-    log(`Inizializzazione ChromaDB in modalità integrata...`, "chromadb");
-    
+  // Verificare il file chroma.pid per determinare se ChromaDB è stato inizializzato
+  const chromaPidFile = path.join(process.cwd(), 'chroma.pid');
+  if (fs.existsSync(chromaPidFile)) {
     try {
-      // Controlla se ci sono collections esistenti
-      const collections = await chromaClient.listCollections();
-      if (collections && collections.length > 0) {
-        log(`ChromaDB inizializzato con successo, trovate ${collections.length} collections esistenti`, "chromadb");
-        
-        // Log delle collezioni per debug
-        for (const collection of collections) {
-          log(`Collection trovata: ${collection}`, "chromadb");
-        }
-      } else {
-        log(`ChromaDB inizializzato con successo, nessuna collection esistente`, "chromadb");
-      }
+      log(`Inizializzazione ChromaDB in modalità direct client...`, "chromadb");
       
-      isChromaAvailable = true;
-      return true;
-    } catch (collectionError) {
-      log(`Errore durante il controllo delle collections: ${collectionError}`, "chromadb");
-      throw collectionError;
+      try {
+        // Controlla se ci sono collections esistenti
+        const collections = await chromaClient.listCollections();
+        if (collections && collections.length > 0) {
+          log(`ChromaDB inizializzato con successo, trovate ${collections.length} collections esistenti`, "chromadb");
+          
+          // Log delle collezioni per debug
+          for (const collection of collections) {
+            log(`Collection trovata: ${collection}`, "chromadb");
+          }
+        } else {
+          log(`ChromaDB inizializzato con successo, nessuna collection esistente`, "chromadb");
+        }
+        
+        isChromaAvailable = true;
+        return true;
+      } catch (collectionError) {
+        log(`Errore durante il controllo delle collections: ${collectionError}`, "chromadb");
+        throw collectionError;
+      }
+    } catch (error) {
+      log(`Errore durante l'inizializzazione di ChromaDB: ${error}`, "chromadb");
+      log("Fallback su storage in-memory attivato", "chromadb");
+      isChromaAvailable = false;
+      return false;
     }
-  } catch (error) {
-    log(`Errore durante l'inizializzazione di ChromaDB: ${error}`, "chromadb");
-    log("Fallback su storage in-memory attivato", "chromadb");
+  } else {
+    log(`File chroma.pid non trovato - ChromaDB non inizializzato`, "chromadb");
+    log("Utilizzo storage in-memory", "chromadb");
     isChromaAvailable = false;
     return false;
   }
