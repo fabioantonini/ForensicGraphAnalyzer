@@ -4,6 +4,9 @@ import { setupVite, serveStatic, log } from "./vite";
 import path from "path";
 import fsExtra from 'fs-extra';
 import { ensureReportDirectory } from "./pdf-utils";
+import { initializeChromaDB } from './chromadb';
+import { execSync } from 'child_process';
+import fs from 'fs';
 
 const app = express();
 app.use(express.json());

@@ -1,15 +1,24 @@
 import { ChromaClient, Collection, OpenAIEmbeddingFunction } from 'chromadb';
 import { Document } from '@shared/schema';
 import { log } from './vite';
+import * as path from 'path';
+import * as fs from 'fs';
 
-// ChromaDB server configuration
-const CHROMA_SERVER_HOST = process.env.CHROMA_SERVER_HOST || 'localhost';
-const CHROMA_SERVER_PORT = process.env.CHROMA_SERVER_PORT || '8000';
-const CHROMA_SERVER_URL = `http://${CHROMA_SERVER_HOST}:${CHROMA_SERVER_PORT}`;
+// Configurazione directory di persistenza ChromaDB
+const CHROMA_PERSISTENCE_DIR = path.join(process.cwd(), 'chroma_data');
 
-// Initialize ChromaDB client with connection to external server
+// Assicuriamoci che la directory esista
+if (!fs.existsSync(CHROMA_PERSISTENCE_DIR)) {
+  fs.mkdirSync(CHROMA_PERSISTENCE_DIR, { recursive: true });
+  log(`Directory di persistenza ChromaDB creata: ${CHROMA_PERSISTENCE_DIR}`, "chromadb");
+}
+
+// Inizializza direttamente il client ChromaDB con persistenza
+// Nota: in ChromaDB 1.0.8+ è raccomandato usare PersistentClient invece di Server+Client
+// ma l'API JavaScript non supporta ancora direttamente PersistentClient
+// quindi usiamo ancora ChromaClient con URL localhost
 const chromaClient = new ChromaClient({
-  path: CHROMA_SERVER_URL,
+  path: "http://localhost:8000",
   fetchOptions: {
     headers: {
       'Content-Type': 'application/json',
@@ -33,7 +42,7 @@ const inMemoryDocuments = new Map<string, InMemoryDocument>();
 // Initialize ChromaDB service
 export async function initializeChromaDB() {
   try {
-    log(`Connecting to ChromaDB server at ${CHROMA_SERVER_URL}...`, "chromadb");
+    log(`Connecting to ChromaDB server at http://localhost:8000...`, "chromadb");
     const heartbeat = await chromaClient.heartbeat();
     log(`ChromaDB connected successfully. Heartbeat: ${heartbeat}`, "chromadb");
     

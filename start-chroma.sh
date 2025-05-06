@@ -1,14 +1,19 @@
 #!/bin/bash
 
-# Assicuriamoci che la directory chroma_data esista
+echo "Starting ChromaDB client with persistence..."
+
+# Make sure the directory exists
 mkdir -p chroma_data
 
-# Avvia il server ChromaDB in background
-python server/chroma-server.py &
+# Execute the script that tests and initializes ChromaDB
+python server/direct-chroma.py
 
-# Salva il PID
-echo $! > chroma.pid
-
-echo "ChromaDB server avviato in background con PID $(cat chroma.pid)"
-echo "I dati verranno salvati nella directory chroma_data"
-echo "Per arrestare il server: kill $(cat chroma.pid)"
+# If the test was successful, we consider ChromaDB ready
+if [ $? -eq 0 ]; then
+  echo "ChromaDB client with persistence initialized successfully"
+  touch chroma.pid
+  echo "ChromaDB ready flag created at chroma.pid"
+else
+  echo "Failed to initialize ChromaDB client with persistence"
+  exit 1
+fi
