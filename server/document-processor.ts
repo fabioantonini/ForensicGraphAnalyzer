@@ -91,10 +91,11 @@ export async function extractTextFromPDF(filepath: string): Promise<string> {
     }
     
     return pdfData.text;
-  } catch (error) {
-    log(`Error extracting text from PDF: ${error}`, "document-processor");
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    log(`Error extracting text from PDF: ${errorMessage}`, "document-processor");
     // Return a more helpful error message
-    return `Failed to extract text from PDF. Error: ${error.message}`;
+    return `Failed to extract text from PDF. Error: ${errorMessage}`;
   }
 }
 

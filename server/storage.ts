@@ -1085,6 +1085,23 @@ export class DatabaseStorage implements IStorage {
     return updatedDocument;
   }
 
+  async updateDocumentContent(id: number, content: string): Promise<Document> {
+    const [updatedDocument] = await db
+      .update(documents)
+      .set({
+        content,
+        updatedAt: new Date()
+      })
+      .where(eq(documents.id, id))
+      .returning();
+    
+    if (!updatedDocument) {
+      throw new Error(`Document with ID ${id} not found`);
+    }
+    
+    return updatedDocument;
+  }
+
   async deleteDocument(id: number): Promise<void> {
     await db.delete(documents).where(eq(documents.id, id));
   }
