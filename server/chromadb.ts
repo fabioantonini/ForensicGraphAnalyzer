@@ -249,16 +249,80 @@ export async function queryCollection(
       // If no specific docs requested, include all docs for this user
       return true;
     });
+
+    // If no documents found after filtering, return empty results
+    if (filteredDocs.length === 0) {
+      log(`No documents found for user ${userId} with requested document IDs`, "chromadb");
+      return {
+        documents: [],
+        metadatas: [],
+        ids: [],
+        distances: []
+      };
+    }
     
-    // Simply return all the filtered documents (no semantic search in fallback mode)
-    // Limited to requested number
-    const limitedDocs = filteredDocs.slice(0, k);
+    // Implement a simple relevance scoring for in-memory documents
+    // This is a basic approximation of semantic search using keyword matching
+    const scoredDocs = filteredDocs.map(doc => {
+      // Basic relevance score based on term frequency
+      let score = 0;
+      
+      // Extract keywords from the query (simple approach)
+      const keywords = query.toLowerCase()
+        .replace(/[.,?!;:"'(){}\[\]]/g, ' ')
+        .split(/\s+/)
+        .filter(word => word.length > 3); // Only consider words with more than 3 letters
+      
+      // Count keyword occurrences in the document
+      const docContent = doc.content.toLowerCase();
+      for (const keyword of keywords) {
+        // Count occurrences of each keyword
+        const regex = new RegExp(keyword, 'g');
+        const matches = docContent.match(regex);
+        if (matches) {
+          score += matches.length;
+        }
+        
+        // Boost score if the document filename contains the keyword
+        const filename = doc.metadata.filename.toLowerCase();
+        if (filename.includes(keyword)) {
+          score += 10; // Significant boost for filename matches
+        }
+      }
+      
+      // Also check if the query explicitly mentions the document by name
+      const queryLower = query.toLowerCase();
+      const filenameWithoutExt = doc.metadata.filename.toLowerCase().replace(/\.[^\.]+$/, '');
+      if (queryLower.includes(filenameWithoutExt)) {
+        score += 50; // Very high boost for explicit document references
+      }
+      
+      return { doc, score };
+    });
+    
+    // Sort by relevance score (descending)
+    scoredDocs.sort((a, b) => b.score - a.score);
+    
+    // Take the top k documents
+    const topDocs = scoredDocs.slice(0, k);
+    
+    log(`Found ${topDocs.length} relevant documents for query: "${query}"`, "chromadb");
+    for (const {doc, score} of topDocs) {
+      log(`  - ${doc.metadata.filename} (score: ${score})`, "chromadb");
+    }
+    
+    // Normalize scores to distances (higher score = lower distance)
+    const maxScore = Math.max(...topDocs.map(d => d.score), 1); // Avoid division by zero
+    const distances = topDocs.map(d => {
+      // Convert scores to distances (0 to 1 range, lower is better)
+      return d.score > 0 ? 1 - (d.score / maxScore) : 1.0;
+    });
     
     return {
-      documents: limitedDocs.map(doc => doc.content),
-      metadatas: limitedDocs.map(doc => doc.metadata),
-      ids: limitedDocs.map(doc => doc.id),
-      distances: limitedDocs.map(() => 1.0) // Default distance value
+      documents: topDocs.map(d => d.doc.content),
+      metadatas: topDocs.map(d => d.doc.metadata),
+      ids: topDocs.map(d => d.doc.id),
+      distances
     };
   } catch (error) {
     log(`Query failed: ${error}`, "chromadb");

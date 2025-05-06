@@ -57,14 +57,40 @@ export async function chatWithRAG(
   model: string = "gpt-4o",
   temperature: number = 0.7
 ): Promise<string> {
+  // Handle case when context is empty
+  if (context.length === 0) {
+    log("No relevant context found for query. Informing user.", "openai");
+    const isItalian = /[àèéìòù]/i.test(query);
+    
+    if (isItalian) {
+      return "Mi dispiace, non ho trovato documenti rilevanti per rispondere alla tua domanda. Se stai cercando informazioni su un documento specifico, assicurati di averlo caricato e selezionato nella query.";
+    } else {
+      return "I'm sorry, I couldn't find relevant documents to answer your question. If you're looking for information from a specific document, please make sure you've uploaded it and selected it for the query.";
+    }
+  }
+  
+  // Check if the user is explicitly asking about a specific document
+  const documentMentionRegex = /(\b(?:file|document|pdf|doc)\b.*?["']([^"']+)["'])|(\b[\w-]+-[\w-]+\.(?:pdf|doc|docx|txt))\b/i;
+  const match = query.match(documentMentionRegex);
+  const mentionedDoc = match ? (match[2] || match[3]) : null;
+  
   // TESTING MODE: Return mock response for testing without OpenAI API
   // This approach allows testing without requiring an API key
   if (!apiKey && !process.env.OPENAI_API_KEY) {
     log("Using mock response for testing without OpenAI API", "openai");
     
+    // If a specific document was mentioned but not found in context, inform the user
+    if (mentionedDoc && !context.some(c => c.toLowerCase().includes(mentionedDoc.toLowerCase()))) {
+      const isItalian = /[àèéìòù]/i.test(query);
+      if (isItalian) {
+        return `Mi dispiace, non ho accesso al documento "${mentionedDoc}" che hai menzionato. Assicurati di aver caricato il documento e di averlo selezionato per questa query.`;
+      } else {
+        return `I'm sorry, I don't have access to the document "${mentionedDoc}" you mentioned. Please make sure you've uploaded the document and selected it for this query.`;
+      }
+    }
+    
     // Create a simple response based on the query and context
     const mockResponse = generateMockResponse(query, context);
-    
     return mockResponse;
   }
   
@@ -72,18 +98,26 @@ export async function chatWithRAG(
   try {
     const openai = createOpenAIClient(apiKey);
     
+    // If a specific document was mentioned but not found in context, inform the user
+    if (mentionedDoc && !context.some(c => c.toLowerCase().includes(mentionedDoc.toLowerCase()))) {
+      log(`User asked about document "${mentionedDoc}" which is not in context`, "openai");
+      
+      // Use a simple message to inform the user that the document wasn't found
+      const isItalian = /[àèéìòù]/i.test(query);
+      if (isItalian) {
+        return `Mi dispiace, non ho accesso al documento "${mentionedDoc}" che hai menzionato. Assicurati di aver caricato il documento e di averlo selezionato per questa query.`;
+      } else {
+        return `I'm sorry, I don't have access to the document "${mentionedDoc}" you mentioned. Please make sure you've uploaded the document and selected it for this query.`;
+      }
+    }
+    
     // Build system message with context
-    const systemMessage = `
-You are a forensic graphology assistant that helps analyze handwriting and documents.
-Use the following context information to inform your response:
-
-${context.join('\n\n')}
-
-Always provide concise, accurate information based on the context. If you don't know the answer or it's not in the context, be honest about it.
-When citing information, mention the specific document it came from if possible.
-
-Note: Respond in the same language as the query. If the query is in Italian, respond in Italian. If the query is in English, respond in English.
-`;
+    const systemMessage = "You are a forensic graphology assistant that helps analyze handwriting and documents. " +
+      "Use the following context information to inform your response:\n\n" +
+      context.join('\n\n') +
+      "\n\nAlways provide concise, accurate information based on the context. If you don't know the answer or it's not in the context, be honest about it. " +
+      "When citing information, mention the specific document it came from if possible.\n\n" +
+      "Note: Respond in the same language as the query. If the query is in Italian, respond in Italian. If the query is in English, respond in English.";
 
     // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
     const response = await openai.chat.completions.create({
