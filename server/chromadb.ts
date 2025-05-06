@@ -36,40 +36,48 @@ const inMemoryDocuments = new Map<string, InMemoryDocument>();
 
 // Initialize ChromaDB service
 export async function initializeChromaDB() {
-  log(`Inizializzazione ChromaDB persistente...`, "chromadb");
+  log(`Verifica disponibilità ChromaDB...`, "chromadb");
   
-  // Verificare il file chroma.pid per determinare se ChromaDB è stato inizializzato
-  const chromaPidFile = path.join(process.cwd(), 'chroma.pid');
-  if (fs.existsSync(chromaPidFile)) {
-    log(`ChromaDB già inizializzato, flag chroma.pid trovato`, "chromadb");
+  try {
+    // Proviamo a connetterci direttamente a ChromaDB con un timeout breve
+    // Se questo fallisce, passiamo immediatamente alla modalità fallback
     
-    try {
-      // Controlla se ci sono collections esistenti tentando di connettersi a ChromaDB
-      // attraverso l'API HTTP standard (il client Python gestisce la persistenza)
-      const collections = await chromaClient.listCollections();
-      
-      if (collections && collections.length > 0) {
-        log(`ChromaDB inizializzato con successo, trovate ${collections.length} collections esistenti`, "chromadb");
-        
-        // Log delle collezioni per debug
-        for (const collection of collections) {
-          log(`Collection trovata: ${collection}`, "chromadb");
-        }
-      } else {
-        log(`ChromaDB inizializzato con successo, nessuna collection esistente`, "chromadb");
+    // Implementiamo un timeout per evitare attese troppo lunghe
+    const testConnection = async () => {
+      try {
+        return await chromaClient.listCollections();
+      } catch (error) {
+        throw new Error(`Connessione a ChromaDB fallita: ${error.message}`);
       }
+    };
+    
+    // Tentativo di connessione con timeout
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Timeout connessione ChromaDB')), 3000);
+    });
+    
+    // Esegui con timeout
+    const collections = await Promise.race([testConnection(), timeoutPromise]);
+    
+    // Se arriviamo qui, la connessione è riuscita
+    if (collections && collections.length > 0) {
+      log(`ChromaDB disponibile con ${collections.length} collections esistenti`, "chromadb");
       
-      isChromaAvailable = true;
-      return true;
-    } catch (error) {
-      log(`Errore durante la connessione a ChromaDB: ${error}`, "chromadb");
-      log("Fallback su storage in-memory attivato", "chromadb");
-      isChromaAvailable = false;
-      return false;
+      // Log delle collezioni per debug
+      for (const collection of collections) {
+        log(`Collection trovata: ${collection}`, "chromadb");
+      }
+    } else {
+      log(`ChromaDB disponibile, nessuna collection esistente`, "chromadb");
     }
-  } else {
-    log(`File chroma.pid non trovato - ChromaDB non inizializzato`, "chromadb");
-    log("Utilizzo storage in-memory", "chromadb");
+    
+    isChromaAvailable = true;
+    return true;
+  } catch (error) {
+    // In caso di errore o timeout, passiamo alla modalità fallback
+    log(`ChromaDB non disponibile: ${error.message}`, "chromadb");
+    log("Sistema fallback in-memory attivato automaticamente", "chromadb");
+    log("Il sistema funzionerà normalmente usando lo storage interno anziché ChromaDB", "chromadb");
     isChromaAvailable = false;
     return false;
   }
