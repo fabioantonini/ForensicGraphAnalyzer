@@ -4,6 +4,7 @@ import { log } from './vite';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as child_process from 'child_process';
+import { createPgVectorAdapter, PgVectorAdapter } from './pgvector-adapter';
 
 // Configurazione directory di persistenza ChromaDB
 const CHROMA_PERSISTENCE_DIR = path.join(process.cwd(), 'chroma_data');
@@ -163,9 +164,9 @@ export async function initializeChromaDB() {
         }
       }
       
-      // If we're here, all attempts failed - activate fallback
+      // If we're here, all attempts failed - activate pgvector fallback
       log(`Impossibile avviare o connettersi al server ChromaDB`, "chromadb");
-      log(`Sistema fallback in-memory attivato`, "chromadb");
+      log(`Sistema fallback pgvector attivato`, "chromadb");
       isChromaAvailable = false;
       return false;
     }
@@ -249,10 +250,24 @@ export async function addDocumentToCollection(
       userId: userId
     });
     
-    // If ChromaDB is not available, just use the in-memory fallback
+    // If ChromaDB is not available, use the pgvector fallback
     if (!isChromaAvailable) {
-      log(`ChromaDB not available, document ${document.id} added only to in-memory storage for user ${userId}`, "chromadb");
-      return true;
+      log(`ChromaDB not available, document ${document.id} added to pgvector for user ${userId}`, "chromadb");
+      
+      try {
+        // Create pgvector adapter
+        const pgAdapter = createPgVectorAdapter(userId, apiKey);
+        
+        // Add document to pgvector
+        await pgAdapter.addDocument(document);
+        
+        log(`Document ${document.id} successfully added to pgvector for user ${userId}`, "chromadb");
+        return true;
+      } catch (pgError) {
+        log(`Failed to add document to pgvector: ${pgError}. Falling back to in-memory storage.`, "chromadb");
+        // Continue with in-memory fallback
+        return true;
+      }
     }
     
     // Try to add to ChromaDB persistent storage
@@ -300,8 +315,23 @@ export async function removeDocumentFromCollection(
       log(`Document ${documentId} removed from in-memory storage for user ${userId}`, "chromadb");
     }
     
+    // Try to remove from pgvector if ChromaDB is not available
+    if (!isChromaAvailable) {
+      try {
+        // Create pgvector adapter
+        const pgAdapter = createPgVectorAdapter(userId, apiKey);
+        
+        // Remove document from pgvector
+        await pgAdapter.removeDocument(documentId);
+        
+        log(`Document ${documentId} removed from pgvector for user ${userId}`, "chromadb");
+      } catch (pgError) {
+        // Log error but don't fail the entire operation
+        log(`Notice: Failed to remove from pgvector: ${pgError}`, "chromadb");
+      }
+    }
     // If ChromaDB is available, try to remove it from there as well
-    if (isChromaAvailable) {
+    else if (isChromaAvailable) {
       try {
         const collection = await getUserCollection(userId, apiKey);
         
@@ -386,7 +416,42 @@ export async function queryCollection(
       }
     }
     
-    // Fallback to in-memory search when ChromaDB is unavailable or query fails
+    // Try pgvector search when ChromaDB is unavailable
+    if (!isChromaAvailable) {
+      try {
+        log(`Trying pgvector search for user ${userId}`, "chromadb");
+        
+        // Create pgvector adapter
+        const pgAdapter = createPgVectorAdapter(userId, apiKey);
+        
+        // Query pgvector
+        const pgResults = await pgAdapter.query(query, documentIds, k);
+        
+        if (pgResults && pgResults.length > 0) {
+          log(`Found ${pgResults.length} results using pgvector for query: "${query}"`, "chromadb");
+          
+          // Map pgvector results to ChromaDB format
+          return {
+            documents: pgResults.map(r => r.content),
+            metadatas: pgResults.map(r => ({
+              documentId: r.documentId,
+              // Placeholder values for compatibility
+              filename: `document_${r.documentId}`,
+              fileType: "text",
+              userId: userId
+            })),
+            ids: pgResults.map(r => `doc_${r.documentId}`),
+            distances: pgResults.map(r => 1 - r.similarity) // Convert similarity to distance
+          };
+        }
+        
+        log(`No results from pgvector, falling back to in-memory search`, "chromadb");
+      } catch (pgError) {
+        log(`Error with pgvector search, falling back to in-memory: ${pgError}`, "chromadb");
+      }
+    }
+    
+    // Final fallback: in-memory search
     log(`Using in-memory documents for query from user ${userId}`, "chromadb");
     
     // Filter documents by user and requested document IDs
