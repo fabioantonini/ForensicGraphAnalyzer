@@ -4,7 +4,7 @@ import { log } from './vite';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as child_process from 'child_process';
-import { createPgVectorAdapter, PgVectorAdapter } from './pgvector-adapter';
+import { createPgVectorAdapter } from './pgvector-adapter';
 import { testDatabaseConnection, isPgVectorAvailable, db } from './db';
 import { sql } from 'drizzle-orm';
 
@@ -85,7 +85,6 @@ async function startChromaDBServer(): Promise<boolean> {
   }
 }
 
-
 // Map to store user-specific collections (for our in-memory fallback)
 const userCollections = new Map<number, Collection>();
 let isChromaAvailable = false;
@@ -98,9 +97,6 @@ interface InMemoryDocument {
   userId: number;
 }
 const inMemoryDocuments = new Map<string, InMemoryDocument>();
-
-// Placeholder comment per mantenere la struttura
-// Le funzioni sono già importate all'inizio
 
 // Initialize ChromaDB service
 export async function initializeChromaDB() {

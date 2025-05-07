@@ -89,10 +89,12 @@ export async function removeDocumentFromVectorStore(documentId: number, userId: 
   }
 }
 
-interface QueryResult {
+// Definizione corretta dell'interfaccia per i risultati delle query
+export interface QueryResult {
   documentId: number;
   content: string;
   similarity: number;
+  [key: string]: unknown; // Permette proprietà aggiuntive per compatibilità con Record<string, unknown>
 }
 
 /**
@@ -123,8 +125,8 @@ export async function queryVectorStore(
       whereCondition += ` AND document_id IN (${documentIds.join(',')})`;
     }
     
-    // Esegui la query di similarità
-    const results = await db.execute<QueryResult>(
+    // Esegui la query di similarità con tipizzazione corretta
+    const results = await db.execute(
       sql`
         SELECT 
           document_id as "documentId", 
@@ -135,7 +137,7 @@ export async function queryVectorStore(
         ORDER BY similarity DESC
         LIMIT ${limit}
       `
-    );
+    ) as unknown as Array<QueryResult>;
     
     console.log(`Query completata, trovati ${results.length} risultati`);
     return results;
@@ -156,11 +158,7 @@ export async function getVectorStoreStats(userId: number): Promise<{
   totalChunks: number;
 }> {
   try {
-    const result = await db.execute<{
-      documentCount: number;
-      embeddingCount: number;
-      totalChunks: number;
-    }>(sql`
+    const result = await db.execute(sql`
       SELECT 
         COUNT(DISTINCT document_id) as "documentCount",
         COUNT(*) as "embeddingCount",
@@ -169,7 +167,16 @@ export async function getVectorStoreStats(userId: number): Promise<{
       WHERE user_id = ${userId}
     `);
     
-    return result[0] || { documentCount: 0, embeddingCount: 0, totalChunks: 0 };
+    // Accesso sicuro ai risultati con tipizzazione corretta
+    const stats = result as unknown as Array<{
+      documentCount: number;
+      embeddingCount: number;
+      totalChunks: number;
+    }>;
+    
+    return (stats.length > 0 && stats[0]) 
+      ? stats[0] 
+      : { documentCount: 0, embeddingCount: 0, totalChunks: 0 };
   } catch (error: any) {
     console.error(`Errore nel recupero delle statistiche del vector store:`, error);
     return { documentCount: 0, embeddingCount: 0, totalChunks: 0 };
