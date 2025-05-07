@@ -2,6 +2,7 @@ import { pgTable, text, serial, integer, boolean, timestamp, json, jsonb, real }
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { sql } from "drizzle-orm";
 
 // User schema
 export const users = pgTable("users", {
@@ -54,11 +55,12 @@ export const documents = pgTable("documents", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const documentsRelations = relations(documents, ({ one }) => ({
+export const documentsRelations = relations(documents, ({ one, many }) => ({
   user: one(users, {
     fields: [documents.userId],
     references: [users.id],
   }),
+  embeddings: many(documentEmbeddings),
 }));
 
 export const insertDocumentSchema = createInsertSchema(documents).pick({
@@ -287,3 +289,37 @@ export type InsertSignatureProject = z.infer<typeof insertSignatureProjectSchema
 
 export type Signature = typeof signatures.$inferSelect;
 export type InsertSignature = z.infer<typeof insertSignatureSchema>;
+
+// Per adesso creeremo la tabella direttamente in SQL, perché Drizzle ha difficoltà con il tipo vector
+// Questa è solo una definizione "parziale" per gestire le relazioni
+export const documentEmbeddings = pgTable("document_embeddings", {
+  id: serial("id").primaryKey(),
+  documentId: integer("document_id").notNull().references(() => documents.id, { onDelete: 'cascade' }),
+  userId: integer("user_id").notNull().references(() => users.id),
+  chunkIndex: integer("chunk_index").notNull(),
+  chunkContent: text("chunk_content").notNull(),
+  // L'embedding vettoriale sarà gestito direttamente tramite SQL
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const documentEmbeddingsRelations = relations(documentEmbeddings, ({ one }) => ({
+  document: one(documents, {
+    fields: [documentEmbeddings.documentId],
+    references: [documents.id],
+  }),
+  user: one(users, {
+    fields: [documentEmbeddings.userId],
+    references: [users.id],
+  }),
+}));
+
+export const insertDocumentEmbeddingSchema = createInsertSchema(documentEmbeddings).pick({
+  documentId: true,
+  userId: true,
+  chunkIndex: true,
+  chunkContent: true,
+});
+
+export type DocumentEmbedding = typeof documentEmbeddings.$inferSelect;
+export type InsertDocumentEmbedding = z.infer<typeof insertDocumentEmbeddingSchema>;
