@@ -1126,31 +1126,73 @@ export class DatabaseStorage implements IStorage {
 
     // Elimina manualmente gli embedding dei documenti dell'utente
     // usando SQL diretto perché Drizzle ORM non gestisce bene il tipo vector
-    await db.execute(sql`
-      DELETE FROM document_embeddings
-      WHERE user_id = ${userId}
-    `);
+    try {
+      await db.execute(sql`DELETE FROM document_embeddings WHERE user_id = ${userId}`);
+      console.log(`Embedding dell'utente ${userId} eliminati con successo`);
+    } catch (error) {
+      console.error(`Errore nell'eliminazione degli embedding dell'utente ${userId}:`, error);
+      // Continua con il processo anche se questa operazione fallisce
+    }
+    
+    // Elimina i dati dell'utente in blocchi di try/catch separati
+    // per assicurarsi che il processo continui anche se alcune operazioni falliscono
     
     // Elimina i documenti dell'utente
-    await db.delete(documents).where(eq(documents.userId, userId));
+    try {
+      await db.delete(documents).where(eq(documents.userId, userId));
+      console.log(`Documenti dell'utente ${userId} eliminati con successo`);
+    } catch (error) {
+      console.error(`Errore nell'eliminazione dei documenti dell'utente ${userId}:`, error);
+    }
     
     // Elimina le attività dell'utente
-    await db.delete(activities).where(eq(activities.userId, userId));
+    try {
+      await db.delete(activities).where(eq(activities.userId, userId));
+      console.log(`Attività dell'utente ${userId} eliminate con successo`);
+    } catch (error) {
+      console.error(`Errore nell'eliminazione delle attività dell'utente ${userId}:`, error);
+    }
     
     // Elimina le query dell'utente
-    await db.delete(queries).where(eq(queries.userId, userId));
+    try {
+      await db.delete(queries).where(eq(queries.userId, userId));
+      console.log(`Query dell'utente ${userId} eliminate con successo`);
+    } catch (error) {
+      console.error(`Errore nell'eliminazione delle query dell'utente ${userId}:`, error);
+    }
     
-    // Elimina le firme dell'utente (prima le firme poi i progetti di firma)
-    await db.delete(signatures).where(eq(signatures.userId, userId));
+    // Elimina le firme dell'utente
+    try {
+      await db.delete(signatures).where(eq(signatures.userId, userId));
+      console.log(`Firme dell'utente ${userId} eliminate con successo`);
+    } catch (error) {
+      console.error(`Errore nell'eliminazione delle firme dell'utente ${userId}:`, error);
+    }
     
     // Elimina i progetti di firma dell'utente
-    await db.delete(signatureProjects).where(eq(signatureProjects.userId, userId));
+    try {
+      await db.delete(signatureProjects).where(eq(signatureProjects.userId, userId));
+      console.log(`Progetti di firma dell'utente ${userId} eliminati con successo`);
+    } catch (error) {
+      console.error(`Errore nell'eliminazione dei progetti di firma dell'utente ${userId}:`, error);
+    }
     
     // Elimina i template di report dell'utente
-    await db.delete(reportTemplates).where(eq(reportTemplates.userId, userId));
+    try {
+      await db.delete(reportTemplates).where(eq(reportTemplates.userId, userId));
+      console.log(`Template di report dell'utente ${userId} eliminati con successo`);
+    } catch (error) {
+      console.error(`Errore nell'eliminazione dei template di report dell'utente ${userId}:`, error);
+    }
     
     // Infine, elimina l'utente
-    await db.delete(users).where(eq(users.id, userId));
+    try {
+      await db.delete(users).where(eq(users.id, userId));
+      console.log(`Utente ${userId} eliminato con successo`);
+    } catch (error) {
+      console.error(`Errore nell'eliminazione dell'utente ${userId}:`, error);
+      throw error; // Questo errore deve essere propagato
+    }
   }
 
   // Document methods
