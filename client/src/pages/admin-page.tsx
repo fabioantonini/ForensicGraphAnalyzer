@@ -1,29 +1,44 @@
-import { useEffect, useState } from "react";
-import { useLocation, useRoute } from "wouter";
+import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { User, UpdateUserRole } from "@shared/schema";
+
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, UserCog, User2, UserMinus, UserCheck, Users, BarChart } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useAuth } from "@/hooks/use-auth";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest, getQueryFn } from "@/lib/queryClient";
+import { Loader2, Search, ShieldAlert, ShieldCheck, Trash2, UserCheck } from "lucide-react";
 
-interface User {
-  id: number;
-  username: string;
-  email: string;
-  fullName: string | null;
-  organization: string | null;
-  profession: string | null;
-  role: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
+// Interfaccia per le statistiche di sistema
 interface SystemStats {
   userCount: number;
   documentCount: number;
@@ -33,406 +48,418 @@ interface SystemStats {
 }
 
 export default function AdminPage() {
-  const [location, setLocation] = useLocation();
-  const { user, isLoading: authLoading } = useAuth();
+  const { t } = useTranslation();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState<boolean>(false);
-  const [showRoleDialog, setShowRoleDialog] = useState<boolean>(false);
-  const [newRole, setNewRole] = useState<string>("");
-  
-  // Reindirizza all'autenticazione se non loggato
-  useEffect(() => {
-    if (!authLoading && !user) {
-      setLocation("/auth");
-    }
-  }, [user, authLoading, setLocation]);
-  
-  // Reindirizza alla home se l'utente non è admin
-  useEffect(() => {
-    if (user && user.role !== 'admin') {
-      toast({
-        title: "Accesso negato",
-        description: "Non hai i permessi per accedere all'area amministrativa",
-        variant: "destructive"
-      });
-      setLocation("/");
-    }
-  }, [user, setLocation, toast]);
-  
-  // Query per recuperare la lista degli utenti
-  const {
-    data: users,
-    isLoading: isLoadingUsers,
-    isError: isErrorUsers
-  } = useQuery({
+  const [search, setSearch] = useState("");
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [userToChangeRole, setUserToChangeRole] = useState<User | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
+
+  // Fetch lista utenti
+  const { data: users, isLoading: isLoadingUsers } = useQuery<User[]>({
     queryKey: ["/api/admin/users"],
-    queryFn: getQueryFn(),
-    enabled: !!user && user.role === 'admin'
+    onError: (error: Error) => {
+      toast({
+        title: t("common.error"),
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
-  
-  // Query per recuperare le statistiche del sistema
-  const {
-    data: stats,
-    isLoading: isLoadingStats,
-    isError: isErrorStats
-  } = useQuery({
-    queryKey: ["/api/admin/stats"],
-    queryFn: getQueryFn(),
-    enabled: !!user && user.role === 'admin'
+
+  // Fetch statistiche sistema
+  const { data: stats, isLoading: isLoadingStats } = useQuery<SystemStats>({
+    queryKey: ["/api/stats"],
+    onError: (error: Error) => {
+      toast({
+        title: t("common.error"),
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
-  
-  // Mutation per cambiare il ruolo di un utente
+
+  // Mutation per modificare il ruolo dell'utente
   const updateRoleMutation = useMutation({
-    mutationFn: async ({ userId, role }: { userId: number, role: string }) => {
-      const res = await apiRequest("PUT", `/api/admin/users/${userId}/role`, { role });
+    mutationFn: async (data: UpdateUserRole) => {
+      const res = await apiRequest("PUT", "/api/admin/user/role", data);
       return await res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
-      setShowRoleDialog(false);
       toast({
-        title: "Ruolo aggiornato",
-        description: "Il ruolo dell'utente è stato aggiornato con successo",
-        variant: "default"
+        title: t("admin.roleSaved"),
+        variant: "default",
       });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      setIsRoleDialogOpen(false);
     },
     onError: (error: Error) => {
       toast({
-        title: "Errore",
-        description: `Impossibile aggiornare il ruolo: ${error.message}`,
-        variant: "destructive"
+        title: t("common.error"),
+        description: error.message,
+        variant: "destructive",
       });
-    }
+    },
   });
-  
+
   // Mutation per eliminare un utente
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: number) => {
-      const res = await apiRequest("DELETE", `/api/admin/users/${userId}`);
+      const res = await apiRequest("DELETE", `/api/admin/user/${userId}`);
       return await res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
-      setConfirmDelete(false);
       toast({
-        title: "Utente eliminato",
-        description: "L'utente è stato eliminato con successo",
-        variant: "default"
+        title: t("admin.deleteSuccess"),
+        variant: "default",
       });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      setIsDeleteDialogOpen(false);
     },
     onError: (error: Error) => {
       toast({
-        title: "Errore",
-        description: `Impossibile eliminare l'utente: ${error.message}`,
-        variant: "destructive"
+        title: t("common.error"),
+        description: error.message,
+        variant: "destructive",
       });
-    }
+    },
   });
-  
-  // Gestori eventi
-  const handleChangeRole = (userId: number, username: string, currentRole: string) => {
-    const user = users?.find(u => u.id === userId);
-    if (user) {
-      setSelectedUser(user);
-      setNewRole(currentRole);
-      setShowRoleDialog(true);
-    }
+
+  // Handler per aprire la dialog di eliminazione utente
+  const handleDeleteUser = (user: User) => {
+    setUserToDelete(user);
+    setIsDeleteDialogOpen(true);
   };
-  
-  const handleDeleteUser = (userId: number, username: string) => {
-    const user = users?.find(u => u.id === userId);
-    if (user) {
-      setSelectedUser(user);
-      setConfirmDelete(true);
-    }
+
+  // Handler per aprire la dialog di cambio ruolo
+  const handleChangeRole = (user: User) => {
+    setUserToChangeRole(user);
+    setIsRoleDialogOpen(true);
   };
-  
-  // Se utente non è admin, non mostrare nulla
-  if (!user || user.role !== 'admin') {
-    return null;
-  }
-  
+
+  // Filtra gli utenti in base alla ricerca
+  const filteredUsers = users
+    ? users.filter(
+        (user) =>
+          user.username.toLowerCase().includes(search.toLowerCase()) ||
+          user.email.toLowerCase().includes(search.toLowerCase())
+      )
+    : [];
+
+  // Formatta la data
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString();
+  };
+
+  // Renderizza l'icona del ruolo utente
+  const renderRoleIcon = (role: string) => {
+    return role === "admin" ? (
+      <ShieldAlert className="h-4 w-4 text-destructive" />
+    ) : (
+      <UserCheck className="h-4 w-4 text-primary" />
+    );
+  };
+
+  // Stato caricamento
+  const isLoading = isLoadingUsers || isLoadingStats;
+
   return (
-    <div className="container py-6">
-      <h1 className="text-3xl font-bold mb-6">Pannello di Amministrazione</h1>
-      
+    <div className="container mx-auto py-8">
+      <h1 className="text-3xl font-bold mb-6">{t("admin.title")}</h1>
+
       <Tabs defaultValue="users" className="w-full">
-        <TabsList className="grid grid-cols-2 w-[400px] mb-6">
-          <TabsTrigger value="users">
-            <Users className="w-4 h-4 mr-2" />
-            Utenti
-          </TabsTrigger>
-          <TabsTrigger value="stats">
-            <BarChart className="w-4 h-4 mr-2" />
-            Statistiche
-          </TabsTrigger>
+        <TabsList className="mb-4">
+          <TabsTrigger value="users">{t("admin.usersManagement")}</TabsTrigger>
+          <TabsTrigger value="stats">{t("admin.systemStats")}</TabsTrigger>
         </TabsList>
-        
-        {/* Scheda Utenti */}
-        <TabsContent value="users" className="space-y-4">
+
+        {/* Tab per la gestione utenti */}
+        <TabsContent value="users">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <Users className="mr-2 h-5 w-5" />
-                Gestione Utenti
-              </CardTitle>
+              <CardTitle>{t("admin.usersManagement")}</CardTitle>
               <CardDescription>
-                Visualizza, modifica e gestisci gli account utente
+                {t("admin.usersManagement")}
               </CardDescription>
+              <div className="relative w-full md:w-80 mb-4">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder={t("admin.search")}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
             </CardHeader>
             <CardContent>
-              {isLoadingUsers ? (
-                <div className="flex justify-center my-8">
+              {isLoading ? (
+                <div className="flex justify-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
-              ) : isErrorUsers ? (
-                <div className="text-center text-destructive my-8">
-                  Errore nel caricamento degli utenti
+              ) : filteredUsers.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  {t("admin.noUsersFound")}
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="bg-muted">
-                        <th className="p-2 text-left">ID</th>
-                        <th className="p-2 text-left">Username</th>
-                        <th className="p-2 text-left">Email</th>
-                        <th className="p-2 text-left">Nome</th>
-                        <th className="p-2 text-left">Organizzazione</th>
-                        <th className="p-2 text-left">Professione</th>
-                        <th className="p-2 text-left">Ruolo</th>
-                        <th className="p-2 text-left">Data Creazione</th>
-                        <th className="p-2 text-left">Azioni</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {users && users.map((user: User) => (
-                        <tr key={user.id} className="border-b hover:bg-muted/50">
-                          <td className="p-2">{user.id}</td>
-                          <td className="p-2">{user.username}</td>
-                          <td className="p-2">{user.email}</td>
-                          <td className="p-2">{user.fullName || "-"}</td>
-                          <td className="p-2">{user.organization || "-"}</td>
-                          <td className="p-2">{user.profession || "-"}</td>
-                          <td className="p-2">
-                            <span className={`px-2 py-1 text-xs rounded-full ${
-                              user.role === 'admin' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
-                            }`}>
-                              {user.role}
-                            </span>
-                          </td>
-                          <td className="p-2">
-                            {new Date(user.createdAt).toLocaleDateString()}
-                          </td>
-                          <td className="p-2 flex space-x-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleChangeRole(user.id, user.username, user.role)}
-                            >
-                              <UserCog className="w-4 h-4 mr-1" />
-                              Ruolo
-                            </Button>
-                            {user.id !== (user as User)?.id && (
-                              <Button 
-                                variant="destructive" 
-                                size="sm"
-                                onClick={() => handleDeleteUser(user.id, user.username)}
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{t("admin.username")}</TableHead>
+                        <TableHead>{t("admin.email")}</TableHead>
+                        <TableHead>{t("admin.role")}</TableHead>
+                        <TableHead>{t("admin.createdAt")}</TableHead>
+                        <TableHead>{t("admin.actions")}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredUsers.map((user) => (
+                        <TableRow key={user.id}>
+                          <TableCell className="font-medium">
+                            {user.username}
+                          </TableCell>
+                          <TableCell>{user.email}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              {renderRoleIcon(user.role)}
+                              <span
+                                className={
+                                  user.role === "admin"
+                                    ? "text-destructive font-semibold"
+                                    : ""
+                                }
                               >
-                                <UserMinus className="w-4 h-4 mr-1" />
-                                Elimina
+                                {user.role}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {formatDate(user.createdAt.toString())}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleChangeRole(user)}
+                              >
+                                {user.role === "admin"
+                                  ? t("admin.makeUser")
+                                  : t("admin.makeAdmin")}
                               </Button>
-                            )}
-                          </td>
-                        </tr>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleDeleteUser(user)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
                       ))}
-                    </tbody>
-                  </table>
+                    </TableBody>
+                  </Table>
                 </div>
               )}
             </CardContent>
           </Card>
         </TabsContent>
-        
-        {/* Scheda Statistiche */}
-        <TabsContent value="stats" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <BarChart className="mr-2 h-5 w-5" />
-                Statistiche Generali
-              </CardTitle>
-              <CardDescription>
-                Panoramica delle metriche di sistema e utilizzo
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoadingStats ? (
-                <div className="flex justify-center my-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              ) : isErrorStats ? (
-                <div className="text-center text-destructive my-8">
-                  Errore nel caricamento delle statistiche
-                </div>
-              ) : stats && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium text-muted-foreground">
-                        Utenti Totali
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{stats.userCount}</div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium text-muted-foreground">
-                        Documenti Totali
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{stats.documentCount}</div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium text-muted-foreground">
-                        Spazio Totale
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{stats.totalSize}</div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium text-muted-foreground">
-                        Query Totali
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{stats.queryCount}</div>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-              
-              {stats && stats.newUsers && (
-                <div className="mt-8">
-                  <h3 className="text-lg font-semibold mb-4">Ultimi Utenti Registrati</h3>
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="bg-muted">
-                          <th className="p-2 text-left">Username</th>
-                          <th className="p-2 text-left">Email</th>
-                          <th className="p-2 text-left">Data Registrazione</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {stats.newUsers.map((user: User) => (
-                          <tr key={user.id} className="border-b hover:bg-muted/50">
-                            <td className="p-2">{user.username}</td>
-                            <td className="p-2">{user.email}</td>
-                            <td className="p-2">
-                              {new Date(user.createdAt).toLocaleDateString()}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+
+        {/* Tab per le statistiche di sistema */}
+        <TabsContent value="stats">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>{t("admin.systemStats")}</CardTitle>
+                <CardDescription>
+                  {t("admin.systemStats")}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                ) : (
+                  <div className="space-y-8">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex flex-col">
+                        <span className="text-3xl font-bold">
+                          {stats?.userCount}
+                        </span>
+                        <span className="text-sm text-muted-foreground">
+                          {t("admin.totalUsers")}
+                        </span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-3xl font-bold">
+                          {stats?.documentCount}
+                        </span>
+                        <span className="text-sm text-muted-foreground">
+                          {t("admin.totalDocuments")}
+                        </span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-3xl font-bold">
+                          {stats?.totalSize}
+                        </span>
+                        <span className="text-sm text-muted-foreground">
+                          {t("admin.totalStorage")}
+                        </span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-3xl font-bold">
+                          {stats?.queryCount}
+                        </span>
+                        <span className="text-sm text-muted-foreground">
+                          {t("admin.totalQueries")}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>{t("admin.newUsers")}</CardTitle>
+                <CardDescription>
+                  {t("admin.newUsers")}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : stats?.newUsers && stats.newUsers.length > 0 ? (
+                  <div className="space-y-4">
+                    {stats.newUsers.map((user) => (
+                      <div
+                        key={user.id}
+                        className="flex items-center justify-between border-b pb-2"
+                      >
+                        <div className="flex flex-col">
+                          <span className="font-medium">{user.username}</span>
+                          <span className="text-sm text-muted-foreground">
+                            {user.email}
+                          </span>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {formatDate(user.createdAt.toString())}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    {t("admin.noUsersFound")}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
-      
-      {/* Dialog per cambio ruolo */}
-      <Dialog open={showRoleDialog} onOpenChange={setShowRoleDialog}>
+
+      {/* Dialog per conferma eliminazione utente */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Cambia Ruolo Utente</DialogTitle>
+            <DialogTitle>{t("common.confirmAction")}</DialogTitle>
             <DialogDescription>
-              Modifica il ruolo di {selectedUser?.username}
+              {t("admin.confirmDelete")}
             </DialogDescription>
           </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="role" className="text-right">
-                Ruolo
-              </Label>
-              <Select
-                value={newRole}
-                onValueChange={setNewRole}
+          <DialogFooter className="sm:justify-start">
+            <div className="flex gap-2 w-full sm:justify-end">
+              <Button
+                variant="secondary"
+                onClick={() => setIsDeleteDialogOpen(false)}
               >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Seleziona ruolo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="user">Utente</SelectItem>
-                  <SelectItem value="admin">Amministratore</SelectItem>
-                </SelectContent>
-              </Select>
+                {t("common.cancel")}
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => userToDelete && deleteUserMutation.mutate(userToDelete.id)}
+                disabled={deleteUserMutation.isPending}
+              >
+                {deleteUserMutation.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                {t("common.delete")}
+              </Button>
             </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowRoleDialog(false)}>
-              Annulla
-            </Button>
-            <Button 
-              onClick={() => selectedUser && updateRoleMutation.mutate({ 
-                userId: selectedUser.id, 
-                role: newRole 
-              })}
-              disabled={updateRoleMutation.isPending}
-            >
-              {updateRoleMutation.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Conferma
-            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
-      {/* Dialog di conferma eliminazione */}
-      <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+
+      {/* Dialog per conferma cambio ruolo */}
+      <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Conferma Eliminazione</DialogTitle>
+            <DialogTitle>{t("common.confirmAction")}</DialogTitle>
             <DialogDescription>
-              Sei sicuro di voler eliminare l'utente {selectedUser?.username}? Questa azione è irreversibile.
+              {t("admin.confirmRoleChange")}
             </DialogDescription>
           </DialogHeader>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmDelete(false)}>
-              Annulla
-            </Button>
-            <Button 
-              variant="destructive"
-              onClick={() => selectedUser && deleteUserMutation.mutate(selectedUser.id)}
-              disabled={deleteUserMutation.isPending}
-            >
-              {deleteUserMutation.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Elimina
-            </Button>
+          <div className="py-4 flex items-center justify-center gap-2">
+            {userToChangeRole && (
+              <>
+                <div className="flex items-center gap-1">
+                  {userToChangeRole.role === "admin" ? (
+                    <ShieldAlert className="h-5 w-5 text-destructive" />
+                  ) : (
+                    <UserCheck className="h-5 w-5 text-primary" />
+                  )}
+                  <span>{userToChangeRole.role}</span>
+                </div>
+                <div className="px-3">→</div>
+                <div className="flex items-center gap-1">
+                  {userToChangeRole.role === "admin" ? (
+                    <UserCheck className="h-5 w-5 text-primary" />
+                  ) : (
+                    <ShieldAlert className="h-5 w-5 text-destructive" />
+                  )}
+                  <span>
+                    {userToChangeRole.role === "admin" ? "user" : "admin"}
+                  </span>
+                </div>
+              </>
+            )}
+          </div>
+          <DialogFooter className="sm:justify-start">
+            <div className="flex gap-2 w-full sm:justify-end">
+              <Button
+                variant="secondary"
+                onClick={() => setIsRoleDialogOpen(false)}
+              >
+                {t("common.cancel")}
+              </Button>
+              <Button
+                variant={
+                  userToChangeRole?.role === "admin" ? "default" : "destructive"
+                }
+                onClick={() =>
+                  userToChangeRole &&
+                  updateRoleMutation.mutate({
+                    userId: userToChangeRole.id,
+                    role:
+                      userToChangeRole.role === "admin" ? "user" : "admin",
+                  })
+                }
+                disabled={updateRoleMutation.isPending}
+              >
+                {updateRoleMutation.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                {t("common.save")}
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

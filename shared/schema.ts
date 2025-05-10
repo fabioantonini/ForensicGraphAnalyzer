@@ -37,10 +37,22 @@ export const insertUserSchema = createInsertSchema(users).pick({
   confirmPassword: z.string(),
 });
 
+export const updateUserRoleSchema = z.object({
+  userId: z.number().positive(),
+  role: z.string().refine(value => ['user', 'admin'].includes(value), {
+    message: "Role must be either 'user' or 'admin'"
+  })
+});
+
 export const loginUserSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
+
+// Types
+export type User = typeof users.$inferSelect;
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type UpdateUserRole = z.infer<typeof updateUserRoleSchema>;
 
 // Document schema
 export const documents = pgTable("documents", {
@@ -150,10 +162,6 @@ export const insertReportTemplateSchema = createInsertSchema(reportTemplates).pi
 });
 
 // Type definitions
-export type User = typeof users.$inferSelect;
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type LoginUser = z.infer<typeof loginUserSchema>;
-
 export type Document = typeof documents.$inferSelect;
 export type InsertDocument = z.infer<typeof insertDocumentSchema>;
 
@@ -165,6 +173,8 @@ export type InsertQuery = z.infer<typeof insertQuerySchema>;
 
 export type ReportTemplate = typeof reportTemplates.$inferSelect;
 export type InsertReportTemplate = z.infer<typeof insertReportTemplateSchema>;
+
+export type LoginUser = z.infer<typeof loginUserSchema>;
 
 
 // Type definition for signature parameters

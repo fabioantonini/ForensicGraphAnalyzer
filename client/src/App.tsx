@@ -68,11 +68,15 @@ function Router() {
         </AppLayout>
       )} />
       
-      <ProtectedRoute path="/admin" component={() => (
-        <AppLayout>
-          <AdminPage />
-        </AppLayout>
-      )} />
+      <ProtectedRoute 
+        path="/admin" 
+        requireAdmin={true}
+        component={() => (
+          <AppLayout>
+            <AdminPage />
+          </AppLayout>
+        )} 
+      />
       
       <Route component={NotFound} />
     </Switch>
