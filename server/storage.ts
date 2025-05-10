@@ -28,6 +28,12 @@ export interface IStorage {
     profession?: string;
   }): Promise<User>;
   updateUserPassword(userId: number, hashedPassword: string): Promise<User>;
+  
+  // Admin methods
+  getAllUsers(): Promise<User[]>;
+  getUserCount(): Promise<number>;
+  updateUserRole(userId: number, role: string): Promise<User>;
+  deleteUser(userId: number): Promise<void>;
 
   // Document methods
   createDocument(document: InsertDocument): Promise<Document>;
@@ -990,6 +996,75 @@ export class DatabaseStorage implements IStorage {
     }
     
     return updatedUser;
+  }
+
+  // Admin methods
+  async getAllUsers(): Promise<User[]> {
+    const allUsers = await db
+      .select()
+      .from(users)
+      .orderBy(users.createdAt);
+    
+    return allUsers;
+  }
+
+  async getUserCount(): Promise<number> {
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(users);
+    
+    return result[0].count;
+  }
+
+  async updateUserRole(userId: number, role: string): Promise<User> {
+    if (role !== 'user' && role !== 'admin') {
+      throw new Error('Role must be either "user" or "admin"');
+    }
+
+    const [updatedUser] = await db
+      .update(users)
+      .set({
+        role,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    
+    if (!updatedUser) {
+      throw new Error(`User with ID ${userId} not found`);
+    }
+    
+    return updatedUser;
+  }
+
+  async deleteUser(userId: number): Promise<void> {
+    // Verifica che l'utente esista
+    const user = await this.getUser(userId);
+    
+    if (!user) {
+      throw new Error(`User with ID ${userId} not found`);
+    }
+
+    // Elimina i documenti dell'utente
+    await db.delete(documents).where(eq(documents.userId, userId));
+    
+    // Elimina le attività dell'utente
+    await db.delete(activities).where(eq(activities.userId, userId));
+    
+    // Elimina le query dell'utente
+    await db.delete(queries).where(eq(queries.userId, userId));
+    
+    // Elimina le firme dell'utente (prima le firme poi i progetti di firma)
+    await db.delete(signatures).where(eq(signatures.userId, userId));
+    
+    // Elimina i progetti di firma dell'utente
+    await db.delete(signatureProjects).where(eq(signatureProjects.userId, userId));
+    
+    // Elimina i template di report dell'utente
+    await db.delete(reportTemplates).where(eq(reportTemplates.userId, userId));
+    
+    // Infine, elimina l'utente
+    await db.delete(users).where(eq(users.id, userId));
   }
 
   // Document methods

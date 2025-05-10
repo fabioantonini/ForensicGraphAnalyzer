@@ -54,6 +54,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     res.status(401).json({ message: "Unauthorized" });
   };
+  
+  // Middleware to check if user is an admin
+  const isAdmin = (req: Request, res: Response, next: NextFunction) => {
+    if (req.isAuthenticated() && req.user?.role === 'admin') {
+      return next();
+    }
+    res.status(403).json({ message: "Forbidden - Admin access required" });
+  };
 
   // Register signature routes
   const router = Router();
