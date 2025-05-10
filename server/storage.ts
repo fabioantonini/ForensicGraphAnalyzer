@@ -11,6 +11,8 @@ import { db } from "./db";
 import { eq, desc, and, sql } from "drizzle-orm";
 import connectPg from "connect-pg-simple";
 import { Pool } from "@neondatabase/serverless";
+import path from "path";
+import fs from "fs/promises";
 
 const MemoryStore = createMemoryStore(session);
 const PostgresSessionStore = connectPg(session);
@@ -1161,20 +1163,52 @@ export class DatabaseStorage implements IStorage {
       console.error(`Errore nell'eliminazione delle query dell'utente ${userId}:`, error);
     }
     
-    // Elimina le firme dell'utente
+    // Ottieni tutte le firme dell'utente per eliminarle dal filesystem
     try {
-      await db.delete(signatures).where(eq(signatures.userId, userId));
-      console.log(`Firme dell'utente ${userId} eliminate con successo`);
-    } catch (error) {
-      console.error(`Errore nell'eliminazione delle firme dell'utente ${userId}:`, error);
-    }
-    
-    // Elimina i progetti di firma dell'utente
-    try {
+      // Ottieni progetti di firma dell'utente
+      const projects = await db
+        .select()
+        .from(signatureProjects)
+        .where(eq(signatureProjects.userId, userId));
+      
+      // Per ogni progetto, ottieni le firme associate
+      for (const project of projects) {
+        // Ottieni tutte le firme associate al progetto
+        const projectSignatures = await db
+          .select()
+          .from(signatures)
+          .where(eq(signatures.projectId, project.id));
+        
+        // Elimina ogni file di firma dal filesystem
+        for (const signature of projectSignatures) {
+          try {
+            // Percorso del file della firma
+            const signaturePath = path.join(process.cwd(), 'uploads', signature.filename);
+            await fs.unlink(signaturePath).catch(err => {
+              console.error(`Impossibile eliminare il file della firma ${signature.filename}:`, err);
+            });
+            
+            // Elimina anche eventuali report PDF associati
+            if (signature.reportPath) {
+              const reportPath = path.join(process.cwd(), signature.reportPath);
+              await fs.unlink(reportPath).catch(err => {
+                console.error(`Impossibile eliminare il file di report ${signature.reportPath}:`, err);
+              });
+            }
+          } catch (fileError) {
+            console.error(`Errore nell'eliminazione dei file della firma ID ${signature.id}:`, fileError);
+          }
+        }
+        
+        // Elimina le firme del progetto dal database
+        await db.delete(signatures).where(eq(signatures.projectId, project.id));
+      }
+      
+      // Elimina i progetti di firma dal database
       await db.delete(signatureProjects).where(eq(signatureProjects.userId, userId));
-      console.log(`Progetti di firma dell'utente ${userId} eliminati con successo`);
+      console.log(`Progetti e firme dell'utente ${userId} eliminati con successo`);
     } catch (error) {
-      console.error(`Errore nell'eliminazione dei progetti di firma dell'utente ${userId}:`, error);
+      console.error(`Errore nell'eliminazione dei progetti e firme dell'utente ${userId}:`, error);
     }
     
     // Elimina i template di report dell'utente
