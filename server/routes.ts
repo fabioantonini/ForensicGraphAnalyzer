@@ -24,8 +24,9 @@ import {
 import { chatWithRAG, validateAPIKey } from "./openai";
 import { log } from "./vite";
 import { registerSignatureRoutes } from "./signature-routes";
-import { eq } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 import { db, pool } from "./db";
+import { users } from "@shared/schema";
 
 // Initialize multer for file uploads
 const upload = multer({
@@ -824,16 +825,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Conteggio totale documenti
       const result = await db.execute(sql`SELECT COUNT(*) as count FROM documents`);
-      const documentCount = (result as any[])[0].count;
+      const resultArray = result as unknown as Record<string, any>[];
+      const documentCount = resultArray[0]?.count || 0;
       
       // Spazio totale utilizzato
       const sizeResult = await db.execute(sql`SELECT SUM(file_size) as total FROM documents`);
-      const totalSize = (sizeResult as any[])[0].total || 0;
+      const sizeResultArray = sizeResult as unknown as Record<string, any>[];
+      const totalSize = sizeResultArray[0]?.total || 0;
       const totalSizeMB = Math.round(totalSize / (1024 * 1024) * 100) / 100;
       
       // Conteggio totale query
       const queryResult = await db.execute(sql`SELECT COUNT(*) as count FROM queries`);
-      const queryCount = (queryResult as any[])[0].count;
+      const queryResultArray = queryResult as unknown as Record<string, any>[];
+      const queryCount = queryResultArray[0]?.count || 0;
       
       // Ultimi utenti registrati
       const newUsers = await db

@@ -164,7 +164,11 @@ export class MemStorage implements IStorage {
     const user: User = {
       ...userData,
       id,
-      openaiApiKey: "",
+      role: "user", // Default role
+      openaiApiKey: null,
+      fullName: userData.fullName || null,
+      organization: userData.organization || null,
+      profession: userData.profession || null,
       createdAt: now,
       updatedAt: now,
     };
@@ -224,6 +228,81 @@ export class MemStorage implements IStorage {
     
     this.users.set(userId, updatedUser);
     return updatedUser;
+  }
+
+  // Admin methods
+  async getAllUsers(): Promise<User[]> {
+    return Array.from(this.users.values());
+  }
+
+  async getUserCount(): Promise<number> {
+    return this.users.size;
+  }
+
+  async updateUserRole(userId: number, role: string): Promise<User> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error(`User with ID ${userId} not found`);
+    }
+    
+    const updatedUser: User = {
+      ...user,
+      role,
+      updatedAt: new Date(),
+    };
+    
+    this.users.set(userId, updatedUser);
+    return updatedUser;
+  }
+
+  async deleteUser(userId: number): Promise<void> {
+    if (!this.users.has(userId)) {
+      throw new Error("User not found");
+    }
+
+    // Delete all user data
+    // First, get all documents to delete
+    const userDocuments = Array.from(this.documents.values())
+      .filter(doc => doc.userId === userId);
+    
+    // Delete each document
+    for (const doc of userDocuments) {
+      this.documents.delete(doc.id);
+    }
+
+    // Delete all activities
+    for (const activity of Array.from(this.activities.values())
+      .filter(a => a.userId === userId)) {
+      this.activities.delete(activity.id);
+    }
+
+    // Delete all queries
+    for (const query of Array.from(this.queries.values())
+      .filter(q => q.userId === userId)) {
+      this.queries.delete(query.id);
+    }
+
+    // Delete all signature projects and signatures
+    for (const project of Array.from(this.signatureProjects.values())
+      .filter(p => p.userId === userId)) {
+      
+      // Delete all signatures in this project
+      for (const signature of Array.from(this.signatures.values())
+        .filter(s => s.projectId === project.id)) {
+        this.signatures.delete(signature.id);
+      }
+      
+      this.signatureProjects.delete(project.id);
+    }
+
+    // Delete all report templates
+    for (const template of Array.from(this.reportTemplates.values())
+      .filter(t => t.userId === userId)) {
+      this.reportTemplates.delete(template.id);
+    }
+
+    // Finally delete the user
+    this.users.delete(userId);
   }
 
   // Document methods
