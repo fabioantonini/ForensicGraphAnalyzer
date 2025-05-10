@@ -83,7 +83,7 @@ export default function AdminPage() {
   // Mutation per modificare il ruolo dell'utente
   const updateRoleMutation = useMutation({
     mutationFn: async (data: UpdateUserRole) => {
-      const res = await apiRequest("PUT", "/api/admin/user/role", data);
+      const res = await apiRequest("PUT", `/api/admin/users/${data.userId}/role`, { role: data.role });
       return await res.json();
     },
     onSuccess: () => {

@@ -787,7 +787,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Elimina utente (solo admin)
-  app.delete("/api/admin/users/:id", isAdmin, async (req, res, next) => {
+  app.delete("/api/admin/user/:id", isAdmin, async (req, res, next) => {
     try {
       const userId = parseInt(req.params.id, 10);
       
