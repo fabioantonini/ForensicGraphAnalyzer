@@ -729,6 +729,137 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ===== ROUTE DI AMMINISTRAZIONE =====
+  
+  // Lista di tutti gli utenti (solo admin)
+  app.get("/api/admin/users", isAdmin, async (req, res, next) => {
+    try {
+      const users = await storage.getAllUsers();
+      // Rimuovi password dall'output
+      const safeUsers = users.map(user => {
+        const { password, ...safeUser } = user;
+        return safeUser;
+      });
+      res.json(safeUsers);
+    } catch (err) {
+      next(err);
+    }
+  });
+  
+  // Conteggio utenti (solo admin)
+  app.get("/api/admin/users/count", isAdmin, async (req, res, next) => {
+    try {
+      const count = await storage.getUserCount();
+      res.json({ count });
+    } catch (err) {
+      next(err);
+    }
+  });
+  
+  // Cambia ruolo utente (solo admin)
+  app.put("/api/admin/users/:id/role", isAdmin, async (req, res, next) => {
+    try {
+      const userId = parseInt(req.params.id, 10);
+      const { role } = req.body;
+      
+      if (!role || (role !== 'user' && role !== 'admin')) {
+        return res.status(400).json({ error: "Invalid role. Must be 'user' or 'admin'" });
+      }
+      
+      // Impedisci di rimuovere i diritti di admin all'ultimo amministratore
+      if (role === 'user' && userId === req.user!.id) {
+        const users = await storage.getAllUsers();
+        const adminCount = users.filter(u => u.role === 'admin').length;
+        
+        if (adminCount <= 1) {
+          return res.status(400).json({ error: "Cannot remove admin role from the last administrator" });
+        }
+      }
+      
+      const updatedUser = await storage.updateUserRole(userId, role);
+      const { password, ...safeUser } = updatedUser;
+      
+      res.json(safeUser);
+    } catch (err) {
+      next(err);
+    }
+  });
+  
+  // Elimina utente (solo admin)
+  app.delete("/api/admin/users/:id", isAdmin, async (req, res, next) => {
+    try {
+      const userId = parseInt(req.params.id, 10);
+      
+      // Impedisci di eliminare se stessi
+      if (userId === req.user!.id) {
+        return res.status(400).json({ error: "Cannot delete your own account" });
+      }
+      
+      // Verifica che l'utente esista
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      await storage.deleteUser(userId);
+      
+      // Log activity
+      await storage.createActivity({
+        userId: req.user!.id,
+        type: "user_deleted",
+        details: `Amministratore ha eliminato l'utente: ${user.username}`
+      });
+      
+      res.json({ message: "User successfully deleted" });
+    } catch (err) {
+      next(err);
+    }
+  });
+  
+  // Statistiche del sistema (solo admin)
+  app.get("/api/admin/stats", isAdmin, async (req, res, next) => {
+    try {
+      // Conteggio totale utenti
+      const userCount = await storage.getUserCount();
+      
+      // Conteggio totale documenti
+      const result = await db.execute(sql`SELECT COUNT(*) as count FROM documents`);
+      const documentCount = (result as any[])[0].count;
+      
+      // Spazio totale utilizzato
+      const sizeResult = await db.execute(sql`SELECT SUM(file_size) as total FROM documents`);
+      const totalSize = (sizeResult as any[])[0].total || 0;
+      const totalSizeMB = Math.round(totalSize / (1024 * 1024) * 100) / 100;
+      
+      // Conteggio totale query
+      const queryResult = await db.execute(sql`SELECT COUNT(*) as count FROM queries`);
+      const queryCount = (queryResult as any[])[0].count;
+      
+      // Ultimi utenti registrati
+      const newUsers = await db
+        .select()
+        .from(users)
+        .orderBy(desc(users.createdAt))
+        .limit(5);
+      
+      // Rimuovi le password dall'output
+      const safeNewUsers = newUsers.map(user => {
+        const { password, ...safeUser } = user;
+        return safeUser;
+      });
+      
+      res.json({
+        userCount,
+        documentCount,
+        totalSize: `${totalSizeMB} MB`,
+        queryCount,
+        newUsers: safeNewUsers
+      });
+    } catch (err) {
+      next(err);
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

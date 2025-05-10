@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Home, FileText, MessageSquare, Settings, ChevronRight, ChevronLeft, Pen } from "lucide-react";
+import { Home, FileText, MessageSquare, Settings, ChevronRight, ChevronLeft, Pen, ShieldCheck } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/hooks/use-auth";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
@@ -24,6 +25,10 @@ export function Sidebar({ className }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { t } = useTranslation();
+  const { user } = useAuth();
+  
+  // Controlla se l'utente è admin
+  const isAdmin = user?.role === 'admin';
 
   // Hide mobile sidebar when route changes
   useEffect(() => {
@@ -63,6 +68,13 @@ export function Sidebar({ className }: SidebarProps) {
       translationKey: "layout.settings",
       icon: <Settings className="h-5 w-5 mr-3" />,
     },
+    // Opzione di amministrazione (visibile solo agli admin)
+    ...(isAdmin ? [{
+      href: "/admin",
+      label: "Administration",
+      translationKey: "layout.admin",
+      icon: <ShieldCheck className="h-5 w-5 mr-3" />,
+    }] : []),
   ];
 
   const toggleSidebar = () => {

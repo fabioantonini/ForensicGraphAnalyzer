@@ -17,6 +17,7 @@ import DocumentsPage from "@/pages/documents-page";
 import QueryPage from "@/pages/query-page";
 import SettingsPage from "@/pages/settings-page";
 import SignaturesPage from "@/pages/signatures-page";
+import AdminPage from "@/pages/admin-page";
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -64,6 +65,12 @@ function Router() {
       <ProtectedRoute path="/signatures" component={() => (
         <AppLayout>
           <SignaturesPage />
+        </AppLayout>
+      )} />
+      
+      <ProtectedRoute path="/admin" component={() => (
+        <AppLayout>
+          <AdminPage />
         </AppLayout>
       )} />
       
