@@ -14,6 +14,7 @@ export const users = pgTable("users", {
   organization: text("organization"),
   profession: text("profession"),
   openaiApiKey: text("openai_api_key"),
+  role: text("role").default("user").notNull(), // 'user' o 'admin'
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
