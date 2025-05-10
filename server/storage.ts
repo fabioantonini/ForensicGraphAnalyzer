@@ -1124,6 +1124,13 @@ export class DatabaseStorage implements IStorage {
       throw new Error(`User with ID ${userId} not found`);
     }
 
+    // Elimina manualmente gli embedding dei documenti dell'utente
+    // usando SQL diretto perché Drizzle ORM non gestisce bene il tipo vector
+    await db.execute(sql`
+      DELETE FROM document_embeddings
+      WHERE user_id = ${userId}
+    `);
+    
     // Elimina i documenti dell'utente
     await db.delete(documents).where(eq(documents.userId, userId));
     
