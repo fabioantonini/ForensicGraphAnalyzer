@@ -273,7 +273,7 @@ const DemoAccountsManagement: React.FC = () => {
                         <TableCell>
                           <Badge variant="outline">
                             <Clock className="h-3 w-3 mr-1" />
-                            {getRemainingDays(user.demoExpiresAt)} giorni
+                            {t("demoAccounts.daysRemaining", { count: getRemainingDays(user.demoExpiresAt) })}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -342,7 +342,7 @@ const DemoAccountsManagement: React.FC = () => {
                 </Table>
               ) : (
                 <div className="text-center py-4 text-muted-foreground">
-                  Nessun account demo scaduto
+                  {t("demoAccounts.noExpiredAccounts")}
                 </div>
               )}
             </CardContent>
@@ -425,7 +425,7 @@ const DemoAccountsManagement: React.FC = () => {
                 name="fullName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nome Completo (opzionale)</FormLabel>
+                    <FormLabel>{t("demoAccounts.fullName")} (opzionale)</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -440,7 +440,7 @@ const DemoAccountsManagement: React.FC = () => {
                   name="organization"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Organizzazione (opzionale)</FormLabel>
+                      <FormLabel>{t("demoAccounts.organization")} (opzionale)</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -453,7 +453,7 @@ const DemoAccountsManagement: React.FC = () => {
                   name="profession"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Professione (opzionale)</FormLabel>
+                      <FormLabel>{t("demoAccounts.profession")} (opzionale)</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
