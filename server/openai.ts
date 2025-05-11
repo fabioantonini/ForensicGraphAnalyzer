@@ -145,14 +145,22 @@ export async function chatWithRAG(
       "Note: Respond in the same language as the query. If the query is in Italian, respond in Italian. If the query is in English, respond in English.";
 
     // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-    const response = await openai.chat.completions.create({
+    
+    // Alcuni modelli (come o3) non supportano il parametro temperatura personalizzato
+    const params: any = {
       model,
-      temperature,
       messages: [
         { role: "system", content: systemMessage },
         { role: "user", content: query }
       ],
-    });
+    };
+    
+    // Aggiungi il parametro temperatura solo se non è un modello che non lo supporta
+    if (model !== 'o3' && model !== 'o4-mini') {
+      params.temperature = temperature;
+    }
+    
+    const response = await openai.chat.completions.create(params);
     
     return response.choices[0].message.content || "No response generated";
   } catch (error: any) {
@@ -165,6 +173,16 @@ export async function chatWithRAG(
         return `Mi dispiace, ma la tua organizzazione OpenAI non è verificata per utilizzare il modello ${model}. Per accedere a questo modello, visita https://platform.openai.com/settings/organization/general e clicca su "Verify Organization". Se hai appena effettuato la verifica, potrebbero essere necessari fino a 15 minuti prima che l'accesso sia propagato.\n\nNel frattempo, prova a utilizzare gpt-4 o un altro modello disponibile.`;
       } else {
         return `I'm sorry, but your OpenAI organization is not verified to use the ${model} model. To access this model, please visit https://platform.openai.com/settings/organization/general and click on "Verify Organization". If you just verified, it can take up to 15 minutes for access to propagate.\n\nIn the meantime, try using gpt-4 or another available model.`;
+      }
+    }
+    
+    // Gestione per errori di parametri non supportati (come temperature)
+    if (error.status === 400 && error.message && error.message.includes('temperature')) {
+      const isItalian = /[àèéìòù]/i.test(query);
+      if (isItalian) {
+        return `Mi dispiace, il modello ${model} non supporta il parametro di temperatura personalizzato. Stiamo correggendo questo problema. Nel frattempo, prova ad utilizzare un altro modello come gpt-4.`;
+      } else {
+        return `I'm sorry, the ${model} model does not support custom temperature settings. We're fixing this issue. In the meantime, please try using another model like gpt-4.`;
       }
     }
     

@@ -29,6 +29,7 @@ export function ApiSettings() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [showApiKey, setShowApiKey] = useState(false);
+  const [selectedModel, setSelectedModel] = useState(user?.model || "gpt-4o");
 
   // Format API key for display
   const formatApiKey = (key: string) => {

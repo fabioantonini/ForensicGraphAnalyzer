@@ -41,6 +41,13 @@ export function ChatInterface({
   const [model, setModel] = useState("gpt-4o");
   const [temperature, setTemperature] = useState(0.7);
   
+  // Quando cambia il modello, imposta la temperatura a 1 per o3 e o4-mini
+  useEffect(() => {
+    if (model === 'o3' || model === 'o4-mini') {
+      setTemperature(1);
+    }
+  }, [model]);
+  
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -234,14 +241,20 @@ export function ChatInterface({
             
             <div className="flex items-center space-x-2">
               <span>{t('settings.api.temperature', 'Temp')}: {temperature}</span>
-              <Slider
-                className="w-24"
-                min={0}
-                max={1}
-                step={0.1}
-                value={[temperature]}
-                onValueChange={(values) => setTemperature(values[0])}
-              />
+              {model !== 'o3' && model !== 'o4-mini' ? (
+                <Slider
+                  className="w-24"
+                  min={0}
+                  max={1}
+                  step={0.1}
+                  value={[temperature]}
+                  onValueChange={(values) => setTemperature(values[0])}
+                />
+              ) : (
+                <div className="italic text-xs ml-2" title={t('query.tempDisabled', 'Temperature control is not available for this model')}>
+                  {t('query.fixedModel', 'Fixed for this model')}
+                </div>
+              )}
             </div>
           </div>
         </div>
