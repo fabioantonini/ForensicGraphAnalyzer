@@ -381,6 +381,11 @@ export default function AdminPage() {
         <TabsContent value="email-config">
           <EmailConfiguration />
         </TabsContent>
+        
+        {/* Tab per la configurazione SendGrid */}
+        <TabsContent value="sendgrid-config">
+          <SendGridConfiguration />
+        </TabsContent>
       </Tabs>
 
       {/* Dialog per conferma eliminazione utente */}
