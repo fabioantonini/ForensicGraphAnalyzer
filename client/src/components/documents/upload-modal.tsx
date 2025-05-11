@@ -56,7 +56,10 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
     onSuccess: (data) => {
       // Salva l'ID del documento caricato
       setUploadedDocumentId(data.id);
-      setUploadedFilename(file.name);
+      // Ottieni il nome del file con controllo null
+      if (file) {
+        setUploadedFilename(file.name);
+      }
       
       // Mostra la barra di avanzamento
       setShowProgressBar(true);
@@ -149,15 +152,35 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
   const isUploading = uploadFileMutation.isPending || uploadUrlMutation.isPending;
   const canUpload = (activeTab === "file" && file) || (activeTab === "url" && url);
 
+  // JSX per la barra di avanzamento del documento
+  const renderProgressBar = () => {
+    if (showProgressBar && uploadedDocumentId && uploadedFilename) {
+      return (
+        <UploadProgress
+          documentId={uploadedDocumentId}
+          filename={uploadedFilename}
+          onDismiss={() => {
+            setShowProgressBar(false);
+            setUploadedDocumentId(null);
+            setUploadedFilename("");
+          }}
+        />
+      );
+    }
+    return null;
+  };
+
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{t("documents.uploadDocument", "Upload Document")}</DialogTitle>
-          <DialogDescription>
-            {t("documents.uploadDescription", "Upload a document to your forensic graphology knowledge base. Supported formats: PDF, DOCX, PPTX, TXT, HTML.")}
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      {renderProgressBar()}
+      <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{t("documents.uploadDocument", "Upload Document")}</DialogTitle>
+            <DialogDescription>
+              {t("documents.uploadDescription", "Upload a document to your forensic graphology knowledge base. Supported formats: PDF, DOCX, PPTX, TXT, HTML.")}
+            </DialogDescription>
+          </DialogHeader>
 
         <Tabs defaultValue="file" value={activeTab} onValueChange={setActiveTab} className="mt-4">
           <TabsList className="grid grid-cols-2 mb-4">

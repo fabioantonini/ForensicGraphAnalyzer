@@ -14,9 +14,11 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { useTranslation } from "react-i18next";
 import { Link, Import, Upload } from "lucide-react";
+import { UploadProgress } from "./upload-progress";
 
 interface UploadModalProps {
   open: boolean;
@@ -27,7 +29,10 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
   const { t } = useTranslation();
   const [file, setFile] = useState<File | null>(null);
   const [url, setUrl] = useState<string>("");
-  const [activeTab, setActiveTab] = useState<"file" | "url">("file");
+  const [activeTab, setActiveTab] = useState<string>("file");
+  const [uploadedDocumentId, setUploadedDocumentId] = useState<number | null>(null);
+  const [showProgressBar, setShowProgressBar] = useState<boolean>(false);
+  const [uploadedFilename, setUploadedFilename] = useState<string>("");
   const { toast } = useToast();
 
   const uploadFileMutation = useMutation({
@@ -48,16 +53,30 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
       
       return await response.json();
     },
-    onSuccess: () => {
-      toast({
-        title: t("documents.uploadSuccess", "Document uploaded"),
-        description: t("documents.uploadSuccessDesc", "Your document was successfully uploaded"),
-        variant: "default",
-      });
+    onSuccess: (data) => {
+      // Salva l'ID del documento caricato
+      setUploadedDocumentId(data.id);
+      // Ottieni il nome del file con controllo null
+      if (file) {
+        setUploadedFilename(file.name);
+      }
+      
+      // Mostra la barra di avanzamento
+      setShowProgressBar(true);
+      
+      // Azzera il file selezionato e chiudi il modale
       setFile(null);
       onOpenChange(false);
+      
+      // Aggiorna le query
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      
+      toast({
+        title: t("documents.uploadSuccess", "Document uploaded"),
+        description: t("documents.processingDesc", "The document is being processed and will be available shortly"),
+        variant: "default",
+      });
     },
     onError: (error: Error) => {
       toast({
@@ -86,16 +105,22 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
       
       return await response.json();
     },
-    onSuccess: () => {
-      toast({
-        title: t("documents.urlImportSuccess", "URL imported"),
-        description: t("documents.urlImportSuccessDesc", "The web page was successfully imported"),
-        variant: "default",
-      });
+    onSuccess: (data) => {
+      // Aggiungi il supporto per la barra di avanzamento anche per il caricamento da URL
+      setUploadedDocumentId(data.id);
+      setUploadedFilename(url);
+      setShowProgressBar(true);
+      
       setUrl("");
       onOpenChange(false);
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      
+      toast({
+        title: t("documents.urlImportSuccess", "URL imported"),
+        description: t("documents.processingDesc", "The web page is being processed and will be available shortly"),
+        variant: "default",
+      });
     },
     onError: (error: Error) => {
       toast({
@@ -133,46 +158,49 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
   const isUploading = uploadFileMutation.isPending || uploadUrlMutation.isPending;
   const canUpload = (activeTab === "file" && file) || (activeTab === "url" && url);
 
-  return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{t("documents.uploadDocument", "Upload Document")}</DialogTitle>
-          <DialogDescription>
-            {t("documents.uploadDescription", "Upload a document to your forensic graphology knowledge base. Supported formats: PDF, DOCX, PPTX, TXT, HTML.")}
-          </DialogDescription>
-        </DialogHeader>
+  // JSX per la barra di avanzamento del documento
+  const renderProgressBar = () => {
+    if (showProgressBar && uploadedDocumentId && uploadedFilename) {
+      return (
+        <UploadProgress
+          documentId={uploadedDocumentId}
+          filename={uploadedFilename}
+          onDismiss={() => {
+            setShowProgressBar(false);
+            setUploadedDocumentId(null);
+            setUploadedFilename("");
+          }}
+        />
+      );
+    }
+    return null;
+  };
 
-        <div className="mt-4">
-          <div className="flex mb-4 border-b">
-            <button
-              type="button"
-              className={`px-4 py-2 font-medium flex items-center ${
-                activeTab === "file" 
-                  ? "text-primary border-b-2 border-primary" 
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-              onClick={() => setActiveTab("file")}
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              {t("documents.uploadFile", "Upload File")}
-            </button>
-            <button
-              type="button"
-              className={`px-4 py-2 font-medium flex items-center ${
-                activeTab === "url" 
-                  ? "text-primary border-b-2 border-primary" 
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-              onClick={() => setActiveTab("url")}
-            >
-              <Link className="h-4 w-4 mr-2" />
-              {t("documents.importUrl", "Import from URL")}
-            </button>
-          </div>
-          
-          {activeTab === "file" && (
-            <>
+  return (
+    <>
+      {renderProgressBar()}
+      <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{t("documents.uploadDocument", "Upload Document")}</DialogTitle>
+            <DialogDescription>
+              {t("documents.uploadDescription", "Upload a document to your forensic graphology knowledge base. Supported formats: PDF, DOCX, PPTX, TXT, HTML.")}
+            </DialogDescription>
+          </DialogHeader>
+
+          <Tabs defaultValue="file" value={activeTab} onValueChange={setActiveTab} className="mt-4">
+            <TabsList className="grid grid-cols-2 mb-4">
+              <TabsTrigger value="file">
+                <Upload className="h-4 w-4 mr-2" />
+                {t("documents.uploadFile", "Upload File")}
+              </TabsTrigger>
+              <TabsTrigger value="url">
+                <Link className="h-4 w-4 mr-2" />
+                {t("documents.importUrl", "Import from URL")}
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="file">
               {!file ? (
                 <FileInput
                   onFileSelect={handleFileSelect}
@@ -182,44 +210,44 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
               ) : (
                 <SelectedFile file={file} onRemove={handleRemoveFile} />
               )}
-            </>
-          )}
-          
-          {activeTab === "url" && (
-            <div className="space-y-2">
-              <Label htmlFor="url">{t("documents.enterUrl", "Enter a web page URL")}</Label>
-              <Input
-                id="url"
-                placeholder="https://example.com/page"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-              />
-              <p className="text-sm text-muted-foreground">
-                {t("documents.urlHelp", "The web page will be fetched and processed as HTML content.")}
-              </p>
-            </div>
-          )}
-        </div>
+            </TabsContent>
+            
+            <TabsContent value="url">
+              <div className="space-y-2">
+                <Label htmlFor="url">{t("documents.enterUrl", "Enter a web page URL")}</Label>
+                <Input
+                  id="url"
+                  placeholder="https://example.com/page"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                />
+                <p className="text-sm text-muted-foreground">
+                  {t("documents.urlHelp", "The web page will be fetched and processed as HTML content.")}
+                </p>
+              </div>
+            </TabsContent>
+          </Tabs>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={handleClose} disabled={isUploading}>
-            {t("common.cancel", "Cancel")}
-          </Button>
-          <Button 
-            onClick={handleUpload} 
-            disabled={!canUpload || isUploading}
-          >
-            {isUploading ? (
-              <LoadingSpinner size="sm" className="mr-2" />
-            ) : (
-              <Import className="h-4 w-4 mr-2" />
-            )}
-            {activeTab === "file" 
-              ? t("documents.upload", "Upload") 
-              : t("documents.import", "Import")}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleClose} disabled={isUploading}>
+              {t("common.cancel", "Cancel")}
+            </Button>
+            <Button 
+              onClick={handleUpload} 
+              disabled={!canUpload || isUploading}
+            >
+              {isUploading ? (
+                <LoadingSpinner size="sm" className="mr-2" />
+              ) : (
+                <Import className="h-4 w-4 mr-2" />
+              )}
+              {activeTab === "file" 
+                ? t("documents.upload", "Upload") 
+                : t("documents.import", "Import")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
