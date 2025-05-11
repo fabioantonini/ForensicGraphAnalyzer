@@ -342,6 +342,7 @@
     "dpiAutomaticExtraction": "DPI value is automatically detected from image metadata when available",
     "dpiDetected": "DPI automatically detected",
     "dpiDescription": "Common values are 72, 96, 150, 300 or 600.",
+    "dimensionsInfo": "Real signature dimensions",
     "editDpi": {
       "title": "Edit signature DPI",
       "description": "The DPI (Dots Per Inch) affects the calculation of the actual size of the signature in millimeters.",

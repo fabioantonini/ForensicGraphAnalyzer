@@ -342,6 +342,7 @@
     "dpiAutomaticExtraction": "Il valore DPI viene rilevato automaticamente dai metadati dell'immagine quando disponibile",
     "dpiDetected": "DPI rilevato automaticamente",
     "dpiDescription": "I valori comuni sono 72, 96, 150, 300 o 600.",
+    "dimensionsInfo": "Dimensioni reali della firma",
     "editDpi": {
       "title": "Modifica DPI della firma",
       "description": "Il DPI (Dots Per Inch) influisce sul calcolo delle dimensioni reali della firma in millimetri.",
