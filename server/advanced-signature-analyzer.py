@@ -58,27 +58,34 @@ def get_realistic_size(width_mm, height_mm):
     Returns:
         Tupla (larghezza, altezza) in valori realistici (cm)
     """
-    # Riferimento: una firma tipica su un foglio A4 occupa circa il 15-30% della larghezza
-    # Foglio A4: 210 x 297 mm
-    # Firma tipica: ~50-90 mm x ~15-30 mm
+    # Nuovo approccio con un fattore di scala fisso molto più grande
+    # Per immagini di alta risoluzione dobbiamo scalare drasticamente
     
-    aspect_ratio = width_mm / height_mm if height_mm > 0 else 1
+    # Le firme tipiche sono di circa 5-10 cm di larghezza
+    # Calcoliamo un fattore di scala basato su questo target
+    scale_to_fit = width_mm / 90.0  # Puntiamo a una larghezza massima di 9 cm
     
-    # Se le dimensioni sono ragionevoli (meno di 15 cm), mantenerle
-    if width_mm < 150 and height_mm < 70:
-        return (width_mm / 10, height_mm / 10)  # Converti in cm
+    # Applichiamo un fattore minimo di riduzione
+    scale_factor = max(scale_to_fit, 100.0)
     
-    # Altrimenti, adatta a dimensioni standard mantenendo le proporzioni
-    if aspect_ratio > 4:  # Firma molto larga e bassa
-        target_width = 8.0  # cm
-    elif aspect_ratio > 2:  # Firma standard
-        target_width = 6.0  # cm
-    else:  # Firma più quadrata
-        target_width = 4.0  # cm
+    # Applichiamo la scala e convertiamo in cm
+    width_cm = width_mm / scale_factor
+    height_cm = height_mm / scale_factor
     
-    target_height = target_width / aspect_ratio
+    # Limitiamo le dimensioni a valori ragionevoli
+    if width_cm > 10.0:
+        width_cm = 10.0
+        height_cm = width_cm * (height_mm / width_mm)
     
-    return (target_width, target_height)
+    if height_cm > 5.0:
+        height_cm = 5.0
+        width_cm = height_cm * (width_mm / height_mm)
+    
+    # Impostiamo dei minimi per evitare firme troppo piccole
+    width_cm = max(width_cm, 3.0)
+    height_cm = max(height_cm, 1.0)
+    
+    return (width_cm, height_cm)
 
 def preprocess_image(image, resize=True):
     """
