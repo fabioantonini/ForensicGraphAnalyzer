@@ -94,6 +94,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     });
   };
+  
+  // Ottieni gli account demo in scadenza nei prossimi giorni
+  app.get("/api/admin/demo-accounts/expiring", isAdmin, async (req, res, next) => {
+    try {
+      // Trova gli account demo che scadranno nei prossimi 7 giorni
+      const expiringAccounts = await storage.getDemoAccountsExpiringIn(7);
+      
+      // Rimuovi la password e altri dati sensibili
+      const safeExpiringAccounts = expiringAccounts.map(account => {
+        const { password, ...safeAccount } = account;
+        return safeAccount;
+      });
+      
+      res.json(safeExpiringAccounts);
+    } catch (err) {
+      next(err);
+    }
+  });
 
   // Register signature routes
   const router = Router();
