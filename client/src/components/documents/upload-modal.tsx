@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { useTranslation } from "react-i18next";
 import { Link, Import, Upload } from "lucide-react";
+import { UploadProgress } from "./upload-progress";
 
 interface UploadModalProps {
   open: boolean;
@@ -29,6 +30,9 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
   const [file, setFile] = useState<File | null>(null);
   const [url, setUrl] = useState<string>("");
   const [activeTab, setActiveTab] = useState<string>("file");
+  const [uploadedDocumentId, setUploadedDocumentId] = useState<number | null>(null);
+  const [showProgressBar, setShowProgressBar] = useState<boolean>(false);
+  const [uploadedFilename, setUploadedFilename] = useState<string>("");
   const { toast } = useToast();
 
   const uploadFileMutation = useMutation({
@@ -49,16 +53,27 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
       
       return await response.json();
     },
-    onSuccess: () => {
-      toast({
-        title: t("documents.uploadSuccess", "Document uploaded"),
-        description: t("documents.uploadSuccessDesc", "Your document was successfully uploaded"),
-        variant: "default",
-      });
+    onSuccess: (data) => {
+      // Salva l'ID del documento caricato
+      setUploadedDocumentId(data.id);
+      setUploadedFilename(file.name);
+      
+      // Mostra la barra di avanzamento
+      setShowProgressBar(true);
+      
+      // Azzera il file selezionato e chiudi il modale
       setFile(null);
       onOpenChange(false);
+      
+      // Aggiorna le query
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      
+      toast({
+        title: t("documents.uploadSuccess", "Document uploaded"),
+        description: t("documents.processingDesc", "The document is being processed and will be available shortly"),
+        variant: "default",
+      });
     },
     onError: (error: Error) => {
       toast({
