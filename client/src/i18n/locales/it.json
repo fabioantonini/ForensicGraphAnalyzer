@@ -191,7 +191,11 @@
   },
   "common": {
     "loading": "Caricamento...",
-    "error": "Si è verificato un errore",
+    "error": {
+      "title": "Errore",
+      "creatingDemoAccount": "Errore durante la creazione dell'account demo",
+      "extendingDemoAccount": "Errore durante l'estensione dell'account demo"
+    },
     "retry": "Riprova",
     "cancel": "Annulla",
     "save": "Salva",

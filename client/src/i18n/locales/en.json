@@ -191,7 +191,11 @@
   },
   "common": {
     "loading": "Loading...",
-    "error": "An error occurred",
+    "error": {
+      "title": "Error",
+      "creatingDemoAccount": "Error while creating demo account",
+      "extendingDemoAccount": "Error while extending demo account"
+    },
     "retry": "Retry",
     "cancel": "Cancel",
     "save": "Save",

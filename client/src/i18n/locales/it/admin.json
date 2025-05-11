@@ -41,7 +41,11 @@
     "password": "Password",
     "confirmPassword": "Conferma password",
     "noExpiredAccounts": "Nessun account demo scaduto",
-    "daysRemaining": "{{count}} giorni"
+    "daysRemaining": "{{count}} giorni",
+    "accountCreated": "Account demo creato",
+    "accountCreatedSuccess": "L'account demo è stato creato con successo",
+    "accountExtended": "Account demo esteso",
+    "accountExtendedSuccess": "La durata dell'account demo è stata estesa con successo"
   },
   "totalUsers": "Utenti totali",
   "totalDocuments": "Documenti totali",
