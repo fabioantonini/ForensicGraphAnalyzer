@@ -95,14 +95,14 @@ const DemoAccountsManagement: React.FC = () => {
       const res = await apiRequest("POST", "/api/admin/demo-account", demoData);
       if (!res.ok) {
         const error = await res.json();
-        throw new Error(error.error || "Errore durante la creazione dell'account demo");
+        throw new Error(error.error || t("common:error.creatingDemoAccount"));
       }
       return await res.json();
     },
     onSuccess: () => {
       toast({
-        title: "Account demo creato",
-        description: "L'account demo è stato creato con successo"
+        title: t("demoAccounts.accountCreated"),
+        description: t("demoAccounts.accountCreatedSuccess")
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
@@ -124,14 +124,14 @@ const DemoAccountsManagement: React.FC = () => {
       const res = await apiRequest("POST", "/api/admin/extend-demo", data);
       if (!res.ok) {
         const error = await res.json();
-        throw new Error(error.error || "Errore durante l'estensione dell'account demo");
+        throw new Error(error.error || t("common:error.extendingDemoAccount"));
       }
       return await res.json();
     },
     onSuccess: () => {
       toast({
-        title: "Account demo esteso",
-        description: "La durata dell'account demo è stata estesa con successo"
+        title: t("demoAccounts.accountExtended"),
+        description: t("demoAccounts.accountExtendedSuccess")
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
@@ -397,7 +397,7 @@ const DemoAccountsManagement: React.FC = () => {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Password</FormLabel>
+                      <FormLabel>{t("demoAccounts.password")}</FormLabel>
                       <FormControl>
                         <Input type="password" {...field} />
                       </FormControl>
