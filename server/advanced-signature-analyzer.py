@@ -28,12 +28,21 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 from reportlab.lib.units import inch, cm
 
-# Costante DPI
-DPI = 300
+# DPI di default se non specificato
+DEFAULT_DPI = 300
 
-def pixels_to_mm(pixels):
-    """Converte i pixel in millimetri basandosi sul DPI"""
-    return (pixels * 25.4) / DPI
+def pixels_to_mm(pixels, dpi=DEFAULT_DPI):
+    """
+    Converte i pixel in millimetri basandosi sul DPI
+    
+    Args:
+        pixels: Numero di pixel da convertire
+        dpi: Densità di pixel per pollice (default 300)
+        
+    Returns:
+        Valore in millimetri
+    """
+    return (pixels * 25.4) / dpi
 
 def preprocess_image(image):
     """Prepara l'immagine per l'analisi"""
@@ -64,12 +73,13 @@ def calculate_circularity(cnt):
         return 0
     return 4 * math.pi * area / (perimeter ** 2)
 
-def analyze_signature(image_path):
+def analyze_signature(image_path, dpi=DEFAULT_DPI):
     """
     Analizza un'immagine di firma ed estrae parametri caratteristici
     
     Args:
         image_path: Percorso dell'immagine da analizzare
+        dpi: Densità di pixel per pollice da utilizzare per il calcolo delle dimensioni reali (default 300)
         
     Returns:
         Dizionario con i parametri estratti dalla firma
@@ -95,7 +105,7 @@ def analyze_signature(image_path):
         y_max = max([cv2.boundingRect(cnt)[1] + cv2.boundingRect(cnt)[3] for cnt in contours])
         w = x_max - x_min
         h = y_max - y_min
-        dimensions = (pixels_to_mm(w), pixels_to_mm(h))
+        dimensions = (pixels_to_mm(w, dpi), pixels_to_mm(h, dpi))
         
         # Calcola la proporzione
         proportion = w / h if h > 0 else 0
@@ -137,7 +147,7 @@ def analyze_signature(image_path):
         letter_connections = len(contours)
         baseline_y_positions = [pt[0][1] for cnt in contours for pt in cnt]
         baseline_std = np.std(baseline_y_positions) if baseline_y_positions else 0
-        baseline_mm_std = pixels_to_mm(baseline_std)
+        baseline_mm_std = pixels_to_mm(baseline_std, dpi)
 
         return {
             'Dimensions': dimensions,

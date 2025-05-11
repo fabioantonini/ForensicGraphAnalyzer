@@ -262,6 +262,7 @@ export const signatureProjects = pgTable("signature_projects", {
   userId: integer("user_id").notNull().references(() => users.id),
   name: text("name").notNull(),
   description: text("description"),
+  dpi: integer("dpi").default(300).notNull(), // Valore DPI per calcolare dimensioni reali (default 300)
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -304,6 +305,7 @@ export const insertSignatureProjectSchema = createInsertSchema(signatureProjects
   userId: true,
   name: true,
   description: true,
+  dpi: true,
 });
 
 export const insertSignatureSchema = createInsertSchema(signatures).pick({
