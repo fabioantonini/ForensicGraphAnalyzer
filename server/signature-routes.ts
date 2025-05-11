@@ -339,6 +339,7 @@ export function registerSignatureRoutes(router: Router) {
       log(`Estrazione DPI per la firma di riferimento: ${req.file.filename}`, 'signatures');
       const dpi = await determineBestDPI(req.file.path);
       log(`DPI determinato per la firma di riferimento: ${dpi}`, 'signatures');
+      log(`DEBUG - Tipo DPI: ${typeof dpi}, Valore: ${dpi}`, 'signatures');
       
       const signatureData = insertSignatureSchema.parse({
         projectId,
