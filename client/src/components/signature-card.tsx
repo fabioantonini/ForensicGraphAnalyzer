@@ -207,8 +207,8 @@ export function SignatureCard({
               {signature.parameters && signature.parameters.width && signature.parameters.height && (
                 <span className="text-xs text-gray-600">
                   <span title={t('signatures.dimensionsInfo', 'Dimensioni reali della firma')}>
-                    {/* Divido per 10 per ottenere una dimensione più realistica in centimetri */}
-                    {(signature.parameters.width / 10).toFixed(1)} × {(signature.parameters.height / 10).toFixed(1)} cm
+                    {/* Le dimensioni sono già calcolate in centimetri */}
+                    {signature.parameters.width.toFixed(1)} × {signature.parameters.height.toFixed(1)} cm
                   </span>
                 </span>
               )}

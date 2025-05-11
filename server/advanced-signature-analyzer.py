@@ -654,8 +654,9 @@ def adapt_parameters_for_json(params):
     result = {}
     for key, value in params.items():
         if isinstance(value, (list, tuple)) and len(value) == 2 and isinstance(value[0], (int, float)) and isinstance(value[1], (int, float)):
-            # Converte tuple e liste di dimensione 2 in oggetti
-            result[key] = {"width": value[0], "height": value[1]}
+            # Converte tuple e liste di dimensione 2 in oggetti e arrotonda a 1 decimale per chiarezza
+            # Questo è particolarmente importante per le dimensioni
+            result[key] = {"width": round(value[0], 1), "height": round(value[1], 1)}
         elif isinstance(value, np.ndarray):
             # Converte array NumPy in liste
             result[key] = value.tolist()
