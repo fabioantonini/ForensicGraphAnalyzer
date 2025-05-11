@@ -3,6 +3,8 @@ import { initReactI18next } from 'react-i18next';
 
 import enTranslation from './locales/en.json';
 import itTranslation from './locales/it.json';
+import enAdminTranslation from './locales/en/admin.json';
+import itAdminTranslation from './locales/it/admin.json';
 
 // Create a very simplified version without language detection
 // This will ensure Italian is always the default language
@@ -11,10 +13,12 @@ i18n
   .init({
     resources: {
       en: {
-        translation: enTranslation
+        translation: enTranslation,
+        admin: enAdminTranslation
       },
       it: {
-        translation: itTranslation
+        translation: itTranslation,
+        admin: itAdminTranslation
       }
     },
     lng: 'it', // Hard-code Italian as the default language
