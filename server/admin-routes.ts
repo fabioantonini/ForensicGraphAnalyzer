@@ -2,7 +2,14 @@ import express, { Express, Request, Response, NextFunction } from "express";
 import fs from "fs/promises";
 import path from "path";
 import { storage } from "./storage";
-import { sendEmail, isEmailServiceConfigured } from "./email-service";
+import { 
+  sendEmail, 
+  isEmailServiceConfigured, 
+  generatePasswordResetToken, 
+  verifyPasswordResetToken,
+  invalidatePasswordResetToken,
+  sendPasswordResetEmail
+} from "./email-service";
 
 // Percorso del file per memorizzare la configurazione email
 const EMAIL_CONFIG_PATH = path.join(process.cwd(), ".email-config.json");
@@ -180,6 +187,129 @@ export function setupAdminRoutes(app: Express) {
     } catch (error) {
       console.error("Error sending test email:", error);
       res.status(500).json({ message: "Failed to send test email: " + (error as Error).message });
+    }
+  });
+  
+  // Le seguenti rotte NON richiedono autenticazione
+  
+  // Rotta per richiedere il reset della password
+  app.post("/api/request-password-reset", async (req, res) => {
+    try {
+      const { email, locale = 'it' } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email richiesta" });
+      }
+      
+      // Verifica se il servizio email è configurato
+      if (!isEmailServiceConfigured()) {
+        return res.status(500).json({ message: "Il servizio email non è configurato. Contatta l'amministratore." });
+      }
+      
+      // Trova l'utente con questa email
+      const user = await storage.getUserByEmail(email);
+      
+      if (!user) {
+        // Per sicurezza, non rivelare che l'utente non esiste
+        return res.json({ 
+          success: true, 
+          message: "Se l'indirizzo è associato a un account, riceverai un'email con le istruzioni per reimpostare la password." 
+        });
+      }
+      
+      // Genera un token di reset
+      const token = await generatePasswordResetToken(user.id);
+      
+      // Costruisci il link di reset
+      const resetLink = `${req.protocol}://${req.get('host')}/reset-password?token=${token}`;
+      
+      // Invia l'email
+      const emailSent = await sendPasswordResetEmail(email, resetLink, locale);
+      
+      // Registra l'attività
+      await storage.createActivity({
+        userId: user.id,
+        type: "password_reset_request",
+        details: "Password reset requested"
+      });
+      
+      res.json({ 
+        success: true, 
+        message: "Se l'indirizzo è associato a un account, riceverai un'email con le istruzioni per reimpostare la password." 
+      });
+    } catch (error) {
+      console.error("Error requesting password reset:", error);
+      res.status(500).json({ message: "Errore nella richiesta di reset password" });
+    }
+  });
+  
+  // Rotta per verificare il token di reset
+  app.get("/api/verify-reset-token", async (req, res) => {
+    try {
+      const { token } = req.query;
+      
+      if (!token || typeof token !== 'string') {
+        return res.status(400).json({ valid: false, message: "Token mancante o non valido" });
+      }
+      
+      // Verifica il token
+      const userId = verifyPasswordResetToken(token);
+      
+      if (!userId) {
+        return res.json({ valid: false, message: "Token non valido o scaduto" });
+      }
+      
+      res.json({ valid: true });
+    } catch (error) {
+      console.error("Error verifying reset token:", error);
+      res.status(500).json({ valid: false, message: "Errore nella verifica del token" });
+    }
+  });
+  
+  // Rotta per reimpostare la password
+  app.post("/api/reset-password", async (req, res) => {
+    try {
+      const { token, newPassword } = req.body;
+      
+      if (!token || !newPassword) {
+        return res.status(400).json({ message: "Token e nuova password richiesti" });
+      }
+      
+      // Verifica il token
+      const userId = verifyPasswordResetToken(token);
+      
+      if (!userId) {
+        return res.status(400).json({ message: "Token non valido o scaduto" });
+      }
+      
+      // Trova l'utente
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "Utente non trovato" });
+      }
+      
+      // Aggiorna la password dell'utente
+      const success = await storage.updateUserPassword(userId, newPassword);
+      
+      if (success) {
+        // Invalida il token dopo l'uso
+        invalidatePasswordResetToken(token);
+        
+        // Registra l'attività
+        await storage.createActivity({
+          userId,
+          type: "password_reset_complete",
+          details: "Password reset completed"
+        });
+        
+        res.json({ success: true, message: "Password aggiornata con successo" });
+      } else {
+        res.status(500).json({ message: "Errore nell'aggiornamento della password" });
+      }
+    } catch (error) {
+      console.error("Error resetting password:", error);
+      res.status(500).json({ message: "Errore nel reset della password" });
     }
   });
 }
