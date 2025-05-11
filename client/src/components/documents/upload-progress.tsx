@@ -51,9 +51,10 @@ export function UploadProgress({
   // Auto-dismissione dopo 3 secondi di completamento
   useEffect(() => {
     if (data && data.status === 'completed') {
+      console.log("UploadProgress: completato, imposto timer per auto-dismissione");
       const timer = setTimeout(() => {
         onDismiss();
-      }, 3000);
+      }, 5000); // Aumentato a 5 secondi per dare più tempo all'utente di vedere il completamento
       return () => clearTimeout(timer);
     }
   }, [data, onDismiss]);
@@ -64,7 +65,8 @@ export function UploadProgress({
     return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
   };
   
-  const progress = data?.progress || 0;
+  // Se non abbiamo ancora dati dal server, mostra una barra al 10% come indicazione che il processo è iniziato
+  const progress = isLoading && !data ? 10 : (data?.progress || 0);
   
   const renderStatusIcon = () => {
     if (!data) return null;
