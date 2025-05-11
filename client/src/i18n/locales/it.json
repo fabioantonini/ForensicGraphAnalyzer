@@ -341,6 +341,12 @@
     "dpi": "Densità Pixel (DPI)",
     "dpiAutomaticExtraction": "Il valore DPI viene rilevato automaticamente dai metadati dell'immagine quando disponibile",
     "uploadFirstReference": "Carica prima firma di riferimento",
+    "editDpi": "Modifica DPI",
+    "updateDpi": "Aggiorna DPI",
+    "invalidDpi": "DPI non valido. Inserisci un valore tra 72 e 1200.",
+    "dpiRange": "Valore DPI (72-1200)",
+    "dpiUpdated": "DPI aggiornato con successo",
+    "dpiUpdateFailed": "Aggiornamento DPI fallito",
     "uploadFirstVerify": "Carica prima firma da verificare",
     "compareAll": "Confronta Tutte",
     "help": {

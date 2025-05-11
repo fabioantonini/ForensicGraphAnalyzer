@@ -340,13 +340,17 @@
     "needReferenceFirst": "You need reference signatures first",
     "dpi": "Pixel Density (DPI)",
     "dpiAutomaticExtraction": "DPI value is automatically detected from image metadata when available",
+    "editDpi": "Edit DPI",
+    "updateDpi": "Update DPI",
+    "invalidDpi": "Invalid DPI. Enter a value between 72 and 1200.",
+    "dpiRange": "DPI Value (72-1200)",
+    "dpiUpdated": "DPI updated successfully",
+    "dpiUpdateFailed": "DPI update failed",
     "help": {
-      "dpiDesc": "Dots per inch (DPI) of signature images. Used to calculate real-world dimensions. Common values are 300 for standard scans, 600 for high-resolution scans."
-    },
-    "uploadFirstReference": "Upload first reference signature",
-    "uploadFirstVerify": "Upload first verification signature",
-    "compareAll": "Compare All",
-    "help": {
+      "dpiDesc": "Dots per inch (DPI) of signature images. Used to calculate real-world dimensions. Common values are 300 for standard scans, 600 for high-resolution scans.",
+      "uploadFirstReference": "Upload first reference signature",
+      "uploadFirstVerify": "Upload first verification signature",
+      "compareAll": "Compare All",
       "referenceSignaturesTitle": "Reference Signatures",
       "referenceSignaturesDesc": "Reference signatures are authentic examples of the subject's signature. Upload at least one reference signature to start the verification process.",
       "verificationSignaturesTitle": "Verification Signatures",

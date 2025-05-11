@@ -75,7 +75,7 @@ export function SignatureCard({
     onError: (error: Error) => {
       toast({
         title: t('common.error'),
-        description: `${t('signatures.dpiUpdateError')}: ${error.message}`,
+        description: `${t('signatures.dpiUpdateFailed')}: ${error.message}`,
         variant: "destructive",
       });
     },
