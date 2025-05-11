@@ -38,12 +38,17 @@ export async function addDocumentToVectorStore(document: Document, apiKey?: stri
     // Dividi il testo in chunk
     const chunks = chunkText(document.content);
     
+    // Inizializza il tracciamento del progresso
+    const { initProgress, updateProgress, completeProgress, failProgress } = require('./progress-tracker');
+    initProgress(document.id, chunks.length);
+    
     // Per ogni chunk, genera l'embedding e salvalo nel database
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
       
       // Genera l'embedding utilizzando OpenAI
       const embedding = await generateEmbedding(chunk, apiKey);
+      console.log(`Embedding generato, dimensione: ${embedding.length}`);
       
       // Salva l'embedding nel database utilizzando una query SQL diretta
       // poiché Drizzle ORM non supporta nativamente il tipo vector
@@ -53,16 +58,27 @@ export async function addDocumentToVectorStore(document: Document, apiKey?: stri
             VALUES 
             (${document.id}, ${document.userId}, ${i}, ${chunk}, ${sql.raw(`'[${embedding.join(',')}]'`)}, NOW(), NOW())`
       );
+      
+      // Aggiorna il progresso
+      updateProgress(document.id, i + 1);
     }
     
     // Aggiorna lo stato del documento come indicizzato
     await db.update(documents)
       .set({ indexed: true })
       .where(eq(documents.id, document.id));
+    
+    // Segna il completamento nel tracker di progresso  
+    completeProgress(document.id);
       
     console.log(`Documento ID ${document.id} aggiunto con successo al vector store (${chunks.length} chunks)`);
   } catch (error: any) {
     console.error(`Errore nell'aggiunta del documento al vector store:`, error);
+    
+    // Segna il fallimento nel tracker di progresso
+    const { failProgress } = require('./progress-tracker');
+    failProgress(document.id, error.message || 'Unknown error');
+    
     throw new Error(`Impossibile aggiungere il documento al vector store: ${error.message}`);
   }
 }
