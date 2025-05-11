@@ -34,7 +34,8 @@ import {
   initProgress,
   updateProgress,
   completeProgress,
-  failProgress
+  failProgress,
+  transferProgress
 } from "./progress-tracker";
 
 // Initialize multer for file uploads
@@ -230,12 +231,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           indexed: false
         });
         
-        // Trasferisci il progresso dal tempDocId al documentId reale
-        const progressData = getProgress(tempDocId);
-        if (progressData) {
-          // Inizializza un nuovo tracker con l'ID documento reale
-          initProgress(document.id, progressData.totalChunks);
-          updateProgress(document.id, progressData.processedChunks);
+        // Trasferisci il progresso dal tempDocId al documentId reale usando la nuova funzione
+        const isTransferred = transferProgress(tempDocId, document.id);
+        if (!isTransferred) {
+          // Fallback: inizializza un nuovo tracker se il trasferimento fallisce
+          initProgress(document.id, 100);
+          updateProgress(document.id, 45);
         }
         
         // Add document to vector database - use user key or fallback to system key
@@ -336,14 +337,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         indexed: false
       });
       
-      // Trasferisci il progresso dal tempId al documentId reale
-      const progressData = getProgress(tempId);
-      if (progressData) {
-        // Inizializza un nuovo tracker con l'ID documento reale
-        initProgress(document.id, progressData.totalChunks);
-        updateProgress(document.id, 50); // 50% - Pre-indicizzazione vettoriale
-      } else {
-        // Fallback: inizializza un nuovo tracker
+      // Trasferisci il progresso dal tempId al documentId reale usando la nuova funzione
+      const isTransferred = transferProgress(tempId, document.id);
+      if (!isTransferred) {
+        // Fallback: inizializza un nuovo tracker se il trasferimento fallisce
         initProgress(document.id, 100);
         updateProgress(document.id, 50); // 50% - Pre-indicizzazione vettoriale
       }
