@@ -203,25 +203,35 @@ export async function queryCollection(
     try {
       log(`Trying pgvector search for user ${userId}`, "database");
       
-      // Create pgvector adapter
-      const pgAdapter = createPgVectorAdapter(userId, apiKey);
-      
-      // Query pgvector
-      const pgResults = await pgAdapter.query(query, documentIds, k);
-      
-      if (pgResults && pgResults.length > 0) {
-        log(`Found ${pgResults.length} results using pgvector for query: "${query}"`, "database");
+      try {
+        // Create pgvector adapter
+        const pgAdapter = createPgVectorAdapter(userId, apiKey);
         
-        // Map pgvector results to expected format
-        return {
-          documents: pgResults.map(r => r.content),
-          metadatas: pgResults.map(r => ({ 
-            documentId: r.documentId,
-            filename: 'unknown' // Non possiamo accedere a r.metadata direttamente
-          })),
-          ids: pgResults.map(r => r.documentId.toString()),
-          distances: pgResults.map(r => 1 - r.similarity) // Convert similarity to distance
-        };
+        // Query pgvector
+        const pgResults = await pgAdapter.query(query, documentIds, k);
+        
+        // Log detailed results for debugging
+        log(`Esecuzione query "${query}" nel vector store...`, "database");
+        log(`Query pgvector ha restituito ${pgResults ? pgResults.length : 'nessun'} risultato/i`, "database");
+        
+        if (pgResults && pgResults.length > 0) {
+          log(`Found ${pgResults.length} results using pgvector for query: "${query}"`, "database");
+          
+          // Map pgvector results to expected format
+          return {
+            documents: pgResults.map(r => r.content),
+            metadatas: pgResults.map(r => ({ 
+              documentId: r.documentId,
+              filename: 'unknown' // Non possiamo accedere a r.metadata direttamente
+            })),
+            ids: pgResults.map(r => r.documentId.toString()),
+            distances: pgResults.map(r => 1 - r.similarity) // Convert similarity to distance
+          };
+        } else {
+          log(`Nessun risultato trovato in pgvector per la query: "${query}"`, "database");
+        }
+      } catch (pgQueryError) {
+        log(`Errore durante la query pgvector: ${pgQueryError}`, "database");
       }
       
       log(`No results from pgvector, falling back to in-memory search`, "database");

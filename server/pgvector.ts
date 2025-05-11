@@ -116,31 +116,51 @@ export async function queryVectorStore(
   try {
     console.log(`Esecuzione query "${query}" nel vector store...`);
     
+    // Conta quanti documenti e chunks ha l'utente
+    const countResults = await db.execute(
+      sql`
+        SELECT COUNT(*) as total_chunks, COUNT(DISTINCT document_id) as total_docs
+        FROM document_embeddings
+        WHERE user_id = ${userId}
+      `
+    );
+    const totalItems = countResults[0] as any;
+    console.log(`L'utente ${userId} ha ${totalItems.total_docs} documenti e ${totalItems.total_chunks} chunk nel vector store`);
+    
     // Genera l'embedding della query
     const queryEmbedding = await generateEmbedding(query, apiKey);
+    console.log(`Embedding generato, dimensione: ${queryEmbedding.length}`);
     
     // Prepara la where condition in base ai parametri
     let whereCondition = `WHERE user_id = ${userId}`;
     if (documentIds && documentIds.length > 0) {
       whereCondition += ` AND document_id IN (${documentIds.join(',')})`;
+      console.log(`Query filtrata per i documenti: ${documentIds.join(', ')}`);
     }
     
     // Esegui la query di similarità con tipizzazione corretta
-    const results = await db.execute(
-      sql`
-        SELECT 
-          document_id as "documentId", 
-          chunk_content as "content", 
-          1 - (embedding <=> ${sql.raw(`'[${queryEmbedding.join(',')}]'::vector`)}) as "similarity"
-        FROM document_embeddings
-        ${sql.raw(whereCondition)}
-        ORDER BY similarity DESC
-        LIMIT ${limit}
-      `
-    ) as unknown as Array<QueryResult>;
+    const sqlQuery = sql`
+      SELECT 
+        document_id as "documentId", 
+        chunk_content as "content", 
+        1 - (embedding <=> ${sql.raw(`'[${queryEmbedding.join(',')}]'::vector`)}) as "similarity"
+      FROM document_embeddings
+      ${sql.raw(whereCondition)}
+      ORDER BY similarity DESC
+      LIMIT ${limit}
+    `;
     
-    console.log(`Query completata, trovati ${results.length} risultati`);
-    return results;
+    console.log(`Esecuzione query SQL nel vector store...`);
+    
+    const results = await db.execute(sqlQuery) as unknown as Array<QueryResult>;
+    
+    if (results && Array.isArray(results)) {
+      console.log(`Query completata, trovati ${results.length} risultati`);
+      return results;
+    } else {
+      console.log(`Query completata, ma risultati non validi: ${typeof results}`);
+      return []
+    }
   } catch (error: any) {
     console.error(`Errore nell'esecuzione della query nel vector store:`, error);
     throw new Error(`Impossibile eseguire la query nel vector store: ${error.message}`);
