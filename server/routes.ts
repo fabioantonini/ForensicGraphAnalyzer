@@ -108,11 +108,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
   
-  // Applica il middleware di controllo account attivo a tutte le rotte API protette
-  app.use("/api", isAuthenticated, isActiveUser, router);
+  // Applica il middleware solo alle API che lo richiedono
+  app.use("/api", router);
 
   // Get user stats
-  app.get("/api/stats", isAuthenticated, async (req, res, next) => {
+  app.get("/api/stats", isAuthenticated, isActiveUser, async (req, res, next) => {
     try {
       const userId = req.user!.id;
       
