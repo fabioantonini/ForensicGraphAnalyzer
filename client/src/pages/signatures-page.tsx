@@ -82,6 +82,7 @@ export default function SignaturesPage() {
     defaultValues: {
       name: "",
       description: "",
+      dpi: 300,
     },
   });
   
