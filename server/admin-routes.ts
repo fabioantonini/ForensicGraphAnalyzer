@@ -8,21 +8,19 @@ import {
   generatePasswordResetToken, 
   verifyPasswordResetToken,
   invalidatePasswordResetToken,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  EmailServiceType,
+  EmailServiceConfig,
+  loadEmailConfig as getEmailConfig,
+  saveEmailConfig
 } from "./email-service";
-
-// Percorso del file per memorizzare la configurazione email
-const EMAIL_CONFIG_PATH = path.join(process.cwd(), ".email-config.json");
-
-// Interfaccia per la configurazione email
-interface EmailConfig {
-  smtpHost: string;
-  smtpPort: number;
-  smtpSecure: boolean;
-  smtpUser: string;
-  smtpPassword: string | null; // null se non è stato modificato
-  isConfigured: boolean;
-}
+import {
+  generateAuthUrl,
+  getTokenFromCode,
+  GmailConfig,
+  loadGmailConfig,
+  saveGmailConfig
+} from "./gmail-service";
 
 // Funzione per verificare se l'utente è un amministratore
 function isAdmin(req: Request, res: Response, next: NextFunction) {
@@ -36,18 +34,6 @@ function isAdmin(req: Request, res: Response, next: NextFunction) {
 
   next();
 }
-
-// Funzione per caricare la configurazione email dal file
-async function loadEmailConfig(): Promise<EmailConfig> {
-  try {
-    const data = await fs.readFile(EMAIL_CONFIG_PATH, "utf8");
-    return JSON.parse(data);
-  } catch (error) {
-    // Se il file non esiste, restituisci una configurazione vuota
-    return {
-      smtpHost: "",
-      smtpPort: 587,
-      smtpSecure: false,
       smtpUser: "",
       smtpPassword: null,
       isConfigured: false,

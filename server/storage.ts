@@ -3,7 +3,7 @@ import {
   InsertActivity, Query, InsertQuery, users, documents, activities, queries,
   SignatureProject, InsertSignatureProject, Signature, InsertSignature,
   signatureProjects, signatures, SignatureParameters, ReportTemplate, InsertReportTemplate,
-  reportTemplates
+  reportTemplates, settings
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -1852,6 +1852,36 @@ export class DatabaseStorage implements IStorage {
       .limit(1);
     
     return query?.createdAt || null;
+  }
+  
+  /**
+   * Salva un'impostazione di sistema
+   * @param key Chiave dell'impostazione
+   * @param value Valore dell'impostazione
+   */
+  async saveSettings(key: string, value: string): Promise<void> {
+    // Controlla se l'impostazione esiste già
+    const [existing] = await db.select().from(settings).where(eq(settings.key, key));
+    
+    if (existing) {
+      // Aggiorna l'impostazione esistente
+      await db.update(settings)
+        .set({ value, updatedAt: new Date() })
+        .where(eq(settings.key, key));
+    } else {
+      // Crea una nuova impostazione
+      await db.insert(settings).values({ key, value });
+    }
+  }
+  
+  /**
+   * Recupera un'impostazione di sistema
+   * @param key Chiave dell'impostazione
+   * @returns Valore dell'impostazione o null se non esiste
+   */
+  async getSettings(key: string): Promise<string | null> {
+    const [result] = await db.select().from(settings).where(eq(settings.key, key));
+    return result ? result.value : null;
   }
 }
 
