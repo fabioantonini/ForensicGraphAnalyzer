@@ -35,6 +35,9 @@ export function UploadProgress({
   
   // Determina se stiamo usando un ID temporaneo o reale
   const isTempId = documentId < 0 || documentId > 1000000000; // IDs temporanei sono negativi o timestamp
+  
+  // Stato per tenere traccia dell'ultimo documento reale trovato
+  const [lastRealDocumentId, setLastRealDocumentId] = useState<number | null>(null);
 
   // Crea un oggetto di stato iniziale per gli ID temporanei
   const initialTempData: ProgressData = {
@@ -44,24 +47,49 @@ export function UploadProgress({
     totalChunks: 100,
   };
 
-  // Effettua la query per ottenere l'avanzamento dell'elaborazione solo per ID reali
+  // Effettua la query per i documenti per cercare corrispondenze recenti
+  const { data: documents } = useQuery<Document[]>({
+    queryKey: ["/api/documents"],
+    enabled: isTempId, // Esegui la query solo per ID temporanei
+    refetchInterval: isTempId ? 2000 : false, // Aggiorna ogni 2 secondi per ID temporanei
+  });
+
+  // Cerca un documento recente che corrisponda al nome del file
+  useEffect(() => {
+    if (isTempId && documents && documents.length > 0) {
+      // Cerca per nome file o URL (filename contiene solo il nome del file, non il path completo)
+      const matchingDoc = documents.find(doc => 
+        doc.originalFilename.includes(filename) || 
+        filename.includes(doc.originalFilename)
+      );
+      
+      // Se troviamo una corrispondenza, salva l'ID
+      if (matchingDoc && matchingDoc.id) {
+        console.log("Trovato documento reale che corrisponde:", matchingDoc);
+        setLastRealDocumentId(matchingDoc.id);
+      }
+    }
+  }, [isTempId, documents, filename]);
+
+  // Effettua la query per ottenere l'avanzamento dell'elaborazione
   const { data: apiData, error, isLoading } = useQuery<ProgressData>({
-    queryKey: [`/api/documents/${documentId}/progress`],
-    // Disabilita la query per ID temporanei, o interrompi il polling quando il documento è completato o fallito
-    enabled: !isTempId,
-    refetchInterval: shouldPoll && !isTempId ? 1000 : false,
+    queryKey: [`/api/documents/${lastRealDocumentId || documentId}/progress`],
+    // Disabilita la query per ID temporanei che non hanno ancora trovato un ID reale
+    enabled: !isTempId || (isTempId && lastRealDocumentId !== null),
+    refetchInterval: shouldPoll ? 1000 : false,
     refetchIntervalInBackground: true,
   });
 
   // Usa i dati dall'API o lo stato iniziale per ID temporanei
-  const data = isTempId ? initialTempData : apiData;
+  const data = (isTempId && !lastRealDocumentId) ? initialTempData : apiData;
   
   // Per ID temporanei, crea un effetto che simula l'avanzamento
   const [tempProgress, setTempProgress] = useState<number>(5);
   
   useEffect(() => {
-    if (isTempId) {
+    if (isTempId && !lastRealDocumentId) {
       // Incrementa gradualmente la barra fino al 40% per mostrare attività
+      // ma solo se non abbiamo ancora trovato un ID reale
       const interval = setInterval(() => {
         setTempProgress(prev => {
           const newProgress = prev + 2; // Incremento graduale
@@ -71,12 +99,21 @@ export function UploadProgress({
       
       return () => clearInterval(interval);
     }
-  }, [isTempId]);
+  }, [isTempId, lastRealDocumentId]);
   
   // Sovrascrive i dati iniziali per ID temporanei con l'avanzamento simulato
-  if (isTempId && data) {
+  // ma solo se non abbiamo ancora trovato un ID reale
+  if (isTempId && !lastRealDocumentId && data) {
     data.progress = tempProgress;
   }
+  
+  // Se abbiamo trovato un documento reale ma ancora usiamo l'ID temporaneo
+  // aggiungiamo dei log per debug
+  useEffect(() => {
+    if (isTempId && lastRealDocumentId) {
+      console.log(`UploadProgress: collegato documento temporaneo ${documentId} a reale ${lastRealDocumentId}`);
+    }
+  }, [isTempId, lastRealDocumentId, documentId]);
   
   // Quando lo stato cambia, aggiorna shouldPoll
   useEffect(() => {
