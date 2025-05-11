@@ -23,6 +23,12 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  createDemoAccount(demoData: Omit<InsertUser, 'confirmPassword'>, durationDays: number): Promise<User>;
+  extendDemoAccount(userId: number, additionalDays: number): Promise<User>;
+  deactivateExpiredDemoAccounts(): Promise<number>; // Restituisce il numero di account disattivati
+  getDemoAccountsExpiringIn(days: number): Promise<User[]>;
+  getDataForPurge(daysAfterExpiration: number): Promise<User[]>;
+  isUserActive(userId: number): Promise<boolean>;
   updateUserApiKey(userId: number, apiKey: string): Promise<User>;
   updateUserProfile(userId: number, profileData: {
     fullName?: string;

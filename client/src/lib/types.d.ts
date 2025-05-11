@@ -1,7 +1,19 @@
-import { User as BaseUser } from "@shared/schema";
+// Import base types from shared schema
+// This is a type declaration file to extend the base types with client-specific properties
 
 // Estende il tipo User dal database con le proprietà specifiche per il client
-export interface User extends BaseUser {
+export interface User {
+  id: number;
+  username: string;
+  email: string;
+  password: string;
+  fullName: string | null;
+  organization: string | null;
+  profession: string | null;
+  openaiApiKey: string | null;
+  role: string;
+  createdAt: Date;
+  updatedAt: Date;
   accountType?: string;  // 'regular' o 'demo'
   demoExpiresAt?: Date;  // Data di scadenza della demo
   dataRetentionUntil?: Date;  // Data di eliminazione dei dati dopo scadenza
