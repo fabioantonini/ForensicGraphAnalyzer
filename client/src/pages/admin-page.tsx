@@ -173,6 +173,7 @@ export default function AdminPage() {
         <TabsList className="mb-4">
           <TabsTrigger value="users">{t("admin.usersManagement")}</TabsTrigger>
           <TabsTrigger value="stats">{t("admin.systemStats")}</TabsTrigger>
+          <TabsTrigger value="demo-accounts">{t("admin.demoAccounts.title", "Account Demo")}</TabsTrigger>
         </TabsList>
 
         {/* Tab per la gestione utenti */}
