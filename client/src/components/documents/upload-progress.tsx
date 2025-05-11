@@ -126,9 +126,9 @@ export function UploadProgress({
   }
 
   return (
-    <Card className="fixed bottom-4 right-4 shadow-lg w-80 z-[9999] border-2 border-primary">
-      <CardContent className="p-4">
-        <div className="flex justify-between items-center mb-2">
+    <Card className="fixed bottom-4 right-4 shadow-lg w-96 z-[9999] border-2 border-primary animate-in slide-in-from-right-10">
+      <CardContent className="p-5">
+        <div className="flex justify-between items-center mb-3">
           <h4 className="font-semibold text-primary text-lg flex items-center">
             {renderStatusIcon()}
             <span className={renderStatusIcon() ? "ml-2" : ""}>
@@ -138,37 +138,39 @@ export function UploadProgress({
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 text-gray-500 hover:text-gray-700"
+            className="h-7 w-7 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
             onClick={onDismiss}
           >
             <X className="h-4 w-4" />
           </Button>
         </div>
-        <p className="text-sm text-gray-500 mb-2 truncate" title={filename}>
+        <p className="text-sm text-gray-700 mb-3 truncate font-medium" title={filename}>
           {filename}
         </p>
-        <div className="w-full bg-gray-200 rounded-full h-4 mt-2 mb-1">
+        <div className="w-full bg-gray-100 rounded-full h-5 mt-2 mb-2 overflow-hidden">
           <div
-            className={`h-4 rounded-full transition-all duration-300 ${
+            className={`h-5 rounded-full transition-all duration-500 ${
               data?.status === 'failed' ? 'bg-red-500' : 'bg-primary'
-            }`}
-            style={{ width: `${progress}%` }}
-          ></div>
+            } shadow-inner flex items-center justify-center text-xs text-white font-medium`}
+            style={{ width: `${Math.max(5, progress)}%` }}
+          >
+            {progress > 10 && `${Math.round(progress)}%`}
+          </div>
         </div>
-        <div className="flex justify-between text-xs text-gray-500 mt-1">
-          <span>
+        <div className="flex justify-between text-xs text-gray-600 mt-2">
+          <span className="font-medium">
             {data?.processedChunks && data?.totalChunks 
               ? `${data.processedChunks}/${data.totalChunks} chunks`
               : `${progress}%`
             }
           </span>
           {data?.status === 'processing' && data?.timeRemaining && (
-            <span>{formatTime(data.timeRemaining)} {t('documents.processing.remaining', 'remaining')}</span>
+            <span className="font-medium">{formatTime(data.timeRemaining)} {t('documents.processing.remaining', 'remaining')}</span>
           )}
         </div>
         
         {data?.status === 'failed' && data?.error && (
-          <p className="text-xs text-red-500 mt-2">
+          <p className="text-sm text-red-600 mt-3 px-3 py-2 bg-red-50 rounded-md border border-red-200">
             {data.error}
           </p>
         )}

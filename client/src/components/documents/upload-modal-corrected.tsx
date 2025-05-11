@@ -76,6 +76,14 @@ export function UploadModal({ open, onOpenChange, onUploadProgress }: UploadModa
         description: error.message,
         variant: "destructive",
       });
+      
+      // Notifichiamo il componente genitore dell'errore di caricamento
+      // Questo garantisce che la barra di avanzamento appaia anche in caso di errore
+      if (onUploadProgress && file) {
+        // Usiamo un ID temporaneo negativo per segnalare un errore
+        const errorDocId = -1 * Date.now();
+        onUploadProgress(errorDocId, file.name);
+      }
     },
   });
 

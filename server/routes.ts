@@ -199,17 +199,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Unsupported file type" });
       }
       
+      // Inizializza la barra di progresso con un ID temporaneo
+      const tempDocId = Date.now(); // Usiamo il timestamp come ID temporaneo
+      initProgress(tempDocId, 100); // Inizializziamo con 100 parti totali
+      updateProgress(tempDocId, 5); // 5% - Avvio caricamento
+      
       // Generate a unique filename
       const filename = generateFilename(req.file.originalname);
+      updateProgress(tempDocId, 10); // 10% - Filename generato
       
       // Save the file temporarily
       const filepath = await saveFile(req.file.buffer, filename);
+      updateProgress(tempDocId, 20); // 20% - File salvato
       
       try {
         // Process the file to extract text
+        updateProgress(tempDocId, 25); // 25% - Inizio estrazione testo
         const content = await processFile(filepath, req.file.mimetype);
+        updateProgress(tempDocId, 40); // 40% - Testo estratto
         
         // Save document to database
+        updateProgress(tempDocId, 45); // 45% - Salvataggio database
         const document = await storage.createDocument({
           userId,
           filename,
@@ -220,15 +230,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           indexed: false
         });
         
+        // Trasferisci il progresso dal tempDocId al documentId reale
+        const progressData = getProgress(tempDocId);
+        if (progressData) {
+          // Inizializza un nuovo tracker con l'ID documento reale
+          initProgress(document.id, progressData.totalChunks);
+          updateProgress(document.id, progressData.processedChunks);
+        }
+        
         // Add document to vector database - use user key or fallback to system key
         const apiKeyToUse = user.openaiApiKey || undefined; // undefined will trigger system key use
         
-        // Inizializza immediatamente il tracker di progresso con stato "processing"
-        // per mostrare la barra di progresso nel client
-        initProgress(document.id, 20); // Inizializziamo con un valore ragionevole
-        updateProgress(document.id, 1); // Impostiamo un chunk processato per calcolare il tempo rimanente
+        // Aggiorniamo il progresso prima dell'indicizzazione vettoriale
+        updateProgress(document.id, 50); // 50% - Pre-indicizzazione vettoriale
         
         try {
+          // Nota: l'addDocumentToCollection chiamerà updateProgress() internamente
+          // attraverso pgvector.ts per ogni chunk elaborato
           await addDocumentToCollection(document, apiKeyToUse);
           document.indexed = true;
           await storage.updateDocumentIndexStatus(document.id, true);
