@@ -182,65 +182,66 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
             </DialogDescription>
           </DialogHeader>
 
-        <Tabs defaultValue="file" value={activeTab} onValueChange={setActiveTab} className="mt-4">
-          <TabsList className="grid grid-cols-2 mb-4">
-            <TabsTrigger value="file">
-              <Upload className="h-4 w-4 mr-2" />
-              {t("documents.uploadFile", "Upload File")}
-            </TabsTrigger>
-            <TabsTrigger value="url">
-              <Link className="h-4 w-4 mr-2" />
-              {t("documents.importUrl", "Import from URL")}
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="file">
-            {!file ? (
-              <FileInput
-                onFileSelect={handleFileSelect}
-                buttonText={t("documents.dragAndDrop", "Drag & drop files or browse")}
-                helperText={t("documents.maxFileSize", "Maximum file size: 25MB")}
-              />
-            ) : (
-              <SelectedFile file={file} onRemove={handleRemoveFile} />
-            )}
-          </TabsContent>
-          
-          <TabsContent value="url">
-            <div className="space-y-2">
-              <Label htmlFor="url">{t("documents.enterUrl", "Enter a web page URL")}</Label>
-              <Input
-                id="url"
-                placeholder="https://example.com/page"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-              />
-              <p className="text-sm text-muted-foreground">
-                {t("documents.urlHelp", "The web page will be fetched and processed as HTML content.")}
-              </p>
-            </div>
-          </TabsContent>
-        </Tabs>
+          <Tabs defaultValue="file" value={activeTab} onValueChange={setActiveTab} className="mt-4">
+            <TabsList className="grid grid-cols-2 mb-4">
+              <TabsTrigger value="file">
+                <Upload className="h-4 w-4 mr-2" />
+                {t("documents.uploadFile", "Upload File")}
+              </TabsTrigger>
+              <TabsTrigger value="url">
+                <Link className="h-4 w-4 mr-2" />
+                {t("documents.importUrl", "Import from URL")}
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="file">
+              {!file ? (
+                <FileInput
+                  onFileSelect={handleFileSelect}
+                  buttonText={t("documents.dragAndDrop", "Drag & drop files or browse")}
+                  helperText={t("documents.maxFileSize", "Maximum file size: 25MB")}
+                />
+              ) : (
+                <SelectedFile file={file} onRemove={handleRemoveFile} />
+              )}
+            </TabsContent>
+            
+            <TabsContent value="url">
+              <div className="space-y-2">
+                <Label htmlFor="url">{t("documents.enterUrl", "Enter a web page URL")}</Label>
+                <Input
+                  id="url"
+                  placeholder="https://example.com/page"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                />
+                <p className="text-sm text-muted-foreground">
+                  {t("documents.urlHelp", "The web page will be fetched and processed as HTML content.")}
+                </p>
+              </div>
+            </TabsContent>
+          </Tabs>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={handleClose} disabled={isUploading}>
-            {t("common.cancel", "Cancel")}
-          </Button>
-          <Button 
-            onClick={handleUpload} 
-            disabled={!canUpload || isUploading}
-          >
-            {isUploading ? (
-              <LoadingSpinner size="sm" className="mr-2" />
-            ) : (
-              <Import className="h-4 w-4 mr-2" />
-            )}
-            {activeTab === "file" 
-              ? t("documents.upload", "Upload") 
-              : t("documents.import", "Import")}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleClose} disabled={isUploading}>
+              {t("common.cancel", "Cancel")}
+            </Button>
+            <Button 
+              onClick={handleUpload} 
+              disabled={!canUpload || isUploading}
+            >
+              {isUploading ? (
+                <LoadingSpinner size="sm" className="mr-2" />
+              ) : (
+                <Import className="h-4 w-4 mr-2" />
+              )}
+              {activeTab === "file" 
+                ? t("documents.upload", "Upload") 
+                : t("documents.import", "Import")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
