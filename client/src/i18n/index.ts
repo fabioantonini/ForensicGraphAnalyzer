@@ -5,6 +5,8 @@ import enTranslation from './locales/en.json';
 import itTranslation from './locales/it.json';
 import enAdminTranslation from './locales/en/admin.json';
 import itAdminTranslation from './locales/it/admin.json';
+import enCommonTranslation from './locales/en/common.json';
+import itCommonTranslation from './locales/it/common.json';
 
 // Create a very simplified version without language detection
 // This will ensure Italian is always the default language
@@ -14,11 +16,13 @@ i18n
     resources: {
       en: {
         translation: enTranslation,
-        admin: enAdminTranslation
+        admin: enAdminTranslation,
+        common: enCommonTranslation
       },
       it: {
         translation: itTranslation,
-        admin: itAdminTranslation
+        admin: itAdminTranslation,
+        common: itCommonTranslation
       }
     },
     lng: 'it', // Hard-code Italian as the default language
