@@ -1452,12 +1452,22 @@ export function registerSignatureRoutes(router: Router) {
               console.log(`[COMPARE-ALL] Firma da verificare (diventerà riferimento): ${signaturePath}`);
               console.log(`[COMPARE-ALL] Firma di riferimento (diventerà verifica): ${referencePath}`);
               
+              // Otteniamo il progetto per il DPI
+              const project = await storage.getSignatureProject(projectId);
+              if (!project) {
+                throw new Error('Progetto non trovato');
+              }
+              
+              // Estrai il DPI dal progetto (default 300)
+              const dpi = project.dpi || 300;
+              
               const comparisonResult = await SignaturePythonAnalyzer.compareSignatures(
                 referencePath,   // Questo diventerà la firma da verificare nel report
                 signaturePath,   // Questo diventerà la firma di riferimento nel report
                 false, // Non generare report DOCX automaticamente
                 caseInfo,
-                projectId // Passiamo l'ID del progetto per assicurare l'isolamento dei dati
+                projectId, // Passiamo l'ID del progetto per assicurare l'isolamento dei dati
+                dpi // Passiamo il DPI specifico del progetto
               );
               console.log(`[COMPARE-ALL] Utilizzando projectId ${projectId} per garantire l'isolamento dei dati`);
               
