@@ -101,8 +101,8 @@ const DemoAccountsManagement: React.FC = () => {
     },
     onSuccess: () => {
       toast({
-        title: t("demoAccounts.accountCreated"),
-        description: t("demoAccounts.accountCreatedSuccess")
+        title: t("admin:demoAccounts.accountCreated"),
+        description: t("admin:demoAccounts.accountCreatedSuccess")
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
@@ -111,7 +111,7 @@ const DemoAccountsManagement: React.FC = () => {
     },
     onError: (error: Error) => {
       toast({
-        title: "Errore",
+        title: t("common:error.title"),
         description: error.message,
         variant: "destructive"
       });
@@ -130,8 +130,8 @@ const DemoAccountsManagement: React.FC = () => {
     },
     onSuccess: () => {
       toast({
-        title: t("demoAccounts.accountExtended"),
-        description: t("demoAccounts.accountExtendedSuccess")
+        title: t("admin:demoAccounts.accountExtended"),
+        description: t("admin:demoAccounts.accountExtendedSuccess")
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
@@ -141,7 +141,7 @@ const DemoAccountsManagement: React.FC = () => {
     },
     onError: (error: Error) => {
       toast({
-        title: "Errore",
+        title: t("common:error.title"),
         description: error.message,
         variant: "destructive"
       });
@@ -154,14 +154,17 @@ const DemoAccountsManagement: React.FC = () => {
       const res = await apiRequest("POST", "/api/admin/maintenance/demo-accounts", {});
       if (!res.ok) {
         const error = await res.json();
-        throw new Error(error.error || "Errore durante la manutenzione degli account demo");
+        throw new Error(error.error || t("admin:demoAccounts.maintenanceError"));
       }
       return await res.json();
     },
     onSuccess: (data) => {
       toast({
-        title: "Manutenzione completata",
-        description: `Disattivati ${data.deactivatedAccounts} account scaduti. ${data.purgedCount} account pronti per pulizia.`
+        title: t("admin:demoAccounts.maintenanceCompleted"),
+        description: t("admin:demoAccounts.maintenanceResults", {
+          deactivated: data.deactivatedAccounts,
+          purged: data.purgedCount
+        })
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/stats"] });
@@ -169,7 +172,7 @@ const DemoAccountsManagement: React.FC = () => {
     },
     onError: (error: Error) => {
       toast({
-        title: "Errore",
+        title: t("common:error.title"),
         description: error.message,
         variant: "destructive"
       });
@@ -397,7 +400,7 @@ const DemoAccountsManagement: React.FC = () => {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("demoAccounts.password")}</FormLabel>
+                      <FormLabel>{t("admin:demoAccounts.password")}</FormLabel>
                       <FormControl>
                         <Input type="password" {...field} />
                       </FormControl>
@@ -410,7 +413,7 @@ const DemoAccountsManagement: React.FC = () => {
                   name="confirmPassword"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("demoAccounts.confirmPassword")}</FormLabel>
+                      <FormLabel>{t("admin:demoAccounts.confirmPassword")}</FormLabel>
                       <FormControl>
                         <Input type="password" {...field} />
                       </FormControl>
@@ -420,21 +423,24 @@ const DemoAccountsManagement: React.FC = () => {
                 />
               </div>
               
-              <FormField
-                control={createForm.control}
-                name="fullName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("demoAccounts.fullName")} (opzionale)</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <Separator />
+              
+              <h4 className="text-sm font-medium">{t("admin:demoAccounts.personalInfo")}</h4>
               
               <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={createForm.control}
+                  name="fullName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t("admin:demoAccounts.fullName")} ({t("common:optional")})</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField
                   control={createForm.control}
                   name="organization"
@@ -448,6 +454,9 @@ const DemoAccountsManagement: React.FC = () => {
                     </FormItem>
                   )}
                 />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={createForm.control}
                   name="profession"
@@ -461,34 +470,26 @@ const DemoAccountsManagement: React.FC = () => {
                     </FormItem>
                   )}
                 />
+                <FormField
+                  control={createForm.control}
+                  name="durationDays"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t("admin:demoAccounts.duration")}</FormLabel>
+                      <FormControl>
+                        <Input type="number" min="1" max="365" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
               
-              <FormField
-                control={createForm.control}
-                name="durationDays"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t("admin:demoAccounts.duration")}</FormLabel>
-                    <FormControl>
-                      <Input type="number" min="1" max="365" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
               <DialogFooter>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setCreateDialogOpen(false)}
-                >
+                <Button variant="outline" type="button" onClick={() => setCreateDialogOpen(false)}>
                   {t("common:cancel")}
                 </Button>
-                <Button 
-                  type="submit"
-                  disabled={createDemoMutation.isPending}
-                >
+                <Button type="submit" disabled={createDemoMutation.isPending}>
                   {createDemoMutation.isPending ? t("admin:demoAccounts.creating") : t("admin:demoAccounts.create")}
                 </Button>
               </DialogFooter>
@@ -503,12 +504,8 @@ const DemoAccountsManagement: React.FC = () => {
           <DialogHeader>
             <DialogTitle>{t("admin:demoAccounts.extendTitle")}</DialogTitle>
             <DialogDescription>
-              {selectedUser && (
-                <>
-                  {t("admin:demoAccounts.extendDescription")} <strong>{selectedUser.username}</strong>
-                  {selectedUser.isActive === false && ` (${t("admin:demoAccounts.reactivation")})`}
-                </>
-              )}
+              {t("admin:demoAccounts.extendDescription")}
+              {selectedUser && !selectedUser.isActive && ` (${t("admin:demoAccounts.reactivation")})`}
             </DialogDescription>
           </DialogHeader>
           
@@ -529,23 +526,11 @@ const DemoAccountsManagement: React.FC = () => {
               />
               
               <DialogFooter>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setExtendDialogOpen(false)}
-                >
+                <Button variant="outline" type="button" onClick={() => setExtendDialogOpen(false)}>
                   {t("common:cancel")}
                 </Button>
-                <Button 
-                  type="submit"
-                  disabled={extendDemoMutation.isPending}
-                >
-                  {extendDemoMutation.isPending 
-                    ? t("admin:demoAccounts.extending") 
-                    : (selectedUser?.isActive 
-                        ? t("admin:demoAccounts.extend") 
-                        : t("admin:demoAccounts.reactivate"))
-                  }
+                <Button type="submit" disabled={extendDemoMutation.isPending}>
+                  {extendDemoMutation.isPending ? t("admin:demoAccounts.extending") : t("admin:demoAccounts.extend")}
                 </Button>
               </DialogFooter>
             </form>

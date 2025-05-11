@@ -54,7 +54,10 @@
     "accountExtendedSuccess": "The demo account duration has been successfully extended",
     "create": "Create Demo Account",
     "creating": "Creating...",
-    "extending": "Extending..."
+    "extending": "Extending...",
+    "maintenanceCompleted": "Maintenance completed",
+    "maintenanceResults": "Deactivated {{deactivated}} expired accounts. {{purged}} accounts ready for cleanup.",
+    "maintenanceError": "Error during demo account maintenance"
   },
   "totalUsers": "Total users",
   "totalDocuments": "Total documents",
