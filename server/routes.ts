@@ -216,7 +216,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Document endpoints
   // Upload a document
-  app.post("/api/documents", isAuthenticated, upload.single("file"), async (req, res, next) => {
+  app.post("/api/documents", isAuthenticated, isActiveUser, upload.single("file"), async (req, res, next) => {
     try {
       if (!req.file) {
         return res.status(400).json({ message: "No file uploaded" });
@@ -418,7 +418,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get all documents for a user
-  app.get("/api/documents", isAuthenticated, async (req, res, next) => {
+  app.get("/api/documents", isAuthenticated, isActiveUser, async (req, res, next) => {
     try {
       const userId = req.user!.id;
       
@@ -435,7 +435,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get a specific document
-  app.get("/api/documents/:id", isAuthenticated, async (req, res, next) => {
+  app.get("/api/documents/:id", isAuthenticated, isActiveUser, async (req, res, next) => {
     try {
       const userId = req.user!.id;
       const documentId = parseInt(req.params.id);
@@ -607,7 +607,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Query endpoints
   // Perform a RAG query
-  app.post("/api/query", isAuthenticated, async (req, res, next) => {
+  app.post("/api/query", isAuthenticated, isActiveUser, async (req, res, next) => {
     try {
       const userId = req.user!.id;
       const user = await storage.getUser(userId) as User;
