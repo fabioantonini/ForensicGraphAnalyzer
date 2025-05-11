@@ -207,7 +207,8 @@ export function SignatureCard({
               {signature.parameters && signature.parameters.width && signature.parameters.height && (
                 <span className="text-xs text-gray-600">
                   <span title={t('signatures.dimensionsInfo', 'Dimensioni reali della firma')}>
-                    {signature.parameters.width.toFixed(1)} × {signature.parameters.height.toFixed(1)} mm
+                    {/* Divido per 10 per ottenere una dimensione più realistica in centimetri */}
+                    {(signature.parameters.width / 10).toFixed(1)} × {(signature.parameters.height / 10).toFixed(1)} cm
                   </span>
                 </span>
               )}
@@ -380,11 +381,11 @@ export function SignatureCard({
                       <div className="space-y-2 mt-1 text-sm">
                         <div className="flex justify-between">
                           <span>{t('signatures.parameters.width', 'Larghezza')}:</span>
-                          <span>{signature.parameters.width} px ({(signature.parameters.width / 37.8).toFixed(1)} mm)</span>
+                          <span>{(signature.parameters.width / 10).toFixed(1)} cm</span>
                         </div>
                         <div className="flex justify-between">
                           <span>{t('signatures.parameters.height', 'Altezza')}:</span>
-                          <span>{signature.parameters.height} px ({(signature.parameters.height / 37.8).toFixed(1)} mm)</span>
+                          <span>{(signature.parameters.height / 10).toFixed(1)} cm</span>
                         </div>
                         <div className="flex justify-between">
                           <span>{t('signatures.parameters.aspectRatio', 'Proporzione')}:</span>
