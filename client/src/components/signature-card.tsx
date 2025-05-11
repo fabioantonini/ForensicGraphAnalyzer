@@ -142,6 +142,9 @@ export function SignatureCard({
     signature.processingStatus === 'completed' && 
     signature.comparisonResult !== null && 
     (signature.comparisonChart || signature.analysisReport || signature.parameters);
+    
+  // Debug per il valore DPI
+  console.log(`Firma ${signature.id} - Valore DPI:`, signature.dpi, "Tipo:", typeof signature.dpi);
   
   return (
     <>
@@ -186,7 +189,7 @@ export function SignatureCard({
             <div className="flex items-center gap-1 ml-1">
               <span className="text-xs text-gray-600">
                 <span title={t('signatures.dpiDetected', 'DPI rilevato automaticamente')}>
-                  DPI: {signature.dpi || 300}
+                  DPI: {signature.dpi ? signature.dpi : 300}
                 </span>
               </span>
               <Button 
