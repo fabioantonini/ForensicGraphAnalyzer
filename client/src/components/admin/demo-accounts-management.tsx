@@ -483,13 +483,13 @@ const DemoAccountsManagement: React.FC = () => {
                   variant="outline" 
                   onClick={() => setCreateDialogOpen(false)}
                 >
-                  Annulla
+                  {t("common:cancel")}
                 </Button>
                 <Button 
                   type="submit"
                   disabled={createDemoMutation.isPending}
                 >
-                  {createDemoMutation.isPending ? "Creazione..." : "Crea Account Demo"}
+                  {createDemoMutation.isPending ? t("admin:demoAccounts.creating") : t("admin:demoAccounts.create")}
                 </Button>
               </DialogFooter>
             </form>
@@ -501,12 +501,12 @@ const DemoAccountsManagement: React.FC = () => {
       <Dialog open={extendDialogOpen} onOpenChange={setExtendDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>{t("demoAccounts.extendTitle")}</DialogTitle>
+            <DialogTitle>{t("admin:demoAccounts.extendTitle")}</DialogTitle>
             <DialogDescription>
               {selectedUser && (
                 <>
-                  Estendi l'account demo <strong>{selectedUser.username}</strong>
-                  {selectedUser.isActive === false && " (riattivazione)"}
+                  {t("admin:demoAccounts.extendDescription")} <strong>{selectedUser.username}</strong>
+                  {selectedUser.isActive === false && ` (${t("admin:demoAccounts.reactivation")})`}
                 </>
               )}
             </DialogDescription>
@@ -519,7 +519,7 @@ const DemoAccountsManagement: React.FC = () => {
                 name="additionalDays"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("demoAccounts.additionalDays")}</FormLabel>
+                    <FormLabel>{t("admin:demoAccounts.additionalDays")}</FormLabel>
                     <FormControl>
                       <Input type="number" min="1" max="365" {...field} />
                     </FormControl>
@@ -534,13 +534,18 @@ const DemoAccountsManagement: React.FC = () => {
                   variant="outline" 
                   onClick={() => setExtendDialogOpen(false)}
                 >
-                  Annulla
+                  {t("common:cancel")}
                 </Button>
                 <Button 
                   type="submit"
                   disabled={extendDemoMutation.isPending}
                 >
-                  {extendDemoMutation.isPending ? "Estensione..." : (selectedUser?.isActive ? "Estendi" : "Riattiva")}
+                  {extendDemoMutation.isPending 
+                    ? t("admin:demoAccounts.extending") 
+                    : (selectedUser?.isActive 
+                        ? t("admin:demoAccounts.extend") 
+                        : t("admin:demoAccounts.reactivate"))
+                  }
                 </Button>
               </DialogFooter>
             </form>
