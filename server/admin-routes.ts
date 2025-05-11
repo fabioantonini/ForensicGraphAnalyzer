@@ -1,20 +1,16 @@
 import express, { Express, Request, Response, NextFunction } from "express";
 import { storage } from "./storage";
 import { 
-  sendEmail, 
-  EmailServiceType,
-  EmailServiceConfig,
-  loadEmailConfig,
-  saveEmailConfig
+  sendEmail,
+  isEmailServiceConfigured
 } from "./email-service";
 import {
-  generateAuthUrl,
-  getTokenFromCode,
-  GmailConfig,
-  loadGmailConfig,
-  saveGmailConfig,
-  isGmailServiceConfigured
-} from "./gmail-service";
+  loadSendGridConfig,
+  saveSendGridConfig,
+  SendGridConfig,
+  testSendGridConfiguration,
+  isSendGridConfigured
+} from "./sendgrid-service";
 
 // Funzione per verificare se l'utente è un amministratore
 function isAdmin(req: Request, res: Response, next: NextFunction) {
@@ -82,15 +78,6 @@ export function setupAdminRoutes(app: Express) {
       } catch (e) {
         console.error("Error getting storage used:", e);
       }
-      
-      try {
-        // Try to get new users in the last 7 days if the method exists
-        if (typeof storage.getNewUsers === 'function') {
-          stats.newUsers = await storage.getNewUsers(7);
-        }
-      } catch (e) {
-        console.error("Error getting new users:", e);
-      }
 
       res.json(stats);
     } catch (error) {
@@ -125,169 +112,88 @@ export function setupAdminRoutes(app: Express) {
     }
   });
 
-  // Rotta per ottenere la configurazione email (solo admin)
-  adminRouter.get("/email-config", async (req, res) => {
+  // Rotta per ottenere la configurazione SendGrid (solo admin)
+  adminRouter.get("/sendgrid-config", async (req, res) => {
     try {
-      const config = await loadEmailConfig();
-      // Non inviare la password al client
+      const config = await loadSendGridConfig();
+      // Non inviare la API key al client
       const safeConfig = { 
         ...config, 
-        smtpPassword: config.smtpPassword ? "********" : null 
+        apiKey: config.apiKey ? "********" : "" 
       };
       res.json(safeConfig);
     } catch (error) {
-      console.error("Errore nel recupero della configurazione email:", error);
+      console.error("Errore nel recupero della configurazione SendGrid:", error);
       res.status(500).json({ message: "Errore interno del server" });
     }
   });
 
-  // Rotta per ottenere la configurazione Gmail (solo admin)
-  adminRouter.get("/gmail-config", async (req, res) => {
+  // Rotta per testare la configurazione SendGrid
+  adminRouter.post("/test-sendgrid", async (req, res) => {
     try {
-      const config = await loadGmailConfig();
-      // Non inviare il client secret al client
-      const safeConfig = { 
-        ...config, 
-        clientSecret: config.clientSecret ? "********" : "" 
-      };
-      res.json(safeConfig);
-    } catch (error) {
-      console.error("Errore nel recupero della configurazione Gmail:", error);
-      res.status(500).json({ message: "Errore interno del server" });
-    }
-  });
-
-  // Rotta per aggiornare la configurazione email SMTP (solo admin)
-  adminRouter.post("/email-config", async (req, res) => {
-    try {
-      const config = req.body as EmailServiceConfig;
+      // Verifica se SendGrid è configurato
+      if (!await isSendGridConfigured()) {
+        return res.status(400).json({ message: "SendGrid non configurato" });
+      }
       
-      // Valida la configurazione per SMTP
-      if (config.type === EmailServiceType.SMTP && config.isConfigured) {
-        if (!config.smtpHost) {
-          return res.status(400).json({ message: "Host SMTP mancante" });
+      // Invia un'email di test all'utente loggato
+      const success = await testSendGridConfiguration(req.user!.email);
+      
+      if (success) {
+        res.json({ message: "Email di test inviata con successo" });
+      } else {
+        res.status(500).json({ message: "Invio email di test fallito" });
+      }
+    } catch (error) {
+      console.error("Errore nel test della configurazione SendGrid:", error);
+      res.status(500).json({ message: "Errore interno del server" });
+    }
+  });
+
+  // Rotta per aggiornare la configurazione SendGrid
+  adminRouter.post("/sendgrid-config", async (req, res) => {
+    try {
+      const config = req.body as SendGridConfig;
+      
+      // Valida la configurazione SendGrid
+      if (config.isConfigured) {
+        if (!config.apiKey && config.apiKey !== "********") {
+          return res.status(400).json({ message: "API Key SendGrid mancante" });
         }
-        if (!config.smtpPort) {
-          return res.status(400).json({ message: "Porta SMTP mancante" });
-        }
-        if (!config.smtpUser) {
-          return res.status(400).json({ message: "Utente SMTP mancante" });
+        if (!config.senderEmail) {
+          return res.status(400).json({ message: "Email mittente mancante" });
         }
       }
 
-      await saveEmailConfig(config);
+      // Se l'API key è "********", mantieni quella esistente
+      if (config.apiKey === "********") {
+        const currentConfig = await loadSendGridConfig();
+        config.apiKey = currentConfig.apiKey;
+      }
+
+      await saveSendGridConfig(config);
       
       // Se la configurazione è stata disabilitata o aggiornata con successo
       if (!config.isConfigured) {
-        res.json({ message: "Configurazione email disabilitata" });
+        res.json({ message: "Configurazione SendGrid disabilitata" });
       } else {
         // Testa la configurazione
         const testEmail = req.user!.email;
         const success = await sendEmail(
           testEmail,
-          "Test Configurazione Email",
-          "<p>Questa è un'email di test per verificare la configurazione del server email.</p>"
+          "Test Configurazione SendGrid",
+          "<p>Questa è un'email di test per verificare la configurazione di SendGrid.</p>"
         );
 
         if (success) {
-          res.json({ message: "Configurazione email aggiornata e testata con successo" });
+          res.json({ message: "Configurazione SendGrid aggiornata e testata con successo" });
         } else {
           res.status(500).json({ message: "Configurazione salvata ma test fallito. Verifica i parametri." });
         }
       }
     } catch (error) {
-      console.error("Errore nell'aggiornamento della configurazione email:", error);
+      console.error("Errore nell'aggiornamento della configurazione SendGrid:", error);
       res.status(500).json({ message: "Errore interno del server" });
-    }
-  });
-
-  // Rotta per aggiornare la configurazione Gmail (solo admin)
-  adminRouter.post("/gmail-config", async (req, res) => {
-    try {
-      const config = req.body as GmailConfig;
-      
-      // Valida la configurazione Gmail
-      if (config.isConfigured) {
-        if (!config.clientId) {
-          return res.status(400).json({ message: "Client ID mancante" });
-        }
-        if (!config.clientSecret) {
-          // Se il client secret è "********", non è stato modificato
-          const currentConfig = await loadGmailConfig();
-          if (currentConfig.clientSecret) {
-            config.clientSecret = currentConfig.clientSecret;
-          } else {
-            return res.status(400).json({ message: "Client Secret mancante" });
-          }
-        }
-        if (!config.redirectUri) {
-          return res.status(400).json({ message: "URI di reindirizzamento mancante" });
-        }
-      }
-
-      await saveGmailConfig(config);
-      
-      // Se la configurazione è stata disabilitata o non c'è ancora un refresh token
-      if (!config.isConfigured || !config.refreshToken) {
-        if (!config.isConfigured) {
-          res.json({ message: "Configurazione Gmail disabilitata" });
-        } else {
-          // Genera l'URL di autorizzazione
-          const authUrl = generateAuthUrl(config);
-          res.json({ 
-            message: "Configurazione Gmail salvata. Autorizzazione richiesta.", 
-            authUrl 
-          });
-        }
-      } else {
-        // Se abbiamo già un refresh token, testiamo la configurazione
-        const testEmail = req.user!.email;
-        const success = await sendEmail(
-          testEmail,
-          "Test Configurazione Gmail",
-          "<p>Questa è un'email di test per verificare la configurazione dell'API Gmail.</p>"
-        );
-
-        if (success) {
-          res.json({ message: "Configurazione Gmail aggiornata e testata con successo" });
-        } else {
-          res.status(500).json({ message: "Configurazione salvata ma test fallito. Verifica i parametri." });
-        }
-      }
-    } catch (error) {
-      console.error("Errore nell'aggiornamento della configurazione Gmail:", error);
-      res.status(500).json({ message: "Errore interno del server" });
-    }
-  });
-
-  // Rotta per gestire il callback OAuth di Gmail
-  adminRouter.get("/gmail-auth-callback", async (req, res) => {
-    try {
-      const { code } = req.query;
-      
-      if (!code || typeof code !== 'string') {
-        return res.status(400).json({ message: "Codice di autorizzazione mancante" });
-      }
-
-      // Carica la configurazione Gmail corrente
-      const config = await loadGmailConfig();
-      
-      if (!config.isConfigured || !config.clientId || !config.clientSecret) {
-        return res.status(400).json({ message: "Configurazione Gmail non valida" });
-      }
-
-      // Ottieni il refresh token dal codice di autorizzazione
-      const refreshToken = await getTokenFromCode(config, code);
-      
-      // Aggiorna la configurazione con il refresh token
-      config.refreshToken = refreshToken;
-      await saveGmailConfig(config);
-
-      // Reindirizza all'interfaccia di amministrazione
-      res.redirect('/admin?gmailConfigured=true');
-    } catch (error) {
-      console.error("Errore nell'elaborazione del callback OAuth:", error);
-      res.status(500).json({ message: "Errore nell'elaborazione del callback OAuth" });
     }
   });
 
@@ -330,8 +236,8 @@ export function setupAdminRoutes(app: Express) {
         user = await storage.createUser({
           username,
           password,
+          confirmPassword: password, // Aggiungiamo confirmPassword
           email,
-          confirmPassword: password,
           fullName: fullName || null,
           organization: organization || null,
           profession: profession || null
