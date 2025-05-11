@@ -74,7 +74,7 @@ export default function SignaturesPage() {
   const [selectedProject, setSelectedProject] = useState<number | null>(null);
   const [isUploadReferenceOpen, setIsUploadReferenceOpen] = useState(false);
   const [isUploadVerifyOpen, setIsUploadVerifyOpen] = useState(false);
-  const [isEditDpiOpen, setIsEditDpiOpen] = useState(false);
+  // Rimosso state per modifica DPI globale
   
   // Form for creating new project
   const projectForm = useForm<ProjectFormValues>({
@@ -638,26 +638,7 @@ export default function SignaturesPage() {
               <h2 className="text-2xl font-semibold">
                 {projects.find(p => p.id === selectedProject)?.name}
               </h2>
-              {projects.find(p => p.id === selectedProject)?.dpi && (
-                <div className="text-sm text-muted-foreground flex items-center mt-1">
-                  <span>{t('signatures.dpi')}: {projects.find(p => p.id === selectedProject)?.dpi}</span>
-                  <HelpTooltip
-                    content=""
-                    translationKey="signatures.help.dpiDesc"
-                    defaultContent="Densità di pixel per pollice (DPI) delle immagini di firma. Utilizzato per calcolare le dimensioni reali."
-                    iconSize={14}
-                    className="ml-1"
-                  />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 ml-2 px-2 text-xs"
-                    onClick={() => setIsEditDpiOpen(true)}
-                  >
-                    {t('common.edit')}
-                  </Button>
-                </div>
-              )}
+              {/* Rimosso visualizzazione e controllo DPI globale */}
             </div>
             <div className="flex space-x-2">
               <Dialog open={isUploadReferenceOpen} onOpenChange={setIsUploadReferenceOpen}>
