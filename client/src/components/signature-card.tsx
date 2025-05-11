@@ -381,11 +381,11 @@ export function SignatureCard({
                       <div className="space-y-2 mt-1 text-sm">
                         <div className="flex justify-between">
                           <span>{t('signatures.parameters.width', 'Larghezza')}:</span>
-                          <span>{(signature.parameters.width / 10).toFixed(1)} cm</span>
+                          <span>{signature.parameters.width.toFixed(1)} cm</span>
                         </div>
                         <div className="flex justify-between">
                           <span>{t('signatures.parameters.height', 'Altezza')}:</span>
-                          <span>{(signature.parameters.height / 10).toFixed(1)} cm</span>
+                          <span>{signature.parameters.height.toFixed(1)} cm</span>
                         </div>
                         <div className="flex justify-between">
                           <span>{t('signatures.parameters.aspectRatio', 'Proporzione')}:</span>
