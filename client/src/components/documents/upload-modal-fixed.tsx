@@ -31,9 +31,7 @@ export function UploadModal({ open, onOpenChange, onUploadProgress }: UploadModa
   const [file, setFile] = useState<File | null>(null);
   const [url, setUrl] = useState<string>("");
   const [activeTab, setActiveTab] = useState<string>("file");
-  const [uploadedDocumentId, setUploadedDocumentId] = useState<number | null>(null);
-  const [showProgressBar, setShowProgressBar] = useState<boolean>(false);
-  const [uploadedFilename, setUploadedFilename] = useState<string>("");
+  // Stati rimossi poiché ora gestiti dal componente genitore
   const { toast } = useToast();
 
   const uploadFileMutation = useMutation({
@@ -57,19 +55,11 @@ export function UploadModal({ open, onOpenChange, onUploadProgress }: UploadModa
     onSuccess: (data) => {
       console.log("Documento caricato con successo", data);
       
-      // Salva l'ID del documento caricato
-      setUploadedDocumentId(data.id);
-      console.log("ID documento impostato:", data.id);
-      
-      // Ottieni il nome del file con controllo null
-      if (file) {
-        setUploadedFilename(file.name);
-        console.log("Nome file impostato:", file.name);
+      // Notifica il componente genitore del caricamento (se la callback è definita)
+      if (onUploadProgress && file) {
+        console.log("Notifica progresso al genitore:", data.id, file.name);
+        onUploadProgress(data.id, file.name);
       }
-      
-      // Mostra la barra di avanzamento
-      setShowProgressBar(true);
-      console.log("Show progress bar impostato a true");
       
       // Azzera il file selezionato e chiudi il modale
       setFile(null);
@@ -113,10 +103,13 @@ export function UploadModal({ open, onOpenChange, onUploadProgress }: UploadModa
       return await response.json();
     },
     onSuccess: (data) => {
-      // Aggiungi il supporto per la barra di avanzamento anche per il caricamento da URL
-      setUploadedDocumentId(data.id);
-      setUploadedFilename(url);
-      setShowProgressBar(true);
+      console.log("URL importato con successo", data);
+      
+      // Notifica il componente genitore dell'importazione da URL (se la callback è definita)
+      if (onUploadProgress) {
+        console.log("Notifica progresso URL al genitore:", data.id, url);
+        onUploadProgress(data.id, url);
+      }
       
       setUrl("");
       onOpenChange(false);
@@ -165,36 +158,10 @@ export function UploadModal({ open, onOpenChange, onUploadProgress }: UploadModa
   const isUploading = uploadFileMutation.isPending || uploadUrlMutation.isPending;
   const canUpload = (activeTab === "file" && file) || (activeTab === "url" && url);
 
-  // JSX per la barra di avanzamento del documento
-  const renderProgressBar = () => {
-    // Log di debug per verificare i valori delle variabili
-    console.log("renderProgressBar", { 
-      showProgressBar, 
-      uploadedDocumentId, 
-      uploadedFilename,
-      shouldRender: showProgressBar && uploadedDocumentId && uploadedFilename
-    });
-    
-    if (showProgressBar && uploadedDocumentId && uploadedFilename) {
-      return (
-        <UploadProgress
-          documentId={uploadedDocumentId}
-          filename={uploadedFilename}
-          onDismiss={() => {
-            console.log("Progress bar dismissed");
-            setShowProgressBar(false);
-            setUploadedDocumentId(null);
-            setUploadedFilename("");
-          }}
-        />
-      );
-    }
-    return null;
-  };
+  // Funzione per renderizzare la barra di progresso rimossa perché ora gestita dal componente genitore
 
   return (
     <>
-      {renderProgressBar()}
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
