@@ -27,6 +27,11 @@ import { registerSignatureRoutes } from "./signature-routes";
 import { eq, desc, sql } from "drizzle-orm";
 import { db, pool } from "./db";
 import { users } from "@shared/schema";
+import { 
+  getProgress, 
+  getProgressPercentage, 
+  getEstimatedTimeRemaining 
+} from "./progress-tracker";
 
 // Initialize multer for file uploads
 const upload = multer({
@@ -115,6 +120,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Document progress endpoint
+  app.get("/api/documents/:id/progress", isAuthenticated, async (req, res, next) => {
+    try {
+      const userId = req.user!.id;
+      const documentId = parseInt(req.params.id);
+      
+      if (isNaN(documentId)) {
+        return res.status(400).json({ message: "Invalid document ID" });
+      }
+      
+      // Verifica che il documento appartenga all'utente
+      const document = await storage.getDocument(documentId);
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+      
+      if (document.userId !== userId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      // Ottieni il progresso dal tracker
+      const progress = getProgress(documentId);
+      
+      if (!progress) {
+        // Se non ci sono informazioni di progresso, il documento potrebbe essere già stato elaborato
+        if (document.indexed) {
+          return res.json({ status: 'completed', progress: 100 });
+        } else {
+          return res.json({ status: 'pending', progress: 0 });
+        }
+      }
+      
+      // Calcola percentuale e tempo rimanente
+      const percentage = getProgressPercentage(documentId);
+      const timeRemaining = getEstimatedTimeRemaining(documentId);
+      
+      res.json({
+        status: progress.status,
+        progress: percentage,
+        processedChunks: progress.processedChunks,
+        totalChunks: progress.totalChunks,
+        timeRemaining,
+        error: progress.error
+      });
+    } catch (err) {
+      next(err);
+    }
+  });
+  
   // Document endpoints
   // Upload a document
   app.post("/api/documents", isAuthenticated, upload.single("file"), async (req, res, next) => {

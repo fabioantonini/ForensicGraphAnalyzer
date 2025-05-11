@@ -6,6 +6,12 @@ import { sql } from "drizzle-orm";
 import { Document, documents, documentEmbeddings } from "@shared/schema";
 import { generateEmbedding } from "./openai";
 import { eq, and } from "drizzle-orm";
+import {
+  initProgress,
+  updateProgress,
+  completeProgress,
+  failProgress
+} from "./progress-tracker";
 
 // Dimensione standard del chunk per il testo (caratteri)
 const CHUNK_SIZE = 1000;
@@ -39,7 +45,6 @@ export async function addDocumentToVectorStore(document: Document, apiKey?: stri
     const chunks = chunkText(document.content);
     
     // Inizializza il tracciamento del progresso
-    const { initProgress, updateProgress, completeProgress, failProgress } = require('./progress-tracker');
     initProgress(document.id, chunks.length);
     
     // Per ogni chunk, genera l'embedding e salvalo nel database
@@ -76,7 +81,6 @@ export async function addDocumentToVectorStore(document: Document, apiKey?: stri
     console.error(`Errore nell'aggiunta del documento al vector store:`, error);
     
     // Segna il fallimento nel tracker di progresso
-    const { failProgress } = require('./progress-tracker');
     failProgress(document.id, error.message || 'Unknown error');
     
     throw new Error(`Impossibile aggiungere il documento al vector store: ${error.message}`);
