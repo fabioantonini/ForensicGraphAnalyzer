@@ -72,6 +72,7 @@
     "info": {
       "title": "About SendGrid",
       "description": "SendGrid is an email sending service with 100 free emails per day.",
+      "domainWarning": "Note: To avoid domain verification issues, use a generic sender email address (e.g. noreply@mail.sendgrid.net) or verify only your specific email address without verifying the entire domain.",
       "link": "Sign up for SendGrid"
     }
   },

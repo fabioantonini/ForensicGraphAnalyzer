@@ -42,7 +42,7 @@ export function SendGridConfiguration() {
     resolver: zodResolver(sendgridConfigSchema),
     defaultValues: {
       apiKey: "",
-      senderEmail: "",
+      senderEmail: "noreply@mail.sendgrid.net",
       isConfigured: false,
     },
   });
@@ -197,7 +197,7 @@ export function SendGridConfiguration() {
                   <FormControl>
                     <Input
                       type="email"
-                      placeholder={t("admin:sendgrid.form.senderEmail.placeholder")}
+                      placeholder="noreply@mail.sendgrid.net"
                       {...field}
                     />
                   </FormControl>
@@ -267,6 +267,9 @@ export function SendGridConfiguration() {
         <h3 className="text-sm font-medium">{t("admin:sendgrid.info.title")}</h3>
         <p className="text-sm text-muted-foreground">
           {t("admin:sendgrid.info.description")}
+        </p>
+        <p className="text-sm text-muted-foreground mt-2">
+          {t("admin:sendgrid.info.domainWarning")}
         </p>
         <a
           href="https://sendgrid.com/free/"

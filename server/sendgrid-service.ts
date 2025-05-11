@@ -66,6 +66,10 @@ export async function loadSendGridConfig(): Promise<SendGridConfig> {
  */
 export async function saveSendGridConfig(config: SendGridConfig): Promise<void> {
   try {
+    // Nota: per evitare problemi di verifica del dominio su Replit
+    // è consigliabile utilizzare un indirizzo email generico di SendGrid
+    // come noreply@mail.sendgrid.net o un indirizzo email specifico verificato
+    
     // Aggiorna le variabili d'ambiente
     if (config.apiKey) {
       process.env.SENDGRID_API_KEY = config.apiKey;
@@ -114,6 +118,9 @@ export async function sendEmailWithSendGrid(to: string, subject: string, html: s
     sgMail.setApiKey(config.apiKey);
 
     // Invia l'email
+    // Nota: per evitare problemi di verifica del dominio su Replit
+    // è consigliabile utilizzare un indirizzo email generico di SendGrid
+    // come noreply@mail.sendgrid.net o un indirizzo email specifico verificato
     await sgMail.send({
       to,
       from: config.senderEmail,
