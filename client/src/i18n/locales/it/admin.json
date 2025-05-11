@@ -19,6 +19,62 @@
   "makeUser": "Rendi utente",
   "confirmDelete": "Sei sicuro di voler eliminare questo utente? Questa operazione eliminerà tutti i dati dell'utente e non può essere annullata.",
   "confirmRoleChange": "Sei sicuro di voler cambiare il ruolo di questo utente?",
+  "sendgrid": {
+    "tabTitle": "SendGrid",
+    "title": "Configurazione SendGrid",
+    "description": "Configura il servizio SendGrid per l'invio di email",
+    "form": {
+      "apiKey": {
+        "label": "API Key",
+        "placeholder": "Inserisci la tua API Key SendGrid",
+        "description": "La API Key per autenticare le richieste a SendGrid"
+      },
+      "senderEmail": {
+        "label": "Email mittente",
+        "placeholder": "nome@dominio.com",
+        "description": "L'indirizzo email da utilizzare come mittente delle email"
+      }
+    },
+    "alert": {
+      "configured": {
+        "title": "SendGrid configurato",
+        "description": "Il servizio SendGrid è configurato e pronto per l'invio di email"
+      },
+      "notConfigured": {
+        "title": "SendGrid non configurato",
+        "description": "Configura SendGrid per abilitare l'invio di email automatiche"
+      }
+    },
+    "testButton": {
+      "default": "Invia email di test",
+      "loading": "Invio in corso..."
+    },
+    "testResult": {
+      "success": {
+        "title": "Test completato con successo",
+        "description": "Email di test inviata correttamente"
+      },
+      "error": {
+        "title": "Test fallito",
+        "description": "Non è stato possibile inviare l'email di test. Verifica le impostazioni."
+      }
+    },
+    "toast": {
+      "success": "Configurazione salvata",
+      "configUpdated": "Configurazione SendGrid aggiornata",
+      "error": "Errore",
+      "configUpdateFailed": "Impossibile aggiornare la configurazione",
+      "testSuccess": "Test completato",
+      "testEmailSent": "Email di test inviata con successo",
+      "testError": "Test fallito",
+      "testEmailFailed": "Invio email di test fallito"
+    },
+    "info": {
+      "title": "Informazioni su SendGrid",
+      "description": "SendGrid è un servizio di invio email con 100 email gratuite al giorno.",
+      "link": "Iscriviti a SendGrid"
+    }
+  },
   "demoAccounts": {
     "title": "Account Demo",
     "createNew": "Crea nuovo",
