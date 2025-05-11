@@ -277,6 +277,7 @@ export const signatures = pgTable("signatures", {
   fileSize: integer("file_size").notNull(),
   isReference: boolean("is_reference").default(true).notNull(),
   parameters: jsonb("parameters").$type<SignatureParameters>(),
+  dpi: integer("dpi").default(300).notNull(), // Valore DPI individuale per ogni firma (default 300)
   processingStatus: text("processing_status").default("pending").notNull(), // pending, processing, completed, failed
   comparisonResult: real("comparison_result"), // null for reference signatures, 0-1 for verification signatures
   comparisonChart: text("comparison_chart"), // Base64-encoded image of the comparison chart
