@@ -219,7 +219,12 @@
     "create": "Crea",
     "documents": "Documenti",
     "selectAll": "Seleziona tutti",
-    "deselectAll": "Deseleziona tutti"
+    "deselectAll": "Deseleziona tutti",
+    "username": "Nome utente",
+    "email": "Email",
+    "organization": "Organizzazione",
+    "profession": "Professione",
+    "optional": "opzionale"
   },
   "heroSection": {
     "title": "Assistente di Grafologia Forense",

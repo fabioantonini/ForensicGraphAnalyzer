@@ -30,6 +30,8 @@
     "createTitle": "Create demo account",
     "createDescription": "Create a new demo account with limited duration",
     "extendTitle": "Extend demo account",
+    "extendDescription": "Extend the demo account",
+    "reactivation": "reactivation",
     "additionalDays": "Additional days",
     "duration": "Duration (days)",
     "expiringDaysMessage": "{{count}} demo accounts will expire in the next 7 days.",
@@ -45,7 +47,10 @@
     "accountCreated": "Demo account created",
     "accountCreatedSuccess": "The demo account has been successfully created",
     "accountExtended": "Demo account extended",
-    "accountExtendedSuccess": "The demo account duration has been successfully extended"
+    "accountExtendedSuccess": "The demo account duration has been successfully extended",
+    "create": "Create Demo Account",
+    "creating": "Creating...",
+    "extending": "Extending..."
   },
   "totalUsers": "Total users",
   "totalDocuments": "Total documents",

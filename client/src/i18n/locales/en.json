@@ -219,7 +219,12 @@
     "create": "Create",
     "documents": "Documents",
     "selectAll": "Select All",
-    "deselectAll": "Deselect All"
+    "deselectAll": "Deselect All",
+    "username": "Username",
+    "email": "Email",
+    "organization": "Organization",
+    "profession": "Profession",
+    "optional": "optional"
   },
   "heroSection": {
     "title": "Forensic Graphology Assistant",
