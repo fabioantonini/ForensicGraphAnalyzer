@@ -234,65 +234,7 @@ export function setupAuth(app: Express) {
     }
   });
   
-  app.post("/api/reset-password", async (req, res, next) => {
-    try {
-      const { token, newPassword, confirmPassword } = req.body;
-      
-      if (!token || !newPassword) {
-        return res.status(400).json({ message: "Token and new password are required" });
-      }
-      
-      if (newPassword !== confirmPassword) {
-        return res.status(400).json({ message: "Passwords do not match" });
-      }
-      
-      // Verifica il token
-      const userId = verifyPasswordResetToken(token);
-      
-      if (!userId) {
-        return res.status(400).json({ message: "Invalid or expired token" });
-      }
-      
-      // Ottieni l'utente
-      const user = await storage.getUser(userId);
-      
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
-      // Genera un nuovo hash della password
-      const hashedPassword = await hashPassword(newPassword);
-      
-      // Aggiorna la password dell'utente
-      const updatedUser = await storage.updateUserPassword(userId, hashedPassword);
-      
-      // Crea un'attività per il reset della password completato
-      await storage.createActivity({
-        userId,
-        type: "password_reset_complete",
-        details: "Password reset completed",
-      });
-      
-      // Invalida il token
-      invalidatePasswordResetToken(token);
-      
-      res.status(200).json({ message: "Password has been reset successfully" });
-    } catch (err) {
-      next(err);
-    }
-  });
-  
-  // Endpoint per verificare se un token di reset password è valido
-  app.get("/api/verify-reset-token/:token", (req, res) => {
-    const { token } = req.params;
-    const userId = verifyPasswordResetToken(token);
-    
-    if (userId) {
-      res.status(200).json({ valid: true });
-    } else {
-      res.status(200).json({ valid: false });
-    }
-  });
+  // Le rotte per il reset password sono state spostate in admin-routes.ts
 
   app.put("/api/user/api-key", async (req, res, next) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
