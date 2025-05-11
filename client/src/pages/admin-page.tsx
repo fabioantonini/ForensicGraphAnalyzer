@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { User, UpdateUserRole } from "@shared/schema";
-import { DemoAccountsManagement } from "@/components/admin/demo-accounts-management";
+import { User } from "@/lib/types";
+import { UpdateUserRole } from "@shared/schema";
+import DemoAccountsManagement from "@/components/admin/demo-accounts-management";
 
 import {
   Card,
