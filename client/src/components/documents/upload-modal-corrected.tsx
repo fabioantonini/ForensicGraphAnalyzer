@@ -18,7 +18,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { useTranslation } from "react-i18next";
 import { Link, Import, Upload } from "lucide-react";
-import { UploadProgress } from "./upload-progress";
 
 interface UploadModalProps {
   open: boolean;
@@ -31,8 +30,6 @@ export function UploadModal({ open, onOpenChange, onUploadProgress }: UploadModa
   const [file, setFile] = useState<File | null>(null);
   const [url, setUrl] = useState<string>("");
   const [activeTab, setActiveTab] = useState<string>("file");
-  const [uploadedDocumentId, setUploadedDocumentId] = useState<number | null>(null);
-  const [uploadedFilename, setUploadedFilename] = useState<string>("");
   const { toast } = useToast();
 
   const uploadFileMutation = useMutation({
@@ -54,15 +51,7 @@ export function UploadModal({ open, onOpenChange, onUploadProgress }: UploadModa
       return await response.json();
     },
     onSuccess: (data) => {
-      // Salva l'ID del documento caricato
-      setUploadedDocumentId(data.id);
-      
-      // Ottieni il nome del file con controllo null
-      if (file) {
-        setUploadedFilename(file.name);
-      }
-      
-      // Notifica il componente genitore
+      // Notifica il componente genitore per iniziare a mostrare la barra di avanzamento
       if (onUploadProgress && data.id) {
         onUploadProgress(data.id, file?.name || "");
       }
@@ -109,7 +98,7 @@ export function UploadModal({ open, onOpenChange, onUploadProgress }: UploadModa
       return await response.json();
     },
     onSuccess: (data) => {
-      // Notifica il componente genitore
+      // Notifica il componente genitore per iniziare a mostrare la barra di avanzamento
       if (onUploadProgress && data.id) {
         onUploadProgress(data.id, url);
       }

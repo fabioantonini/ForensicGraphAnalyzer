@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { PlusCircle, Search, LayoutGrid, List, Trash } from "lucide-react";
 import { Document, FilterOptions } from "@/lib/types";
 import { DocumentGrid } from "@/components/documents/document-grid";
-import { UploadModal } from "@/components/documents/upload-modal-fixed";
+import { UploadModal } from "@/components/documents/upload-modal-corrected";
 import { UploadProgress } from "@/components/documents/upload-progress";
 import { TestTabs } from "@/components/documents/test-tabs";
 import { useQuery, useMutation } from "@tanstack/react-query";
