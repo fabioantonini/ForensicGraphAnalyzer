@@ -46,6 +46,28 @@ def pixels_to_mm(pixels, dpi=DEFAULT_DPI):
     mm = inches * 25.4     # Conversione da pollici a millimetri
     return mm
 
+def get_signature_cm_size(pixel_width, pixel_height, dpi):
+    """
+    Calcola le dimensioni reali di una firma in centimetri basate sui pixel e sul DPI.
+    
+    Args:
+        pixel_width: Larghezza in pixel
+        pixel_height: Altezza in pixel
+        dpi: Punti per pollice
+        
+    Returns:
+        Tupla (larghezza, altezza) in centimetri
+    """
+    # Calcola dimensioni in pollici
+    width_inches = pixel_width / dpi if dpi > 0 else 0
+    height_inches = pixel_height / dpi if dpi > 0 else 0
+    
+    # Converti in centimetri (1 pollice = 2.54 cm)
+    width_cm = width_inches * 2.54
+    height_cm = height_inches * 2.54
+    
+    return (width_cm, height_cm)
+
 def get_realistic_size(width_mm, height_mm):
     """
     Restituisce dimensioni realistiche per una firma basate su proporzioni tipiche.
@@ -58,30 +80,25 @@ def get_realistic_size(width_mm, height_mm):
     Returns:
         Tupla (larghezza, altezza) in valori realistici (cm)
     """
-    # Nuovo approccio con un fattore di scala fisso molto più grande
-    # Per immagini di alta risoluzione dobbiamo scalare drasticamente
+    # Converti millimetri in centimetri
+    width_cm = width_mm / 10.0 if width_mm > 0 else 0
+    height_cm = height_mm / 10.0 if height_mm > 0 else 0
     
-    # Le firme tipiche sono di circa 5-10 cm di larghezza
-    # Calcoliamo un fattore di scala basato su questo target
-    scale_to_fit = width_mm / 90.0  # Puntiamo a una larghezza massima di 9 cm
+    # Verifica se ci sono valori anomali (dimensioni eccessive)
+    if width_cm > 25 or height_cm > 15:
+        # Calcola il fattore di riduzione
+        ratio = width_cm / height_cm if height_cm > 0 else 1
+        
+        # Limita la larghezza a 8 cm massimo
+        width_cm = min(width_cm, 8.0)
+        
+        # Ricalcola l'altezza in base alla proporzione
+        height_cm = width_cm / ratio if ratio > 0 else 0
+        
+        # Limita l'altezza a 4 cm massimo
+        height_cm = min(height_cm, 4.0)
     
-    # Applichiamo un fattore minimo di riduzione
-    scale_factor = max(scale_to_fit, 100.0)
-    
-    # Applichiamo la scala e convertiamo in cm
-    width_cm = width_mm / scale_factor
-    height_cm = height_mm / scale_factor
-    
-    # Limitiamo le dimensioni a valori ragionevoli
-    if width_cm > 10.0:
-        width_cm = 10.0
-        height_cm = width_cm * (height_mm / width_mm)
-    
-    if height_cm > 5.0:
-        height_cm = 5.0
-        width_cm = height_cm * (width_mm / height_mm)
-    
-    # Impostiamo dei minimi per evitare firme troppo piccole
+    # Assicurati che le dimensioni non siano zero o troppo piccole
     width_cm = max(width_cm, 3.0)
     height_cm = max(height_cm, 1.0)
     
@@ -179,12 +196,12 @@ def analyze_signature(image_path, dpi=DEFAULT_DPI):
         w = x_max - x_min
         h = y_max - y_min
         
-        # Calcola le dimensioni in millimetri in base al DPI
-        width_mm = pixels_to_mm(w, dpi)
-        height_mm = pixels_to_mm(h, dpi)
+        # Calcola le dimensioni reali in centimetri in base al DPI dell'immagine
+        # Usa la nuova funzione che calcola direttamente dai pixel al centimetro
+        width_cm, height_cm = get_signature_cm_size(w, h, dpi)
         
-        # Ottieni dimensioni realistiche in cm
-        realistic_width_cm, realistic_height_cm = get_realistic_size(width_mm, height_mm)
+        # Normalizza in dimensioni realistiche per firme
+        realistic_width_cm, realistic_height_cm = get_realistic_size(width_cm * 10, height_cm * 10)
         dimensions = (realistic_width_cm, realistic_height_cm)
         
         # Calcola la proporzione
