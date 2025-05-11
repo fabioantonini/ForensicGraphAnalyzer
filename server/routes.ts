@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import multer from "multer";
-import { Document, User, insertQuerySchema, signatures, InsertReportTemplate } from "@shared/schema";
+import { Document, User, insertQuerySchema, signatures, InsertReportTemplate, createDemoAccountSchema, extendDemoSchema } from "@shared/schema";
 import path from "path";
 import fs from "fs/promises";
 import { 
@@ -27,6 +27,8 @@ import { registerSignatureRoutes } from "./signature-routes";
 import { eq, desc, sql } from "drizzle-orm";
 import { db, pool } from "./db";
 import { users } from "@shared/schema";
+import { scrypt, randomBytes } from "crypto";
+import { promisify } from "util";
 import { 
   getProgress, 
   getProgressPercentage, 
@@ -73,6 +75,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     res.status(403).json({ message: "Forbidden - Admin access required" });
   };
+  
+  // Middleware per verificare se l'utente è attivo (non scaduto per gli account demo)
+  const isActiveUser = (req: Request, res: Response, next: NextFunction) => {
+    if (req.isAuthenticated() && req.user?.isActive !== false) {
+      return next();
+    }
+    
+    // Se l'utente non è attivo (probabilmente un account demo scaduto)
+    req.logout((err) => {
+      if (err) {
+        console.error("Errore durante il logout dell'utente disattivato:", err);
+      }
+      
+      res.status(403).json({ 
+        message: "Account disattivato o scaduto", 
+        code: "ACCOUNT_EXPIRED" 
+      });
+    });
+  };
 
   // Register signature routes
   const router = Router();
@@ -81,13 +102,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Risposta API per indicare quale versione di codice sta eseguendo
   router.get("/api/version", (req, res) => {
     res.json({
-      version: "1.0.0",
-      updated: "2025-05-02",
-      features: ["Project isolation", "Full PDF report generation", "Reference signatures validation"]
+      version: "1.1.0",
+      updated: "2025-05-11",
+      features: ["Project isolation", "Full PDF report generation", "Reference signatures validation", "Demo mode"]
     });
   });
   
-  app.use("/api", router);
+  // Applica il middleware di controllo account attivo a tutte le rotte API protette
+  app.use("/api", isAuthenticated, isActiveUser, router);
 
   // Get user stats
   app.get("/api/stats", isAuthenticated, async (req, res, next) => {
@@ -982,6 +1004,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .orderBy(desc(users.createdAt))
         .limit(5);
       
+      // Account demo in scadenza
+      const expiringDemoAccounts = await storage.getDemoAccountsExpiringIn(7); // Account che scadono entro 7 giorni
+      const safeExpiringAccounts = expiringDemoAccounts.map(user => {
+        const { password, ...safeUser } = user;
+        return safeUser;
+      });
+      
       // Rimuovi le password dall'output
       const safeNewUsers = newUsers.map(user => {
         const { password, ...safeUser } = user;
@@ -993,7 +1022,138 @@ export async function registerRoutes(app: Express): Promise<Server> {
         documentCount,
         totalSize: `${totalSizeMB} MB`,
         queryCount,
-        newUsers: safeNewUsers
+        newUsers: safeNewUsers,
+        expiringDemoAccounts: safeExpiringAccounts
+      });
+    } catch (err) {
+      next(err);
+    }
+  });
+  
+  // Crea un account demo (solo admin)
+  app.post("/api/admin/demo-account", isAdmin, async (req, res, next) => {
+    try {
+      // Validazione dei dati
+      const validationResult = createDemoAccountSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ error: "Dati account demo non validi", details: validationResult.error.format() });
+      }
+      
+      const demoData = validationResult.data;
+      
+      // Verifica se l'username è già in uso
+      const existingUser = await storage.getUserByUsername(demoData.username);
+      if (existingUser) {
+        return res.status(400).json({ error: "Username già in uso" });
+      }
+      
+      // Verifica se l'email è già in uso
+      const existingEmail = await storage.getUserByEmail(demoData.email);
+      if (existingEmail) {
+        return res.status(400).json({ error: "Email già in uso" });
+      }
+      
+      // Hash della password
+      const scryptAsync = promisify(scrypt);
+      const salt = randomBytes(16).toString("hex");
+      const passwordBuf = (await scryptAsync(demoData.password, salt, 64)) as Buffer;
+      const hashedPassword = `${passwordBuf.toString("hex")}.${salt}`;
+      
+      // Crea l'account demo
+      const demoAccount = await storage.createDemoAccount(
+        {
+          ...demoData,
+          password: hashedPassword
+        }, 
+        demoData.durationDays
+      );
+      
+      // Registra attività
+      await storage.createActivity({
+        userId: req.user!.id,
+        type: "admin",
+        details: `Creato account demo '${demoAccount.username}' con scadenza ${demoAccount.demoExpiresAt!.toLocaleDateString()}`
+      });
+      
+      // Rimuovi la password dall'output
+      const { password, ...safeDemoAccount } = demoAccount;
+      
+      res.status(201).json(safeDemoAccount);
+    } catch (err) {
+      next(err);
+    }
+  });
+  
+  // Estendi un account demo (solo admin)
+  app.post("/api/admin/extend-demo", isAdmin, async (req, res, next) => {
+    try {
+      // Validazione dei dati
+      const validationResult = extendDemoSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ error: "Dati non validi", details: validationResult.error.format() });
+      }
+      
+      const { userId, additionalDays } = validationResult.data;
+      
+      // Verifica che l'utente esista
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "Utente non trovato" });
+      }
+      
+      // Verifica che sia un account demo
+      if (user.accountType !== 'demo') {
+        return res.status(400).json({ error: "L'utente specificato non è un account demo" });
+      }
+      
+      // Estendi l'account demo
+      const updatedUser = await storage.extendDemoAccount(userId, additionalDays);
+      
+      // Registra attività
+      await storage.createActivity({
+        userId: req.user!.id,
+        type: "admin",
+        details: `Esteso account demo '${updatedUser.username}' di ${additionalDays} giorni. Nuova scadenza: ${updatedUser.demoExpiresAt!.toLocaleDateString()}`
+      });
+      
+      // Rimuovi la password dall'output
+      const { password, ...safeUser } = updatedUser;
+      
+      res.json(safeUser);
+    } catch (err) {
+      next(err);
+    }
+  });
+  
+  // Manutenzione account demo scaduti
+  app.post("/api/admin/maintenance/demo-accounts", isAdmin, async (req, res, next) => {
+    try {
+      // Disattiva gli account demo scaduti
+      const deactivatedCount = await storage.deactivateExpiredDemoAccounts();
+      
+      // Ottieni i dati per la purga (account che hanno superato il periodo di ritenzione dati)
+      const accountsToPurge = await storage.getDataForPurge(14); // 14 giorni oltre la scadenza
+      
+      let purgedCount = 0;
+      
+      if (accountsToPurge.length > 0) {
+        // Implementa qui la logica per eliminare file e dati
+        // Questa operazione richiede ulteriore sviluppo per gestire correttamente la pulizia dei dati
+        
+        // TODO: eliminazione dei dati
+        purgedCount = accountsToPurge.length;
+      }
+      
+      // Registra attività
+      await storage.createActivity({
+        userId: req.user!.id,
+        type: "admin",
+        details: `Manutenzione account demo: ${deactivatedCount} disattivati, ${purgedCount} purge-ready`
+      });
+      
+      res.json({
+        deactivatedAccounts: deactivatedCount,
+        purgeReadyAccounts: accountsToPurge.length
       });
     } catch (err) {
       next(err);
