@@ -44,9 +44,19 @@ def pixels_to_mm(pixels, dpi=DEFAULT_DPI):
     """
     return (pixels * 25.4) / dpi
 
-def preprocess_image(image):
-    """Prepara l'immagine per l'analisi"""
-    image = cv2.resize(image, (300, 150))
+def preprocess_image(image, resize=True):
+    """
+    Prepara l'immagine per l'analisi
+    
+    Args:
+        image: Immagine da processare
+        resize: Se True, ridimensiona l'immagine a 300x150 pixel
+        
+    Returns:
+        Immagine processata
+    """
+    if resize:
+        image = cv2.resize(image, (300, 150))
     _, thresh = cv2.threshold(image, 150, 255, cv2.THRESH_BINARY_INV)
     return thresh
 
@@ -89,23 +99,47 @@ def analyze_signature(image_path, dpi=DEFAULT_DPI):
         image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
         if image is None:
             raise ValueError(f"Impossibile leggere l'immagine: {image_path}")
+            
+        # Ottieni le dimensioni originali dell'immagine
+        original_height, original_width = image.shape
+            
+        # Crea due versioni: una per l'analisi delle dimensioni reali e una per gli altri parametri
+        # Per le dimensioni reali, usa l'immagine originale senza ridimensionamento
+        processed_original = preprocess_image(image, resize=False)
         
-        # Preprocessa l'immagine
-        processed = preprocess_image(image)
+        # Per gli altri parametri, usa l'immagine ridimensionata per omogeneità
+        processed = preprocess_image(image, resize=True)
         
-        # Trova i contorni
-        contours, _ = cv2.findContours(processed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # Trova i contorni nell'immagine originale per dimensioni accurate
+        contours_original = None
+        contours = None
+        try:
+            # In OpenCV 4.x la firma è diversa da OpenCV 3.x
+            contours_original, _ = cv2.findContours(processed_original, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            contours, _ = cv2.findContours(processed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        except ValueError:
+            # In OpenCV 3.x la firma è diversa
+            _, contours_original, _ = cv2.findContours(processed_original, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            _, contours, _ = cv2.findContours(processed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            
+        if not contours_original:
+            raise ValueError(f"Nessun contorno trovato nell'immagine originale: {image_path}")
+            
         if not contours:
-            raise ValueError(f"Nessun contorno trovato nell'immagine: {image_path}")
+            raise ValueError(f"Nessun contorno trovato nell'immagine ridimensionata: {image_path}")
 
-        # Calcola i limiti della firma
-        x_min = min([cv2.boundingRect(cnt)[0] for cnt in contours])
-        y_min = min([cv2.boundingRect(cnt)[1] for cnt in contours])
-        x_max = max([cv2.boundingRect(cnt)[0] + cv2.boundingRect(cnt)[2] for cnt in contours])
-        y_max = max([cv2.boundingRect(cnt)[1] + cv2.boundingRect(cnt)[3] for cnt in contours])
+        # Calcola i limiti della firma usando l'immagine originale
+        x_min = min([cv2.boundingRect(cnt)[0] for cnt in contours_original])
+        y_min = min([cv2.boundingRect(cnt)[1] for cnt in contours_original])
+        x_max = max([cv2.boundingRect(cnt)[0] + cv2.boundingRect(cnt)[2] for cnt in contours_original])
+        y_max = max([cv2.boundingRect(cnt)[1] + cv2.boundingRect(cnt)[3] for cnt in contours_original])
         w = x_max - x_min
         h = y_max - y_min
-        dimensions = (pixels_to_mm(w, dpi), pixels_to_mm(h, dpi))
+        
+        # Converti in millimetri - riduce di un fattore di scala per normalizzare
+        # Rispetto al formato A4 tipico (21 x 29.7 cm)
+        scale_factor = 10.0  # Fattore di normalizzazione per ottenere dimensioni realistiche
+        dimensions = (pixels_to_mm(w, dpi) / scale_factor, pixels_to_mm(h, dpi) / scale_factor)
         
         # Calcola la proporzione
         proportion = w / h if h > 0 else 0
