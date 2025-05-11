@@ -55,7 +55,7 @@ const DemoAccountsManagement: React.FC = () => {
   
   // Form per creazione account demo
   const createForm = useForm<DemoAccountFormValues>({
-    resolver: zodResolver(demoAccountSchema),
+    resolver: zodResolver(demoAccountSchema(t)),
     defaultValues: {
       username: "",
       password: "",
@@ -368,7 +368,7 @@ const DemoAccountsManagement: React.FC = () => {
                   name="username"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("username")}</FormLabel>
+                      <FormLabel>{t("common:username")}</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -381,7 +381,7 @@ const DemoAccountsManagement: React.FC = () => {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("email")}</FormLabel>
+                      <FormLabel>{t("common:email")}</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
