@@ -210,14 +210,14 @@ const DemoAccountsManagement: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">{t("demoAccounts.title")}</h2>
+        <h2 className="text-2xl font-bold">{t("admin:demoAccounts.title")}</h2>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => maintenanceDemoMutation.mutate()}>
-            {t("demoAccounts.maintenance")}
+            {t("admin:demoAccounts.maintenance")}
           </Button>
           <Button onClick={() => setCreateDialogOpen(true)}>
             <UserPlus className="h-4 w-4 mr-2" />
-            {t("demoAccounts.createNew")}
+            {t("admin:demoAccounts.createNew")}
           </Button>
         </div>
       </div>
@@ -225,9 +225,9 @@ const DemoAccountsManagement: React.FC = () => {
       {expiringUsers && expiringUsers.length > 0 && (
         <Alert variant="warning">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>{t("demoAccounts.expiringAlert")}</AlertTitle>
+          <AlertTitle>{t("admin:demoAccounts.expiringAlert")}</AlertTitle>
           <AlertDescription>
-            {t("demoAccounts.expiringDaysMessage", { count: expiringUsers.length })}
+            {t("admin:demoAccounts.expiringDaysMessage", { count: expiringUsers.length })}
           </AlertDescription>
         </Alert>
       )}
@@ -235,19 +235,19 @@ const DemoAccountsManagement: React.FC = () => {
       <Tabs defaultValue="active">
         <TabsList>
           <TabsTrigger value="active">
-            {t("demoAccounts.activeAccounts")}
+            {t("admin:demoAccounts.activeAccounts")}
           </TabsTrigger>
           <TabsTrigger value="expired">
-            {t("demoAccounts.expiredAccounts")}
+            {t("admin:demoAccounts.expiredAccounts")}
           </TabsTrigger>
         </TabsList>
         
         <TabsContent value="active">
           <Card>
             <CardHeader>
-              <CardTitle>{t("demoAccounts.activeAccounts")}</CardTitle>
+              <CardTitle>{t("admin:demoAccounts.activeAccounts")}</CardTitle>
               <CardDescription>
-                {t("demoAccounts.activeDescription")}
+                {t("admin:demoAccounts.activeDescription")}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -255,12 +255,12 @@ const DemoAccountsManagement: React.FC = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>{t("username")}</TableHead>
-                      <TableHead>{t("email")}</TableHead>
-                      <TableHead>Organizzazione</TableHead>
-                      <TableHead>Scade il</TableHead>
-                      <TableHead>Giorni rimasti</TableHead>
-                      <TableHead>Azioni</TableHead>
+                      <TableHead>{t("common:username")}</TableHead>
+                      <TableHead>{t("common:email")}</TableHead>
+                      <TableHead>{t("common:organization")}</TableHead>
+                      <TableHead>{t("admin:expiry")}</TableHead>
+                      <TableHead>{t("admin:daysRemaining")}</TableHead>
+                      <TableHead>{t("admin:actions")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
