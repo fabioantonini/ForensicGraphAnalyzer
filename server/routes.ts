@@ -216,6 +216,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           indexed: false
         });
         
+        // Inizializza immediatamente il tracker di progresso con stato "processing"
+        // per mostrare la barra di progresso nel client
+        initProgress(document.id, 20); // Inizializziamo con un valore ragionevole
+        updateProgress(document.id, 1); // Impostiamo un chunk processato per calcolare il tempo rimanente
+        
         // Add document to vector database - use user key or fallback to system key
         const apiKeyToUse = user.openaiApiKey || undefined; // undefined will trigger system key use
         
