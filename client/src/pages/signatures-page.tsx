@@ -73,6 +73,7 @@ export default function SignaturesPage() {
   const [selectedProject, setSelectedProject] = useState<number | null>(null);
   const [isUploadReferenceOpen, setIsUploadReferenceOpen] = useState(false);
   const [isUploadVerifyOpen, setIsUploadVerifyOpen] = useState(false);
+  const [isEditDpiOpen, setIsEditDpiOpen] = useState(false);
   
   // Form for creating new project
   const projectForm = useForm<ProjectFormValues>({
@@ -94,6 +95,16 @@ export default function SignaturesPage() {
   const verifyForm = useForm<FileFormValues>({
     resolver: zodResolver(fileSchema),
     defaultValues: {},
+  });
+  
+  // Form for editing DPI
+  const dpiForm = useForm<{ dpi: number }>({
+    resolver: zodResolver(z.object({
+      dpi: z.number().int().min(72).max(1200),
+    })),
+    defaultValues: {
+      dpi: projects.find(p => p.id === selectedProject)?.dpi || 300,
+    },
   });
   
   // Query to get all projects
@@ -640,6 +651,14 @@ export default function SignaturesPage() {
                     iconSize={14}
                     className="ml-1"
                   />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 ml-2 px-2 text-xs"
+                    onClick={() => setIsEditDpiOpen(true)}
+                  >
+                    {t('common.edit')}
+                  </Button>
                 </div>
               )}
             </div>
