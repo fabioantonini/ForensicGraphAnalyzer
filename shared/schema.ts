@@ -316,6 +316,7 @@ export const insertSignatureSchema = createInsertSchema(signatures).pick({
   fileType: true,
   fileSize: true,
   isReference: true,
+  dpi: true,
 });
 
 // Questa relazione è già definita in usersRelations

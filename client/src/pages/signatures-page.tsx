@@ -50,7 +50,7 @@ import { Progress } from "@/components/ui/progress";
 const projectSchema = z.object({
   name: z.string().min(3, "Il nome deve avere almeno 3 caratteri"),
   description: z.string().optional(),
-  // DPI rimosso perché ogni firma ha ora il proprio valore DPI
+  dpi: z.number().min(72).max(1200).default(300)
 });
 
 type ProjectFormValues = z.infer<typeof projectSchema>;
