@@ -23,9 +23,10 @@ import { UploadProgress } from "./upload-progress";
 interface UploadModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onUploadProgress?: (documentId: number, filename: string) => void;
 }
 
-export function UploadModal({ open, onOpenChange }: UploadModalProps) {
+export function UploadModal({ open, onOpenChange, onUploadProgress }: UploadModalProps) {
   const { t } = useTranslation();
   const [file, setFile] = useState<File | null>(null);
   const [url, setUrl] = useState<string>("");
@@ -54,15 +55,21 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
       return await response.json();
     },
     onSuccess: (data) => {
+      console.log("Documento caricato con successo", data);
+      
       // Salva l'ID del documento caricato
       setUploadedDocumentId(data.id);
+      console.log("ID documento impostato:", data.id);
+      
       // Ottieni il nome del file con controllo null
       if (file) {
         setUploadedFilename(file.name);
+        console.log("Nome file impostato:", file.name);
       }
       
       // Mostra la barra di avanzamento
       setShowProgressBar(true);
+      console.log("Show progress bar impostato a true");
       
       // Azzera il file selezionato e chiudi il modale
       setFile(null);
@@ -160,12 +167,21 @@ export function UploadModal({ open, onOpenChange }: UploadModalProps) {
 
   // JSX per la barra di avanzamento del documento
   const renderProgressBar = () => {
+    // Log di debug per verificare i valori delle variabili
+    console.log("renderProgressBar", { 
+      showProgressBar, 
+      uploadedDocumentId, 
+      uploadedFilename,
+      shouldRender: showProgressBar && uploadedDocumentId && uploadedFilename
+    });
+    
     if (showProgressBar && uploadedDocumentId && uploadedFilename) {
       return (
         <UploadProgress
           documentId={uploadedDocumentId}
           filename={uploadedFilename}
           onDismiss={() => {
+            console.log("Progress bar dismissed");
             setShowProgressBar(false);
             setUploadedDocumentId(null);
             setUploadedFilename("");

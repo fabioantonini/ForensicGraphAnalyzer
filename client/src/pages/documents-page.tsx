@@ -7,6 +7,7 @@ import { PlusCircle, Search, LayoutGrid, List, Trash } from "lucide-react";
 import { Document, FilterOptions } from "@/lib/types";
 import { DocumentGrid } from "@/components/documents/document-grid";
 import { UploadModal } from "@/components/documents/upload-modal-fixed";
+import { UploadProgress } from "@/components/documents/upload-progress";
 import { TestTabs } from "@/components/documents/test-tabs";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -38,6 +39,19 @@ export default function DocumentsPage() {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list'); // Default to list view
   const [documentToDelete, setDocumentToDelete] = useState<Document | null>(null);
+  
+  // Stato per la barra di avanzamento
+  const [showProgressBar, setShowProgressBar] = useState<boolean>(false);
+  const [uploadedDocumentId, setUploadedDocumentId] = useState<number | null>(null);
+  const [uploadedFilename, setUploadedFilename] = useState<string>("");
+  
+  // Callback per la gestione dell'avanzamento del caricamento
+  const handleUploadProgress = (documentId: number, filename: string) => {
+    console.log("DocumentsPage: ricevuto progresso di caricamento", { documentId, filename });
+    setUploadedDocumentId(documentId);
+    setUploadedFilename(filename);
+    setShowProgressBar(true);
+  };
   const [filters, setFilters] = useState<FilterOptions>({
     fileType: "all",
     searchTerm: "",
@@ -305,7 +319,22 @@ export default function DocumentsPage() {
       <UploadModal
         open={showUploadModal}
         onOpenChange={setShowUploadModal}
+        onUploadProgress={handleUploadProgress}
       />
+
+      {/* Progress Bar */}
+      {showProgressBar && uploadedDocumentId && uploadedFilename && (
+        <UploadProgress
+          documentId={uploadedDocumentId}
+          filename={uploadedFilename}
+          onDismiss={() => {
+            console.log("Progress bar dismissed from DocumentsPage");
+            setShowProgressBar(false);
+            setUploadedDocumentId(null);
+            setUploadedFilename("");
+          }}
+        />
+      )}
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!documentToDelete} onOpenChange={(open) => !open && setDocumentToDelete(null)}>

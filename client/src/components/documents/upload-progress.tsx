@@ -30,6 +30,9 @@ export function UploadProgress({
   const { t } = useTranslation();
   const [shouldPoll, setShouldPoll] = useState(true);
   
+  // Log di debug per verificare se il componente viene renderizzato
+  console.log("UploadProgress renderizzato", { documentId, filename });
+  
   // Effettua la query per ottenere l'avanzamento dell'elaborazione
   const { data, error, isLoading } = useQuery<ProgressData>({
     queryKey: [`/api/documents/${documentId}/progress`],
