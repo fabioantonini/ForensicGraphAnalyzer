@@ -273,7 +273,7 @@ const DemoAccountsManagement: React.FC = () => {
                         <TableCell>
                           <Badge variant="outline">
                             <Clock className="h-3 w-3 mr-1" />
-                            {t("demoAccounts.daysRemaining", { count: getRemainingDays(user.demoExpiresAt) })}
+                            {t("admin:demoAccounts.daysRemaining", { count: getRemainingDays(user.demoExpiresAt) })}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -282,7 +282,7 @@ const DemoAccountsManagement: React.FC = () => {
                             size="sm"
                             onClick={() => handleExtendDemoClick(user)}
                           >
-                            {t("demoAccounts.extend")}
+                            {t("admin:demoAccounts.extend")}
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -291,7 +291,7 @@ const DemoAccountsManagement: React.FC = () => {
                 </Table>
               ) : (
                 <div className="text-center py-4 text-muted-foreground">
-                  {t("demoAccounts.noActiveAccounts")}
+                  {t("admin:demoAccounts.noActiveAccounts")}
                 </div>
               )}
             </CardContent>
@@ -301,9 +301,9 @@ const DemoAccountsManagement: React.FC = () => {
         <TabsContent value="expired">
           <Card>
             <CardHeader>
-              <CardTitle>{t("demoAccounts.expiredAccounts")}</CardTitle>
+              <CardTitle>{t("admin:demoAccounts.expiredAccounts")}</CardTitle>
               <CardDescription>
-                {t("demoAccounts.expiredDescription")}
+                {t("admin:demoAccounts.expiredDescription")}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -311,12 +311,12 @@ const DemoAccountsManagement: React.FC = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>{t("username")}</TableHead>
-                      <TableHead>{t("email")}</TableHead>
-                      <TableHead>Organizzazione</TableHead>
-                      <TableHead>Scaduto il</TableHead>
-                      <TableHead>Dati fino al</TableHead>
-                      <TableHead>Azioni</TableHead>
+                      <TableHead>{t("common:username")}</TableHead>
+                      <TableHead>{t("common:email")}</TableHead>
+                      <TableHead>{t("common:organization")}</TableHead>
+                      <TableHead>{t("admin:expiredOn")}</TableHead>
+                      <TableHead>{t("admin:dataRetentionUntil")}</TableHead>
+                      <TableHead>{t("admin:actions")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -333,7 +333,7 @@ const DemoAccountsManagement: React.FC = () => {
                             size="sm"
                             onClick={() => handleExtendDemoClick(user)}
                           >
-                            {t("demoAccounts.reactivate")}
+                            {t("admin:demoAccounts.reactivate")}
                           </Button>
                         </TableCell>
                       </TableRow>
