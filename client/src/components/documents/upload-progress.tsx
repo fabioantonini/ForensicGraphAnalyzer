@@ -101,11 +101,11 @@ export function UploadProgress({
   // Se c'è un errore nella query, mostriamo un messaggio appropriato
   if (error) {
     return (
-      <Card className="fixed bottom-4 right-4 shadow-lg w-80 z-50">
+      <Card className="fixed bottom-4 right-4 shadow-lg w-80 z-[9999] border-2 border-red-500">
         <CardContent className="p-4">
           <div className="flex justify-between items-center mb-2">
-            <h4 className="font-medium text-gray-900 flex items-center">
-              <AlertCircle className="h-4 w-4 text-red-500 mr-2" />
+            <h4 className="font-semibold text-red-500 text-lg flex items-center">
+              <AlertCircle className="h-5 w-5 text-red-500 mr-2" />
               {t('documents.processing.error', 'Error')}
             </h4>
             <Button
@@ -126,10 +126,10 @@ export function UploadProgress({
   }
 
   return (
-    <Card className="fixed bottom-4 right-4 shadow-lg w-80 z-50">
+    <Card className="fixed bottom-4 right-4 shadow-lg w-80 z-[9999] border-2 border-primary">
       <CardContent className="p-4">
         <div className="flex justify-between items-center mb-2">
-          <h4 className="font-medium text-gray-900 flex items-center">
+          <h4 className="font-semibold text-primary text-lg flex items-center">
             {renderStatusIcon()}
             <span className={renderStatusIcon() ? "ml-2" : ""}>
               {getStatusText()}
@@ -147,10 +147,10 @@ export function UploadProgress({
         <p className="text-sm text-gray-500 mb-2 truncate" title={filename}>
           {filename}
         </p>
-        <div className="w-full bg-gray-200 rounded-full h-2.5">
+        <div className="w-full bg-gray-200 rounded-full h-4 mt-2 mb-1">
           <div
-            className={`h-2.5 rounded-full transition-all duration-300 ${
-              data?.status === 'failed' ? 'bg-red-500' : 'bg-secondary'
+            className={`h-4 rounded-full transition-all duration-300 ${
+              data?.status === 'failed' ? 'bg-red-500' : 'bg-primary'
             }`}
             style={{ width: `${progress}%` }}
           ></div>
