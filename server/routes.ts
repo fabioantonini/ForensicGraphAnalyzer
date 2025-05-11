@@ -162,15 +162,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           indexed: false
         });
         
-        // Add document to ChromaDB collection - use user key or fallback to system key
+        // Add document to vector database - use user key or fallback to system key
         const apiKeyToUse = user.openaiApiKey || undefined; // undefined will trigger system key use
-        const indexed = await addDocumentToCollection(userId, document, apiKeyToUse);
         
-        // Update document indexed status
-        if (indexed) {
-          await storage.updateDocumentIndexStatus(document.id, true);
+        try {
+          await addDocumentToCollection(document, apiKeyToUse);
           document.indexed = true;
+          await storage.updateDocumentIndexStatus(document.id, true);
+        } catch (indexError) {
+          log(`Error indexing document: ${indexError}`, "express");
+          // Non blocchiamo il flusso di lavoro se l'indicizzazione fallisce
         }
+        
+        // Il documento è già stato aggiornato nel blocco try/catch precedente
         
         // Log activity
         await storage.createActivity({
@@ -234,14 +238,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         indexed: false
       });
       
-      // Add document to ChromaDB collection - use user key or fallback to system key
+      // Add document to vector database - use user key or fallback to system key
       const apiKeyToUse = user.openaiApiKey || undefined; // undefined will trigger system key use
-      const indexed = await addDocumentToCollection(userId, document, apiKeyToUse);
       
-      // Update document indexed status
-      if (indexed) {
-        await storage.updateDocumentIndexStatus(document.id, true);
+      try {
+        await addDocumentToCollection(document, apiKeyToUse);
         document.indexed = true;
+        await storage.updateDocumentIndexStatus(document.id, true);
+      } catch (indexError) {
+        log(`Error indexing document: ${indexError}`, "express");
+        // Non blocchiamo il flusso di lavoro se l'indicizzazione fallisce
       }
       
       // Log activity
