@@ -739,6 +739,7 @@ export class MemStorage implements IStorage {
   async updateSignatureProject(id: number, data: {
     name?: string;
     description?: string;
+    dpi?: number;
   }): Promise<SignatureProject> {
     const project = await this.getSignatureProject(id);
     if (!project) {
@@ -749,6 +750,7 @@ export class MemStorage implements IStorage {
       ...project,
       ...(data.name !== undefined && { name: data.name }),
       ...(data.description !== undefined && { description: data.description }),
+      ...(data.dpi !== undefined && { dpi: data.dpi }),
       updatedAt: new Date(),
     };
     
@@ -1193,10 +1195,14 @@ export class DatabaseStorage implements IStorage {
   async updateSignatureProject(id: number, data: {
     name?: string;
     description?: string;
+    dpi?: number;
   }): Promise<SignatureProject> {
     const [project] = await db
       .update(signatureProjects)
-      .set(data)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
       .where(eq(signatureProjects.id, id))
       .returning();
     return project;

@@ -339,6 +339,7 @@
     "selectFile": "Seleziona file",
     "needReferenceFirst": "Hai bisogno prima di firme di riferimento",
     "dpi": "Densità Pixel (DPI)",
+    "dpiAutomaticExtraction": "Il valore DPI viene rilevato automaticamente dai metadati dell'immagine quando disponibile",
     "uploadFirstReference": "Carica prima firma di riferimento",
     "uploadFirstVerify": "Carica prima firma da verificare",
     "compareAll": "Confronta Tutte",

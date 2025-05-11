@@ -1681,8 +1681,8 @@ async function processSignature(signatureId: number, filePath: string) {
       }
       
       log(`Utilizzo DPI=${dpi} per l'analisi della firma (ID: ${signatureId})`, 'signatures');
-    } catch (dpiError) {
-      log(`Impossibile estrarre il DPI dall'immagine: ${dpiError.message}. Uso il valore del progetto: ${dpi}`, 'signatures');
+    } catch (error: any) {
+      log(`Impossibile estrarre il DPI dall'immagine: ${error.message || error}. Uso il valore del progetto: ${dpi}`, 'signatures');
     }
     
     // Aggiorna lo stato a 'processing'
@@ -1755,8 +1755,8 @@ async function processAndCompareSignature(signatureId: number, filePath: string,
       }
       
       log(`Utilizzo DPI=${dpi} per l'analisi della firma (ID: ${signatureId})`, 'signatures');
-    } catch (dpiError) {
-      log(`Impossibile estrarre il DPI dall'immagine: ${dpiError}. Uso il valore del progetto: ${dpi}`, 'signatures');
+    } catch (error: any) {
+      log(`Impossibile estrarre il DPI dall'immagine: ${error.message || error}. Uso il valore del progetto: ${dpi}`, 'signatures');
     }
     
     // Aggiorna lo stato a 'processing'
