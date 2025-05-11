@@ -1306,6 +1306,7 @@ export class DatabaseStorage implements IStorage {
     comparisonChart?: string;
     analysisReport?: string;
     reportPath?: string;
+    dpi?: number;
   }): Promise<Signature> {
     const [signature] = await db
       .update(signatures)
@@ -1313,6 +1314,7 @@ export class DatabaseStorage implements IStorage {
         ...(data.comparisonChart !== undefined && { comparisonChart: data.comparisonChart }),
         ...(data.analysisReport !== undefined && { analysisReport: data.analysisReport }),
         ...(data.reportPath !== undefined && { reportPath: data.reportPath }),
+        ...(data.dpi !== undefined && { dpi: data.dpi }),
         updatedAt: new Date()
       })
       .where(eq(signatures.id, id))

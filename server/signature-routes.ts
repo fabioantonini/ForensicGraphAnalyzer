@@ -1321,6 +1321,59 @@ export function registerSignatureRoutes(router: Router) {
     }
   });
 
+  // Aggiorna il DPI di una firma specifica
+  router.patch("/signatures/:id/dpi", isAuthenticated, async (req, res) => {
+    try {
+      const signatureId = parseInt(req.params.id);
+      
+      if (isNaN(signatureId)) {
+        return res.status(400).json({ error: 'ID firma non valido' });
+      }
+      
+      // Verifica che il DPI sia stato fornito
+      if (req.body.dpi === undefined || !Number.isInteger(req.body.dpi)) {
+        return res.status(400).json({ error: 'DPI non valido. Deve essere un numero intero.' });
+      }
+      
+      // Verifica che il DPI sia in un intervallo accettabile
+      const dpi = parseInt(req.body.dpi);
+      if (dpi < 72 || dpi > 1200) {
+        return res.status(400).json({ error: 'DPI non valido. Deve essere un valore tra 72 e 1200.' });
+      }
+      
+      // Ottieni la firma
+      const signature = await storage.getSignature(signatureId);
+      if (!signature) {
+        return res.status(404).json({ error: 'Firma non trovata' });
+      }
+      
+      // Ottieni il progetto associato alla firma
+      const project = await storage.getSignatureProject(signature.projectId);
+      if (!project) {
+        return res.status(404).json({ error: 'Progetto non trovato' });
+      }
+      
+      // Verifica che l'utente sia il proprietario del progetto
+      if (project.userId !== req.user!.id) {
+        return res.status(403).json({ error: 'Non autorizzato ad accedere a questa firma' });
+      }
+      
+      // Aggiorna il DPI della firma
+      const updatedSignature = await storage.updateSignature(signatureId, { dpi });
+      
+      // Aggiorna le attività
+      await storage.createActivity({
+        userId: req.user!.id,
+        type: 'signature_update',
+        details: `Aggiornato il DPI della firma "${signature.originalFilename}" a ${dpi}`
+      });
+      
+      res.json(updatedSignature);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Elimina una firma
   router.delete("/signatures/:id", isAuthenticated, async (req, res) => {
     try {
