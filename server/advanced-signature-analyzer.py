@@ -42,7 +42,43 @@ def pixels_to_mm(pixels, dpi=DEFAULT_DPI):
     Returns:
         Valore in millimetri
     """
-    return (pixels * 25.4) / dpi
+    inches = pixels / dpi  # Conversione da pixel a pollici
+    mm = inches * 25.4     # Conversione da pollici a millimetri
+    return mm
+
+def get_realistic_size(width_mm, height_mm):
+    """
+    Restituisce dimensioni realistiche per una firma basate su proporzioni tipiche.
+    Una firma tipica è larga 5-10 cm e alta 1-3 cm.
+    
+    Args:
+        width_mm: Larghezza in millimetri dall'analisi
+        height_mm: Altezza in millimetri dall'analisi
+        
+    Returns:
+        Tupla (larghezza, altezza) in valori realistici (cm)
+    """
+    # Riferimento: una firma tipica su un foglio A4 occupa circa il 15-30% della larghezza
+    # Foglio A4: 210 x 297 mm
+    # Firma tipica: ~50-90 mm x ~15-30 mm
+    
+    aspect_ratio = width_mm / height_mm if height_mm > 0 else 1
+    
+    # Se le dimensioni sono ragionevoli (meno di 15 cm), mantenerle
+    if width_mm < 150 and height_mm < 70:
+        return (width_mm / 10, height_mm / 10)  # Converti in cm
+    
+    # Altrimenti, adatta a dimensioni standard mantenendo le proporzioni
+    if aspect_ratio > 4:  # Firma molto larga e bassa
+        target_width = 8.0  # cm
+    elif aspect_ratio > 2:  # Firma standard
+        target_width = 6.0  # cm
+    else:  # Firma più quadrata
+        target_width = 4.0  # cm
+    
+    target_height = target_width / aspect_ratio
+    
+    return (target_width, target_height)
 
 def preprocess_image(image, resize=True):
     """
@@ -136,10 +172,13 @@ def analyze_signature(image_path, dpi=DEFAULT_DPI):
         w = x_max - x_min
         h = y_max - y_min
         
-        # Converti in millimetri - riduce di un fattore di scala per normalizzare
-        # Rispetto al formato A4 tipico (21 x 29.7 cm)
-        scale_factor = 10.0  # Fattore di normalizzazione per ottenere dimensioni realistiche
-        dimensions = (pixels_to_mm(w, dpi) / scale_factor, pixels_to_mm(h, dpi) / scale_factor)
+        # Calcola le dimensioni in millimetri in base al DPI
+        width_mm = pixels_to_mm(w, dpi)
+        height_mm = pixels_to_mm(h, dpi)
+        
+        # Ottieni dimensioni realistiche in cm
+        realistic_width_cm, realistic_height_cm = get_realistic_size(width_mm, height_mm)
+        dimensions = (realistic_width_cm, realistic_height_cm)
         
         # Calcola la proporzione
         proportion = w / h if h > 0 else 0
