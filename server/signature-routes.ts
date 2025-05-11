@@ -1666,8 +1666,24 @@ async function processSignature(signatureId: number, filePath: string) {
       throw new Error('Progetto non trovato');
     }
     
-    // Estrai il DPI dal progetto (default 300)
-    const dpi = project.dpi || 300;
+    // Prima tenta di determinare il DPI dall'immagine
+    let dpi = project.dpi || 300; // Valore predefinito dal progetto
+    
+    try {
+      // Tenta l'estrazione automatica del DPI dai metadata dell'immagine
+      const extractedDPI = await determineBestDPI(filePath, dpi);
+      
+      // Se il DPI estratto è diverso da quello del progetto, aggiorna il progetto
+      if (extractedDPI !== dpi) {
+        log(`DPI estratto dall'immagine (${extractedDPI}) diverso da quello del progetto (${dpi}), aggiornamento...`, 'image-utils');
+        await storage.updateSignatureProject(project.id, { dpi: extractedDPI });
+        dpi = extractedDPI;
+      }
+      
+      log(`Utilizzo DPI=${dpi} per l'analisi della firma (ID: ${signatureId})`, 'signatures');
+    } catch (dpiError) {
+      log(`Impossibile estrarre il DPI dall'immagine: ${dpiError.message}. Uso il valore del progetto: ${dpi}`, 'signatures');
+    }
     
     // Aggiorna lo stato a 'processing'
     await storage.updateSignatureStatus(signatureId, 'processing');
@@ -1714,8 +1730,34 @@ async function processAndCompareSignature(signatureId: number, filePath: string,
       throw new Error('Progetto non trovato');
     }
     
-    // Estrai il DPI dal progetto (default 300)
-    const dpi = project.dpi || 300;
+    // Prima tenta di determinare il DPI dall'immagine
+    let dpi = project.dpi || 300; // Valore predefinito dal progetto
+    
+    try {
+      // Tenta l'estrazione automatica del DPI dai metadata dell'immagine
+      const extractedDPI = await determineBestDPI(filePath, dpi);
+      
+      // Se è la prima firma caricata per il progetto e il DPI è diverso, aggiorna il progetto
+      if (extractedDPI !== dpi) {
+        // Ottieni il numero di firme già presenti
+        const existingSignatures = await storage.getProjectSignatures(projectId);
+        const isFirstSignature = existingSignatures.length <= 1; // Considerando che questa è già stata aggiunta
+        
+        // Se è la prima firma, usiamo il suo DPI per il progetto
+        if (isFirstSignature) {
+          log(`Prima firma per il progetto ${projectId}, aggiorno il DPI del progetto a ${extractedDPI}`, 'image-utils');
+          await storage.updateSignatureProject(project.id, { dpi: extractedDPI });
+          dpi = extractedDPI;
+        } else {
+          // Altrimenti manteniamo il DPI del progetto per coerenza
+          log(`DPI estratto (${extractedDPI}) diverso dal progetto (${dpi}), ma non è la prima firma. Mantengo il DPI del progetto.`, 'image-utils');
+        }
+      }
+      
+      log(`Utilizzo DPI=${dpi} per l'analisi della firma (ID: ${signatureId})`, 'signatures');
+    } catch (dpiError) {
+      log(`Impossibile estrarre il DPI dall'immagine: ${dpiError}. Uso il valore del progetto: ${dpi}`, 'signatures');
+    }
     
     // Aggiorna lo stato a 'processing'
     await storage.updateSignatureStatus(signatureId, 'processing');

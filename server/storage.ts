@@ -88,6 +88,7 @@ export interface IStorage {
   updateSignatureProject(id: number, data: {
     name?: string;
     description?: string;
+    dpi?: number;
   }): Promise<SignatureProject>;
   deleteSignatureProject(id: number): Promise<void>;
 
