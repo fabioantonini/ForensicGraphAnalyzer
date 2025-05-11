@@ -21,17 +21,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 // Schema di validazione per la creazione di un account demo
-const demoAccountSchema = z.object({
-  username: z.string().min(3, "Username deve essere di almeno 3 caratteri"),
-  password: z.string().min(6, "Password deve essere di almeno 6 caratteri"),
+const demoAccountSchema = (t: any) => z.object({
+  username: z.string().min(3, t("validation.usernameLength")),
+  password: z.string().min(6, t("validation.passwordLength")),
   confirmPassword: z.string(),
-  email: z.string().email("Email non valida"),
+  email: z.string().email(t("validation.invalidEmail")),
   fullName: z.string().optional(),
   organization: z.string().optional(),
   profession: z.string().optional(),
   durationDays: z.coerce.number().min(1).max(365)
 }).refine(data => data.password === data.confirmPassword, {
-  message: "Le password non corrispondono",
+  message: t("validation.passwordsDoNotMatch"),
   path: ["confirmPassword"]
 });
 
@@ -41,7 +41,7 @@ const extendDemoSchema = z.object({
   additionalDays: z.coerce.number().min(1).max(365)
 });
 
-type DemoAccountFormValues = z.infer<typeof demoAccountSchema>;
+type DemoAccountFormValues = z.infer<ReturnType<typeof demoAccountSchema>>;
 type ExtendDemoFormValues = z.infer<typeof extendDemoSchema>;
 
 const DemoAccountsManagement: React.FC = () => {
