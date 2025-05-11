@@ -26,6 +26,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -616,7 +617,7 @@ export default function SignaturesPage() {
       </div>
       
       {/* Projects list */}
-      {projectsLoading ? (
+      {isLoadingProjects ? (
         <div className="flex justify-center items-center h-40">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
@@ -1000,6 +1001,55 @@ export default function SignaturesPage() {
           </div>
         </div>
       )}
+      
+      {/* Edit DPI Dialog */}
+      <Dialog open={isEditDpiOpen} onOpenChange={setIsEditDpiOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('signatures.editDpi')}</DialogTitle>
+            <DialogDescription>
+              {t('signatures.editDpiDescription')}
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...dpiForm}>
+            <form onSubmit={dpiForm.handleSubmit(onUpdateDpi)} className="space-y-8">
+              <FormField
+                control={dpiForm.control}
+                name="dpi"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('signatures.dpi')}</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number"
+                        {...field}
+                        onChange={(e) => field.onChange(Number(e.target.value))}
+                        min={72}
+                        max={1200}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      {t('signatures.dpiRange')}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button 
+                  type="submit" 
+                  disabled={updateDpi.isPending}
+                >
+                  {updateDpi.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {t('common.save')}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+      
+      <SignatureMethodologyDialog />
     </div>
   );
 }
