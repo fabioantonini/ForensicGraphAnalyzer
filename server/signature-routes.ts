@@ -461,7 +461,8 @@ export function registerSignatureRoutes(router: Router) {
         processingStatus: sig.processingStatus,
         comparisonResult: sig.comparisonResult,
         createdAt: sig.createdAt,
-        updatedAt: sig.updatedAt
+        updatedAt: sig.updatedAt,
+        dpi: sig.dpi // Aggiungi esplicitamente il campo DPI nella risposta
       }));
       
       res.json(result);
