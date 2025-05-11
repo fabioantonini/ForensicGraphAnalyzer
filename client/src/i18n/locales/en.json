@@ -340,7 +340,13 @@
     "needReferenceFirst": "You need reference signatures first",
     "dpi": "Pixel Density (DPI)",
     "dpiAutomaticExtraction": "DPI value is automatically detected from image metadata when available",
-    "editDpi": "Edit DPI",
+    "dpiDetected": "DPI automatically detected",
+    "dpiDescription": "Common values are 72, 96, 150, 300 or 600.",
+    "editDpi": {
+      "title": "Edit signature DPI",
+      "description": "The DPI (Dots Per Inch) affects the calculation of the actual size of the signature in millimeters.",
+      "buttonTitle": "Edit DPI value"
+    },
     "updateDpi": "Update DPI",
     "invalidDpi": "Invalid DPI. Enter a value between 72 and 1200.",
     "dpiRange": "DPI Value (72-1200)",
