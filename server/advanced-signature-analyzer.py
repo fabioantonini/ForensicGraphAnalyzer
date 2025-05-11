@@ -484,7 +484,7 @@ def generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, simi
         print(f"Errore nella generazione del PDF: {str(e)}", file=sys.stderr)
         return None
 
-def compare_signatures(verifica_path, comp_path, generate_report=False, case_info=None, project_id=None):
+def compare_signatures(verifica_path, comp_path, generate_report=False, case_info=None, project_id=None, dpi=DEFAULT_DPI):
     """
     Funzione principale per confrontare firme
     
@@ -494,6 +494,7 @@ def compare_signatures(verifica_path, comp_path, generate_report=False, case_inf
         generate_report: Se True, genera anche un report PDF
         case_info: Informazioni sul caso per il report
         project_id: ID del progetto per garantire l'isolamento dei dati
+        dpi: Densità di pixel per pollice da utilizzare per il calcolo delle dimensioni reali (default 300)
         
     Returns:
         Dizionario con i risultati dell'analisi
@@ -514,8 +515,8 @@ def compare_signatures(verifica_path, comp_path, generate_report=False, case_inf
         similarity, _ = ssim(processed_verifica, processed_comp, full=True)
         
         # Analizza le firme
-        verifica_data = analyze_signature(verifica_path)
-        comp_data = analyze_signature(comp_path)
+        verifica_data = analyze_signature(verifica_path, dpi)
+        comp_data = analyze_signature(comp_path, dpi)
         
         if not verifica_data or not comp_data:
             raise ValueError("Errore nell'analisi di una o entrambe le firme")
