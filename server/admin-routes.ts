@@ -34,14 +34,8 @@ function isAdmin(req: Request, res: Response, next: NextFunction) {
 
   next();
 }
-      smtpUser: "",
-      smtpPassword: null,
-      isConfigured: false,
-    };
-  }
-}
 
-// Funzione per salvare la configurazione email nel file
+// Funzione per salvare la configurazione email
 async function saveEmailConfig(config: EmailConfig): Promise<void> {
   // Se la password è vuota e c'è già una configurazione, mantieni la password attuale
   if (!config.smtpPassword) {
