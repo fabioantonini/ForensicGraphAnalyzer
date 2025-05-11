@@ -103,6 +103,7 @@ export interface IStorage {
     comparisonChart?: string;
     analysisReport?: string;
     reportPath?: string;
+    dpi?: number;
   }): Promise<Signature>;
   deleteSignature(id: number): Promise<void>;
 
@@ -862,6 +863,7 @@ export class MemStorage implements IStorage {
     comparisonChart?: string;
     analysisReport?: string;
     reportPath?: string;
+    dpi?: number;
   }): Promise<Signature> {
     const signature = await this.getSignature(id);
     if (!signature) {
@@ -873,6 +875,7 @@ export class MemStorage implements IStorage {
       ...(data.comparisonChart !== undefined && { comparisonChart: data.comparisonChart }),
       ...(data.analysisReport !== undefined && { analysisReport: data.analysisReport }),
       ...(data.reportPath !== undefined && { reportPath: data.reportPath }),
+      ...(data.dpi !== undefined && { dpi: data.dpi }),
       updatedAt: new Date(),
     };
     

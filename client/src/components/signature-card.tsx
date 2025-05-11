@@ -208,6 +208,67 @@ export function SignatureCard({
         </CardContent>
       </Card>
 
+      {/* Dialog per la modifica del DPI */}
+      <Dialog open={isEditDpiOpen} onOpenChange={setIsEditDpiOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {t('signatures.editDpi.title', 'Modifica DPI della firma')}
+            </DialogTitle>
+            <DialogDescription>
+              {t('signatures.editDpi.description', 'Il DPI (Dots Per Inch) influisce sul calcolo delle dimensioni reali della firma in millimetri.')}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Form {...dpiForm}>
+            <form onSubmit={dpiForm.handleSubmit(onUpdateDpi)} className="space-y-4 py-3">
+              <FormField
+                control={dpiForm.control}
+                name="dpi"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('signatures.dpi', 'DPI')}</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        min={72} 
+                        max={1200} 
+                        {...field} 
+                        onChange={(e) => field.onChange(parseInt(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      {t('signatures.dpiDescription', 'I valori comuni sono 72, 96, 150, 300 o 600.')}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setIsEditDpiOpen(false)}
+                >
+                  {t('common.cancel', 'Annulla')}
+                </Button>
+                <Button 
+                  type="submit"
+                  disabled={updateDpi.isPending}
+                >
+                  {updateDpi.isPending ? (
+                    <>{t('common.saving', 'Salvataggio...')}</>
+                  ) : (
+                    <>{t('common.save', 'Salva')}</>
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
       {hasAdvancedDetails && (
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogContent className="max-w-3xl max-h-[90vh]">
