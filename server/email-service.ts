@@ -1,6 +1,8 @@
 import nodemailer from 'nodemailer';
 import { promisify } from 'util';
 import { randomBytes } from 'crypto';
+import { storage } from './storage';
+import { loadGmailConfig, sendGmailEmail, isGmailServiceConfigured } from './gmail-service';
 
 const generateRandomToken = promisify(randomBytes);
 
@@ -13,43 +15,133 @@ interface PasswordResetToken {
 
 const passwordResetTokens = new Map<string, PasswordResetToken>();
 
-// Configurazione di nodemailer - utilizza le variabili d'ambiente
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: parseInt(process.env.SMTP_PORT || '587'),
-  secure: process.env.SMTP_SECURE === 'true',
-  auth: {
-    user: process.env.SMTP_USER || '',
-    pass: process.env.SMTP_PASSWORD || '',
-  },
-});
+// Tipi di servizio email
+export enum EmailServiceType {
+  SMTP = 'smtp',
+  GMAIL_API = 'gmail_api'
+}
+
+// Configurazione del servizio email
+export interface EmailServiceConfig {
+  type: EmailServiceType;
+  smtpHost?: string;
+  smtpPort?: number;
+  smtpSecure?: boolean;
+  smtpUser?: string;
+  smtpPassword?: string | null;
+  isConfigured: boolean;
+}
+
+// Crea un transporter SMTP basato sulle impostazioni
+function createSMTPTransporter(config: EmailServiceConfig) {
+  return nodemailer.createTransport({
+    host: config.smtpHost || process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: config.smtpPort || parseInt(process.env.SMTP_PORT || '587'),
+    secure: config.smtpSecure || process.env.SMTP_SECURE === 'true',
+    auth: {
+      user: config.smtpUser || process.env.SMTP_USER || '',
+      pass: config.smtpPassword || process.env.SMTP_PASSWORD || '',
+    },
+  });
+}
 
 /**
- * Invia un'email tramite Nodemailer
+ * Invia un'email utilizzando il provider configurato
  * @param to Indirizzo email del destinatario
  * @param subject Oggetto dell'email
  * @param html Contenuto HTML dell'email
- * @returns Promise che si risolve quando l'email è stata inviata
+ * @returns Promise che si risolve a true se l'email è stata inviata con successo
  */
 export async function sendEmail(to: string, subject: string, html: string): Promise<boolean> {
   try {
-    if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
-      console.error('SMTP_USER o SMTP_PASSWORD non configurati');
-      return false;
-    }
-
-    await transporter.sendMail({
-      from: `"GrapholexInsight" <${process.env.SMTP_USER}>`,
-      to,
-      subject,
-      html,
-    });
+    // Carica la configurazione corrente
+    const emailConfig = await loadEmailConfig();
     
-    return true;
+    // Controlla quale provider è configurato
+    if (emailConfig.type === EmailServiceType.GMAIL_API) {
+      // Carica la configurazione Gmail
+      const gmailConfig = await loadGmailConfig();
+      if (!isGmailServiceConfigured(gmailConfig)) {
+        console.error('Servizio Gmail API non configurato correttamente');
+        return false;
+      }
+      
+      // Invia tramite Gmail API
+      return await sendGmailEmail(to, subject, html, gmailConfig);
+    } else {
+      // Configurazione SMTP
+      if (!emailConfig.smtpUser || !emailConfig.smtpPassword) {
+        console.error('Credenziali SMTP non configurate');
+        return false;
+      }
+      
+      // Crea transporter SMTP
+      const transporter = createSMTPTransporter(emailConfig);
+      
+      // Invia email tramite SMTP
+      await transporter.sendMail({
+        from: `"GrapholexInsight" <${emailConfig.smtpUser}>`,
+        to,
+        subject,
+        html,
+      });
+      
+      return true;
+    }
   } catch (error) {
     console.error('Errore nell\'invio dell\'email:', error);
     return false;
   }
+}
+
+/**
+ * Carica la configurazione del servizio email
+ * @returns Promise con la configurazione del servizio email
+ */
+export async function loadEmailConfig(): Promise<EmailServiceConfig> {
+  const configJson = await storage.getSettings('email_config');
+  
+  if (!configJson) {
+    return {
+      type: EmailServiceType.SMTP,
+      smtpHost: process.env.SMTP_HOST || '',
+      smtpPort: parseInt(process.env.SMTP_PORT || '587'),
+      smtpSecure: process.env.SMTP_SECURE === 'true',
+      smtpUser: process.env.SMTP_USER || '',
+      smtpPassword: process.env.SMTP_PASSWORD || '',
+      isConfigured: !!process.env.SMTP_USER && !!process.env.SMTP_PASSWORD
+    };
+  }
+  
+  try {
+    const config = JSON.parse(configJson) as EmailServiceConfig;
+    return {
+      ...config,
+      isConfigured: isEmailServiceConfigured(config)
+    };
+  } catch (error) {
+    console.error('Errore nel parsing della configurazione email:', error);
+    return {
+      type: EmailServiceType.SMTP,
+      isConfigured: false
+    };
+  }
+}
+
+/**
+ * Salva la configurazione del servizio email
+ * @param config Configurazione da salvare
+ * @returns Promise che si risolve quando la configurazione è stata salvata
+ */
+export async function saveEmailConfig(config: EmailServiceConfig): Promise<void> {
+  // Non salvare le password null (per non sovrascrivere quelle esistenti)
+  if (config.type === EmailServiceType.SMTP && config.smtpPassword === null) {
+    // Recupera la configurazione corrente per mantenere la password
+    const currentConfig = await loadEmailConfig();
+    config.smtpPassword = currentConfig.smtpPassword;
+  }
+  
+  await storage.saveSettings('email_config', JSON.stringify(config));
 }
 
 /**

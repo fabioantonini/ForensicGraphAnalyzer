@@ -1,0 +1,63 @@
+Sì, **Gmail può essere usato tramite API per inviare email**, ma ci sono alcune considerazioni importanti da tenere a mente.
+
+### ✅ Soluzione: **Gmail API**
+
+Google mette a disposizione la [**Gmail API**](https://developers.google.com/gmail/api), che consente di:
+
+* Inviare email (`users.messages.send`)
+* Leggere messaggi
+* Gestire etichette
+* Accedere a thread
+
+### 🔐 Autenticazione: **OAuth 2.0**
+
+Per usare l’API devi autenticare l’utente tramite **OAuth 2.0**. Questo significa che:
+
+* L’utente deve autorizzare esplicitamente l’accesso (non puoi usare direttamente username/password).
+* Serve un **client ID** e un **client secret** creati nella Google Cloud Console.
+* L’ambito (scope) per inviare email è:
+
+  ```
+  https://www.googleapis.com/auth/gmail.send
+  ```
+
+### 📥 Esempio di invio email
+
+Una volta ottenuto il token di accesso, puoi inviare un’email così:
+
+1. Crea il messaggio in MIME (Base64 URL-safe).
+2. Fai una POST a:
+
+   ```
+   https://gmail.googleapis.com/gmail/v1/users/me/messages/send
+   ```
+
+Esempio in Python con `google-api-python-client`:
+
+```python
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+from email.mime.text import MIMEText
+import base64
+
+def send_email(to, subject, body, creds):
+    service = build('gmail', 'v1', credentials=creds)
+    message = MIMEText(body)
+    message['to'] = to
+    message['subject'] = subject
+    raw = base64.urlsafe_b64encode(message.as_bytes()).decode()
+
+    return service.users().messages().send(userId="me", body={"raw": raw}).execute()
+```
+
+---
+
+### ⚠️ Limitazioni
+
+* **Quota**: Gmail API ha limiti giornalieri, simili a quelli dell’interfaccia web.
+* **Uso aziendale**: Se usi un account Google Workspace, l'amministratore può limitare l'accesso.
+* **Automazione "senza utente"**: Non è possibile usare l’API in modo completamente automatizzato *senza* un processo OAuth, a meno di usare **service account** con delega su Workspace (ma non su account Gmail personali).
+
+---
+
+Hai in mente di usarlo in un'app personale o per un sistema automatico tipo cron job/server?
