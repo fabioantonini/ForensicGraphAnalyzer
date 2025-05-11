@@ -224,6 +224,8 @@ export function ChatInterface({
                   <SelectValue placeholder="GPT-4o" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="o3">o3</SelectItem>
+                  <SelectItem value="o4-mini">o4-mini</SelectItem>
                   <SelectItem value="gpt-4o">GPT-4o</SelectItem>
                   <SelectItem value="gpt-3.5-turbo">GPT-3.5</SelectItem>
                 </SelectContent>
