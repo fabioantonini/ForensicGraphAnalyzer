@@ -357,3 +357,19 @@ export const insertDocumentEmbeddingSchema = createInsertSchema(documentEmbeddin
 
 export type DocumentEmbedding = typeof documentEmbeddings.$inferSelect;
 export type InsertDocumentEmbedding = z.infer<typeof insertDocumentEmbeddingSchema>;
+
+// Impostazioni di sistema
+export const settings = pgTable("settings", {
+  id: serial("id").primaryKey(),
+  key: text("key").notNull().unique(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertSettingsSchema = createInsertSchema(settings).pick({
+  key: true,
+  value: true,
+});
+
+export type Setting = typeof settings.$inferSelect;
+export type InsertSetting = z.infer<typeof insertSettingsSchema>;

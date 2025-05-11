@@ -48,6 +48,10 @@ export interface IStorage {
   getDataForPurge(daysBeforePurge: number): Promise<{ userId: number, documents: number[] }[]>;
   getUserCount(): Promise<number>;
   updateUserRole(userId: number, role: string): Promise<User>;
+  
+  // Settings methods
+  saveSettings(key: string, value: string): Promise<void>;
+  getSettings(key: string): Promise<string | null>;
   deleteUser(userId: number): Promise<void>;
 
   // Document methods
