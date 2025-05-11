@@ -220,21 +220,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
           indexed: false
         });
         
+        // Add document to vector database - use user key or fallback to system key
+        const apiKeyToUse = user.openaiApiKey || undefined; // undefined will trigger system key use
+        
         // Inizializza immediatamente il tracker di progresso con stato "processing"
         // per mostrare la barra di progresso nel client
         initProgress(document.id, 20); // Inizializziamo con un valore ragionevole
         updateProgress(document.id, 1); // Impostiamo un chunk processato per calcolare il tempo rimanente
         
-        // Add document to vector database - use user key or fallback to system key
-        const apiKeyToUse = user.openaiApiKey || undefined; // undefined will trigger system key use
-        
         try {
           await addDocumentToCollection(document, apiKeyToUse);
           document.indexed = true;
           await storage.updateDocumentIndexStatus(document.id, true);
+          
+          // Segnala il completamento dell'elaborazione nel tracker di progresso
+          completeProgress(document.id);
         } catch (indexError) {
           log(`Error indexing document: ${indexError}`, "express");
           // Non blocchiamo il flusso di lavoro se l'indicizzazione fallisce
+          
+          // Segnala il fallimento dell'elaborazione nel tracker di progresso
+          const errorMessage = indexError instanceof Error ? indexError.message : String(indexError);
+          failProgress(document.id, errorMessage || "Errore durante l'indicizzazione del documento");
         }
         
         // Il documento è già stato aggiornato nel blocco try/catch precedente
@@ -321,7 +328,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Non blocchiamo il flusso di lavoro se l'indicizzazione fallisce
         
         // Segnala il fallimento dell'elaborazione nel tracker di progresso
-        failProgress(document.id, indexError.message || "Errore durante l'indicizzazione del documento");
+        const errorMessage = indexError instanceof Error ? indexError.message : String(indexError);
+        failProgress(document.id, errorMessage || "Errore durante l'indicizzazione del documento");
       }
       
       // Log activity
