@@ -4,8 +4,8 @@ import { setupVite, serveStatic, log } from "./vite";
 import path from "path";
 import fsExtra from 'fs-extra';
 import { ensureReportDirectory } from "./pdf-utils";
-import { initializeChromaDB } from './chromadb';
-import { execSync } from 'child_process';
+import { initializeVectorDB } from './vectordb'; // Nuovo modulo di persistenza vettoriale
+import { testDatabaseConnection, isPgVectorAvailable } from './db';
 import fs from 'fs';
 
 const app = express();
@@ -52,32 +52,36 @@ app.use((req, res, next) => {
     console.error("Errore nell'inizializzazione della directory per i report:", error);
   }
   
-  // Inizializza ChromaDB all'avvio
+  // Inizializzazione del database vettoriale
   try {
-    log("Inizializzazione ChromaDB persistente...", "chromadb");
+    log("Inizializzazione sistema di persistenza vettoriale...", "database");
     
-    // Verifica se è necessario eseguire lo script start-chroma.sh
-    const chromaPidExists = fs.existsSync(path.join(process.cwd(), 'chroma.pid'));
+    // Verifica connessione al database PostgreSQL
+    const pgConnected = await testDatabaseConnection();
     
-    if (!chromaPidExists) {
-      log("Esecuzione script di inizializzazione ChromaDB...", "chromadb");
-      try {
-        // Esegui lo script di inizializzazione
-        execSync('./start-chroma.sh', { stdio: 'inherit' });
-        log("ChromaDB persistente inizializzato con successo", "chromadb");
-      } catch (error) {
-        log(`Errore durante l'inizializzazione di ChromaDB: ${error}`, "chromadb");
-        log("L'applicazione continuerà usando il fallback in-memory", "chromadb");
+    if (pgConnected) {
+      log("Connessione al database PostgreSQL riuscita", "database");
+      
+      // Verifica disponibilità estensione pgvector
+      const vectorAvailable = await isPgVectorAvailable();
+      
+      if (vectorAvailable) {
+        log("Estensione pgvector installata e disponibile", "database");
+        log("Sistema di persistenza vettoriale pgvector abilitato", "database");
+      } else {
+        log("Estensione pgvector non disponibile", "database");
+        log("ATTENZIONE: Sarà utilizzato storage in-memory non persistente", "database");
       }
     } else {
-      log("ChromaDB già inizializzato, flag chroma.pid trovato", "chromadb");
+      log("Connessione al database PostgreSQL fallita", "database");
+      log("ATTENZIONE: Sarà utilizzato storage in-memory non persistente", "database");
     }
     
-    // Inizializza il client ChromaDB (sia che il server sia disponibile o meno)
-    await initializeChromaDB();
+    // Inizializza il sistema vettoriale
+    await initializeVectorDB();
   } catch (error) {
-    log(`Errore durante l'inizializzazione di ChromaDB: ${error}`, "chromadb");
-    log("L'applicazione continuerà usando il fallback in-memory", "chromadb");
+    log(`Errore durante l'inizializzazione del sistema vettoriale: ${error}`, "database");
+    log("L'applicazione continuerà ma potrebbero esserci problemi di persistenza", "database");
   }
   
   const server = await registerRoutes(app);

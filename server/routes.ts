@@ -19,8 +19,8 @@ import {
   addDocumentToCollection, 
   removeDocumentFromCollection,
   queryCollection,
-  initializeChromaDB
-} from "./chromadb";
+  initializeVectorDB
+} from "./vectordb";
 import { chatWithRAG, validateAPIKey } from "./openai";
 import { log } from "./vite";
 import { registerSignatureRoutes } from "./signature-routes";
@@ -37,12 +37,12 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Initialize ChromaDB - but don't block the app if it fails
-  // This allows the auth system to work even if ChromaDB is unavailable
+  // Inizializzazione del sistema di persistenza vettoriale
+  // Non blocchiamo l'app se fallisce per consentire al sistema di autenticazione di funzionare comunque
   try {
-    await initializeChromaDB();
+    await initializeVectorDB();
   } catch (error) {
-    log(`ChromaDB initialization error (non-blocking): ${error}`, "express");
+    log(`Errore inizializzazione sistema di persistenza vettoriale (non bloccante): ${error}`, "express");
   }
 
   // Sets up /api/register, /api/login, /api/logout, /api/user
