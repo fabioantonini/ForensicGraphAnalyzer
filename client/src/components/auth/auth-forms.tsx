@@ -56,7 +56,14 @@ export function LoginForm() {
               </FormControl>
               <FormMessage />
               <div className="text-right">
-                <a href="#" className="text-sm text-primary hover:text-primary-dark">
+                <a 
+                  href="/forgot-password" 
+                  className="text-sm text-primary hover:text-primary-dark"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.location.href = "/forgot-password";
+                  }}
+                >
                   {t('auth.forgotPassword', 'Forgot password?')}
                 </a>
               </div>

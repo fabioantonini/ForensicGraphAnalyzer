@@ -18,6 +18,8 @@ import QueryPage from "@/pages/query-page";
 import SettingsPage from "@/pages/settings-page";
 import SignaturesPage from "@/pages/signatures-page";
 import AdminPage from "@/pages/admin-page";
+import ForgotPasswordPage from "@/pages/forgot-password-page";
+import ResetPasswordPage from "@/pages/reset-password-page";
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -37,6 +39,8 @@ function Router() {
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
+      <Route path="/forgot-password" component={ForgotPasswordPage} />
+      <Route path="/reset-password/:token" component={ResetPasswordPage} />
       
       <ProtectedRoute path="/" component={() => (
         <AppLayout>

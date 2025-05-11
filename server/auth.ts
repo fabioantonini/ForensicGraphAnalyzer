@@ -174,6 +174,125 @@ export function setupAuth(app: Express) {
     const { password, ...userWithoutPassword } = req.user as SelectUser;
     res.json(userWithoutPassword);
   });
+  
+  // Endpoints per il recupero password
+  app.post("/api/forgot-password", async (req, res, next) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+      
+      // Verifica se il servizio email è configurato
+      if (!isEmailServiceConfigured()) {
+        return res.status(503).json({ 
+          message: "Email service is not configured. Please contact the administrator." 
+        });
+      }
+      
+      // Trova l'utente con questa email
+      const user = await storage.getUserByEmail(email);
+      
+      // Per ragioni di sicurezza, non rivelare se l'email esiste o meno
+      if (!user) {
+        // Invia una risposta di successo anche se l'utente non esiste
+        return res.status(200).json({ 
+          message: "If your email is registered, you will receive a password reset link shortly" 
+        });
+      }
+      
+      // Genera un token per il reset della password
+      const token = await generatePasswordResetToken(user.id);
+      
+      // Costruisci il link di reset
+      const baseUrl = process.env.BASE_URL || `http://${req.headers.host}`;
+      const resetLink = `${baseUrl}/reset-password/${token}`;
+      
+      // Determina la lingua dell'utente (se disponibile, altrimenti usa l'italiano)
+      const locale = user.settings?.language || 'it';
+      
+      // Invia l'email
+      const emailSent = await sendPasswordResetEmail(email, resetLink, locale);
+      
+      if (!emailSent) {
+        return res.status(500).json({ message: "Failed to send password reset email" });
+      }
+      
+      // Crea un'attività per il reset della password
+      await storage.createActivity({
+        userId: user.id,
+        type: "password_reset_request",
+        details: "Password reset requested",
+      });
+      
+      res.status(200).json({ 
+        message: "If your email is registered, you will receive a password reset link shortly" 
+      });
+    } catch (err) {
+      next(err);
+    }
+  });
+  
+  app.post("/api/reset-password", async (req, res, next) => {
+    try {
+      const { token, newPassword, confirmPassword } = req.body;
+      
+      if (!token || !newPassword) {
+        return res.status(400).json({ message: "Token and new password are required" });
+      }
+      
+      if (newPassword !== confirmPassword) {
+        return res.status(400).json({ message: "Passwords do not match" });
+      }
+      
+      // Verifica il token
+      const userId = verifyPasswordResetToken(token);
+      
+      if (!userId) {
+        return res.status(400).json({ message: "Invalid or expired token" });
+      }
+      
+      // Ottieni l'utente
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Genera un nuovo hash della password
+      const hashedPassword = await hashPassword(newPassword);
+      
+      // Aggiorna la password dell'utente
+      const updatedUser = await storage.updateUserPassword(userId, hashedPassword);
+      
+      // Crea un'attività per il reset della password completato
+      await storage.createActivity({
+        userId,
+        type: "password_reset_complete",
+        details: "Password reset completed",
+      });
+      
+      // Invalida il token
+      invalidatePasswordResetToken(token);
+      
+      res.status(200).json({ message: "Password has been reset successfully" });
+    } catch (err) {
+      next(err);
+    }
+  });
+  
+  // Endpoint per verificare se un token di reset password è valido
+  app.get("/api/verify-reset-token/:token", (req, res) => {
+    const { token } = req.params;
+    const userId = verifyPasswordResetToken(token);
+    
+    if (userId) {
+      res.status(200).json({ valid: true });
+    } else {
+      res.status(200).json({ valid: false });
+    }
+  });
 
   app.put("/api/user/api-key", async (req, res, next) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
