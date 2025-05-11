@@ -18,7 +18,7 @@ import { Eye, EyeOff } from "lucide-react";
 
 const apiSettingsSchema = z.object({
   openaiApiKey: z.string().min(1, "API key is required"),
-  model: z.enum(["gpt-4o", "gpt-3.5-turbo"]),
+  model: z.enum(["gpt-4o", "gpt-3.5-turbo", "o3", "o4-mini"]),
   temperature: z.number().min(0).max(1),
 });
 
@@ -142,6 +142,8 @@ export function ApiSettings() {
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="gpt-4o">GPT-4o</SelectItem>
+                      <SelectItem value="o3">o3</SelectItem>
+                      <SelectItem value="o4-mini">o4-mini</SelectItem>
                       <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
                     </SelectContent>
                   </Select>
