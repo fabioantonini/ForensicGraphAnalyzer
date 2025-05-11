@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "react-i18next";
 import { 
@@ -97,23 +97,22 @@ export default function SignaturesPage() {
     defaultValues: {},
   });
   
+  // Query to get all projects
+  const { 
+    data: projects = [],
+    isLoading: isLoadingProjects,
+  } = useQuery<SignatureProject[]>({
+    queryKey: ["/api/signature-projects"],
+  });
+  
   // Form for editing DPI
   const dpiForm = useForm<{ dpi: number }>({
     resolver: zodResolver(z.object({
       dpi: z.number().int().min(72).max(1200),
     })),
     defaultValues: {
-      dpi: projects.find(p => p.id === selectedProject)?.dpi || 300,
+      dpi: 300,
     },
-  });
-  
-  // Query to get all projects
-  const { 
-    data: projects = [],
-    isLoading: projectsLoading
-  } = useQuery<SignatureProject[]>({
-    queryKey: ["/api/signature-projects"],
-    enabled: !!user,
   });
   
   // Query to get signatures for selected project
@@ -476,6 +475,50 @@ export default function SignaturesPage() {
   });
   
   // Rimosso renderSimilarityScore perché ora è gestito dal componente SignatureCard
+  
+  // Mutation per aggiornare il DPI di un progetto
+  const updateDpi = useMutation({
+    mutationFn: async (data: { projectId: number, dpi: number }) => {
+      const res = await apiRequest("PATCH", `/api/signature-projects/${data.projectId}`, { dpi: data.dpi });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: t('common.success'),
+        description: t('signatures.dpiUpdated'),
+      });
+      setIsEditDpiOpen(false);
+      // Aggiorniamo i dati dei progetti e delle firme
+      queryClient.invalidateQueries({ queryKey: ["/api/signature-projects"] });
+      if (selectedProject) {
+        queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures"] });
+      }
+    },
+    onError: (error: Error) => {
+      toast({
+        title: t('common.error'),
+        description: t('signatures.errors.updateDpiError'),
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Funzione per aggiornare il DPI di un progetto
+  const onUpdateDpi = (data: { dpi: number }) => {
+    if (selectedProject) {
+      updateDpi.mutate({ projectId: selectedProject, dpi: data.dpi });
+    }
+  };
+
+  // Aggiorna i valori del form di modifica DPI quando cambia il progetto selezionato
+  useEffect(() => {
+    if (selectedProject) {
+      const project = projects.find(p => p.id === selectedProject);
+      if (project && project.dpi) {
+        dpiForm.setValue('dpi', project.dpi);
+      }
+    }
+  }, [selectedProject, projects, dpiForm]);
   
   return (
     <div className="container mx-auto py-6">
