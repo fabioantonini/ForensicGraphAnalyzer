@@ -1,0 +1,40 @@
+{
+  "fields": {
+    "email": "Email Address",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "newPassword": "New Password",
+    "username": "Username"
+  },
+  "errors": {
+    "error": "Error",
+    "requestFailed": "The request failed. Please try again later.",
+    "invalidEmail": "Please enter a valid email address"
+  },
+  "forgotPassword": {
+    "title": "Forgot Password",
+    "description": "Enter your account email address to receive a reset link.",
+    "sendLink": "Send Link",
+    "sending": "Sending...",
+    "emailSent": "Email Sent",
+    "checkInbox": "Check your inbox for the password reset link. If you don't see it, check your spam folder as well.",
+    "backToLogin": "Back to login page"
+  },
+  "resetPassword": {
+    "title": "Reset Password",
+    "description": "Enter a new password for your account.",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "reset": "Reset Password",
+    "resetting": "Resetting...",
+    "verifying": "Verifying token...",
+    "cancel": "Cancel",
+    "noToken": "No token provided. Please request a new reset link.",
+    "invalidToken": "The token is invalid or has expired. Please request a new reset link.",
+    "invalidTokenTitle": "Invalid Token",
+    "tryAgain": "Request new link",
+    "successTitle": "Password Successfully Reset",
+    "successDescription": "Your password has been reset. You will be redirected to the login page.",
+    "goToLogin": "Go to login page"
+  }
+}

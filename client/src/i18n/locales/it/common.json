@@ -1,0 +1,40 @@
+{
+  "fields": {
+    "email": "Indirizzo Email",
+    "password": "Password",
+    "confirmPassword": "Conferma Password",
+    "newPassword": "Nuova Password",
+    "username": "Nome Utente"
+  },
+  "errors": {
+    "error": "Errore",
+    "requestFailed": "La richiesta non è andata a buon fine. Riprova più tardi.",
+    "invalidEmail": "Inserisci un indirizzo email valido"
+  },
+  "forgotPassword": {
+    "title": "Password Dimenticata",
+    "description": "Inserisci l'indirizzo email associato al tuo account per ricevere un link di reset.",
+    "sendLink": "Invia Link",
+    "sending": "Invio in corso...",
+    "emailSent": "Email inviata",
+    "checkInbox": "Controlla la tua casella di posta per il link di reset password. Se non lo trovi, controlla anche nella cartella spam.",
+    "backToLogin": "Torna alla pagina di accesso"
+  },
+  "resetPassword": {
+    "title": "Reimposta Password",
+    "description": "Inserisci una nuova password per il tuo account.",
+    "newPassword": "Nuova Password",
+    "confirmPassword": "Conferma Password",
+    "reset": "Reimposta Password",
+    "resetting": "Reimpostazione in corso...",
+    "verifying": "Verifica del token in corso...",
+    "cancel": "Annulla",
+    "noToken": "Nessun token fornito. Richiedi un nuovo link di reset.",
+    "invalidToken": "Il token non è valido o è scaduto. Richiedi un nuovo link di reset.",
+    "invalidTokenTitle": "Token non valido",
+    "tryAgain": "Richiedi un nuovo link",
+    "successTitle": "Password reimpostata con successo",
+    "successDescription": "La tua password è stata reimpostata. Sarai reindirizzato alla pagina di accesso.",
+    "goToLogin": "Vai alla pagina di accesso"
+  }
+}
