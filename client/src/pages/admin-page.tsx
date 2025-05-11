@@ -5,6 +5,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { User } from "@/lib/types";
 import { UpdateUserRole } from "@shared/schema";
 import DemoAccountsManagement from "@/components/admin/demo-accounts-management";
+import EmailConfiguration from "@/components/admin/email-configuration";
 
 import {
   Card,
@@ -176,6 +177,7 @@ export default function AdminPage() {
           <TabsTrigger value="users">{t("admin.usersManagement")}</TabsTrigger>
           <TabsTrigger value="stats">{t("admin.systemStats")}</TabsTrigger>
           <TabsTrigger value="demo-accounts">{t("admin.demoAccounts.title", "Account Demo")}</TabsTrigger>
+          <TabsTrigger value="email-config">{t("admin.emailConfig.tabTitle", "Email")}</TabsTrigger>
         </TabsList>
 
         {/* Tab per la gestione utenti */}
@@ -371,6 +373,11 @@ export default function AdminPage() {
         {/* Tab per la gestione account demo */}
         <TabsContent value="demo-accounts">
           <DemoAccountsManagement />
+        </TabsContent>
+        
+        {/* Tab per la configurazione email */}
+        <TabsContent value="email-config">
+          <EmailConfiguration />
         </TabsContent>
       </Tabs>
 
