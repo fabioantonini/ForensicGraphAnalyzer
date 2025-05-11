@@ -16,6 +16,7 @@ import { LoadingSpinner } from "../ui/loading-spinner";
 import { useAuth } from "@/hooks/use-auth";
 import { Eye, EyeOff } from "lucide-react";
 
+// Definizione del nuovo schema con supporto per i modelli o3 e o4-mini
 const apiSettingsSchema = z.object({
   openaiApiKey: z.string().min(1, "API key is required"),
   model: z.enum(["gpt-4o", "gpt-3.5-turbo", "o3", "o4-mini"]),
@@ -141,9 +142,9 @@ export function ApiSettings() {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="gpt-4o">GPT-4o</SelectItem>
                       <SelectItem value="o3">o3</SelectItem>
                       <SelectItem value="o4-mini">o4-mini</SelectItem>
+                      <SelectItem value="gpt-4o">GPT-4o</SelectItem>
                       <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
                     </SelectContent>
                   </Select>
