@@ -117,15 +117,41 @@ export async function queryVectorStore(
     console.log(`Esecuzione query "${query}" nel vector store...`);
     
     // Conta quanti documenti e chunks ha l'utente
-    const countResults = await db.execute(
-      sql`
-        SELECT COUNT(*) as total_chunks, COUNT(DISTINCT document_id) as total_docs
-        FROM document_embeddings
-        WHERE user_id = ${userId}
-      `
-    );
-    const totalItems = countResults[0] as any;
-    console.log(`L'utente ${userId} ha ${totalItems.total_docs} documenti e ${totalItems.total_chunks} chunk nel vector store`);
+    try {
+      const countResults = await db.execute(
+        sql`
+          SELECT COUNT(*) as total_chunks, COUNT(DISTINCT document_id) as total_docs
+          FROM document_embeddings
+          WHERE user_id = ${userId}
+        `
+      );
+      
+      // Evitiamo di usare JSON.stringify per oggetti complessi
+      try {
+        console.log("Tipo countResults:", typeof countResults);
+        console.log("countResults è un array?", Array.isArray(countResults));
+        
+        if (typeof countResults === 'object' && countResults !== null) {
+          console.log("Proprietà di countResults:", Object.keys(countResults));
+        }
+        
+        if (Array.isArray(countResults) && countResults.length > 0) {
+          console.log("Proprietà del primo elemento:", Object.keys(countResults[0]));
+        }
+      } catch (logError) {
+        console.log("Errore durante il logging dei risultati di conteggio:", logError);
+      }
+      
+      // Verifica il formato esatto della risposta
+      if (Array.isArray(countResults) && countResults.length > 0) {
+        const totalItems = countResults[0];
+        console.log(`L'utente ${userId} ha ${totalItems.total_docs || 'unknown'} documenti e ${totalItems.total_chunks || 'unknown'} chunk nel vector store`);
+      } else {
+        console.log(`Formato di risposta imprevisto per la count query:`, typeof countResults);
+      }
+    } catch (countError) {
+      console.log(`Errore durante il conteggio dei documenti: ${countError}`);
+    }
     
     // Genera l'embedding della query
     const queryEmbedding = await generateEmbedding(query, apiKey);
@@ -152,14 +178,40 @@ export async function queryVectorStore(
     
     console.log(`Esecuzione query SQL nel vector store...`);
     
-    const results = await db.execute(sqlQuery) as unknown as Array<QueryResult>;
-    
-    if (results && Array.isArray(results)) {
-      console.log(`Query completata, trovati ${results.length} risultati`);
-      return results;
-    } else {
-      console.log(`Query completata, ma risultati non validi: ${typeof results}`);
-      return []
+    try {
+      const rawResults = await db.execute(sqlQuery);
+      console.log("Formato risultati SQL:", typeof rawResults);
+      console.log("È un array?", Array.isArray(rawResults));
+      
+      // Evitiamo di usare JSON.stringify per oggetti complessi
+      try {
+        const firstResult = Array.isArray(rawResults) && rawResults.length > 0 ? rawResults[0] : null;
+        console.log("Primo risultato:", firstResult);
+        
+        if (typeof rawResults === 'object' && rawResults !== null) {
+          console.log("Proprietà dell'oggetto risultati:", Object.keys(rawResults));
+        }
+      } catch (logError) {
+        console.log("Errore durante il logging dei risultati:", logError);
+      }
+      
+      // Vediamo se c'è la proprietà rows, che è comune nei client PostgreSQL
+      if (rawResults && typeof rawResults === 'object' && 'rows' in rawResults && Array.isArray(rawResults.rows)) {
+        console.log(`Query completata, trovati ${rawResults.rows.length} risultati nella proprietà 'rows'`);
+        return rawResults.rows as Array<QueryResult>;
+      }
+      
+      // In alternativa, controlliamo se è già un array
+      if (rawResults && Array.isArray(rawResults)) {
+        console.log(`Query completata, trovati ${rawResults.length} risultati nell'array`);
+        return rawResults as Array<QueryResult>;
+      }
+      
+      console.log(`Query completata, ma risultati non validi:`, rawResults);
+      return [];
+    } catch (sqlError) {
+      console.error("Errore nell'esecuzione della query SQL:", sqlError);
+      return [];
     }
   } catch (error: any) {
     console.error(`Errore nell'esecuzione della query nel vector store:`, error);
