@@ -123,6 +123,12 @@ export async function addDocumentToCollection(
     .filter(p => p.trim().length > 0)
     .map(p => p.trim());
   
+  // Inizializza il tracciamento del progresso se non è già stato fatto
+  const progress = getProgress(document.id);
+  if (!progress) {
+    initProgress(document.id, paragraphs.length);
+  }
+  
   for (let i = 0; i < paragraphs.length; i++) {
     const docId = `${document.id}-${i}`;
     inMemoryDocuments.set(docId, {
@@ -135,7 +141,13 @@ export async function addDocumentToCollection(
       },
       userId
     });
+    
+    // Aggiorna il progresso per ogni chunk elaborato
+    updateProgress(document.id, i + 1);
   }
+  
+  // Segna il completamento dell'elaborazione
+  completeProgress(document.id);
   
   log(`Documento aggiunto all'in-memory store con ${paragraphs.length} chunk`, "database");
 }
