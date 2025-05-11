@@ -50,15 +50,18 @@ export class SignaturePythonAnalyzer {
   /**
    * Analizza una singola firma
    * @param signaturePath Percorso del file dell'immagine della firma
+   * @param dpi Densità di pixel per pollice per calcolare le dimensioni reali (default 300)
    * @returns Promise con i parametri estratti dalla firma
    */
-  public static async analyzeSignature(signaturePath: string): Promise<any> {
+  public static async analyzeSignature(signaturePath: string, dpi: number = 300): Promise<any> {
     return new Promise((resolve, reject) => {
       const process = spawn('python3', [
         this.pythonScript,
         signaturePath,
         signaturePath,  // Usiamo lo stesso file due volte per evitare errori
-        '--no-report'   // Non generiamo report per singole analisi
+        '--no-report',  // Non generiamo report per singole analisi
+        '--dpi',        // Parametro per il DPI
+        dpi.toString()  // Valore del DPI specificato
       ]);
 
       let outputData = '';
@@ -103,6 +106,7 @@ export class SignaturePythonAnalyzer {
    * @param generateReport Se true, genera un report PDF
    * @param caseInfo Informazioni opzionali sul caso per il report
    * @param projectId ID opzionale del progetto per assicurare l'isolamento dei dati
+   * @param dpi Densità di pixel per pollice per calcolare le dimensioni reali (default 300)
    * @returns Promise con i risultati del confronto
    */
   public static async compareSignatures(
@@ -110,7 +114,8 @@ export class SignaturePythonAnalyzer {
     referencePath: string,
     generateReport: boolean = false,
     caseInfo?: CaseInfo,
-    projectId?: number
+    projectId?: number,
+    dpi: number = 300
   ): Promise<ComparisonResult> {
     return new Promise((resolve, reject) => {
       const args = [
@@ -135,6 +140,11 @@ export class SignaturePythonAnalyzer {
         args.push(projectId.toString());
         console.log(`[PYTHON BRIDGE] Passaggio del project ID ${projectId} allo script Python per isolamento dati`);
       }
+      
+      // Passiamo sempre il parametro DPI
+      args.push('--dpi');
+      args.push(dpi.toString());
+      log(`Usando DPI: ${dpi} per il calcolo delle dimensioni reali`, 'python-bridge');
 
       const process = spawn('python3', args);
 

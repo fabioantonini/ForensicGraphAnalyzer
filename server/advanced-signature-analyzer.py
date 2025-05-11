@@ -625,10 +625,21 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"Errore nel parsing dell'ID del progetto: {e}", file=sys.stderr)
     
-    # Log per debugging
-    print(f"Confronto tra firme con path1={verifica_path}, path2={comp_path}, generate_report={generate_report}, project_id={project_id}", file=sys.stderr)
+    # Recupera il DPI se presente
+    dpi = DEFAULT_DPI
+    if "--dpi" in sys.argv:
+        try:
+            idx = sys.argv.index("--dpi")
+            if idx + 1 < len(sys.argv):
+                dpi = int(sys.argv[idx + 1])
+                print(f"DPI specificato: {dpi}", file=sys.stderr)
+        except Exception as e:
+            print(f"Errore nel parsing del DPI: {e}, usando DPI di default={DEFAULT_DPI}", file=sys.stderr)
     
-    result = compare_signatures(verifica_path, comp_path, generate_report, case_info, project_id)
+    # Log per debugging
+    print(f"Confronto tra firme con path1={verifica_path}, path2={comp_path}, generate_report={generate_report}, project_id={project_id}, dpi={dpi}", file=sys.stderr)
+    
+    result = compare_signatures(verifica_path, comp_path, generate_report, case_info, project_id, dpi)
     
     # Adatta i parametri per JSON
     if "verifica_parameters" in result:
