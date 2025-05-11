@@ -8,6 +8,14 @@ import { log } from './vite';
 import { createPgVectorAdapter } from './pgvector-adapter';
 import { testDatabaseConnection, isPgVectorAvailable, db } from './db';
 import { sql } from 'drizzle-orm';
+import {
+  initProgress,
+  updateProgress,
+  completeProgress,
+  failProgress,
+  transferProgress,
+  getProgress
+} from './progress-tracker';
 
 // Stato del sistema di persistenza vettoriale
 let isPgVectorEnabled = false;
