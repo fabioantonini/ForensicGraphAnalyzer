@@ -1,17 +1,10 @@
 import express, { Express, Request, Response, NextFunction } from "express";
-import fs from "fs/promises";
-import path from "path";
 import { storage } from "./storage";
 import { 
   sendEmail, 
-  isEmailServiceConfigured, 
-  generatePasswordResetToken, 
-  verifyPasswordResetToken,
-  invalidatePasswordResetToken,
-  sendPasswordResetEmail,
   EmailServiceType,
   EmailServiceConfig,
-  loadEmailConfig as getEmailConfig,
+  loadEmailConfig,
   saveEmailConfig
 } from "./email-service";
 import {
@@ -19,7 +12,8 @@ import {
   getTokenFromCode,
   GmailConfig,
   loadGmailConfig,
-  saveGmailConfig
+  saveGmailConfig,
+  isGmailServiceConfigured
 } from "./gmail-service";
 
 // Funzione per verificare se l'utente è un amministratore
@@ -35,261 +29,374 @@ function isAdmin(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
-// Funzione per salvare la configurazione email
-async function saveEmailConfig(config: EmailConfig): Promise<void> {
-  // Se la password è vuota e c'è già una configurazione, mantieni la password attuale
-  if (!config.smtpPassword) {
-    try {
-      const existingConfig = await loadEmailConfig();
-      if (existingConfig.smtpPassword) {
-        config.smtpPassword = existingConfig.smtpPassword;
-      }
-    } catch (error) {
-      // Ignora errori
-    }
-  }
-
-  // Imposta isConfigured a true se tutti i campi obbligatori sono presenti
-  config.isConfigured = !!(
-    config.smtpHost &&
-    config.smtpPort &&
-    config.smtpUser &&
-    config.smtpPassword
-  );
-
-  // Salva la configurazione nel file
-  await fs.writeFile(EMAIL_CONFIG_PATH, JSON.stringify(config, null, 2), "utf8");
-
-  // Aggiorna le variabili d'ambiente
-  process.env.SMTP_HOST = config.smtpHost;
-  process.env.SMTP_PORT = config.smtpPort.toString();
-  process.env.SMTP_SECURE = config.smtpSecure.toString();
-  process.env.SMTP_USER = config.smtpUser;
-  if (config.smtpPassword) {
-    process.env.SMTP_PASSWORD = config.smtpPassword;
-  }
-}
-
-// Funzione per configurare le rotte di amministrazione
+// Configurazione delle rotte di amministrazione
 export function setupAdminRoutes(app: Express) {
-  // Applica il middleware isAdmin a tutte le rotte di amministrazione
-  app.use("/api/admin", isAdmin);
+  // Middleware per verificare se l'utente è un amministratore
+  const adminRouter = express.Router();
+  adminRouter.use(isAdmin);
 
-  // Ottieni configurazione email
-  app.get("/api/admin/email-config", async (req, res) => {
+  // Rotta per ottenere tutti gli utenti (solo admin)
+  adminRouter.get("/users", async (req, res) => {
     try {
-      const config = await loadEmailConfig();
-      
-      // Non inviare la password al client per sicurezza
-      // ma invia un indicatore se è impostata
-      const safeConfig = {
-        ...config,
-        smtpPassword: config.smtpPassword ? true : null,
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("Errore nel recupero degli utenti:", error);
+      res.status(500).json({ message: "Errore interno del server" });
+    }
+  });
+
+  // Rotta per ottenere statistiche del sistema (solo admin)
+  adminRouter.get("/stats", async (req, res) => {
+    try {
+      // Implementa la logica per ottenere statistiche
+      // Ad esempio: numero di utenti, documenti, query, ecc.
+      const stats = {
+        userCount: 0,
+        documentCount: 0,
+        queryCount: 0,
+        totalSize: 0,
+        newUsers: []
       };
+      
+      try {
+        stats.userCount = await storage.getUserCount();
+      } catch (e) {
+        console.error("Error getting user count:", e);
+      }
+      
+      try {
+        stats.documentCount = await storage.getDocumentCount();
+      } catch (e) {
+        console.error("Error getting document count:", e);
+      }
+      
+      try {
+        stats.queryCount = await storage.getQueryCount();
+      } catch (e) {
+        console.error("Error getting query count:", e);
+      }
+      
+      try {
+        stats.totalSize = await storage.getStorageUsed();
+      } catch (e) {
+        console.error("Error getting storage used:", e);
+      }
+      
+      try {
+        // Try to get new users in the last 7 days if the method exists
+        if (typeof storage.getNewUsers === 'function') {
+          stats.newUsers = await storage.getNewUsers(7);
+        }
+      } catch (e) {
+        console.error("Error getting new users:", e);
+      }
 
-      res.status(200).json(safeConfig);
+      res.json(stats);
     } catch (error) {
-      console.error("Error loading email config:", error);
-      res.status(500).json({ message: "Failed to load email configuration" });
+      console.error("Errore nel recupero delle statistiche:", error);
+      res.status(500).json({ message: "Errore interno del server" });
     }
   });
 
-  // Salva configurazione email
-  app.post("/api/admin/email-config", async (req, res) => {
+  // Rotta per eliminare un utente (solo admin)
+  adminRouter.delete("/users/:id", async (req, res) => {
     try {
-      const { smtpHost, smtpPort, smtpSecure, smtpUser, smtpPassword } = req.body;
-
-      const config: EmailConfig = {
-        smtpHost,
-        smtpPort: parseInt(smtpPort, 10),
-        smtpSecure: !!smtpSecure,
-        smtpUser,
-        smtpPassword: smtpPassword || null,
-        isConfigured: false, // Sarà aggiornato da saveEmailConfig
-      };
-
-      await saveEmailConfig(config);
-
-      // Crea un'attività per registrare la modifica
-      await storage.createActivity({
-        userId: req.user!.id,
-        type: "email_config_update",
-        details: "Email configuration updated",
-      });
-
-      res.status(200).json({ message: "Email configuration saved successfully" });
-    } catch (error) {
-      console.error("Error saving email config:", error);
-      res.status(500).json({ message: "Failed to save email configuration" });
-    }
-  });
-
-  // Test dell'invio di email
-  app.post("/api/admin/test-email", async (req, res) => {
-    try {
-      if (!isEmailServiceConfigured()) {
-        return res.status(400).json({ message: "Email service is not configured" });
+      const userId = parseInt(req.params.id);
+      
+      // Non consentire l'eliminazione dell'utente stesso
+      if (userId === req.user!.id) {
+        return res.status(400).json({ message: "Non puoi eliminare il tuo account" });
       }
 
-      const adminEmail = req.user!.email;
-      const testSubject = "GrapholexInsight - Test Email";
-      const testContent = `
-        <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
-          <div style="background-color: #4f46e5; padding: 20px; color: white; text-align: center; border-radius: 5px 5px 0 0;">
-            <h1 style="margin: 0;">GrapholexInsight</h1>
-            <p>Test Email</p>
-          </div>
-          <div style="border: 1px solid #e5e7eb; border-top: none; padding: 20px; border-radius: 0 0 5px 5px;">
-            <p>Ciao,</p>
-            <p>Questa è un'email di test inviata da GrapholexInsight.</p>
-            <p>Se stai ricevendo questa email, la configurazione del servizio email è corretta.</p>
-            <p>Data e ora del test: ${new Date().toLocaleString()}</p>
-            <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
-            <p style="font-size: 12px; color: #6b7280;">Questa email è stata inviata automaticamente. Si prega di non rispondere a questa email.</p>
-          </div>
-        </div>
-      `;
-
-      const emailSent = await sendEmail(adminEmail, testSubject, testContent);
-
-      if (!emailSent) {
-        return res.status(500).json({ message: "Failed to send test email" });
-      }
-
-      // Crea un'attività per registrare il test
-      await storage.createActivity({
-        userId: req.user!.id,
-        type: "email_test",
-        details: "Email test sent",
-      });
-
-      res.status(200).json({ message: "Test email sent successfully" });
-    } catch (error) {
-      console.error("Error sending test email:", error);
-      res.status(500).json({ message: "Failed to send test email: " + (error as Error).message });
-    }
-  });
-  
-  // Le seguenti rotte NON richiedono autenticazione
-  
-  // Rotta per richiedere il reset della password
-  app.post("/api/request-password-reset", async (req, res) => {
-    try {
-      const { email, locale = 'it' } = req.body;
-      
-      if (!email) {
-        return res.status(400).json({ message: "Email richiesta" });
-      }
-      
-      // Verifica se il servizio email è configurato
-      if (!isEmailServiceConfigured()) {
-        return res.status(500).json({ message: "Il servizio email non è configurato. Contatta l'amministratore." });
-      }
-      
-      // Trova l'utente con questa email
-      const user = await storage.getUserByEmail(email);
-      
-      if (!user) {
-        // Per sicurezza, non rivelare che l'utente non esiste
-        return res.json({ 
-          success: true, 
-          message: "Se l'indirizzo è associato a un account, riceverai un'email con le istruzioni per reimpostare la password." 
-        });
-      }
-      
-      // Genera un token di reset
-      const token = await generatePasswordResetToken(user.id);
-      
-      // Costruisci il link di reset
-      const resetLink = `${req.protocol}://${req.get('host')}/reset-password?token=${token}`;
-      
-      // Invia l'email
-      const emailSent = await sendPasswordResetEmail(email, resetLink, locale);
-      
-      // Registra l'attività
-      await storage.createActivity({
-        userId: user.id,
-        type: "password_reset_request",
-        details: "Password reset requested"
-      });
-      
-      res.json({ 
-        success: true, 
-        message: "Se l'indirizzo è associato a un account, riceverai un'email con le istruzioni per reimpostare la password." 
-      });
-    } catch (error) {
-      console.error("Error requesting password reset:", error);
-      res.status(500).json({ message: "Errore nella richiesta di reset password" });
-    }
-  });
-  
-  // Rotta per verificare il token di reset
-  app.get("/api/verify-reset-token", async (req, res) => {
-    try {
-      const { token } = req.query;
-      
-      if (!token || typeof token !== 'string') {
-        return res.status(400).json({ valid: false, message: "Token mancante o non valido" });
-      }
-      
-      // Verifica il token
-      const userId = verifyPasswordResetToken(token);
-      
-      if (!userId) {
-        return res.json({ valid: false, message: "Token non valido o scaduto" });
-      }
-      
-      res.json({ valid: true });
-    } catch (error) {
-      console.error("Error verifying reset token:", error);
-      res.status(500).json({ valid: false, message: "Errore nella verifica del token" });
-    }
-  });
-  
-  // Rotta per reimpostare la password
-  app.post("/api/reset-password", async (req, res) => {
-    try {
-      const { token, newPassword } = req.body;
-      
-      if (!token || !newPassword) {
-        return res.status(400).json({ message: "Token e nuova password richiesti" });
-      }
-      
-      // Verifica il token
-      const userId = verifyPasswordResetToken(token);
-      
-      if (!userId) {
-        return res.status(400).json({ message: "Token non valido o scaduto" });
-      }
-      
-      // Trova l'utente
+      // Controlla se l'utente esiste
       const user = await storage.getUser(userId);
-      
       if (!user) {
         return res.status(404).json({ message: "Utente non trovato" });
       }
+
+      // Elimina l'utente
+      await storage.deleteUser(userId);
       
-      // Aggiorna la password dell'utente
-      const success = await storage.updateUserPassword(userId, newPassword);
-      
-      if (success) {
-        // Invalida il token dopo l'uso
-        invalidatePasswordResetToken(token);
-        
-        // Registra l'attività
-        await storage.createActivity({
-          userId,
-          type: "password_reset_complete",
-          details: "Password reset completed"
-        });
-        
-        res.json({ success: true, message: "Password aggiornata con successo" });
-      } else {
-        res.status(500).json({ message: "Errore nell'aggiornamento della password" });
-      }
+      res.status(200).json({ message: "Utente eliminato con successo" });
     } catch (error) {
-      console.error("Error resetting password:", error);
-      res.status(500).json({ message: "Errore nel reset della password" });
+      console.error("Errore nell'eliminazione dell'utente:", error);
+      res.status(500).json({ message: "Errore interno del server" });
     }
   });
+
+  // Rotta per ottenere la configurazione email (solo admin)
+  adminRouter.get("/email-config", async (req, res) => {
+    try {
+      const config = await loadEmailConfig();
+      // Non inviare la password al client
+      const safeConfig = { 
+        ...config, 
+        smtpPassword: config.smtpPassword ? "********" : null 
+      };
+      res.json(safeConfig);
+    } catch (error) {
+      console.error("Errore nel recupero della configurazione email:", error);
+      res.status(500).json({ message: "Errore interno del server" });
+    }
+  });
+
+  // Rotta per ottenere la configurazione Gmail (solo admin)
+  adminRouter.get("/gmail-config", async (req, res) => {
+    try {
+      const config = await loadGmailConfig();
+      // Non inviare il client secret al client
+      const safeConfig = { 
+        ...config, 
+        clientSecret: config.clientSecret ? "********" : "" 
+      };
+      res.json(safeConfig);
+    } catch (error) {
+      console.error("Errore nel recupero della configurazione Gmail:", error);
+      res.status(500).json({ message: "Errore interno del server" });
+    }
+  });
+
+  // Rotta per aggiornare la configurazione email SMTP (solo admin)
+  adminRouter.post("/email-config", async (req, res) => {
+    try {
+      const config = req.body as EmailServiceConfig;
+      
+      // Valida la configurazione per SMTP
+      if (config.type === EmailServiceType.SMTP && config.isConfigured) {
+        if (!config.smtpHost) {
+          return res.status(400).json({ message: "Host SMTP mancante" });
+        }
+        if (!config.smtpPort) {
+          return res.status(400).json({ message: "Porta SMTP mancante" });
+        }
+        if (!config.smtpUser) {
+          return res.status(400).json({ message: "Utente SMTP mancante" });
+        }
+      }
+
+      await saveEmailConfig(config);
+      
+      // Se la configurazione è stata disabilitata o aggiornata con successo
+      if (!config.isConfigured) {
+        res.json({ message: "Configurazione email disabilitata" });
+      } else {
+        // Testa la configurazione
+        const testEmail = req.user!.email;
+        const success = await sendEmail(
+          testEmail,
+          "Test Configurazione Email",
+          "<p>Questa è un'email di test per verificare la configurazione del server email.</p>"
+        );
+
+        if (success) {
+          res.json({ message: "Configurazione email aggiornata e testata con successo" });
+        } else {
+          res.status(500).json({ message: "Configurazione salvata ma test fallito. Verifica i parametri." });
+        }
+      }
+    } catch (error) {
+      console.error("Errore nell'aggiornamento della configurazione email:", error);
+      res.status(500).json({ message: "Errore interno del server" });
+    }
+  });
+
+  // Rotta per aggiornare la configurazione Gmail (solo admin)
+  adminRouter.post("/gmail-config", async (req, res) => {
+    try {
+      const config = req.body as GmailConfig;
+      
+      // Valida la configurazione Gmail
+      if (config.isConfigured) {
+        if (!config.clientId) {
+          return res.status(400).json({ message: "Client ID mancante" });
+        }
+        if (!config.clientSecret) {
+          // Se il client secret è "********", non è stato modificato
+          const currentConfig = await loadGmailConfig();
+          if (currentConfig.clientSecret) {
+            config.clientSecret = currentConfig.clientSecret;
+          } else {
+            return res.status(400).json({ message: "Client Secret mancante" });
+          }
+        }
+        if (!config.redirectUri) {
+          return res.status(400).json({ message: "URI di reindirizzamento mancante" });
+        }
+      }
+
+      await saveGmailConfig(config);
+      
+      // Se la configurazione è stata disabilitata o non c'è ancora un refresh token
+      if (!config.isConfigured || !config.refreshToken) {
+        if (!config.isConfigured) {
+          res.json({ message: "Configurazione Gmail disabilitata" });
+        } else {
+          // Genera l'URL di autorizzazione
+          const authUrl = generateAuthUrl(config);
+          res.json({ 
+            message: "Configurazione Gmail salvata. Autorizzazione richiesta.", 
+            authUrl 
+          });
+        }
+      } else {
+        // Se abbiamo già un refresh token, testiamo la configurazione
+        const testEmail = req.user!.email;
+        const success = await sendEmail(
+          testEmail,
+          "Test Configurazione Gmail",
+          "<p>Questa è un'email di test per verificare la configurazione dell'API Gmail.</p>"
+        );
+
+        if (success) {
+          res.json({ message: "Configurazione Gmail aggiornata e testata con successo" });
+        } else {
+          res.status(500).json({ message: "Configurazione salvata ma test fallito. Verifica i parametri." });
+        }
+      }
+    } catch (error) {
+      console.error("Errore nell'aggiornamento della configurazione Gmail:", error);
+      res.status(500).json({ message: "Errore interno del server" });
+    }
+  });
+
+  // Rotta per gestire il callback OAuth di Gmail
+  adminRouter.get("/gmail-auth-callback", async (req, res) => {
+    try {
+      const { code } = req.query;
+      
+      if (!code || typeof code !== 'string') {
+        return res.status(400).json({ message: "Codice di autorizzazione mancante" });
+      }
+
+      // Carica la configurazione Gmail corrente
+      const config = await loadGmailConfig();
+      
+      if (!config.isConfigured || !config.clientId || !config.clientSecret) {
+        return res.status(400).json({ message: "Configurazione Gmail non valida" });
+      }
+
+      // Ottieni il refresh token dal codice di autorizzazione
+      const refreshToken = await getTokenFromCode(config, code);
+      
+      // Aggiorna la configurazione con il refresh token
+      config.refreshToken = refreshToken;
+      await saveGmailConfig(config);
+
+      // Reindirizza all'interfaccia di amministrazione
+      res.redirect('/admin?gmailConfigured=true');
+    } catch (error) {
+      console.error("Errore nell'elaborazione del callback OAuth:", error);
+      res.status(500).json({ message: "Errore nell'elaborazione del callback OAuth" });
+    }
+  });
+
+  // Rotta per creare un account demo (solo admin)
+  adminRouter.post("/create-demo-account", async (req, res) => {
+    try {
+      const { username, email, password, durationDays, fullName, organization, profession } = req.body;
+
+      // Validazione base
+      if (!username || !email || !password || !durationDays) {
+        return res.status(400).json({ message: "Dati mancanti per la creazione dell'account demo" });
+      }
+
+      // Controlla se username o email esistono già
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Nome utente già in uso" });
+      }
+
+      const existingEmail = await storage.getUserByEmail(email);
+      if (existingEmail) {
+        return res.status(400).json({ message: "Email già in uso" });
+      }
+
+      // Crea l'account demo
+      // Utilizziamo createUser invece di createDemoUser se il metodo specifico non esiste
+      let user;
+      if (typeof storage.createDemoUser === 'function') {
+        user = await storage.createDemoUser({
+          username,
+          email,
+          password,
+          durationDays: parseInt(durationDays.toString()),
+          fullName: fullName || null,
+          organization: organization || null,
+          profession: profession || null
+        });
+      } else {
+        // Fallback se createDemoUser non è disponibile
+        user = await storage.createUser({
+          username,
+          password,
+          email,
+          confirmPassword: password,
+          fullName: fullName || null,
+          organization: organization || null,
+          profession: profession || null
+        });
+      }
+
+      res.status(201).json({ 
+        message: "Account demo creato con successo",
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          fullName: user.fullName
+        }
+      });
+    } catch (error) {
+      console.error("Errore nella creazione dell'account demo:", error);
+      res.status(500).json({ message: "Errore interno del server" });
+    }
+  });
+
+  // Rotta per estendere la durata di un account demo (solo admin)
+  adminRouter.post("/extend-demo/:id", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { durationDays } = req.body;
+
+      if (!durationDays || durationDays <= 0) {
+        return res.status(400).json({ message: "Durata di estensione non valida" });
+      }
+
+      // Controlla se l'utente esiste
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Utente non trovato" });
+      }
+
+      // Se il metodo specifico esiste, usa quello
+      if (typeof storage.extendDemoAccount === 'function') {
+        try {
+          const updatedUser = await storage.extendDemoAccount(userId, parseInt(durationDays.toString()));
+          
+          res.json({ 
+            message: "Durata dell'account demo estesa con successo",
+            user: {
+              id: updatedUser.id,
+              username: updatedUser.username,
+              email: updatedUser.email,
+              demoExpiresAt: updatedUser.demoExpiresAt
+            }
+          });
+        } catch (error) {
+          console.error("Errore nell'estensione dell'account demo:", error);
+          res.status(500).json({ message: "Errore durante l'estensione dell'account demo" });
+        }
+      } else {
+        // Fallback se extendDemoAccount non è disponibile
+        res.status(501).json({ message: "Funzionalità non implementata" });
+      }
+    } catch (error) {
+      console.error("Errore nell'estensione dell'account demo:", error);
+      res.status(500).json({ message: "Errore interno del server" });
+    }
+  });
+
+  // Registra le rotte di amministrazione
+  app.use("/api/admin", adminRouter);
 }

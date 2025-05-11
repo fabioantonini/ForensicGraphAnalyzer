@@ -115,9 +115,14 @@ export async function loadEmailConfig(): Promise<EmailServiceConfig> {
   
   try {
     const config = JSON.parse(configJson) as EmailServiceConfig;
+    // Determina se il servizio è configurato in base al tipo
+    const configuredStatus = config.type === EmailServiceType.SMTP 
+      ? !!(config.smtpHost && config.smtpPort && config.smtpUser && config.smtpPassword)
+      : config.type === EmailServiceType.GMAIL_API;
+    
     return {
       ...config,
-      isConfigured: isEmailServiceConfigured(config)
+      isConfigured: configuredStatus
     };
   } catch (error) {
     console.error('Errore nel parsing della configurazione email:', error);
@@ -256,8 +261,15 @@ export async function sendPasswordResetEmail(to: string, resetLink: string, loca
 
 /**
  * Verifica se il servizio email è configurato correttamente
+ * @param config Configurazione del servizio email da verificare
  * @returns true se il servizio email è configurato correttamente
  */
-export function isEmailServiceConfigured(): boolean {
-  return !!(process.env.SMTP_USER && process.env.SMTP_PASSWORD);
+export function isEmailServiceConfigured(config: EmailServiceConfig): boolean {
+  if (config.type === EmailServiceType.SMTP) {
+    return !!(config.smtpHost && config.smtpPort && config.smtpUser && config.smtpPassword);
+  } else if (config.type === EmailServiceType.GMAIL_API) {
+    // La verifica dettagliata viene fatta nella funzione isGmailServiceConfigured
+    return true;
+  }
+  return false;
 }
