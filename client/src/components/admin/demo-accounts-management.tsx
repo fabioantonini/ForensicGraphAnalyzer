@@ -342,7 +342,7 @@ const DemoAccountsManagement: React.FC = () => {
                 </Table>
               ) : (
                 <div className="text-center py-4 text-muted-foreground">
-                  {t("demoAccounts.noExpiredAccounts")}
+                  {t("admin:demoAccounts.noExpiredAccounts")}
                 </div>
               )}
             </CardContent>
@@ -354,9 +354,9 @@ const DemoAccountsManagement: React.FC = () => {
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
         <DialogContent className="sm:max-w-[525px]">
           <DialogHeader>
-            <DialogTitle>{t("demoAccounts.createTitle")}</DialogTitle>
+            <DialogTitle>{t("admin:demoAccounts.createTitle")}</DialogTitle>
             <DialogDescription>
-              {t("demoAccounts.createDescription")}
+              {t("admin:demoAccounts.createDescription")}
             </DialogDescription>
           </DialogHeader>
           
@@ -440,7 +440,7 @@ const DemoAccountsManagement: React.FC = () => {
                   name="organization"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("demoAccounts.organization")} (opzionale)</FormLabel>
+                      <FormLabel>{t("common:organization")} ({t("common:optional")})</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -453,7 +453,7 @@ const DemoAccountsManagement: React.FC = () => {
                   name="profession"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("demoAccounts.profession")} (opzionale)</FormLabel>
+                      <FormLabel>{t("common:profession")} ({t("common:optional")})</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -468,7 +468,7 @@ const DemoAccountsManagement: React.FC = () => {
                 name="durationDays"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("demoAccounts.duration")}</FormLabel>
+                    <FormLabel>{t("admin:demoAccounts.duration")}</FormLabel>
                     <FormControl>
                       <Input type="number" min="1" max="365" {...field} />
                     </FormControl>
