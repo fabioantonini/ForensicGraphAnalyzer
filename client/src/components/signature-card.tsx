@@ -186,21 +186,31 @@ export function SignatureCard({
               {getStatusTranslation(signature.processingStatus)}
             </Badge>
             
-            <div className="flex items-center gap-1 ml-1">
-              <span className="text-xs text-gray-600">
-                <span title={t('signatures.dpiDetected', 'DPI rilevato automaticamente')}>
-                  DPI: {signature.dpi ? signature.dpi : 300}
+            <div className="flex flex-col gap-1 ml-1">
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-gray-600">
+                  <span title={t('signatures.dpiDetected', 'DPI rilevato automaticamente')}>
+                    DPI: {signature.dpi ? signature.dpi : 300}
+                  </span>
                 </span>
-              </span>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-5 w-5 p-0"
-                onClick={() => setIsEditDpiOpen(true)}
-                title={t('signatures.editDpi.buttonTitle', 'Modifica valore DPI')}
-              >
-                <Edit2 className="h-3 w-3" />
-              </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-5 w-5 p-0"
+                  onClick={() => setIsEditDpiOpen(true)}
+                  title={t('signatures.editDpi.buttonTitle', 'Modifica valore DPI')}
+                >
+                  <Edit2 className="h-3 w-3" />
+                </Button>
+              </div>
+              
+              {signature.parameters && signature.parameters.width && signature.parameters.height && (
+                <span className="text-xs text-gray-600">
+                  <span title={t('signatures.dimensionsInfo', 'Dimensioni reali della firma')}>
+                    {signature.parameters.width.toFixed(1)} × {signature.parameters.height.toFixed(1)} mm
+                  </span>
+                </span>
+              )}
             </div>
             
             <Badge className={signature.isReference ? "bg-blue-500 ml-auto" : "bg-purple-500 ml-auto"}>
