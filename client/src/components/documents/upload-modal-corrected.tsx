@@ -127,6 +127,14 @@ export function UploadModal({ open, onOpenChange, onUploadProgress }: UploadModa
         description: error.message,
         variant: "destructive",
       });
+      
+      // Notifichiamo il componente genitore dell'errore di caricamento da URL
+      // per mostrare la barra di avanzamento anche in caso di errore
+      if (onUploadProgress && url) {
+        // Usiamo un ID temporaneo negativo per segnalare un errore
+        const errorDocId = -1 * Date.now();
+        onUploadProgress(errorDocId, url);
+      }
     },
   });
 

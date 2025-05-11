@@ -79,6 +79,30 @@ export function getProgress(documentId: number): ProgressInfo | undefined {
 }
 
 /**
+ * Trasferisce le informazioni di progresso da un ID temporaneo a un ID documento reale
+ * Utile quando iniziamo il tracciamento prima di avere l'ID del documento
+ * @param tempId ID temporaneo usato inizialmente
+ * @param realId ID reale del documento
+ * @returns true se il trasferimento è riuscito, false altrimenti
+ */
+export function transferProgress(tempId: number, realId: number): boolean {
+  const progress = progressMap.get(tempId);
+  if (!progress) return false;
+  
+  // Copia il progress al nuovo ID
+  progressMap.set(realId, {
+    ...progress,
+    // Preserviamo il tempo di inizio originale
+    startTime: progress.startTime
+  });
+  
+  // Rimuovi il tracker temporaneo
+  progressMap.delete(tempId);
+  
+  return true;
+}
+
+/**
  * Calcola la percentuale di completamento
  * @param documentId ID del documento
  * @returns Percentuale di completamento (0-100)

@@ -294,6 +294,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "URL is required" });
       }
       
+      // Inizializza subito il progresso con un ID temporaneo per mostrare feedback immediato
+      const tempId = Date.now(); // ID temporaneo per il tracker
+      initProgress(tempId, 100); // Impostiamo un totale di 100 steps
+      updateProgress(tempId, 5); // 5% - Iniziamo il processo
+      
       const userId = req.user!.id;
       const user = await storage.getUser(userId) as User;
       
@@ -308,12 +313,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Fetch HTML content from URL
+      updateProgress(tempId, 15); // 15% - Inizio download del contenuto HTML
       const { content, filename } = await fetchHtmlFromUrl(url);
+      updateProgress(tempId, 30); // 30% - Download completato
       
       // Process the HTML content
+      updateProgress(tempId, 35); // 35% - Inizio elaborazione del contenuto HTML
       const processedContent = await extractTextFromHTML('', content);
+      updateProgress(tempId, 40); // 40% - Elaborazione completata
       
       // Save document to database
+      updateProgress(tempId, 45); // 45% - Preparazione per il salvataggio nel database
       const estimatedSize = Buffer.byteLength(content, 'utf8');
       
       const document = await storage.createDocument({
@@ -326,10 +336,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         indexed: false
       });
       
-      // Inizializza immediatamente il tracker di progresso con stato "processing"
-      // per mostrare la barra di progresso nel client
-      initProgress(document.id, 20); // Inizializziamo con un valore ragionevole
-      updateProgress(document.id, 1); // Impostiamo un chunk processato per calcolare il tempo rimanente
+      // Trasferisci il progresso dal tempId al documentId reale
+      const progressData = getProgress(tempId);
+      if (progressData) {
+        // Inizializza un nuovo tracker con l'ID documento reale
+        initProgress(document.id, progressData.totalChunks);
+        updateProgress(document.id, 50); // 50% - Pre-indicizzazione vettoriale
+      } else {
+        // Fallback: inizializza un nuovo tracker
+        initProgress(document.id, 100);
+        updateProgress(document.id, 50); // 50% - Pre-indicizzazione vettoriale
+      }
       
       // Add document to vector database - use user key or fallback to system key
       const apiKeyToUse = user.openaiApiKey || undefined; // undefined will trigger system key use
