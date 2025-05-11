@@ -539,6 +539,9 @@ export default function SignaturesPage() {
                           value={field.value || 300}
                         />
                       </FormControl>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {t('signatures.dpiAutomaticExtraction')}
+                      </p>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -623,9 +626,23 @@ export default function SignaturesPage() {
       {selectedProject && (
         <div className="mt-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-semibold">
-              {projects.find(p => p.id === selectedProject)?.name}
-            </h2>
+            <div>
+              <h2 className="text-2xl font-semibold">
+                {projects.find(p => p.id === selectedProject)?.name}
+              </h2>
+              {projects.find(p => p.id === selectedProject)?.dpi && (
+                <div className="text-sm text-muted-foreground flex items-center mt-1">
+                  <span>{t('signatures.dpi')}: {projects.find(p => p.id === selectedProject)?.dpi}</span>
+                  <HelpTooltip
+                    content=""
+                    translationKey="signatures.help.dpiDesc"
+                    defaultContent="Densità di pixel per pollice (DPI) delle immagini di firma. Utilizzato per calcolare le dimensioni reali."
+                    iconSize={14}
+                    className="ml-1"
+                  />
+                </div>
+              )}
+            </div>
             <div className="flex space-x-2">
               <Dialog open={isUploadReferenceOpen} onOpenChange={setIsUploadReferenceOpen}>
                 <DialogTrigger asChild>
