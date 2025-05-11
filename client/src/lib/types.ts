@@ -6,6 +6,9 @@ export interface User {
   organization?: string;
   profession?: string;
   openaiApiKey?: string;
+  model?: string;
+  queryCount?: number;
+  role?: string;
   createdAt: Date;
   updatedAt: Date;
 }

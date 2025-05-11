@@ -134,7 +134,15 @@ export function ApiSettings() {
                 <FormItem>
                   <FormLabel>OpenAI Model</FormLabel>
                   <Select
-                    onValueChange={field.onChange}
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      setSelectedModel(value);
+                      
+                      // Se il modello è o3 o o4-mini, imposta temperatura a 1
+                      if (value === 'o3' || value === 'o4-mini') {
+                        form.setValue('temperature', 1);
+                      }
+                    }}
                     defaultValue={field.value}
                   >
                     <FormControl>
@@ -159,20 +167,35 @@ export function ApiSettings() {
               name="temperature"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Temperature: {field.value}</FormLabel>
-                  <FormControl>
-                    <Slider
-                      min={0}
-                      max={1}
-                      step={0.1}
-                      value={[field.value]}
-                      onValueChange={(values) => field.onChange(values[0])}
-                    />
-                  </FormControl>
-                  <div className="flex justify-between text-xs text-gray-500">
-                    <span>More Precise</span>
-                    <span>More Creative</span>
+                  <div className="flex items-center gap-2">
+                    <FormLabel>Temperature: {field.value}</FormLabel>
+                    {(selectedModel === 'o3' || selectedModel === 'o4-mini') && (
+                      <div className="text-xs text-amber-600 italic">
+                        (Fixed value for {selectedModel})
+                      </div>
+                    )}
                   </div>
+                  <FormControl>
+                    {(selectedModel === 'o3' || selectedModel === 'o4-mini') ? (
+                      <div className="h-5 text-sm text-gray-500 italic">
+                        The {selectedModel} model only supports a fixed temperature value of 1.
+                      </div>
+                    ) : (
+                      <Slider
+                        min={0}
+                        max={1}
+                        step={0.1}
+                        value={[field.value]}
+                        onValueChange={(values) => field.onChange(values[0])}
+                      />
+                    )}
+                  </FormControl>
+                  {(selectedModel !== 'o3' && selectedModel !== 'o4-mini') && (
+                    <div className="flex justify-between text-xs text-gray-500">
+                      <span>More Precise</span>
+                      <span>More Creative</span>
+                    </div>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
