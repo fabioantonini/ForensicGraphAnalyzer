@@ -329,10 +329,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Forbidden" });
       }
       
-      // Remove document from ChromaDB if it was indexed - use user key or fallback to system key
+      // Remove document from vector database if it was indexed - use user key or fallback to system key
       if (document.indexed) {
-        const apiKeyForDelete = user.openaiApiKey || undefined; // undefined will trigger system key use
-        await removeDocumentFromCollection(userId, documentId, apiKeyForDelete);
+        try {
+          await removeDocumentFromCollection(documentId, userId);
+        } catch (error) {
+          log(`Error removing document from vector database: ${error}`, "express");
+          // Non blocchiamo il flusso di lavoro se la rimozione fallisce
+        }
       }
       
       // Delete document from storage
@@ -384,10 +388,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Document file not found on server" });
       }
       
-      // Remove from ChromaDB first (if possible) to prevent duplicates
+      // Remove from vector database first (if possible) to prevent duplicates
       if (document.indexed) {
-        const apiKeyForDelete = user.openaiApiKey || undefined; // undefined will trigger system key use
-        await removeDocumentFromCollection(userId, documentId, apiKeyForDelete);
+        try {
+          await removeDocumentFromCollection(documentId, userId);
+        } catch (error) {
+          log(`Error removing document from vector database: ${error}`, "express");
+          // Non blocchiamo il flusso di lavoro se la rimozione fallisce
+        }
       }
       
       // Process the file to extract text
@@ -404,14 +412,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.updateDocumentIndexStatus(documentId, false); // First update indexed status
       await storage.updateDocumentContent(documentId, content); // Then update content
       
-      // Add document back to ChromaDB with updated content
+      // Add document back to vector database with updated content
       const apiKeyToUse = user.openaiApiKey || undefined; // undefined will trigger system key use
-      log(`Adding document back to ChromaDB with updated content`, "express");
-      const indexed = await addDocumentToCollection(userId, document, apiKeyToUse);
+      log(`Adding document back to vector database with updated content`, "express");
       
-      // Update document indexed status
-      if (indexed) {
-        await storage.updateDocumentIndexStatus(documentId, true);
+      try {
+        // Ottieni il documento aggiornato
+        const updatedDocument = await storage.getDocument(documentId);
+        if (updatedDocument) {
+          await addDocumentToCollection(updatedDocument, apiKeyToUse);
+          await storage.updateDocumentIndexStatus(documentId, true);
+        } else {
+          log(`Document not found after update`, "express");
+        }
+      } catch (indexError) {
+        log(`Error re-indexing document: ${indexError}`, "express");
+        // Non blocchiamo il flusso di lavoro se l'indicizzazione fallisce
       }
       
       // Log activity
