@@ -227,7 +227,7 @@ const DemoAccountsManagement: React.FC = () => {
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>{t("demoAccounts.expiringAlert")}</AlertTitle>
           <AlertDescription>
-            {expiringUsers.length} account demo scadranno nei prossimi 7 giorni.
+            {t("demoAccounts.expiringDaysMessage", { count: expiringUsers.length })}
           </AlertDescription>
         </Alert>
       )}
@@ -410,7 +410,7 @@ const DemoAccountsManagement: React.FC = () => {
                   name="confirmPassword"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Conferma Password</FormLabel>
+                      <FormLabel>{t("demoAccounts.confirmPassword")}</FormLabel>
                       <FormControl>
                         <Input type="password" {...field} />
                       </FormControl>

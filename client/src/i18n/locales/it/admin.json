@@ -31,7 +31,17 @@
     "createDescription": "Crea un nuovo account demo con durata limitata",
     "extendTitle": "Estendi account demo",
     "additionalDays": "Giorni aggiuntivi",
-    "duration": "Durata (giorni)"
+    "duration": "Durata (giorni)",
+    "expiringDaysMessage": "{{count}} account demo scadranno nei prossimi 7 giorni.",
+    "personalInfo": "Informazioni personali",
+    "fullName": "Nome completo",
+    "organization": "Organizzazione",
+    "profession": "Professione",
+    "accountInfo": "Informazioni account",
+    "password": "Password",
+    "confirmPassword": "Conferma password",
+    "noExpiredAccounts": "Nessun account demo scaduto",
+    "daysRemaining": "{{count}} giorni"
   },
   "totalUsers": "Utenti totali",
   "totalDocuments": "Documenti totali",
