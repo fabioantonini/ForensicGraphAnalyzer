@@ -805,6 +805,189 @@ export class DatabaseStorage implements IStorage {
     });
   }
   
+  // Demo account methods
+  async createDemoAccount(demoUser: InsertUser, durationDays: number): Promise<User> {
+    try {
+      // Calcola le date di scadenza
+      const now = new Date();
+      const expiryDate = new Date(now);
+      expiryDate.setDate(expiryDate.getDate() + durationDays);
+      
+      // Calcola la data di conservazione dati (2 settimane dopo la scadenza)
+      const retentionDate = new Date(expiryDate);
+      retentionDate.setDate(retentionDate.getDate() + 14);
+      
+      // Crea l'utente con tipo account demo
+      const [user] = await db
+        .insert(users)
+        .values({
+          ...demoUser,
+          role: 'demo',
+          accountType: 'demo',
+          demoExpiresAt: expiryDate,
+          dataRetentionUntil: retentionDate,
+          isActive: true
+        })
+        .returning();
+      
+      // Registra attività
+      await this.createActivity({
+        userId: user.id,
+        type: 'account',
+        details: `Account demo creato. Scade il: ${expiryDate.toLocaleDateString()}`
+      });
+      
+      return user;
+    } catch (error) {
+      console.error("Errore durante la creazione dell'account demo:", error);
+      throw error;
+    }
+  }
+  
+  async extendDemoAccount(userId: number, additionalDays: number): Promise<User> {
+    try {
+      // Ottieni l'utente corrente
+      const user = await this.getUser(userId);
+      if (!user) {
+        throw new Error(`Utente con ID ${userId} non trovato`);
+      }
+      
+      if (user.accountType !== 'demo') {
+        throw new Error(`L'utente non è un account demo`);
+      }
+      
+      // Calcola la nuova data di scadenza
+      let newExpiryDate: Date;
+      
+      if (user.demoExpiresAt && user.demoExpiresAt > new Date()) {
+        // Se l'account è ancora attivo, aggiungi giorni alla data di scadenza attuale
+        newExpiryDate = new Date(user.demoExpiresAt);
+      } else {
+        // Se l'account è già scaduto, aggiungi giorni alla data corrente
+        newExpiryDate = new Date();
+      }
+      
+      newExpiryDate.setDate(newExpiryDate.getDate() + additionalDays);
+      
+      // Calcola la nuova data di conservazione dati
+      const newRetentionDate = new Date(newExpiryDate);
+      newRetentionDate.setDate(newRetentionDate.getDate() + 14);
+      
+      // Aggiorna l'utente
+      const [updatedUser] = await db
+        .update(users)
+        .set({
+          demoExpiresAt: newExpiryDate,
+          dataRetentionUntil: newRetentionDate,
+          isActive: true, // Riattiva l'account se era stato disattivato
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId))
+        .returning();
+      
+      // Registra attività
+      await this.createActivity({
+        userId,
+        type: 'account',
+        details: `Account demo esteso di ${additionalDays} giorni. Nuova scadenza: ${newExpiryDate.toLocaleDateString()}`
+      });
+      
+      return updatedUser;
+    } catch (error) {
+      console.error("Errore durante l'estensione dell'account demo:", error);
+      throw error;
+    }
+  }
+  
+  async getDemoAccountsExpiringIn(days: number): Promise<User[]> {
+    try {
+      const now = new Date();
+      const cutoffDate = new Date(now);
+      cutoffDate.setDate(cutoffDate.getDate() + days);
+      
+      return await db
+        .select()
+        .from(users)
+        .where(
+          and(
+            eq(users.accountType, 'demo'),
+            eq(users.isActive, true),
+            lt(users.demoExpiresAt as any, cutoffDate),
+            gt(users.demoExpiresAt as any, now)
+          )
+        );
+    } catch (error) {
+      console.error("Errore durante il recupero degli account demo in scadenza:", error);
+      throw error;
+    }
+  }
+  
+  async deactivateExpiredDemoAccounts(): Promise<number> {
+    try {
+      const now = new Date();
+      
+      const result = await db
+        .update(users)
+        .set({
+          isActive: false,
+          updatedAt: now
+        })
+        .where(
+          and(
+            eq(users.accountType, 'demo'),
+            eq(users.isActive, true),
+            lt(users.demoExpiresAt as any, now)
+          )
+        );
+      
+      return result.length;
+    } catch (error) {
+      console.error("Errore durante la disattivazione degli account demo scaduti:", error);
+      throw error;
+    }
+  }
+  
+  async getDataForPurge(daysBeforePurge: number): Promise<{ userId: number, documents: number[] }[]> {
+    try {
+      const now = new Date();
+      const cutoffDate = new Date(now);
+      cutoffDate.setDate(cutoffDate.getDate() - daysBeforePurge);
+      
+      // Trova gli account demo da eliminare
+      const accountsToPurge = await db
+        .select()
+        .from(users)
+        .where(
+          and(
+            eq(users.accountType, 'demo'),
+            eq(users.isActive, false),
+            lt(users.dataRetentionUntil as any, now)
+          )
+        );
+      
+      // Raccogli i documenti per ogni account
+      const result = [];
+      
+      for (const user of accountsToPurge) {
+        // Trova tutti i documenti dell'utente
+        const userDocuments = await db
+          .select()
+          .from(documents)
+          .where(eq(documents.userId, user.id));
+        
+        result.push({
+          userId: user.id,
+          documents: userDocuments.map(doc => doc.id)
+        });
+      }
+      
+      return result;
+    } catch (error) {
+      console.error("Errore durante il recupero dei dati per la purga:", error);
+      throw error;
+    }
+  }
+  
   // Signature Project methods
   async createSignatureProject(projectData: InsertSignatureProject): Promise<SignatureProject> {
     // Prima di creare un nuovo progetto, verifica se esistono già firme con lo stesso ID
