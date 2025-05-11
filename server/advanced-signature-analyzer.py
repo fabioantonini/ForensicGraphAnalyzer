@@ -162,6 +162,10 @@ def analyze_signature(image_path, dpi=DEFAULT_DPI):
             
         # Ottieni le dimensioni originali dell'immagine
         original_height, original_width = image.shape
+        
+        # Calcola le dimensioni reali dell'intera immagine
+        full_width_cm, full_height_cm = get_signature_cm_size(original_width, original_height, dpi)
+        print(f"Dimensioni totali immagine: {original_width}x{original_height} px, {full_width_cm:.2f}x{full_height_cm:.2f} cm @ {dpi} DPI")
             
         # Crea due versioni: una per l'analisi delle dimensioni reali e una per gli altri parametri
         # Per le dimensioni reali, usa l'immagine originale senza ridimensionamento
@@ -197,12 +201,29 @@ def analyze_signature(image_path, dpi=DEFAULT_DPI):
         h = y_max - y_min
         
         # Calcola le dimensioni reali in centimetri in base al DPI dell'immagine
-        # Usa la nuova funzione che calcola direttamente dai pixel al centimetro
-        width_cm, height_cm = get_signature_cm_size(w, h, dpi)
+        sign_width_cm, sign_height_cm = get_signature_cm_size(w, h, dpi)
         
-        # Normalizza in dimensioni realistiche per firme
-        realistic_width_cm, realistic_height_cm = get_realistic_size(width_cm * 10, height_cm * 10)
-        dimensions = (realistic_width_cm, realistic_height_cm)
+        # Calcola la percentuale dell'immagine occupata dalla firma
+        width_percentage = w / original_width if original_width > 0 else 0
+        height_percentage = h / original_height if original_height > 0 else 0
+        print(f"Bounding box firma: {w}x{h} px, {sign_width_cm:.2f}x{sign_height_cm:.2f} cm ({width_percentage*100:.1f}% x {height_percentage*100:.1f}% dell'immagine)")
+        
+        # Stima più accurata delle dimensioni in base alle dimensioni dell'immagine intera
+        if full_width_cm > 15:  # Se l'immagine è grande (es. foglio A4)
+            # Se l'immagine è un foglio A4 (21 x 29.7 cm) o simile
+            if width_percentage < 0.4:  # Se la firma occupa meno del 40% della larghezza dell'immagine
+                # La firma è probabilmente una vera firma su un documento
+                if sign_width_cm > 10.0:  # Ma se è ancora troppo grande (per errori di DPI)
+                    # Limitiamo a dimensioni realistiche per documenti
+                    aspect_ratio = sign_width_cm / sign_height_cm if sign_height_cm > 0 else 1
+                    sign_width_cm = min(sign_width_cm, 8.0)
+                    sign_height_cm = sign_width_cm / aspect_ratio if aspect_ratio > 0 else sign_height_cm
+        
+        # Assicura che le dimensioni siano ragionevoli
+        sign_width_cm = max(min(sign_width_cm, 10.0), 3.0)
+        sign_height_cm = max(min(sign_height_cm, 5.0), 1.0)
+        
+        dimensions = (sign_width_cm, sign_height_cm)
         
         # Calcola la proporzione
         proportion = w / h if h > 0 else 0
