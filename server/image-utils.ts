@@ -4,7 +4,7 @@
 import sharp from 'sharp';
 import fs from 'fs/promises';
 import path from 'path';
-import { log } from './logger';
+import { log } from './vite';
 
 /**
  * Estrae il DPI dai metadati di un'immagine

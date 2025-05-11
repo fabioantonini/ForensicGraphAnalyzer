@@ -8,6 +8,7 @@ import { SignaturePythonAnalyzer } from "./python-bridge";
 import { insertSignatureProjectSchema, insertSignatureSchema } from "@shared/schema";
 import { log } from "./vite";
 import PDFDocument from "pdfkit";
+import { determineBestDPI } from "./image-utils";
 
 // Per compatibilità retroattiva, inizialmente usiamo solo fs standard
 import { createWriteStream, constants } from "fs";
