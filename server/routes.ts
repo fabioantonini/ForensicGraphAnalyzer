@@ -2,6 +2,7 @@ import { Express, Request, Response, NextFunction, Router } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
+import { setupAdminRoutes } from "./admin-routes";
 import multer from "multer";
 import { Document, User, insertQuerySchema, signatures, InsertReportTemplate, createDemoAccountSchema, extendDemoSchema } from "@shared/schema";
 import path from "path";
@@ -59,6 +60,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Sets up /api/register, /api/login, /api/logout, /api/user
   setupAuth(app);
+  
+  // Setup admin routes
+  setupAdminRoutes(app);
   
   // Middleware to check if user is authenticated
   const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {

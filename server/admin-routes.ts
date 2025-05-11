@@ -1,4 +1,4 @@
-import { Express } from "express";
+import express, { Express, Request, Response, NextFunction } from "express";
 import fs from "fs/promises";
 import path from "path";
 import { storage } from "./storage";
@@ -18,7 +18,7 @@ interface EmailConfig {
 }
 
 // Funzione per verificare se l'utente è un amministratore
-function isAdmin(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
+function isAdmin(req: Request, res: Response, next: NextFunction) {
   if (!req.isAuthenticated()) {
     return res.status(401).json({ message: "Unauthorized" });
   }
