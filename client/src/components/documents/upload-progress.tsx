@@ -33,13 +33,50 @@ export function UploadProgress({
   // Log di debug per verificare se il componente viene renderizzato
   console.log("UploadProgress renderizzato", { documentId, filename });
   
-  // Effettua la query per ottenere l'avanzamento dell'elaborazione
-  const { data, error, isLoading } = useQuery<ProgressData>({
+  // Determina se stiamo usando un ID temporaneo o reale
+  const isTempId = documentId < 0 || documentId > 1000000000; // IDs temporanei sono negativi o timestamp
+
+  // Crea un oggetto di stato iniziale per gli ID temporanei
+  const initialTempData: ProgressData = {
+    status: 'pending',
+    progress: 5, // Valore iniziale basso
+    processedChunks: 0,
+    totalChunks: 100,
+  };
+
+  // Effettua la query per ottenere l'avanzamento dell'elaborazione solo per ID reali
+  const { data: apiData, error, isLoading } = useQuery<ProgressData>({
     queryKey: [`/api/documents/${documentId}/progress`],
-    // Interrompi il polling quando il documento è completato o fallito
-    refetchInterval: shouldPoll ? 1000 : false,
+    // Disabilita la query per ID temporanei, o interrompi il polling quando il documento è completato o fallito
+    enabled: !isTempId,
+    refetchInterval: shouldPoll && !isTempId ? 1000 : false,
     refetchIntervalInBackground: true,
   });
+
+  // Usa i dati dall'API o lo stato iniziale per ID temporanei
+  const data = isTempId ? initialTempData : apiData;
+  
+  // Per ID temporanei, crea un effetto che simula l'avanzamento
+  const [tempProgress, setTempProgress] = useState<number>(5);
+  
+  useEffect(() => {
+    if (isTempId) {
+      // Incrementa gradualmente la barra fino al 40% per mostrare attività
+      const interval = setInterval(() => {
+        setTempProgress(prev => {
+          const newProgress = prev + 2; // Incremento graduale
+          return newProgress < 40 ? newProgress : 40; // Massimo 40%
+        });
+      }, 500);
+      
+      return () => clearInterval(interval);
+    }
+  }, [isTempId]);
+  
+  // Sovrascrive i dati iniziali per ID temporanei con l'avanzamento simulato
+  if (isTempId && data) {
+    data.progress = tempProgress;
+  }
   
   // Quando lo stato cambia, aggiorna shouldPoll
   useEffect(() => {

@@ -51,14 +51,8 @@ export function UploadModal({ open, onOpenChange, onUploadProgress }: UploadModa
       return await response.json();
     },
     onSuccess: (data) => {
-      // Notifica il componente genitore per iniziare a mostrare la barra di avanzamento
-      if (onUploadProgress && data.id) {
-        onUploadProgress(data.id, file?.name || "");
-      }
-      
-      // Azzera il file selezionato e chiudi il modale
-      setFile(null);
-      onOpenChange(false);
+      // Non notifichiamo qui perché abbiamo già creato una barra di avanzamento temporanea
+      // L'aggiornamento avverrà tramite il polling dall'API di progresso
       
       // Aggiorna le query
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
@@ -106,18 +100,19 @@ export function UploadModal({ open, onOpenChange, onUploadProgress }: UploadModa
       return await response.json();
     },
     onSuccess: (data) => {
-      // Notifica il componente genitore per iniziare a mostrare la barra di avanzamento
-      if (onUploadProgress && data.id) {
-        onUploadProgress(data.id, url);
-      }
+      // Non notifichiamo qui perché abbiamo già creato una barra di avanzamento temporanea
+      // L'aggiornamento avverrà tramite il polling dall'API di progresso
       
       toast({
         title: t("documents.urlImportSuccess", "URL imported"),
         description: t("documents.urlImportSuccessDesc", "The web page was successfully imported"),
         variant: "default",
       });
-      setUrl("");
-      onOpenChange(false);
+      
+      // Queste righe sono ora gestite direttamente in handleUpload
+      // setUrl("");
+      // onOpenChange(false);
+      
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
     },
@@ -148,10 +143,25 @@ export function UploadModal({ open, onOpenChange, onUploadProgress }: UploadModa
 
   const handleUpload = () => {
     if (activeTab === "file" && file) {
+      // Crea un ID temporaneo per iniziare a mostrare la barra di avanzamento immediatamente
+      if (onUploadProgress) {
+        const tempId = Date.now();
+        onUploadProgress(tempId, file.name);
+      }
       uploadFileMutation.mutate(file);
     } else if (activeTab === "url" && url) {
+      // Crea un ID temporaneo per iniziare a mostrare la barra di avanzamento immediatamente
+      if (onUploadProgress) {
+        const tempId = Date.now();
+        onUploadProgress(tempId, url);
+      }
       uploadUrlMutation.mutate(url);
     }
+    
+    // Chiudi il modale subito dopo l'avvio del caricamento
+    setFile(null);
+    setUrl("");
+    onOpenChange(false);
   };
 
   const handleClose = () => {
