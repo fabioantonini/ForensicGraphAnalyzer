@@ -389,13 +389,19 @@ export function registerSignatureRoutes(router: Router) {
         });
       }
       
+      // Estrae il DPI dall'immagine usando Sharp
+      log(`Estrazione DPI per la firma di verifica: ${req.file.filename}`, 'signatures');
+      const dpi = await determineBestDPI(req.file.path);
+      log(`DPI determinato per la firma di verifica: ${dpi}`, 'signatures');
+      
       const signatureData = insertSignatureSchema.parse({
         projectId,
         filename: req.file.filename,
         originalFilename: req.file.originalname,
         fileType: req.file.mimetype,
         fileSize: req.file.size,
-        isReference: false
+        isReference: false,
+        dpi: dpi // Utilizziamo il DPI estratto
       });
       
       // Salva la firma nel database

@@ -184,12 +184,17 @@ export function SignatureCard({
             </Badge>
             
             <div className="flex items-center gap-1 ml-1">
-              <span className="text-xs text-gray-600">DPI: {signature.dpi || 300}</span>
+              <span className="text-xs text-gray-600">
+                <span title={t('signatures.dpiDetected', 'DPI rilevato automaticamente') as string}>
+                  DPI: {signature.dpi || 300}
+                </span>
+              </span>
               <Button 
                 variant="ghost" 
                 size="sm" 
                 className="h-5 w-5 p-0"
                 onClick={() => setIsEditDpiOpen(true)}
+                title={t('signatures.editDpi.buttonTitle', 'Modifica valore DPI') as string}
               >
                 <Edit2 className="h-3 w-3" />
               </Button>
