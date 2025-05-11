@@ -1,29 +1,90 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Trash2 } from "lucide-react";
+import { Eye, Trash2, Edit2 } from "lucide-react";
 import { SignatureImage } from "./signature-image";
 import { Progress } from "@/components/ui/progress";
 import { useTranslation } from "react-i18next";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+
+// Schema per la modifica del DPI
+const dpiSchema = z.object({
+  dpi: z.number().min(72).max(1200)
+});
+
+type DpiFormValues = z.infer<typeof dpiSchema>;
 
 interface SignatureCardProps {
   signature: any; 
   onDelete: (id: number) => void;
   showSimilarity?: boolean;
+  projectId?: number;
 }
 
 export function SignatureCard({ 
   signature, 
   onDelete,
-  showSimilarity = false
+  showSimilarity = false,
+  projectId
 }: SignatureCardProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const [isEditDpiOpen, setIsEditDpiOpen] = useState(false);
+  const queryClient = useQueryClient();
+  
+  // DPI form
+  const dpiForm = useForm<DpiFormValues>({
+    resolver: zodResolver(dpiSchema),
+    defaultValues: {
+      dpi: signature.dpi || 300
+    }
+  });
+  
+  // Update DPI when signature changes
+  useEffect(() => {
+    if (signature) {
+      dpiForm.setValue("dpi", signature.dpi || 300);
+    }
+  }, [signature, dpiForm]);
+  
+  // Mutation to update signature DPI
+  const updateDpi = useMutation({
+    mutationFn: async (data: DpiFormValues) => {
+      const res = await apiRequest("PATCH", `/api/signatures/${signature.id}/dpi`, data);
+      return res.ok;
+    },
+    onSuccess: () => {
+      setIsEditDpiOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", projectId, "signatures"] });
+      toast({
+        title: t('common.success'),
+        description: t('signatures.dpiUpdated'),
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: t('common.error'),
+        description: `${t('signatures.dpiUpdateError')}: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Function to handle DPI update submission
+  const onUpdateDpi = (data: DpiFormValues) => {
+    updateDpi.mutate(data);
+  };
   
   // Function to get status badge color
   const getStatusColor = (status: string) => {
@@ -117,9 +178,28 @@ export function SignatureCard({
           <p className="text-sm truncate" title={signature.originalFilename}>
             {signature.originalFilename || 'Unknown File'}
           </p>
-          <div className="flex items-center mt-1">
+          <div className="flex flex-wrap items-center gap-1 mt-1">
             <Badge className={getStatusColor(signature.processingStatus)}>
               {getStatusTranslation(signature.processingStatus)}
+            </Badge>
+            
+            <div className="flex items-center gap-1 ml-1">
+              <span className="text-xs text-gray-600">DPI: {signature.dpi || 300}</span>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-5 w-5 p-0"
+                onClick={() => setIsEditDpiOpen(true)}
+              >
+                <Edit2 className="h-3 w-3" />
+              </Button>
+            </div>
+            
+            <Badge className={signature.isReference ? "bg-blue-500 ml-auto" : "bg-purple-500 ml-auto"}>
+              {signature.isReference 
+                ? t('signatures.referenceSignature', 'Firma di riferimento')
+                : t('signatures.verificationSignature', 'Firma da verificare')
+              }
             </Badge>
           </div>
           
