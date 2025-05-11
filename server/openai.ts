@@ -111,6 +111,31 @@ export async function chatWithRAG(
       }
     }
     
+    // Verifica che il modello richiesto sia compatibile con l'API key
+    if (model === 'o3' || model === 'o4-mini') {
+      try {
+        // Test call con zero tokens per verificare l'accesso al modello
+        await openai.chat.completions.create({
+          model,
+          messages: [{ role: "system", content: "Test." }],
+          max_tokens: 1
+        });
+      } catch (modelError: any) {
+        // Se c'è un errore 404, probabilmente l'organizzazione non è verificata per i nuovi modelli
+        if (modelError.status === 404 && modelError.message && modelError.message.includes('must be verified')) {
+          log(`Organizzazione non verificata per l'uso del modello ${model}`, "openai");
+          
+          // Informare l'utente del problema
+          const isItalian = /[àèéìòù]/i.test(query);
+          if (isItalian) {
+            return `Mi dispiace, ma la tua organizzazione OpenAI non è verificata per utilizzare il modello ${model}. Per accedere a questo modello, visita https://platform.openai.com/settings/organization/general e clicca su "Verify Organization". Se hai appena effettuato la verifica, potrebbero essere necessari fino a 15 minuti prima che l'accesso sia propagato.\n\nNel frattempo, prova a utilizzare gpt-4 o un altro modello disponibile.`;
+          } else {
+            return `I'm sorry, but your OpenAI organization is not verified to use the ${model} model. To access this model, please visit https://platform.openai.com/settings/organization/general and click on "Verify Organization". If you just verified, it can take up to 15 minutes for access to propagate.\n\nIn the meantime, try using gpt-4 or another available model.`;
+          }
+        }
+      }
+    }
+    
     // Build system message with context
     const systemMessage = "You are a forensic graphology assistant that helps analyze handwriting and documents. " +
       "Use the following context information to inform your response:\n\n" +
@@ -130,9 +155,26 @@ export async function chatWithRAG(
     });
     
     return response.choices[0].message.content || "No response generated";
-  } catch (error) {
+  } catch (error: any) {
     log(`Error in chat completion: ${error}`, "openai");
-    throw error;
+    
+    // Gestione specifica per errori di verifica organizzazione
+    if (error.status === 404 && error.message && error.message.includes('must be verified')) {
+      const isItalian = /[àèéìòù]/i.test(query);
+      if (isItalian) {
+        return `Mi dispiace, ma la tua organizzazione OpenAI non è verificata per utilizzare il modello ${model}. Per accedere a questo modello, visita https://platform.openai.com/settings/organization/general e clicca su "Verify Organization". Se hai appena effettuato la verifica, potrebbero essere necessari fino a 15 minuti prima che l'accesso sia propagato.\n\nNel frattempo, prova a utilizzare gpt-4 o un altro modello disponibile.`;
+      } else {
+        return `I'm sorry, but your OpenAI organization is not verified to use the ${model} model. To access this model, please visit https://platform.openai.com/settings/organization/general and click on "Verify Organization". If you just verified, it can take up to 15 minutes for access to propagate.\n\nIn the meantime, try using gpt-4 or another available model.`;
+      }
+    }
+    
+    // Restituisci un messaggio generico di errore
+    const isItalian = /[àèéìòù]/i.test(query);
+    if (isItalian) {
+      return `Mi dispiace, si è verificato un errore durante l'elaborazione della tua richiesta: ${error.message || 'errore sconosciuto'}. Per favore riprova più tardi o contatta l'amministratore del sistema.`;
+    } else {
+      return `I'm sorry, an error occurred while processing your request: ${error.message || 'unknown error'}. Please try again later or contact the system administrator.`;
+    }
   }
 }
 
