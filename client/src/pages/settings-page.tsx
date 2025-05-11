@@ -1,4 +1,4 @@
-import { ApiSettings } from "@/components/settings/api-settings";
+import { ApiSettings } from "@/components/settings/api-settings-new";
 import { ProfileSettings } from "@/components/settings/profile-settings";
 import { SecuritySettings } from "@/components/settings/security-settings";
 
