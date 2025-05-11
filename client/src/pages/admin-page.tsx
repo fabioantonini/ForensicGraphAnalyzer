@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { User, UpdateUserRole } from "@shared/schema";
+import { DemoAccountsManagement } from "@/components/admin/demo-accounts-management";
 
 import {
   Card,
@@ -364,6 +365,11 @@ export default function AdminPage() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+        
+        {/* Tab per la gestione account demo */}
+        <TabsContent value="demo-accounts">
+          <DemoAccountsManagement />
         </TabsContent>
       </Tabs>
 
