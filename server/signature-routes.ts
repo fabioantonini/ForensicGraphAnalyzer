@@ -1130,12 +1130,17 @@ export function registerSignatureRoutes(router: Router) {
               // Se fallisce, tentiamo con il modulo Python come backup
               console.log(`[PDF REPORT REGEN] CORREZIONE: Invertendo ordine parametri per compensare il bug`);
               try {
+                // Otteniamo il progetto per recuperare il DPI
+                const dpiProject = await storage.getSignatureProject(signature.projectId);
+                const dpi = dpiProject?.dpi || 300;
+                
                 const pythonResult = await SignaturePythonAnalyzer.compareSignatures(
                   referencePath,   // Questo diventerà la firma da verificare nel report
                   signaturePath,   // Questo diventerà la firma di riferimento nel report
                   true,            // Genera il report
                   caseInfo,
-                  signature.projectId // Passiamo l'ID del progetto per assicurare l'isolamento dei dati
+                  signature.projectId, // Passiamo l'ID del progetto per assicurare l'isolamento dei dati
+                  dpi               // Passiamo il DPI specifico del progetto
                 );
                 console.log(`[PDF REPORT] Utilizzando projectId ${signature.projectId} per garantire l'isolamento dei dati`);
                 
@@ -1260,12 +1265,16 @@ export function registerSignatureRoutes(router: Router) {
           console.log(`[CONFRONTO POPUP] Firma da verificare (diventerà riferimento): ${signaturePath}`);
           console.log(`[CONFRONTO POPUP] Firma di riferimento (diventerà verifica): ${referencePath}`);
           
+          // Otteniamo il DPI dal progetto
+          const dpi = project.dpi || 300;
+          
           const comparisonResult = await SignaturePythonAnalyzer.compareSignatures(
             referencePath,   // Questo diventerà la firma da verificare nel report
             signaturePath,   // Questo diventerà la firma di riferimento nel report
             false, // Non generare report DOCX automaticamente
             caseInfo,
-            project.id // Passiamo l'ID del progetto per assicurare l'isolamento dei dati
+            project.id, // Passiamo l'ID del progetto per assicurare l'isolamento dei dati
+            dpi // Passiamo il DPI specifico del progetto
           );
           console.log(`[CONFRONTO POPUP] Utilizzando projectId ${project.id} per garantire l'isolamento dei dati`);
           
@@ -1634,6 +1643,21 @@ export function registerSignatureRoutes(router: Router) {
 
 async function processSignature(signatureId: number, filePath: string) {
   try {
+    // Ottieni i dettagli della firma
+    const signature = await storage.getSignature(signatureId);
+    if (!signature) {
+      throw new Error('Firma non trovata');
+    }
+    
+    // Ottieni il progetto associato per recuperare il DPI
+    const project = await storage.getSignatureProject(signature.projectId);
+    if (!project) {
+      throw new Error('Progetto non trovato');
+    }
+    
+    // Estrai il DPI dal progetto (default 300)
+    const dpi = project.dpi || 300;
+    
     // Aggiorna lo stato a 'processing'
     await storage.updateSignatureStatus(signatureId, 'processing');
     
@@ -1643,10 +1667,10 @@ async function processSignature(signatureId: number, filePath: string) {
     let parameters;
     
     if (isPythonAvailable) {
-      log(`Usando analizzatore Python avanzato per la firma ${signatureId}`, 'signatures');
+      log(`Usando analizzatore Python avanzato per la firma ${signatureId} con DPI=${dpi}`, 'signatures');
       try {
-        // Prova a usare l'analizzatore Python avanzato
-        parameters = await SignaturePythonAnalyzer.analyzeSignature(filePath);
+        // Prova a usare l'analizzatore Python avanzato con il DPI specifico del progetto
+        parameters = await SignaturePythonAnalyzer.analyzeSignature(filePath, dpi);
       } catch (pythonError: any) {
         log(`Errore con analizzatore Python: ${pythonError.message}. Uso analizzatore JS fallback.`, 'signatures');
         // Fallback all'analizzatore JavaScript se quello Python fallisce
@@ -1673,6 +1697,15 @@ async function processAndCompareSignature(signatureId: number, filePath: string,
   try {
     log(`Inizio elaborazione firma ${signatureId} per progetto ${projectId}`, 'signatures');
     
+    // Ottieni il progetto per recuperare il DPI
+    const project = await storage.getSignatureProject(projectId);
+    if (!project) {
+      throw new Error('Progetto non trovato');
+    }
+    
+    // Estrai il DPI dal progetto (default 300)
+    const dpi = project.dpi || 300;
+    
     // Aggiorna lo stato a 'processing'
     await storage.updateSignatureStatus(signatureId, 'processing');
     
@@ -1682,10 +1715,10 @@ async function processAndCompareSignature(signatureId: number, filePath: string,
     let parameters;
     
     if (isPythonAvailable) {
-      log(`Usando analizzatore Python avanzato per la firma ${signatureId}`, 'signatures');
+      log(`Usando analizzatore Python avanzato per la firma ${signatureId} con DPI=${dpi}`, 'signatures');
       try {
-        // Prova a usare l'analizzatore Python avanzato
-        parameters = await SignaturePythonAnalyzer.analyzeSignature(filePath);
+        // Prova a usare l'analizzatore Python avanzato con il DPI specifico del progetto
+        parameters = await SignaturePythonAnalyzer.analyzeSignature(filePath, dpi);
       } catch (pythonError: any) {
         log(`Errore con analizzatore Python: ${pythonError.message}. Uso analizzatore JS fallback.`, 'signatures');
         // Fallback all'analizzatore JavaScript se quello Python fallisce
