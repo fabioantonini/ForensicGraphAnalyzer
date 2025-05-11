@@ -340,8 +340,14 @@
     "needReferenceFirst": "Hai bisogno prima di firme di riferimento",
     "dpi": "Densità Pixel (DPI)",
     "dpiAutomaticExtraction": "Il valore DPI viene rilevato automaticamente dai metadati dell'immagine quando disponibile",
+    "dpiDetected": "DPI rilevato automaticamente",
+    "dpiDescription": "I valori comuni sono 72, 96, 150, 300 o 600.",
+    "editDpi": {
+      "title": "Modifica DPI della firma",
+      "description": "Il DPI (Dots Per Inch) influisce sul calcolo delle dimensioni reali della firma in millimetri.",
+      "buttonTitle": "Modifica valore DPI"
+    },
     "uploadFirstReference": "Carica prima firma di riferimento",
-    "editDpi": "Modifica DPI",
     "updateDpi": "Aggiorna DPI",
     "invalidDpi": "DPI non valido. Inserisci un valore tra 72 e 1200.",
     "dpiRange": "Valore DPI (72-1200)",
