@@ -338,6 +338,10 @@
     "file": "Signature File",
     "selectFile": "Select file",
     "needReferenceFirst": "You need reference signatures first",
+    "dpi": "Pixel Density (DPI)",
+    "help": {
+      "dpiDesc": "Dots per inch (DPI) of signature images. Used to calculate real-world dimensions. Common values are 300 for standard scans, 600 for high-resolution scans."
+    },
     "uploadFirstReference": "Upload first reference signature",
     "uploadFirstVerify": "Upload first verification signature",
     "compareAll": "Compare All",

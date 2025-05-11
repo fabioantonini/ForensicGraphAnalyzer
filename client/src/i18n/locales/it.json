@@ -339,13 +339,11 @@
     "selectFile": "Seleziona file",
     "needReferenceFirst": "Hai bisogno prima di firme di riferimento",
     "dpi": "Densità Pixel (DPI)",
-    "help": {
-      "dpiDesc": "Densità di pixel per pollice (DPI) delle immagini di firma. Utilizzato per calcolare le dimensioni reali. I valori comuni sono 300 per scansioni standard, 600 per scansioni ad alta risoluzione."
-    },
     "uploadFirstReference": "Carica prima firma di riferimento",
     "uploadFirstVerify": "Carica prima firma da verificare",
     "compareAll": "Confronta Tutte",
     "help": {
+      "dpiDesc": "Densità di pixel per pollice (DPI) delle immagini di firma. Utilizzato per calcolare le dimensioni reali. I valori comuni sono 300 per scansioni standard, 600 per scansioni ad alta risoluzione.",
       "referenceSignaturesTitle": "Firme di Riferimento",
       "referenceSignaturesDesc": "Le firme di riferimento sono esempi autentici della firma del soggetto. Carica almeno una firma di riferimento per avviare il processo di verifica.",
       "verificationSignaturesTitle": "Firme da Verificare",
