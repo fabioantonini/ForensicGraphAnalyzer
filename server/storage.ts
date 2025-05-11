@@ -33,6 +33,13 @@ export interface IStorage {
   
   // Admin methods
   getAllUsers(): Promise<User[]>;
+  
+  // Demo account methods
+  createDemoAccount(demoUser: InsertUser, durationDays: number): Promise<User>;
+  extendDemoAccount(userId: number, additionalDays: number): Promise<User>;
+  getDemoAccountsExpiringIn(days: number): Promise<User[]>;
+  deactivateExpiredDemoAccounts(): Promise<number>; // Ritorna il numero di account disattivati
+  getDataForPurge(daysBeforePurge: number): Promise<{ userId: number, documents: number[] }[]>;
   getUserCount(): Promise<number>;
   updateUserRole(userId: number, role: string): Promise<User>;
   deleteUser(userId: number): Promise<void>;

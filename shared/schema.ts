@@ -14,9 +14,14 @@ export const users = pgTable("users", {
   organization: text("organization"),
   profession: text("profession"),
   openaiApiKey: text("openai_api_key"),
-  role: text("role").default("user").notNull(), // 'user' o 'admin'
+  role: text("role").default("user").notNull(), // 'user', 'admin' o 'demo'
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  // Campi per la modalità demo
+  accountType: text("account_type").default("regular").notNull(), // 'regular' o 'demo'
+  demoExpiresAt: timestamp("demo_expires_at"), // Data di scadenza della demo
+  dataRetentionUntil: timestamp("data_retention_until"), // Data di eliminazione dei dati dopo scadenza
+  isActive: boolean("is_active").default(true).notNull(), // Indica se l'account è attivo o disabilitato
 });
 
 export const usersRelations = relations(users, ({ many }) => ({
@@ -39,9 +44,26 @@ export const insertUserSchema = createInsertSchema(users).pick({
 
 export const updateUserRoleSchema = z.object({
   userId: z.number().positive(),
-  role: z.string().refine(value => ['user', 'admin'].includes(value), {
-    message: "Role must be either 'user' or 'admin'"
+  role: z.string().refine(value => ['user', 'admin', 'demo'].includes(value), {
+    message: "Role must be either 'user', 'admin', or 'demo'"
   })
+});
+
+// Schema per la creazione di account demo
+export const createDemoAccountSchema = z.object({
+  username: z.string().min(3, "Username must be at least 3 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  email: z.string().email("Invalid email format"),
+  fullName: z.string().optional(),
+  organization: z.string().optional(),
+  profession: z.string().optional(),
+  durationDays: z.number().default(14), // Durata in giorni (default 14)
+});
+
+// Schema per l'estensione della demo
+export const extendDemoSchema = z.object({
+  userId: z.number().positive(),
+  additionalDays: z.number().min(1).max(365),
 });
 
 export const loginUserSchema = z.object({

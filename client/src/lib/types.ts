@@ -11,6 +11,26 @@ export interface User {
   role?: string;
   createdAt: Date;
   updatedAt: Date;
+  // Campi per la modalità demo
+  accountType?: string;  // 'regular' o 'demo'
+  demoExpiresAt?: Date;  // Data di scadenza della demo
+  dataRetentionUntil?: Date;  // Data di eliminazione dei dati dopo scadenza
+  isActive?: boolean;  // Indica se l'account è attivo o disabilitato
+}
+
+export interface DemoAccountCreation {
+  username: string;
+  password: string;
+  email: string;
+  fullName?: string;
+  organization?: string;
+  profession?: string;
+  durationDays: number;
+}
+
+export interface DemoExtension {
+  userId: number;
+  additionalDays: number;
 }
 
 export interface Document {
