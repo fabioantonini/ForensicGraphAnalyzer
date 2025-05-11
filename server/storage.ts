@@ -7,8 +7,8 @@ import {
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
+import { and, desc, eq, gt, lt, sql } from "drizzle-orm";
 import { db } from "./db";
-import { eq, desc, and, sql } from "drizzle-orm";
 import connectPg from "connect-pg-simple";
 import { Pool } from "@neondatabase/serverless";
 import path from "path";
@@ -312,6 +312,153 @@ export class MemStorage implements IStorage {
 
     // Finally delete the user
     this.users.delete(userId);
+  }
+  
+  // Demo account methods
+  async createDemoAccount(demoUser: InsertUser, durationDays: number): Promise<User> {
+    const id = this.nextUserId++;
+    const now = new Date();
+    
+    // Calcola le date di scadenza
+    const expiryDate = new Date(now);
+    expiryDate.setDate(expiryDate.getDate() + durationDays);
+    
+    // Calcola la data di conservazione dati (2 settimane dopo la scadenza)
+    const retentionDate = new Date(expiryDate);
+    retentionDate.setDate(retentionDate.getDate() + 14);
+    
+    const user: User = {
+      ...demoUser,
+      id,
+      role: 'demo',
+      accountType: 'demo',
+      demoExpiresAt: expiryDate,
+      dataRetentionUntil: retentionDate,
+      isActive: true,
+      createdAt: now,
+      updatedAt: now,
+    };
+    
+    this.users.set(id, user);
+    
+    // Registra attività
+    this.createActivity({
+      userId: id,
+      type: 'account',
+      details: `Account demo creato. Scade il: ${expiryDate.toLocaleDateString()}`
+    });
+    
+    return user;
+  }
+  
+  async extendDemoAccount(userId: number, additionalDays: number): Promise<User> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error(`Utente con ID ${userId} non trovato`);
+    }
+    
+    if (user.accountType !== 'demo') {
+      throw new Error(`L'utente non è un account demo`);
+    }
+    
+    // Calcola la nuova data di scadenza
+    let newExpiryDate: Date;
+    
+    if (user.demoExpiresAt && user.demoExpiresAt > new Date()) {
+      // Se l'account è ancora attivo, aggiungi giorni alla data di scadenza attuale
+      newExpiryDate = new Date(user.demoExpiresAt);
+    } else {
+      // Se l'account è già scaduto, aggiungi giorni alla data corrente
+      newExpiryDate = new Date();
+    }
+    
+    newExpiryDate.setDate(newExpiryDate.getDate() + additionalDays);
+    
+    // Calcola la nuova data di conservazione dati
+    const newRetentionDate = new Date(newExpiryDate);
+    newRetentionDate.setDate(newRetentionDate.getDate() + 14);
+    
+    // Aggiorna l'utente
+    const updatedUser: User = {
+      ...user,
+      demoExpiresAt: newExpiryDate,
+      dataRetentionUntil: newRetentionDate,
+      isActive: true,
+      updatedAt: new Date(),
+    };
+    
+    this.users.set(userId, updatedUser);
+    
+    // Registra attività
+    this.createActivity({
+      userId,
+      type: 'account',
+      details: `Account demo esteso di ${additionalDays} giorni. Nuova scadenza: ${newExpiryDate.toLocaleDateString()}`
+    });
+    
+    return updatedUser;
+  }
+  
+  async getDemoAccountsExpiringIn(days: number): Promise<User[]> {
+    const now = new Date();
+    const cutoffDate = new Date(now);
+    cutoffDate.setDate(cutoffDate.getDate() + days);
+    
+    return Array.from(this.users.values()).filter(user => 
+      user.accountType === 'demo' && 
+      user.isActive === true && 
+      user.demoExpiresAt !== undefined && 
+      user.demoExpiresAt < cutoffDate && 
+      user.demoExpiresAt > now
+    );
+  }
+  
+  async deactivateExpiredDemoAccounts(): Promise<number> {
+    const now = new Date();
+    let count = 0;
+    
+    for (const user of this.users.values()) {
+      if (
+        user.accountType === 'demo' && 
+        user.isActive === true && 
+        user.demoExpiresAt !== undefined && 
+        user.demoExpiresAt < now
+      ) {
+        // Disattiva l'account
+        user.isActive = false;
+        user.updatedAt = now;
+        this.users.set(user.id, user);
+        count++;
+      }
+    }
+    
+    return count;
+  }
+  
+  async getDataForPurge(daysBeforePurge: number): Promise<{ userId: number, documents: number[] }[]> {
+    const now = new Date();
+    const result = [];
+    
+    for (const user of this.users.values()) {
+      if (
+        user.accountType === 'demo' && 
+        user.isActive === false && 
+        user.dataRetentionUntil !== undefined && 
+        user.dataRetentionUntil < now
+      ) {
+        // Trova tutti i documenti dell'utente
+        const userDocuments = Array.from(this.documents.values())
+          .filter(doc => doc.userId === user.id)
+          .map(doc => doc.id);
+        
+        result.push({
+          userId: user.id,
+          documents: userDocuments
+        });
+      }
+    }
+    
+    return result;
   }
 
   // Document methods
