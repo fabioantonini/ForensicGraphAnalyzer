@@ -40,7 +40,7 @@ function Router() {
     <Switch>
       <Route path="/auth" component={AuthPage} />
       <Route path="/forgot-password" component={ForgotPasswordPage} />
-      <Route path="/reset-password/:token" component={ResetPasswordPage} />
+      <Route path="/reset-password" component={ResetPasswordPage} />
       
       <ProtectedRoute path="/" component={() => (
         <AppLayout>

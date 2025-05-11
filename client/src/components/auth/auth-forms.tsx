@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useTranslation } from "react-i18next";
+import { Link } from "wouter";
 
 export function LoginForm() {
   const { loginMutation } = useAuth();
@@ -56,16 +57,12 @@ export function LoginForm() {
               </FormControl>
               <FormMessage />
               <div className="text-right">
-                <a 
+                <Link
                   href="/forgot-password" 
                   className="text-sm text-primary hover:text-primary-dark"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    window.location.href = "/forgot-password";
-                  }}
                 >
                   {t('auth.forgotPassword', 'Forgot password?')}
-                </a>
+                </Link>
               </div>
             </FormItem>
           )}
