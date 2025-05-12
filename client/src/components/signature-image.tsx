@@ -1,7 +1,7 @@
 import { Loader2, ZoomIn, ZoomOut, Search, RotateCw, Pencil, Eraser, Save } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -145,7 +145,7 @@ export function SignatureImage({
     }
   };
   
-  const drawLineOnCanvas = () => {
+  const drawLineOnCanvas = useCallback(() => {
     if (!canvasRef.current || !startPoint || !endPoint) return;
     
     const canvas = canvasRef.current;
@@ -194,38 +194,61 @@ export function SignatureImage({
       // Ripristina lo stato del contesto
       ctx.restore();
     }
-  };
+  }, [canvasRef, startPoint, endPoint, scale, positionX, positionY]);
   
   // Aggiorna le dimensioni del canvas quando l'immagine viene caricata o lo zoom cambia
   useEffect(() => {
-    if (isImageLoaded && imgRef.current && canvasRef.current) {
-      const img = imgRef.current;
-      const canvas = canvasRef.current;
-      
-      // Imposta le dimensioni del canvas per corrispondere all'immagine visualizzata
-      // Usiamo il container parent per ottenere la dimensione effettiva visualizzata
-      const container = img.parentElement;
-      if (container) {
-        canvas.width = container.clientWidth;
-        canvas.height = container.clientHeight;
-      } else {
-        canvas.width = img.clientWidth;
-        canvas.height = img.clientHeight;
+    // Assicuriamoci che il canvas abbia sempre le dimensioni corrette anche quando l'immagine viene ridimensionata o scalata
+    const updateCanvasSize = () => {
+      if (isImageLoaded && imgRef.current && canvasRef.current) {
+        const img = imgRef.current;
+        const canvas = canvasRef.current;
+        
+        // Imposta le dimensioni del canvas per corrispondere all'immagine visualizzata
+        // Usiamo il container parent per ottenere la dimensione effettiva visualizzata
+        const container = img.parentElement;
+        if (container) {
+          canvas.width = container.clientWidth;
+          canvas.height = container.clientHeight;
+        } else {
+          canvas.width = img.clientWidth;
+          canvas.height = img.clientHeight;
+        }
+        
+        // Ridisegna la linea con le dimensioni aggiornate
+        if (startPoint && endPoint) {
+          drawLineOnCanvas();
+        }
       }
-      
-      // Ridisegna la linea con le dimensioni aggiornate
-      if (startPoint && endPoint) {
-        drawLineOnCanvas();
-      }
-    }
-  }, [isImageLoaded, scale]); // Aggiungiamo scale come dipendenza per reagire ai cambiamenti di zoom
+    };
+    
+    updateCanvasSize();
+    
+    // Aggiungiamo un listener per il resize della finestra
+    window.addEventListener('resize', updateCanvasSize);
+    
+    return () => {
+      window.removeEventListener('resize', updateCanvasSize);
+    };
+  }, [isImageLoaded, scale, filename]); // Aggiungiamo filename come dipendenza per ricalcolare quando cambia l'immagine // Aggiungiamo scale come dipendenza per reagire ai cambiamenti di zoom
   
-  // Ridisegna la linea quando cambia lo zoom
+  // Ridisegna la linea quando cambiano i punti o il fattore di scala
+  const drawLineRef = useRef(drawLineOnCanvas);
+  
+  // Aggiorniamo il riferimento alla funzione drawLineOnCanvas
   useEffect(() => {
-    if (startPoint && endPoint) {
-      drawLineOnCanvas();
+    drawLineRef.current = drawLineOnCanvas;
+  }, [scale, positionX, positionY, startPoint, endPoint, drawLineOnCanvas]);
+  
+  // Effetto per ridisegnare la linea quando cambiano i punti
+  useEffect(() => {
+    if (startPoint && endPoint && canvasRef.current) {
+      // Usiamo requestAnimationFrame per assicurarci che il canvas sia già stato aggiornato
+      requestAnimationFrame(() => {
+        drawLineRef.current();
+      });
     }
-  }, [startPoint, endPoint]);
+  }, [startPoint, endPoint, scale, positionX, positionY]);
 
   return (
     <div className={cn("relative w-full h-full group", className)}>
@@ -254,9 +277,26 @@ export function SignatureImage({
           setPositionX(e.state.positionX);
           setPositionY(e.state.positionY);
           
+          // Aggiorna le dimensioni del canvas se necessario
+          if (imgRef.current && canvasRef.current) {
+            const img = imgRef.current;
+            const canvas = canvasRef.current;
+            const container = img.parentElement;
+            
+            if (container) {
+              // Se le dimensioni sono cambiate, aggiorna il canvas
+              if (canvas.width !== container.clientWidth || canvas.height !== container.clientHeight) {
+                canvas.width = container.clientWidth;
+                canvas.height = container.clientHeight;
+              }
+            }
+          }
+          
           // Ridisegna la linea con le nuove proporzioni
           if (startPoint && endPoint) {
-            drawLineOnCanvas();
+            requestAnimationFrame(() => {
+              drawLineOnCanvas();
+            });
           }
         }}
       >
