@@ -151,7 +151,7 @@ export function SignatureCard({
   return (
     <>
       <Card className="overflow-hidden">
-        <div className="relative h-48 bg-gray-100">
+        <div className="relative h-64 bg-gray-100">
           <SignatureImage 
             filename={signature.filename}
             originalFilename={signature.originalFilename}
@@ -323,21 +323,23 @@ export function SignatureCard({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <h3 className="font-medium mb-2">{t('signatures.verification.verifiedSignature', 'Firma da verificare')}</h3>
-                  <div className="bg-muted rounded h-48 relative">
+                  <div className="bg-muted rounded h-64 relative">
                     <SignatureImage 
                       filename={signature.filename}
                       originalFilename={signature.originalFilename}
                       className="w-full h-full"
+                      dpi={signature.dpi || 300}
                     />
                   </div>
                 </div>
                 <div>
                   <h3 className="font-medium mb-2">{t('signatures.verification.referenceSignature', 'Firma di riferimento')}</h3>
-                  <div className="bg-muted rounded h-48 relative">
+                  <div className="bg-muted rounded h-64 relative">
                     <SignatureImage 
                       filename={signature.referenceSignatureFilename || ''}
                       originalFilename={signature.referenceSignatureOriginalFilename || ''}
                       className="w-full h-full"
+                      dpi={signature.referenceDpi || 300}
                     />
                   </div>
                 </div>
