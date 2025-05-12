@@ -56,12 +56,25 @@ export function SignatureImage({
   
   // Funzione per calcolare la lunghezza della linea in centimetri
   const calculateLineLength = (start: { x: number, y: number }, end: { x: number, y: number }): number => {
-    // Le coordinate sono relative all'immagine originale in pixel
-
+    if (!imgRef.current) return 0;
+    
+    // Le coordinate sono percentuali (0-1), dobbiamo convertirle in pixel
+    const img = imgRef.current;
+    
+    // Ottieni le dimensioni naturali dell'immagine
+    const imgWidth = img.naturalWidth;
+    const imgHeight = img.naturalHeight;
+    
+    // Converti le coordinate percentuali in pixel nell'immagine originale
+    const startX = start.x * imgWidth;
+    const startY = start.y * imgHeight;
+    const endX = end.x * imgWidth;
+    const endY = end.y * imgHeight;
+    
     // Calcola la distanza in pixel usando il teorema di Pitagora
     const pixelDistance = Math.sqrt(
-      Math.pow(end.x - start.x, 2) + 
-      Math.pow(end.y - start.y, 2)
+      Math.pow(endX - startX, 2) + 
+      Math.pow(endY - startY, 2)
     );
     
     // Converti da pixel a centimetri usando il DPI
@@ -77,28 +90,23 @@ export function SignatureImage({
   const [positionX, setPositionX] = useState(0);
   const [positionY, setPositionY] = useState(0);
   
-  // Funzione helper per convertire le coordinate del mouse in coordinate del canvas tenendo conto dello zoom
+  // Funzione helper per convertire le coordinate del mouse in coordinate percentuali
+  // Le coordinate percentuali non cambiano con lo zoom o le dimensioni della finestra
   const getCanvasCoordinates = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!canvasRef.current || !imgRef.current) return { x: 0, y: 0 };
     
     const canvas = canvasRef.current;
-    const img = imgRef.current;
     const rect = canvas.getBoundingClientRect();
     
     // Calcola le coordinate relative al canvas
     const clientX = e.clientX - rect.left;
     const clientY = e.clientY - rect.top;
     
-    // Ottieni le dimensioni originali e la scala dell'immagine
-    const imgRect = img.getBoundingClientRect();
-    const scaleRatio = imgRect.width / img.naturalWidth;
+    // Converti in percentuali (0-1) rispetto alle dimensioni del canvas
+    const x = clientX / rect.width;
+    const y = clientY / rect.height;
     
-    // Converti le coordinate client in coordinate relative all'immagine originale
-    // Prima normalizza la posizione (da 0 a 1) all'interno del container, poi
-    // moltiplicala per le dimensioni naturali dell'immagine
-    const x = (clientX / rect.width) * img.naturalWidth;
-    const y = (clientY / rect.height) * img.naturalHeight;
-    
+    // Ritorna le coordinate percentuali
     return { x, y };
   };
   
@@ -155,10 +163,9 @@ export function SignatureImage({
   };
   
   const drawLineOnCanvas = useCallback(() => {
-    if (!canvasRef.current || !imgRef.current || !startPoint || !endPoint) return;
+    if (!canvasRef.current || !startPoint || !endPoint) return;
     
     const canvas = canvasRef.current;
-    const img = imgRef.current;
     const ctx = canvas.getContext('2d');
     
     if (ctx) {
@@ -166,32 +173,32 @@ export function SignatureImage({
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
       try {
-        // Manteniamo le coordinate nella scala naturale dell'immagine
-        // ma dobbiamo convertire in coordinate del canvas per il disegno
+        // Ottieni le dimensioni effettive del canvas
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
         
-        // 1. Ottieni le dimensioni attuali dell'immagine visualizzata
-        const imgRect = img.getBoundingClientRect();
+        // Converti le coordinate percentuali in pixel sul canvas
+        const displayStartX = startPoint.x * canvasWidth;
+        const displayStartY = startPoint.y * canvasHeight;
+        const displayEndX = endPoint.x * canvasWidth;
+        const displayEndY = endPoint.y * canvasHeight;
         
-        // 2. Calcola il rapporto tra le dimensioni visualizzate e quelle naturali
-        const widthRatio = canvas.width / img.naturalWidth;
-        const heightRatio = canvas.height / img.naturalHeight;
+        // Imposta lo spessore della linea e disegnala
+        const lineWidth = Math.max(2, 2 / scale);
+        ctx.lineWidth = lineWidth;
+        ctx.strokeStyle = '#2563eb'; // Blu
         
-        // 3. Converti le coordinate in base al rapporto
-        const displayStartX = startPoint.x * widthRatio;
-        const displayStartY = startPoint.y * heightRatio;
-        const displayEndX = endPoint.x * widthRatio;
-        const displayEndY = endPoint.y * heightRatio;
+        // Assicurati che il contesto sia pulito
+        ctx.save();
         
-        // 4. Disegna la linea con le nuove coordinate
+        // Disegna la linea
         ctx.beginPath();
         ctx.moveTo(displayStartX, displayStartY);
         ctx.lineTo(displayEndX, displayEndY);
-        ctx.strokeStyle = '#2563eb'; // Blu
-        ctx.lineWidth = Math.max(2, 2 / scale); // Assicurati che la linea sia sempre visibile
         ctx.stroke();
         
-        // 5. Disegna i punti di inizio e fine
-        const pointRadius = Math.max(4, 4 / scale); // Assicurati che i punti siano sempre visibili
+        // Disegna i punti di inizio e fine
+        const pointRadius = Math.max(4, 4 / scale);
         ctx.fillStyle = '#2563eb';
         
         // Punto iniziale
@@ -203,13 +210,16 @@ export function SignatureImage({
         ctx.beginPath();
         ctx.arc(displayEndX, displayEndY, pointRadius, 0, Math.PI * 2);
         ctx.fill();
+        
+        // Ripristina il contesto
+        ctx.restore();
       } catch (error) {
         console.error("Errore durante il disegno della linea:", error);
       }
     }
-  }, [canvasRef, imgRef, startPoint, endPoint, scale]);
+  }, [canvasRef, startPoint, endPoint, scale]);
   
-  // Aggiorna le dimensioni del canvas quando l'immagine viene caricata o lo zoom cambia
+  // Aggiorna le dimensioni del canvas quando l'immagine viene caricata o cambia la finestra
   useEffect(() => {
     // Assicuriamoci che il canvas abbia sempre le dimensioni corrette
     const updateCanvasSize = () => {
@@ -224,7 +234,6 @@ export function SignatureImage({
         
         // Imposta le dimensioni del canvas
         // Utilizziamo un fattore di scala maggiore per una migliore qualità del rendering
-        // Questo è importante per evitare che le linee diventino sfocate durante lo zoom
         const pixelRatio = window.devicePixelRatio || 1;
         canvas.width = containerWidth * pixelRatio;
         canvas.height = containerHeight * pixelRatio;
@@ -235,40 +244,24 @@ export function SignatureImage({
         
         // Ridisegna la linea con le dimensioni aggiornate
         if (startPoint && endPoint) {
-          drawLineOnCanvas();
+          // Usa setTimeout per assicurarsi che il canvas sia completamente aggiornato
+          setTimeout(() => {
+            drawLineOnCanvas();
+          }, 0);
         }
       }
     };
     
+    // Aggiorna le dimensioni iniziali
     updateCanvasSize();
     
     // Aggiungiamo un listener per il resize della finestra
     window.addEventListener('resize', updateCanvasSize);
     
-    // Listener per eventi di zoom
-    const handleZoom = () => {
-      if (startPoint && endPoint) {
-        requestAnimationFrame(() => {
-          updateCanvasSize();
-        });
-      }
-    };
-    
-    if (transformRef.current) {
-      const instance = transformRef.current;
-      // @ts-ignore - event emitter may not be directly typed
-      instance.on("zoomed", handleZoom);
-    }
-    
     return () => {
       window.removeEventListener('resize', updateCanvasSize);
-      if (transformRef.current) {
-        const instance = transformRef.current;
-        // @ts-ignore - event emitter may not be directly typed
-        instance.off("zoomed", handleZoom);
-      }
     };
-  }, [isImageLoaded, drawLineOnCanvas, startPoint, endPoint, filename, transformRef]); // Dipendenze aggiornate // Aggiungiamo scale come dipendenza per reagire ai cambiamenti di zoom
+  }, [isImageLoaded, drawLineOnCanvas, startPoint, endPoint, filename]);
   
   // Ridisegna la linea quando necessario
   useEffect(() => {
@@ -306,23 +299,9 @@ export function SignatureImage({
           setPositionX(e.state.positionX);
           setPositionY(e.state.positionY);
           
-          // Aggiorna le dimensioni del canvas se necessario
-          if (imgRef.current && canvasRef.current) {
-            const img = imgRef.current;
-            const canvas = canvasRef.current;
-            const container = img.parentElement;
-            
-            if (container) {
-              // Se le dimensioni sono cambiate, aggiorna il canvas
-              if (canvas.width !== container.clientWidth || canvas.height !== container.clientHeight) {
-                canvas.width = container.clientWidth;
-                canvas.height = container.clientHeight;
-              }
-            }
-          }
-          
-          // Ridisegna la linea con le nuove proporzioni
-          if (startPoint && endPoint) {
+          // Ridisegna la linea immediatamente dopo la trasformazione
+          if (startPoint && endPoint && canvasRef.current) {
+            // Usa requestAnimationFrame per assicurarsi che avvenga dopo il rendering
             requestAnimationFrame(() => {
               drawLineOnCanvas();
             });
