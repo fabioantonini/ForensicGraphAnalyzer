@@ -70,28 +70,44 @@ export function SignatureImage({
   };
     
   // Funzioni per gestire il disegno della linea
-  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!drawMode || !canvasRef.current) return;
+  // Ottiene un riferimento allo stato di trasformazione per calcolare le coordinate corrette
+  const [scale, setScale] = useState(1);
+  const [positionX, setPositionX] = useState(0);
+  const [positionY, setPositionY] = useState(0);
+  
+  // Funzione helper per convertire le coordinate del mouse in coordinate del canvas tenendo conto dello zoom
+  const getCanvasCoordinates = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!canvasRef.current) return { x: 0, y: 0 };
     
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    
+    // Calcola le coordinate relative al canvas
+    const clientX = e.clientX - rect.left;
+    const clientY = e.clientY - rect.top;
+    
+    // Applica la trasformazione inversa per ottenere le coordinate reali sul canvas
+    const x = (clientX - positionX) / scale;
+    const y = (clientY - positionY) / scale;
+    
+    return { x, y };
+  };
+  
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!drawMode || !canvasRef.current) return;
+    
+    const coords = getCanvasCoordinates(e);
     
     setIsDrawing(true);
-    setStartPoint({ x, y });
-    setEndPoint({ x, y });
+    setStartPoint(coords);
+    setEndPoint(coords);
   };
   
   const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!isDrawing || !drawMode || !canvasRef.current || !startPoint) return;
     
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    setEndPoint({ x, y });
+    const coords = getCanvasCoordinates(e);
+    setEndPoint(coords);
     
     // Disegna la linea sul canvas
     drawLineOnCanvas();
@@ -138,22 +154,32 @@ export function SignatureImage({
       // Pulisci il canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
+      // Salva lo stato corrente del contesto
+      ctx.save();
+      
+      // Applica la stessa trasformazione che ha l'immagine
+      ctx.scale(scale, scale);
+      ctx.translate(positionX / scale, positionY / scale);
+      
       // Imposta lo stile della linea
       ctx.beginPath();
       ctx.moveTo(startPoint.x, startPoint.y);
       ctx.lineTo(endPoint.x, endPoint.y);
       ctx.strokeStyle = '#2563eb'; // Blu
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 2 / scale; // Adatta lo spessore della linea allo zoom
       ctx.stroke();
       
       // Disegna i punti di inizio e fine
       ctx.fillStyle = '#2563eb';
       ctx.beginPath();
-      ctx.arc(startPoint.x, startPoint.y, 4, 0, Math.PI * 2);
+      ctx.arc(startPoint.x, startPoint.y, 4 / scale, 0, Math.PI * 2);
       ctx.fill();
       ctx.beginPath();
-      ctx.arc(endPoint.x, endPoint.y, 4, 0, Math.PI * 2);
+      ctx.arc(endPoint.x, endPoint.y, 4 / scale, 0, Math.PI * 2);
       ctx.fill();
+      
+      // Ripristina lo stato del contesto
+      ctx.restore();
     }
   };
   
@@ -196,6 +222,17 @@ export function SignatureImage({
         wheel={{
           disabled: isProcessing || !isImageLoaded || drawMode,
           step: 0.2
+        }}
+        onTransformed={(e) => {
+          // Aggiorna lo stato con le informazioni di trasformazione correnti
+          setScale(e.state.scale);
+          setPositionX(e.state.positionX);
+          setPositionY(e.state.positionY);
+          
+          // Ridisegna la linea con le nuove proporzioni
+          if (startPoint && endPoint) {
+            drawLineOnCanvas();
+          }
         }}
       >
         {({ zoomIn, zoomOut, resetTransform }) => (
