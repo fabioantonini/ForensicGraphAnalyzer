@@ -182,7 +182,7 @@ export function SignatureImage({
         ref={transformRef}
         initialScale={1}
         minScale={0.5}
-        maxScale={4}
+        maxScale={8}
         centerOnInit
         limitToBounds
         panning={{
