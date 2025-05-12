@@ -259,7 +259,11 @@ export function SignatureImage({
                   <canvas
                     ref={canvasRef}
                     className="absolute top-0 left-0 w-full h-full pointer-events-auto"
-                    style={{ display: drawMode ? 'block' : 'none', cursor: drawMode ? 'crosshair' : 'auto' }}
+                    style={{ 
+                      cursor: drawMode ? 'crosshair' : 'auto',
+                      // Canvas sempre visibile ma riceve gli eventi solo in modalità disegno
+                      pointerEvents: drawMode ? 'auto' : 'none'
+                    }}
                     onMouseDown={startDrawing}
                     onMouseMove={draw}
                     onMouseUp={endDrawing}
@@ -377,7 +381,7 @@ export function SignatureImage({
       </TransformWrapper>
       
       {/* Display dimensione linea se disponibile */}
-      {lineLength !== null && drawMode && (
+      {lineLength !== null && (
         <div className="absolute top-2 right-2 p-2 bg-white/90 rounded-md shadow-sm border border-gray-200 z-10">
           <div className="text-sm font-medium">
             {t('common.lineLength', 'Lunghezza della linea:')} {lineLength} cm
