@@ -157,6 +157,11 @@ export function SignatureCard({
             originalFilename={signature.originalFilename}
             processingStatus={signature.processingStatus}
             className="w-full h-full"
+            dpi={signature.dpi || 300}
+            onLineLengthChange={(length) => {
+              // In futuro puoi implementare qui il salvataggio della lunghezza
+              console.log("Lunghezza della linea:", length, "cm");
+            }}
           />
           <div className="absolute top-2 right-2 flex space-x-2">
             {hasAdvancedDetails && (
