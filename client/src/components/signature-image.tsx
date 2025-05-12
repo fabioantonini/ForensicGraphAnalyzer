@@ -157,43 +157,68 @@ export function SignatureImage({
       // Salva lo stato corrente del contesto
       ctx.save();
       
-      // Applica la stessa trasformazione che ha l'immagine
-      ctx.scale(scale, scale);
-      ctx.translate(positionX / scale, positionY / scale);
-      
-      // Imposta lo stile della linea
-      ctx.beginPath();
-      ctx.moveTo(startPoint.x, startPoint.y);
-      ctx.lineTo(endPoint.x, endPoint.y);
-      ctx.strokeStyle = '#2563eb'; // Blu
-      ctx.lineWidth = 2 / scale; // Adatta lo spessore della linea allo zoom
-      ctx.stroke();
-      
-      // Disegna i punti di inizio e fine
-      ctx.fillStyle = '#2563eb';
-      ctx.beginPath();
-      ctx.arc(startPoint.x, startPoint.y, 4 / scale, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(endPoint.x, endPoint.y, 4 / scale, 0, Math.PI * 2);
-      ctx.fill();
+      try {
+        // Correggiamo le coordinate canvas in base al fattore di zoom
+        // Questo assicura che la linea sia sempre posizionata correttamente rispetto all'immagine zoomata
+        const displayRatio = canvas.width / canvas.clientWidth;
+        
+        // Applica la stessa trasformazione che ha l'immagine
+        ctx.scale(scale * displayRatio, scale * displayRatio);
+        ctx.translate(positionX / scale, positionY / scale);
+        
+        // Imposta lo stile della linea e disegnala
+        ctx.beginPath();
+        ctx.moveTo(startPoint.x, startPoint.y);
+        ctx.lineTo(endPoint.x, endPoint.y);
+        ctx.strokeStyle = '#2563eb'; // Blu
+        ctx.lineWidth = 2 / scale; // Adatta lo spessore della linea allo zoom
+        ctx.stroke();
+        
+        // Disegna i punti di inizio e fine
+        const pointRadius = 4 / scale; // Adatta la dimensione dei punti allo zoom
+        ctx.fillStyle = '#2563eb';
+        
+        // Punto iniziale
+        ctx.beginPath();
+        ctx.arc(startPoint.x, startPoint.y, pointRadius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Punto finale
+        ctx.beginPath();
+        ctx.arc(endPoint.x, endPoint.y, pointRadius, 0, Math.PI * 2);
+        ctx.fill();
+      } catch (error) {
+        console.error("Errore durante il disegno della linea:", error);
+      }
       
       // Ripristina lo stato del contesto
       ctx.restore();
     }
   };
   
-  // Aggiorna le dimensioni del canvas quando l'immagine viene caricata
+  // Aggiorna le dimensioni del canvas quando l'immagine viene caricata o lo zoom cambia
   useEffect(() => {
     if (isImageLoaded && imgRef.current && canvasRef.current) {
       const img = imgRef.current;
       const canvas = canvasRef.current;
       
       // Imposta le dimensioni del canvas per corrispondere all'immagine visualizzata
-      canvas.width = img.clientWidth;
-      canvas.height = img.clientHeight;
+      // Usiamo il container parent per ottenere la dimensione effettiva visualizzata
+      const container = img.parentElement;
+      if (container) {
+        canvas.width = container.clientWidth;
+        canvas.height = container.clientHeight;
+      } else {
+        canvas.width = img.clientWidth;
+        canvas.height = img.clientHeight;
+      }
+      
+      // Ridisegna la linea con le dimensioni aggiornate
+      if (startPoint && endPoint) {
+        drawLineOnCanvas();
+      }
     }
-  }, [isImageLoaded]);
+  }, [isImageLoaded, scale]); // Aggiungiamo scale come dipendenza per reagire ai cambiamenti di zoom
   
   // Ridisegna la linea quando cambia lo zoom
   useEffect(() => {
