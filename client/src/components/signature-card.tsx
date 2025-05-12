@@ -314,6 +314,30 @@ export function SignatureCard({
                 </div>
               )}
               
+              {/* Visualizza entrambe le firme con zoom */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="font-medium mb-2">{t('signatures.verification.verifiedSignature', 'Firma da verificare')}</h3>
+                  <div className="bg-muted rounded h-48 relative">
+                    <SignatureImage 
+                      filename={signature.filename}
+                      originalFilename={signature.originalFilename}
+                      className="w-full h-full"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-medium mb-2">{t('signatures.verification.referenceSignature', 'Firma di riferimento')}</h3>
+                  <div className="bg-muted rounded h-48 relative">
+                    <SignatureImage 
+                      filename={signature.referenceSignatureFilename || ''}
+                      originalFilename={signature.referenceSignatureOriginalFilename || ''}
+                      className="w-full h-full"
+                    />
+                  </div>
+                </div>
+              </div>
+              
               {/* Metodologia di analisi */}
               <div className="bg-muted rounded p-4 border-l-4 border-primary">
                 <h3 className="font-medium text-lg mb-2">
@@ -350,12 +374,89 @@ export function SignatureCard({
               {signature.comparisonChart && (
                 <div>
                   <h3 className="font-medium mb-2 text-lg">{t('signatures.analysisReport.comparisonChart', 'Grafico di confronto')}</h3>
-                  <div className="bg-white rounded border p-2 flex justify-center">
-                    <img 
-                      src={`data:image/png;base64,${signature.comparisonChart}`} 
-                      alt="Comparison Chart" 
-                      className="max-w-full h-auto"
-                    />
+                  <div className="bg-white rounded border p-2 relative h-64 group">
+                    <TransformWrapper
+                      initialScale={1}
+                      minScale={0.5}
+                      maxScale={4}
+                      centerOnInit
+                      limitToBounds
+                    >
+                      {({ zoomIn, zoomOut, resetTransform }) => (
+                        <>
+                          <TransformComponent wrapperClass="!w-full !h-full">
+                            <img 
+                              src={`data:image/png;base64,${signature.comparisonChart}`} 
+                              alt="Comparison Chart" 
+                              className="max-w-full h-auto"
+                            />
+                          </TransformComponent>
+                          
+                          {/* Zoom controls */}
+                          <div className="absolute bottom-2 right-2 flex-col gap-1 hidden group-hover:flex">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button 
+                                    variant="secondary" 
+                                    size="icon" 
+                                    className="h-7 w-7 opacity-90 hover:opacity-100 shadow" 
+                                    onClick={() => zoomIn()}
+                                  >
+                                    <ZoomIn className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>{t('common.zoomIn', 'Zoom in')}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                            
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button 
+                                    variant="secondary" 
+                                    size="icon" 
+                                    className="h-7 w-7 opacity-90 hover:opacity-100 shadow" 
+                                    onClick={() => zoomOut()}
+                                  >
+                                    <ZoomOut className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>{t('common.zoomOut', 'Zoom out')}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                            
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button 
+                                    variant="secondary" 
+                                    size="icon" 
+                                    className="h-7 w-7 opacity-90 hover:opacity-100 shadow" 
+                                    onClick={() => resetTransform()}
+                                  >
+                                    <RotateCw className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>{t('common.resetZoom', 'Reset')}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
+                          
+                          {/* Zoom instruction hint */}
+                          <div className="absolute top-2 left-2 text-xs text-gray-600 bg-white/70 px-1.5 py-0.5 rounded hidden group-hover:flex items-center gap-1">
+                            <Search className="h-3 w-3" />
+                            <span>{t('common.dragToMove', 'Trascina per muovere')}</span>
+                          </div>
+                        </>
+                      )}
+                    </TransformWrapper>
                   </div>
                 </div>
               )}
