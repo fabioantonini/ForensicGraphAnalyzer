@@ -192,7 +192,7 @@
   "layout": {
     "dashboard": "Dashboard",
     "documents": "Documents",
-    "ragQuery": "Graphology Analysis",
+    "ragQuery": "Document Assistant",
     "signatures": "Signature Verification",
     "settings": "Settings",
     "admin": "Administration",
