@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { SendHorizontal, Bot, User } from "lucide-react";
+import { SendHorizontal, Bot, User, Trash2, Clock } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Document, Message, QueryResult } from "@/lib/types";
 import { useMutation } from "@tanstack/react-query";
@@ -13,6 +13,7 @@ import { Slider } from "@/components/ui/slider";
 import { LoadingSpinner } from "../ui/loading-spinner";
 import { useAuth } from "@/hooks/use-auth";
 import { useTranslation } from "react-i18next";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ChatInterfaceProps {
   selectedDocumentIds: number[];
@@ -30,13 +31,54 @@ export function ChatInterface({
   const { user } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation();
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "system",
-      content: t("query.welcomeMessage", "Hello! I'm your forensic graphology assistant. I can analyze handwriting, signatures, and other graphological elements using your document knowledge base. How can I help you today?"),
-      timestamp: new Date(),
-    },
-  ]);
+  
+  // Generazione di un ID univoco per la conversazione corrente
+  const [conversationId] = useState(() => {
+    // Usa un conversationId esistente o creane uno nuovo
+    return `conversation-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  });
+  
+  // Carica messaggi dal localStorage
+  const [messages, setMessages] = useState<Message[]>(() => {
+    if (typeof window === 'undefined') {
+      return [
+        {
+          role: "system",
+          content: t("query.welcomeMessage", "Hello! I'm your forensic graphology assistant. I can analyze handwriting, signatures, and other graphological elements using your document knowledge base. How can I help you today?"),
+          timestamp: new Date(),
+        },
+      ];
+    }
+    
+    try {
+      const savedMessages = localStorage.getItem(conversationId);
+      if (savedMessages) {
+        // Ripristina i messaggi salvati, assicurandosi che i timestamp siano oggetti Date
+        const parsedMessages = JSON.parse(savedMessages) as any[];
+        return parsedMessages.map(msg => ({
+          role: msg.role,
+          content: msg.content,
+          timestamp: new Date(msg.timestamp),
+          sources: msg.sources
+        }));
+      }
+    } catch (err) {
+      console.error("Errore nel caricamento dei messaggi salvati:", err);
+    }
+    
+    // Messaggio di benvenuto di default
+    return [
+      {
+        role: "system",
+        content: t("query.welcomeMessage", "Hello! I'm your forensic graphology assistant. I can analyze handwriting, signatures, and other graphological elements using your document knowledge base. How can I help you today?"),
+        timestamp: new Date(),
+      },
+    ];
+  });
+  
+  // Numero massimo di messaggi da considerare per il contesto
+  const [contextWindowSize, setContextWindowSize] = useState(5);
+  
   const [inputValue, setInputValue] = useState(initialQuery);
   const [model, setModel] = useState("gpt-4o");
   const [temperature, setTemperature] = useState(0.7);
@@ -47,6 +89,17 @@ export function ChatInterface({
       setTemperature(1);
     }
   }, [model]);
+  
+  // Salva i messaggi nel localStorage quando cambiano
+  useEffect(() => {
+    if (typeof window !== 'undefined' && messages.length > 0) {
+      try {
+        localStorage.setItem(conversationId, JSON.stringify(messages));
+      } catch (err) {
+        console.error("Errore nel salvataggio dei messaggi:", err);
+      }
+    }
+  }, [messages, conversationId]);
   
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -66,13 +119,55 @@ export function ChatInterface({
     }
   }, [initialQuery]);
 
+  // Funzione per preparare il contesto della conversazione
+  const prepareConversationContext = () => {
+    // Ignoriamo il messaggio iniziale di sistema (benvenuto)
+    const relevantMessages = messages.filter(msg => msg.role !== "system");
+    
+    // Prendiamo solo gli ultimi N messaggi (basati su contextWindowSize)
+    const recentMessages = relevantMessages.slice(-contextWindowSize * 2);
+    
+    return recentMessages.map(msg => ({
+      role: msg.role,
+      content: msg.content
+    }));
+  };
+  
+  // Funzione per pulire la conversazione
+  const clearConversation = () => {
+    const welcomeMessage = {
+      role: "system" as const,
+      content: t("query.welcomeMessage", "Hello! I'm your forensic graphology assistant. I can analyze handwriting, signatures, and other graphological elements using your document knowledge base. How can I help you today?"),
+      timestamp: new Date(),
+    };
+    setMessages([welcomeMessage]);
+    
+    // Rimuovi la conversazione salvata
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem(conversationId);
+      } catch (err) {
+        console.error("Errore nella rimozione dei messaggi salvati:", err);
+      }
+    }
+    
+    toast({
+      title: t("query.conversationCleared", "Conversation cleared"),
+      description: t("query.startNewConversation", "You can now start a new conversation."),
+    });
+  };
+
   const queryMutation = useMutation({
     mutationFn: async (query: string) => {
+      // Prepara il contesto della conversazione per l'API
+      const conversationContext = prepareConversationContext();
+      
       const response = await apiRequest("POST", "/api/query", {
         query,
         documentIds: selectedDocumentIds,
         model,
         temperature,
+        conversationContext // Invia il contesto recente al server
       });
       return await response.json() as QueryResult;
     },
@@ -221,10 +316,54 @@ export function ChatInterface({
           </div>
         </ScrollArea>
         
-        {/* Advanced Settings */}
+        {/* Advanced Settings & Memory Controls */}
         <div className="flex flex-col md:flex-row justify-between text-xs text-gray-500 mb-2">
-          <div className="flex items-center mb-2 md:mb-0">
-            <span>{t('query.usingDocuments', 'Using')} {selectedDocumentIds.length} {t(selectedDocumentIds.length !== 1 ? 'query.documents' : 'query.document', 'document')} {t('query.inContext', 'in context')}</span>
+          <div className="flex items-center mb-2 md:mb-0 space-x-4">
+            <span>
+              {t('query.usingDocuments', 'Using')} {selectedDocumentIds.length} {t(selectedDocumentIds.length !== 1 ? 'query.documents' : 'query.document', 'document')} {t('query.inContext', 'in context')}
+            </span>
+            
+            <div className="flex items-center">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={clearConversation}>
+                      <Trash2 className="h-4 w-4 text-gray-500" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{t('query.clearConversation', 'Clear conversation')}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center ml-2">
+                      <Clock className="h-4 w-4 text-gray-500 mr-1" />
+                      <Select 
+                        value={contextWindowSize.toString()} 
+                        onValueChange={(value) => setContextWindowSize(parseInt(value))}
+                      >
+                        <SelectTrigger className="h-6 border-none bg-transparent w-12 px-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="3">3</SelectItem>
+                          <SelectItem value="5">5</SelectItem>
+                          <SelectItem value="8">8</SelectItem>
+                          <SelectItem value="10">10</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{t('query.memorySize', 'Chat memory size (exchanges)')}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
           </div>
           
           <div className="flex items-center space-x-4">
