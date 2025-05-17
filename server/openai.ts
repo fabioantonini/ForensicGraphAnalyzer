@@ -49,13 +49,20 @@ export async function generateEmbedding(text: string, apiKey?: string): Promise<
   }
 }
 
+// Interfaccia per i messaggi di conversazione
+interface ConversationMessage {
+  role: string;
+  content: string;
+}
+
 // Chat completion with RAG context
 export async function chatWithRAG(
   query: string,
   context: string[],
   apiKey?: string,
   model: string = "gpt-4o",
-  temperature: number = 0.7
+  temperature: number = 0.7,
+  conversationContext: ConversationMessage[] = []
 ): Promise<string> {
   // Handle case when context is empty
   if (context.length === 0) {
@@ -146,13 +153,24 @@ export async function chatWithRAG(
 
     // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
     
+    // Prepara i messaggi di base
+    const messages: any[] = [
+      { role: "system", content: systemMessage }
+    ];
+    
+    // Aggiungi il contesto della conversazione precedente se disponibile
+    if (conversationContext && conversationContext.length > 0) {
+      log(`Aggiungendo ${conversationContext.length} messaggi di contesto della conversazione`, "openai");
+      messages.push(...conversationContext);
+    }
+    
+    // Aggiungi la query corrente
+    messages.push({ role: "user", content: query });
+    
     // Alcuni modelli (come o3) non supportano il parametro temperatura personalizzato
     const params: any = {
       model,
-      messages: [
-        { role: "system", content: systemMessage },
-        { role: "user", content: query }
-      ],
+      messages: messages,
     };
     
     // Aggiungi il parametro temperatura solo se non è un modello che non lo supporta

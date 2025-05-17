@@ -617,7 +617,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(userId) as User;
       
       // Validate request body
-      const { query, documentIds, model = "gpt-4o", temperature = 0.7 } = req.body;
+      const { query, documentIds, model = "gpt-4o", temperature = 0.7, conversationContext = [] } = req.body;
       
       if (!query || typeof query !== "string") {
         return res.status(400).json({ message: "Query is required" });
@@ -625,6 +625,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!Array.isArray(documentIds)) {
         return res.status(400).json({ message: "documentIds must be an array" });
+      }
+      
+      // Verifica che il contesto della conversazione sia un array
+      if (!Array.isArray(conversationContext)) {
+        return res.status(400).json({ message: "conversationContext must be an array" });
       }
       
       // Check if the user has an API key configured or if we have a system key
@@ -674,7 +679,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         context,
         apiKeyToUse,
         model,
-        temperature
+        temperature,
+        conversationContext // Passa il contesto della conversazione
       );
       
       // Save query and response to database
