@@ -158,8 +158,12 @@ export function ChatInterface({
         <h3 className="text-lg font-medium text-gray-700 mb-4">{t('query.chatInterface', 'Chat Interface')}</h3>
         
         {/* Chat Messages */}
-        <ScrollArea className="flex-1 mb-4 border border-gray-200 rounded-lg p-4 min-h-[300px] max-h-[500px]" ref={scrollAreaRef}>
-          <div className="space-y-4">
+        <ScrollArea 
+          className="flex-1 mb-4 border border-gray-200 rounded-lg p-4 min-h-[300px] max-h-[500px] overflow-y-auto" 
+          ref={scrollAreaRef}
+          type="always"
+        >
+          <div className="space-y-4 pr-2">
             {messages.map((message, index) => (
               <div
                 key={index}
