@@ -55,13 +55,13 @@ export async function addDocumentToVectorStore(document: Document, apiKey?: stri
       const embedding = await generateEmbedding(chunk, apiKey);
       console.log(`Embedding generato, dimensione: ${embedding.length}`);
       
-      // Salva l'embedding nel database utilizzando una query SQL diretta
+      // Salva l'embedding nel database utilizzando una query SQL con parametri
       // poiché Drizzle ORM non supporta nativamente il tipo vector
       await db.execute(
         sql`INSERT INTO document_embeddings 
             (document_id, user_id, chunk_index, chunk_content, embedding, created_at, updated_at)
             VALUES 
-            (${document.id}, ${document.userId}, ${i}, ${chunk}, ${sql.raw(`'[${embedding.join(',')}]'`)}, NOW(), NOW())`
+            (${document.id}, ${document.userId}, ${i}, ${chunk}, ${'[' + embedding.join(',') + ']'}::vector, NOW(), NOW())`
       );
       
       // Aggiorna il progresso
@@ -184,14 +184,15 @@ export async function queryVectorStore(
       console.log(`Query filtrata per i documenti: ${documentIds.join(', ')}`);
     }
     
-    // Esegui la query di similarità con tipizzazione corretta
+    // Esegui la query di similarità con tipizzazione corretta e parametri sicuri
     const sqlQuery = sql`
       SELECT 
         document_id as "documentId", 
         chunk_content as "content", 
-        1 - (embedding <=> ${sql.raw(`'[${queryEmbedding.join(',')}]'::vector`)}) as "similarity"
+        1 - (embedding <=> ${'[' + queryEmbedding.join(',') + ']'}::vector) as "similarity"
       FROM document_embeddings
-      ${sql.raw(whereCondition)}
+      WHERE user_id = ${userId}
+      ${documentIds && documentIds.length > 0 ? sql`AND document_id IN (${sql.join(documentIds)})` : sql``}
       ORDER BY similarity DESC
       LIMIT ${limit}
     `;
