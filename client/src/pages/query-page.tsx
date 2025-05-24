@@ -53,7 +53,7 @@ export default function QueryPage() {
 
   return (
     <div className="container mx-auto py-6">
-      <h2 className="text-2xl font-bold text-primary mb-6">
+      <h2 className="text-2xl font-bold text-primary mb-6" data-tour="assistant-header">
         {t('query.title')}
       </h2>
       
@@ -63,11 +63,13 @@ export default function QueryPage() {
         </div>
       ) : (
         <div className="flex flex-col md:flex-row gap-6">
-          <DocumentSelection
-            selectedDocumentIds={selectedDocumentIds}
-            onSelectionChange={handleSelectionChange}
-            className="md:w-1/3"
-          />
+          <div data-tour="document-selection">
+            <DocumentSelection
+              selectedDocumentIds={selectedDocumentIds}
+              onSelectionChange={handleSelectionChange}
+              className="md:w-1/3"
+            />
+          </div>
           
           <ChatInterface
             selectedDocumentIds={selectedDocumentIds}
