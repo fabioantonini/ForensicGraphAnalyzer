@@ -71,12 +71,14 @@ export default function QueryPage() {
             />
           </div>
           
-          <ChatInterface
-            selectedDocumentIds={selectedDocumentIds}
-            documentMap={documentMap}
-            className="md:w-2/3 flex-1"
-            initialQuery={initialQuery}
-          />
+          <div data-tour="chat-interface">
+            <ChatInterface
+              selectedDocumentIds={selectedDocumentIds}
+              documentMap={documentMap}
+              className="md:w-2/3 flex-1"
+              initialQuery={initialQuery}
+            />
+          </div>
         </div>
       )}
     </div>

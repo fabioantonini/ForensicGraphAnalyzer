@@ -477,11 +477,11 @@ export default function SignaturesPage() {
   
   return (
     <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-6" data-tour="signatures-header">
         <h1 className="text-3xl font-bold">{t('signatures.title')}</h1>
         <Dialog open={isCreateProjectOpen} onOpenChange={setIsCreateProjectOpen}>
           <DialogTrigger asChild>
-            <Button>{t('signatures.createProject')}</Button>
+            <Button data-tour="create-project">{t('signatures.createProject')}</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
@@ -644,7 +644,7 @@ export default function SignaturesPage() {
             <div className="flex space-x-2">
               <Dialog open={isUploadReferenceOpen} onOpenChange={setIsUploadReferenceOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="outline">
+                  <Button variant="outline" data-tour="reference-signatures">
                     <Upload className="h-4 w-4 mr-2" />
                     {t('signatures.uploadReference')}
                   </Button>
@@ -698,7 +698,7 @@ export default function SignaturesPage() {
               
               <Dialog open={isUploadVerifyOpen} onOpenChange={setIsUploadVerifyOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="outline">
+                  <Button variant="outline" data-tour="verify-signatures">
                     <Upload className="h-4 w-4 mr-2" />
                     {t('signatures.uploadVerify')}
                   </Button>
