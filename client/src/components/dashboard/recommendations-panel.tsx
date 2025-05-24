@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import { apiRequest } from "@/lib/queryClient";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { toast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // Tipi per le raccomandazioni
 interface Recommendation {
@@ -22,30 +22,44 @@ interface Recommendation {
 }
 
 export function RecommendationsPanel() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [isGenerating, setIsGenerating] = useState(false);
   const queryClient = useQueryClient();
   
-  // Traduzioni dirette
+  // Multilingual translations
   const translations = {
-    title: "Suggerimenti Personalizzati",
-    noRecommendations: "Nessun suggerimento personalizzato disponibile. Generane alcuni per iniziare!",
-    loadError: "Si è verificato un errore durante il caricamento dei suggerimenti.",
-    refresh: "Aggiorna",
-    generate: "Genera Suggerimenti",
-    markViewed: "Segna come visualizzato",
-    dismiss: "Ignora",
-    generated: "Suggerimenti Generati",
-    generatedSuccess: "Nuovi suggerimenti sono stati generati in base alla tua attività.",
-    error: "Errore",
-    generationError: "Si è verificato un errore durante la generazione dei suggerimenti. Riprova più tardi."
+    title: i18n.language === 'en' ? 'Personalized Insights' : 'Suggerimenti Personalizzati',
+    noRecommendations: i18n.language === 'en' 
+      ? 'No personalized insights available yet. Generate some to get started!' 
+      : 'Nessun suggerimento personalizzato disponibile. Generane alcuni per iniziare!',
+    loadError: i18n.language === 'en' 
+      ? 'There was an error loading your insights.' 
+      : 'Si è verificato un errore durante il caricamento dei suggerimenti.',
+    refresh: i18n.language === 'en' ? 'Refresh' : 'Aggiorna',
+    generate: i18n.language === 'en' ? 'Generate Insights' : 'Genera Suggerimenti',
+    markViewed: i18n.language === 'en' ? 'Mark as viewed' : 'Segna come visualizzato',
+    dismiss: i18n.language === 'en' ? 'Dismiss' : 'Ignora',
+    generated: i18n.language === 'en' ? 'Insights Generated' : 'Suggerimenti Generati',
+    generatedSuccess: i18n.language === 'en' 
+      ? 'New insights have been generated based on your activity.' 
+      : 'Nuovi suggerimenti sono stati generati in base alla tua attività.',
+    error: i18n.language === 'en' ? 'Error' : 'Errore',
+    generationError: i18n.language === 'en' 
+      ? 'There was an error generating your insights. Please try again later.' 
+      : 'Si è verificato un errore durante la generazione dei suggerimenti. Riprova più tardi.'
   };
 
   // Recupera le raccomandazioni non visualizzate e non rifiutate
-  const { data: recommendations, isLoading, isError } = useQuery<Recommendation[]>({
+  const { data: recommendations, isLoading, isError, refetch } = useQuery<Recommendation[]>({
     queryKey: ["/api/recommendations"],
     staleTime: 5 * 60 * 1000, // 5 minuti
   });
+  
+  // Reazione al cambio di lingua e all'aggiornamento delle raccomandazioni
+  useEffect(() => {
+    // Forza il refresh delle raccomandazioni quando la lingua cambia
+    refetch();
+  }, [i18n.language, refetch]);
 
   // Mutazione per contrassegnare una raccomandazione come visualizzata
   const viewMutation = useMutation({
@@ -97,6 +111,9 @@ export function RecommendationsPanel() {
   const handleGenerateClick = () => {
     setIsGenerating(true);
     generateMutation.mutate();
+    
+    // Debug: controlliamo lo stato attuale delle raccomandazioni
+    console.log("Avvio generazione suggerimenti:", { recommendations, locale: i18n.language });
   };
 
   // Ottiene il colore del badge in base alla categoria
@@ -119,13 +136,24 @@ export function RecommendationsPanel() {
 
   // Traduce la categoria
   const translateCategory = (category: string): string => {
-    switch (category.toLowerCase()) {
-      case 'document': return "Analisi Documenti";
-      case 'signature': return "Analisi Firme";
-      case 'workflow': return "Flusso di Lavoro";
-      case 'learning': return "Apprendimento";
-      case 'tool': return "Strumento";
-      default: return category;
+    if (i18n.language === 'en') {
+      switch (category.toLowerCase()) {
+        case 'document': return "Document Analysis";
+        case 'signature': return "Signature Analysis";
+        case 'workflow': return "Workflow";
+        case 'learning': return "Learning";
+        case 'tool': return "Tool";
+        default: return category;
+      }
+    } else {
+      switch (category.toLowerCase()) {
+        case 'document': return "Analisi Documenti";
+        case 'signature': return "Analisi Firme";
+        case 'workflow': return "Flusso di Lavoro";
+        case 'learning': return "Apprendimento";
+        case 'tool': return "Strumento";
+        default: return category;
+      }
     }
   };
 
