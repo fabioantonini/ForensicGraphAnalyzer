@@ -33,7 +33,9 @@ i18n
     fallbackLng: 'it',
     interpolation: {
       escapeValue: false
-    }
+    },
+    defaultNS: 'translation',
+    ns: ['translation', 'admin', 'common', 'recommendations']
   });
 
 // Helper function to ensure Italian is set as the default

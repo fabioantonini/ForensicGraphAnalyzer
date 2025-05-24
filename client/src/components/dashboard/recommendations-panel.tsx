@@ -22,9 +22,20 @@ interface Recommendation {
 }
 
 export function RecommendationsPanel() {
-  const { t } = useTranslation('recommendations');
+  const { t } = useTranslation();
   const [isGenerating, setIsGenerating] = useState(false);
   const queryClient = useQueryClient();
+  
+  // Traduzioni dirette
+  const translations = {
+    title: "Suggerimenti Personalizzati",
+    noRecommendations: "Nessun suggerimento personalizzato disponibile. Generane alcuni per iniziare!",
+    loadError: "Si è verificato un errore durante il caricamento dei suggerimenti.",
+    refresh: "Aggiorna",
+    generate: "Genera Suggerimenti",
+    markViewed: "Segna come visualizzato",
+    dismiss: "Ignora"
+  };
 
   // Recupera le raccomandazioni non visualizzate e non rifiutate
   const { data: recommendations, isLoading, isError } = useQuery<Recommendation[]>({
@@ -111,10 +122,10 @@ export function RecommendationsPanel() {
     return (
       <Card className="col-span-full">
         <CardHeader>
-          <CardTitle>{t("recommendations.title")}</CardTitle>
+          <CardTitle>{translations.title}</CardTitle>
         </CardHeader>
         <CardContent className="flex justify-center py-6">
-          <LoadingSpinner text={t("common.loading")} />
+          <LoadingSpinner text="Caricamento..." />
         </CardContent>
       </Card>
     );
@@ -124,16 +135,16 @@ export function RecommendationsPanel() {
     return (
       <Card className="col-span-full">
         <CardHeader>
-          <CardTitle>{t("recommendations.title")}</CardTitle>
+          <CardTitle>{translations.title}</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-center text-muted-foreground">
-            {t("recommendations.loadError")}
+            {translations.loadError}
           </p>
           <div className="flex justify-center mt-4">
             <Button onClick={handleGenerateClick} disabled={isGenerating}>
               {isGenerating ? <LoadingSpinner size="sm" /> : <RefreshCw className="mr-2 h-4 w-4" />}
-              {t("recommendations.refresh")}
+              {translations.refresh}
             </Button>
           </div>
         </CardContent>
