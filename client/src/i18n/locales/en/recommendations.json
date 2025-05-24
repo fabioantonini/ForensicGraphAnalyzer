@@ -1,0 +1,20 @@
+{
+  "title": "Personalized Insights",
+  "noRecommendations": "No personalized insights available yet. Generate some to get started!",
+  "loadError": "There was an error loading your insights.",
+  "generate": "Generate Insights",
+  "refresh": "Refresh",
+  "generated": "Insights Generated",
+  "generatedSuccess": "New insights have been generated based on your activity.",
+  "error": "Error",
+  "generationError": "There was an error generating your insights. Please try again later.",
+  "markViewed": "Mark as viewed",
+  "dismiss": "Dismiss",
+  "categories": {
+    "document": "Document Analysis",
+    "signature": "Signature Analysis",
+    "workflow": "Workflow",
+    "learning": "Learning",
+    "tool": "Tool"
+  }
+}

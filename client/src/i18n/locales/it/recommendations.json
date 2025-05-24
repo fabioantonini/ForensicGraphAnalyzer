@@ -1,0 +1,20 @@
+{
+  "title": "Suggerimenti Personalizzati",
+  "noRecommendations": "Nessun suggerimento personalizzato disponibile. Generane alcuni per iniziare!",
+  "loadError": "Si è verificato un errore durante il caricamento dei suggerimenti.",
+  "generate": "Genera Suggerimenti",
+  "refresh": "Aggiorna",
+  "generated": "Suggerimenti Generati",
+  "generatedSuccess": "Nuovi suggerimenti sono stati generati in base alla tua attività.",
+  "error": "Errore",
+  "generationError": "Si è verificato un errore durante la generazione dei suggerimenti. Riprova più tardi.",
+  "markViewed": "Segna come visualizzato",
+  "dismiss": "Ignora",
+  "categories": {
+    "document": "Analisi Documenti",
+    "signature": "Analisi Firme",
+    "workflow": "Flusso di Lavoro",
+    "learning": "Apprendimento",
+    "tool": "Strumento"
+  }
+}

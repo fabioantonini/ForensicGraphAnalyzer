@@ -3,6 +3,7 @@ import { Stats, Activity } from "@/lib/types";
 import { DocumentCard, QueryCard, StorageCard } from "@/components/dashboard/stats-card";
 import { ActivityList } from "@/components/dashboard/activity-list";
 import { QuickActions } from "@/components/dashboard/quick-actions";
+import { RecommendationsPanel } from "@/components/dashboard/recommendations-panel";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useTranslation } from "react-i18next";
 
@@ -39,6 +40,10 @@ export default function DashboardPage() {
         <DocumentCard count={stats.documentCount} lastUpload={stats.lastUpload} />
         <QueryCard count={stats.queryCount} lastQuery={stats.lastQuery} />
         <StorageCard storageUsed={stats.storageUsed} />
+      </div>
+      
+      <div className="mb-8" data-tour="personalized-recommendations">
+        <RecommendationsPanel />
       </div>
       
       <div className="mb-8" data-tour="recent-activities">
