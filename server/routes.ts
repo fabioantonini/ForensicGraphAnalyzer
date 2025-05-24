@@ -778,6 +778,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
       next(err);
     }
   });
+  
+  // Recommendation endpoints
+  // Get recommendations for current user
+  app.get("/api/recommendations", isAuthenticated, isActiveUser, async (req, res, next) => {
+    try {
+      const userId = req.user!.id;
+      
+      const includeViewed = req.query.includeViewed === 'true';
+      const includeDismissed = req.query.includeDismissed === 'true';
+      const limit = parseInt(req.query.limit as string || "5");
+      
+      const recommendations = await getUserRecommendations(userId, limit, includeViewed, includeDismissed);
+      res.json(recommendations);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Generate new recommendations
+  app.post("/api/recommendations/generate", isAuthenticated, isActiveUser, async (req, res, next) => {
+    try {
+      const userId = req.user!.id;
+      
+      const count = req.body.count || 3;
+      const recommendations = await generateRecommendations(userId, count);
+      res.json(recommendations);
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+  // Update recommendation status (viewed/dismissed)
+  app.patch("/api/recommendations/:id", isAuthenticated, isActiveUser, async (req, res, next) => {
+    try {
+      const userId = req.user!.id;
+      
+      const recommendationId = parseInt(req.params.id);
+      const { viewed, dismissed } = req.body;
+      
+      const success = await updateRecommendationStatus(
+        recommendationId, 
+        userId, 
+        viewed !== undefined ? viewed : undefined, 
+        dismissed !== undefined ? dismissed : undefined
+      );
+      
+      if (success) {
+        res.json({ success: true });
+      } else {
+        res.status(404).json({ error: "Raccomandazione non trovata o non aggiornata" });
+      }
+    } catch (error) {
+      next(error);
+    }
+  });
 
   // Report Template API Routes
   // Get all report templates for current user

@@ -4,7 +4,7 @@
  */
 
 import { db } from './db';
-import { User, Recommendation, insertRecommendationSchema, recommendations, queries, signatures, signatureProjects, documents, users } from '../shared/schema';
+import { User, Recommendation, insertRecommendationSchema, recommendations, queries, signatures, signatureProjects, documents, users, insertRecommendationSchema as insertSchema } from '@shared/schema';
 import { chatWithRAG } from './openai';
 import { eq, desc, and, sql, isNull, not, lt } from 'drizzle-orm';
 import { log } from './vite';
@@ -156,6 +156,7 @@ async function collectUserData(userId: number): Promise<UserData | null> {
     // Recupera le informazioni dell'utente
     const userResults = await db.select().from(users).where(eq(users.id, userId));
     if (userResults.length === 0) {
+      log(`Utente con ID ${userId} non trovato`, "recommendations");
       return null;
     }
     const user = userResults[0];
