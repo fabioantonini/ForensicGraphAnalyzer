@@ -755,6 +755,7 @@ export default function SignaturesPage() {
                   variant="default"
                   onClick={() => compareAllSignatures.mutate()}
                   disabled={compareAllSignatures.isPending}
+                  data-tour="compare-signatures"
                 >
                   {compareAllSignatures.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {t('signatures.compareAll')}
