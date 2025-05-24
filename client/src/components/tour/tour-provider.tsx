@@ -205,8 +205,8 @@ export function TourProvider({ children }: TourProviderProps) {
     const { status, type } = data;
     
     // Tour is done or skipped
-    if ([Status.FINISHED, Status.SKIPPED].includes(status)) {
-      setCompletedTours(prev => [...prev, currentTour]);
+    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
+      setCompletedTours((prev: string[]) => [...prev, currentTour]);
       setIsActive(false);
     }
   };
