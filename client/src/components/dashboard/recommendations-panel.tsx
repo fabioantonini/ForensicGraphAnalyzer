@@ -22,7 +22,7 @@ interface Recommendation {
 }
 
 export function RecommendationsPanel() {
-  const { t } = useTranslation();
+  const { t } = useTranslation('recommendations');
   const [isGenerating, setIsGenerating] = useState(false);
   const queryClient = useQueryClient();
 
