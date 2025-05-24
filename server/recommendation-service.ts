@@ -375,11 +375,14 @@ async function collectUserData(userId: number): Promise<UserData | null> {
 
     const projectIds = signatureProjs.map(p => p.id);
     
+    // Utilizza la clausola IN con il formato corretto per SQL
     const recentSignatures = projectIds.length > 0 
       ? await db
           .select()
           .from(signatures)
-          .where(sql`${signatures.projectId} IN (${projectIds.join(',')})`)
+          .where(
+            sql`${signatures.projectId} IN (${sql.join(projectIds, sql`, `)})`
+          )
           .orderBy(desc(signatures.createdAt))
           .limit(20)
       : [];
