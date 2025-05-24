@@ -87,7 +87,8 @@ export function RecommendationsPanel() {
   const generateMutation = useMutation({
     mutationFn: () => 
       apiRequest("/api/recommendations/generate", "POST", {
-        count: 3
+        count: 3,
+        locale: i18n.language // Passa la lingua attuale all'API
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/recommendations"] });

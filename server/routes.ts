@@ -802,8 +802,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user!.id;
       
       const count = req.body.count || 3;
-      // Passa la lingua preferita dell'utente alla funzione di generazione
-      const locale = req.headers["accept-language"]?.split(',')[0].substring(0, 2) || 'it';
+      // Usa la lingua inviata dal client o fallback su 'it'
+      const locale = req.body.locale || 'it';
+      console.log(`Generazione raccomandazioni in lingua: ${locale}`);
       const recommendations = await generateRecommendations(userId, count, locale);
       res.json(recommendations);
     } catch (error) {
