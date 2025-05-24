@@ -25,6 +25,17 @@
   "documentSelection": "Seleziona i documenti che vuoi analizzare.",
   "queryInput": "Fai domande sui tuoi documenti qui. Sii specifico sui termini di grafologia forense per ottenere risultati migliori.",
   "chatInterface": "Visualizza qui la cronologia della conversazione e gli approfondimenti sui documenti.",
+  
+  "settingsHeader": "Benvenuto nelle impostazioni del tuo account. Qui puoi gestire il tuo profilo, le chiavi API e le impostazioni di sicurezza.",
+  "profileSettings": "Aggiorna le tue informazioni personali e i dettagli professionali qui.",
+  "apiSettings": "Configura le tue chiavi API per OpenAI e altri servizi. Queste sono necessarie per l'analisi avanzata del testo.",
+  "securitySettings": "Gestisci la tua password e le impostazioni di sicurezza dell'account.",
+  
+  "adminHeader": "Questo è il pannello di amministrazione dove puoi gestire utenti e impostazioni di sistema.",
+  "adminTabs": "Passa tra diverse sezioni di amministrazione utilizzando queste schede.",
+  "userManagement": "Gestisci gli account utente, incluse le assegnazioni di ruolo e lo stato dell'account.",
+  "systemSettings": "Visualizza le statistiche di sistema e configura impostazioni globali come i servizi di posta elettronica.",
+  
   "back": "Indietro",
   "close": "Chiudi",
   "finish": "Termina",

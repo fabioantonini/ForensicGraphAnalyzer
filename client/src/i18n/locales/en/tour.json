@@ -25,6 +25,17 @@
   "documentSelection": "Select the documents you want to analyze.",
   "queryInput": "Ask questions about your documents here. Be specific about forensic graphology terms for better results.",
   "chatInterface": "View the conversation history and document insights here.",
+  
+  "settingsHeader": "Welcome to your account settings. Here you can manage your profile, API keys, and security settings.",
+  "profileSettings": "Update your personal information and professional details here.",
+  "apiSettings": "Configure your API keys for OpenAI and other services. These are needed for advanced text analysis.",
+  "securitySettings": "Manage your password and account security settings.",
+  
+  "adminHeader": "This is the admin panel where you can manage users and system settings.",
+  "adminTabs": "Switch between different administration sections using these tabs.",
+  "userManagement": "Manage user accounts, including role assignments and account status.",
+  "systemSettings": "View system statistics and configure global settings like email services.",
+  
   "back": "Back",
   "close": "Close",
   "finish": "Finish",
