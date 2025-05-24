@@ -32,17 +32,23 @@ export async function generateRecommendations(
     const userData = await collectUserData(userId);
     if (!userData) {
       log(`Impossibile generare raccomandazioni: dati utente non disponibili per userId ${userId}`, "recommendations");
-      return [];
+      return generateFallbackRecommendations(userId, count);
     }
 
     const apiKey = userData.user.openaiApiKey || process.env.OPENAI_API_KEY;
     if (!apiKey) {
       log(`Impossibile generare raccomandazioni: API key non disponibile`, "recommendations");
-      return [];
+      return generateFallbackRecommendations(userId, count);
     }
 
     // Genera nuove raccomandazioni tramite AI
     const generatedRecommendations = await createAIRecommendations(userData, count, apiKey);
+    
+    // Se non ci sono raccomandazioni generate, usa quelle di fallback
+    if (!generatedRecommendations || generatedRecommendations.length === 0) {
+      log(`Nessuna raccomandazione generata dall'AI, uso fallback`, "recommendations");
+      return generateFallbackRecommendations(userId, count);
+    }
     
     // Salva le raccomandazioni nel database
     const savedRecommendations: Recommendation[] = [];
@@ -57,11 +63,111 @@ export async function generateRecommendations(
       }
     }
 
+    // Se non ci sono raccomandazioni salvate, usa quelle di fallback
+    if (savedRecommendations.length === 0) {
+      return generateFallbackRecommendations(userId, count);
+    }
+
     return savedRecommendations;
   } catch (error) {
     log(`Errore nella generazione delle raccomandazioni: ${error}`, "recommendations");
-    return [];
+    return generateFallbackRecommendations(userId, count);
   }
+}
+
+/**
+ * Genera raccomandazioni predefinite quando non è possibile generarle con l'AI
+ * @param userId ID dell'utente
+ * @param count Numero di raccomandazioni da generare
+ * @returns Array di raccomandazioni predefinite
+ */
+async function generateFallbackRecommendations(userId: number, count: number = 3): Promise<Recommendation[]> {
+  const fallbackRecs = [
+    {
+      userId,
+      title: "Analizza le firme contestate con confronto avanzato",
+      content: "Utilizza il tool di confronto firme per analizzare differenze tra firme contestate e campioni di riferimento.",
+      category: "signature",
+      relevanceScore: 0.9,
+      viewed: false,
+      dismissed: false,
+      relatedDocumentIds: [],
+      relatedSignatureIds: [],
+      relatedQueryIds: [],
+      metadata: { generatedBy: 'fallback' }
+    },
+    {
+      userId,
+      title: "Ottimizza l'estrazione del testo dai documenti",
+      content: "Migliora la qualità dell'estrazione testuale configurando le opzioni avanzate OCR per documenti poco leggibili.",
+      category: "document",
+      relevanceScore: 0.85,
+      viewed: false,
+      dismissed: false,
+      relatedDocumentIds: [],
+      relatedSignatureIds: [],
+      relatedQueryIds: [],
+      metadata: { generatedBy: 'fallback' }
+    },
+    {
+      userId,
+      title: "Esplora l'analisi approfondita dei documenti",
+      content: "Utilizza la ricerca semantica per trovare informazioni nascoste nei tuoi documenti analizzati.",
+      category: "learning",
+      relevanceScore: 0.8,
+      viewed: false,
+      dismissed: false,
+      relatedDocumentIds: [],
+      relatedSignatureIds: [],
+      relatedQueryIds: [],
+      metadata: { generatedBy: 'fallback' }
+    },
+    {
+      userId,
+      title: "Crea report personalizzati per casi forensi",
+      content: "Utilizza i modelli di report avanzati per creare documentazione professionale delle tue analisi.",
+      category: "workflow",
+      relevanceScore: 0.75,
+      viewed: false,
+      dismissed: false,
+      relatedDocumentIds: [],
+      relatedSignatureIds: [],
+      relatedQueryIds: [],
+      metadata: { generatedBy: 'fallback' }
+    },
+    {
+      userId,
+      title: "Migliora l'accuratezza con il training AI",
+      content: "Allena l'AI con i tuoi dati specifici per ottenere analisi più accurate per il tuo tipo di documenti.",
+      category: "tool",
+      relevanceScore: 0.7,
+      viewed: false,
+      dismissed: false,
+      relatedDocumentIds: [],
+      relatedSignatureIds: [],
+      relatedQueryIds: [],
+      metadata: { generatedBy: 'fallback' }
+    }
+  ];
+
+  // Salva le raccomandazioni di fallback nel database
+  const savedRecommendations: Recommendation[] = [];
+  
+  // Prendi solo il numero richiesto di raccomandazioni
+  const recsToSave = fallbackRecs.slice(0, count);
+  
+  for (const rec of recsToSave) {
+    try {
+      const result = await db.insert(recommendations).values(rec).returning();
+      if (result.length > 0) {
+        savedRecommendations.push(result[0]);
+      }
+    } catch (err) {
+      log(`Errore nel salvare la raccomandazione di fallback: ${err}`, "recommendations");
+    }
+  }
+
+  return savedRecommendations;
 }
 
 /**
