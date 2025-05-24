@@ -549,9 +549,14 @@ IMPORTANTE: Rispondi SOLO con un array JSON. Non aggiungere testo prima o dopo l
       let recommendations = [];
       
       if (Array.isArray(parsed)) {
+        // Se è già un array, usalo direttamente
         recommendations = parsed;
       } else if (parsed.recommendations && Array.isArray(parsed.recommendations)) {
+        // Se contiene una proprietà "recommendations" che è un array
         recommendations = parsed.recommendations;
+      } else if (parsed.title && parsed.content && parsed.category) {
+        // Se è un singolo oggetto con le proprietà richieste, lo trattiamo come una singola raccomandazione
+        recommendations = [parsed];
       } else {
         // Cerca qualsiasi proprietà che contenga un array
         for (const key in parsed) {
