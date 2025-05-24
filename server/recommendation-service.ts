@@ -4,7 +4,7 @@
  */
 
 import { db } from './db';
-import { User, Recommendation, insertRecommendationSchema, recommendations, queries, signatures, signatureProjects, documents } from '../shared/schema';
+import { User, Recommendation, insertRecommendationSchema, recommendations, queries, signatures, signatureProjects, documents, users } from '../shared/schema';
 import { chatWithRAG } from './openai';
 import { eq, desc, and, sql, isNull, not, lt } from 'drizzle-orm';
 import { log } from './vite';
@@ -79,22 +79,26 @@ export async function getUserRecommendations(
   includeDismissed: boolean = false
 ): Promise<Recommendation[]> {
   try {
-    let query = db
+    // Costruire la query con le condizioni
+    const conditions = [eq(recommendations.userId, userId)];
+    
+    if (!includeViewed) {
+      conditions.push(eq(recommendations.viewed, false));
+    }
+    
+    if (!includeDismissed) {
+      conditions.push(eq(recommendations.dismissed, false));
+    }
+    
+    // Esegui la query con tutte le condizioni
+    const result = await db
       .select()
       .from(recommendations)
-      .where(eq(recommendations.userId, userId))
+      .where(and(...conditions))
       .orderBy(desc(recommendations.relevanceScore), desc(recommendations.createdAt))
       .limit(limit);
 
-    if (!includeViewed) {
-      query = query.where(eq(recommendations.viewed, false));
-    }
-
-    if (!includeDismissed) {
-      query = query.where(eq(recommendations.dismissed, false));
-    }
-
-    return await query;
+    return result;
   } catch (error) {
     log(`Errore nel recupero delle raccomandazioni: ${error}`, "recommendations");
     return [];
@@ -150,11 +154,11 @@ export async function updateRecommendationStatus(
 async function collectUserData(userId: number): Promise<UserData | null> {
   try {
     // Recupera le informazioni dell'utente
-    const users = await db.select().from(recommendations.user).where(eq(recommendations.user.id, userId));
-    if (users.length === 0) {
+    const userResults = await db.select().from(users).where(eq(users.id, userId));
+    if (userResults.length === 0) {
       return null;
     }
-    const user = users[0];
+    const user = userResults[0];
 
     // Recupera le query recenti
     const recentQueries = await db
@@ -304,7 +308,7 @@ Rispondi solo con un array JSON di raccomandazioni, senza testo aggiuntivo. Esem
 `;
 
     // Chiamata all'API di OpenAI per generare le raccomandazioni
-    const aiResponse = await generateChatCompletion(prompt, "gpt-4o", [], 0.7, apiKey);
+    const aiResponse = await chatWithRAG(prompt, [], apiKey, "gpt-4o", 0.7);
     
     try {
       // Parsing della risposta dell'AI (che deve essere in formato JSON)
