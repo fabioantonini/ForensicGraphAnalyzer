@@ -171,10 +171,10 @@ export default function AdminPage() {
 
   return (
     <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-6">{t("admin.title")}</h1>
+      <h1 className="text-3xl font-bold mb-6" data-tour="admin-header">{t("admin.title")}</h1>
 
       <Tabs defaultValue="users" className="w-full">
-        <TabsList className="mb-4">
+        <TabsList className="mb-4" data-tour="admin-tabs">
           <TabsTrigger value="users">{t("admin.usersManagement")}</TabsTrigger>
           <TabsTrigger value="stats">{t("admin.systemStats")}</TabsTrigger>
           <TabsTrigger value="demo-accounts">{t("admin.demoAccounts.title", "Account Demo")}</TabsTrigger>

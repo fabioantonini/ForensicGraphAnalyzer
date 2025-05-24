@@ -6,7 +6,7 @@ import { useLocation } from 'wouter';
 interface AppTourProps {
   isOpen?: boolean;
   onClose?: () => void;
-  tourType?: 'main' | 'dashboard' | 'documents' | 'signatures' | 'assistant';
+  tourType?: 'main' | 'dashboard' | 'documents' | 'signatures' | 'assistant' | 'settings' | 'admin';
 }
 
 export function AppTour({ isOpen = false, onClose, tourType = 'main' }: AppTourProps) {
@@ -166,6 +166,58 @@ export function AppTour({ isOpen = false, onClose, tourType = 'main' }: AppTourP
           target: '[data-tour="chat-interface"]',
           content: t('tour.chatInterface', 'View the conversation history and document insights here.'),
           placement: 'left',
+        },
+      ]);
+    }
+    // Settings page tour
+    else if (tourType === 'settings' && location === '/settings') {
+      setSteps([
+        {
+          target: '[data-tour="settings-header"]',
+          content: t('tour.settingsHeader', 'Welcome to your account settings. Here you can manage your profile, API keys, and security settings.'),
+          placement: 'bottom',
+          disableBeacon: true,
+        },
+        {
+          target: '[data-tour="profile-settings"]',
+          content: t('tour.profileSettings', 'Update your personal information and professional details here.'),
+          placement: 'right',
+        },
+        {
+          target: '[data-tour="api-settings"]',
+          content: t('tour.apiSettings', 'Configure your API keys for OpenAI and other services. These are needed for advanced text analysis.'),
+          placement: 'left',
+        },
+        {
+          target: '[data-tour="security-settings"]',
+          content: t('tour.securitySettings', 'Manage your password and account security settings.'),
+          placement: 'top',
+        },
+      ]);
+    }
+    // Admin page tour
+    else if (tourType === 'admin' && location === '/admin') {
+      setSteps([
+        {
+          target: '[data-tour="admin-header"]',
+          content: t('tour.adminHeader', 'This is the admin panel where you can manage users and system settings.'),
+          placement: 'bottom',
+          disableBeacon: true,
+        },
+        {
+          target: '[data-tour="admin-tabs"]',
+          content: t('tour.adminTabs', 'Switch between different administration sections using these tabs.'),
+          placement: 'bottom',
+        },
+        {
+          target: 'table',
+          content: t('tour.userManagement', 'Manage user accounts, including role assignments and account status.'),
+          placement: 'top',
+        },
+        {
+          target: '.TabsContent[value="stats"], .TabsContent[value="email-config"]',
+          content: t('tour.systemSettings', 'View system statistics and configure global settings like email services.'),
+          placement: 'top',
         },
       ]);
     }
