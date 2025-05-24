@@ -104,7 +104,7 @@ export function Sidebar({ className }: SidebarProps) {
       )}
 
       {/* Sidebar */}
-      <aside className={sidebarClass}>
+      <aside className={sidebarClass} data-tour="sidebar">
         <div className="flex h-full flex-col">
           <div className="flex items-center justify-between h-14 px-4 border-b">
             {!collapsed && (
@@ -139,6 +139,11 @@ export function Sidebar({ className }: SidebarProps) {
                         }
                         ${collapsed ? "justify-center" : "justify-start"}
                       `}
+                      data-tour={item.href === "/" ? "dashboard-link" : 
+                               item.href === "/documents" ? "documents-link" : 
+                               item.href === "/query" ? "assistant-link" : 
+                               item.href === "/signatures" ? "signatures-link" : 
+                               item.href === "/settings" ? "settings-link" : ""}
                     >
                       <div className={collapsed ? "" : "mr-3"}>
                         {React.cloneElement(item.icon as React.ReactElement, {

@@ -15,6 +15,7 @@ import { useLocation } from "wouter";
 import { LoadingSpinner } from "../ui/loading-spinner";
 import { LanguageSwitcher } from "../ui/language-switcher";
 import { useTranslation } from "react-i18next";
+import { TourHelpButton } from "../tour/tour-help-button";
 
 interface HeaderProps {
   className?: string;
@@ -54,6 +55,7 @@ export function Header({ className }: HeaderProps) {
         </div>
         
         <div className="flex items-center">
+          {user && <TourHelpButton />}
           <LanguageSwitcher />
           
           {user && (

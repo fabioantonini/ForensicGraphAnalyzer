@@ -2,7 +2,8 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import Joyride, { CallBackProps, Step, EVENTS, STATUS } from 'react-joyride';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'wouter';
-import { useLocalStorage } from '@/hooks/use-local-storage';
+// Import the useState hook to handle tour state
+// We'll use regular useState instead of localStorage for simplicity
 
 interface TourContextType {
   startTour: (tourName?: string) => void;
@@ -27,7 +28,7 @@ interface TourProviderProps {
 export function TourProvider({ children }: TourProviderProps) {
   const { t } = useTranslation();
   const [location] = useLocation();
-  const [completedTours, setCompletedTours] = useLocalStorage<string[]>('completedTours', []);
+  const [completedTours, setCompletedTours] = useState<string[]>([]);
   const [isActive, setIsActive] = useState(false);
   const [currentTour, setCurrentTour] = useState<string>('main');
   const [steps, setSteps] = useState<Step[]>([]);
