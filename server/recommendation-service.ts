@@ -481,7 +481,7 @@ async function createAIRecommendations(userData: UserData, count: number, apiKey
       }
     };
 
-    // Preparazione del prompt per l'AI con un contesto non vuoto
+    // Preparazione del prompt per l'AI con i dati dell'utente
     const prompt = `
 Sei un assistente esperto di grafologia forense che fornisce consigli personalizzati agli utenti di Grapholex Insight.
 In base ai dati dell'utente, genera ${count} raccomandazioni personalizzate che possano migliorare la sua esperienza e produttività.
@@ -514,42 +514,86 @@ Rispondi con un array JSON in questo formato:
 IMPORTANTE: Rispondi SOLO con un array JSON. Non aggiungere testo prima o dopo l'array.
 `;
 
-    // Utilizziamo un contesto fittizio per evitare il messaggio di errore in chatWithRAG
-    const fakeContext = ["Questo è un contesto per il sistema di raccomandazioni di Grapholex Insight."];
-    
     log(`Richiesta raccomandazioni AI per utente ${user.id}`, "recommendations");
-
-    // Chiamata all'API di OpenAI tramite la funzione chatWithRAG esistente
-    const aiResponse = await chatWithRAG(prompt, fakeContext, apiKey, "gpt-4o", 0.7);
-
+    
+    // Crea un client OpenAI utilizzando la funzione helper
+    const openai = createOpenAIClient(apiKey);
+    
+    // Chiamata diretta all'API di OpenAI
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
+      messages: [
+        {
+          role: "system",
+          content: "Sei un assistente esperto di grafologia forense che fornisce consigli personalizzati."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      temperature: 0.7,
+      response_format: { type: "json_object" }
+    });
+    
+    const aiResponse = response.choices[0].message.content || "";
+    
+    // Parsing della risposta dell'AI (che deve essere in formato JSON)
     try {
-      // Parsing della risposta dell'AI (che deve essere in formato JSON)
-      const startJson = aiResponse.indexOf('[');
-      const endJson = aiResponse.lastIndexOf(']') + 1;
+      log(`Risposta AI ricevuta: ${aiResponse}`, "recommendations");
       
-      if (startJson >= 0 && endJson > startJson) {
-        const jsonStr = aiResponse.substring(startJson, endJson);
-        const recommendations = JSON.parse(jsonStr);
-        
-        if (Array.isArray(recommendations) && recommendations.length > 0) {
-          log(`Generate ${recommendations.length} raccomandazioni AI`, "recommendations");
-          
-          // Formattazione e validazione delle raccomandazioni
-          return recommendations.map((rec: any) => ({
-            userId: user.id,
-            title: rec.title || "Suggerimento personalizzato",
-            content: rec.content || "Suggerimento basato sulla tua attività recente.",
-            category: rec.category || "learning",
-            relevanceScore: Math.min(1.0, Math.max(0.1, rec.relevanceScore || 0.7)),
-            relatedDocumentIds: [],
-            relatedSignatureIds: [],
-            relatedQueryIds: [],
-            metadata: { generatedBy: 'ai', model: 'gpt-4o' }
-          })).slice(0, count);
+      // Prima tentare il parsing diretto (che dovrebbe funzionare grazie a response_format)
+      const parsed = JSON.parse(aiResponse);
+      
+      // Estrai l'array di raccomandazioni
+      let recommendations = [];
+      
+      if (Array.isArray(parsed)) {
+        recommendations = parsed;
+      } else if (parsed.recommendations && Array.isArray(parsed.recommendations)) {
+        recommendations = parsed.recommendations;
+      } else {
+        // Cerca qualsiasi proprietà che contenga un array
+        for (const key in parsed) {
+          if (Array.isArray(parsed[key]) && parsed[key].length > 0) {
+            recommendations = parsed[key];
+            break;
+          }
         }
       }
       
-      log(`Formato di risposta AI non valido: ${aiResponse}`, "recommendations");
+      // Se non abbiamo trovato un array, proviamo a cercare manualmente le parentesi quadre
+      if (recommendations.length === 0) {
+        const startJson = aiResponse.indexOf('[');
+        const endJson = aiResponse.lastIndexOf(']') + 1;
+        
+        if (startJson >= 0 && endJson > startJson) {
+          const jsonStr = aiResponse.substring(startJson, endJson);
+          recommendations = JSON.parse(jsonStr);
+        }
+      }
+      
+      // Verifica che abbiamo effettivamente delle raccomandazioni
+      if (Array.isArray(recommendations) && recommendations.length > 0) {
+        log(`Generate ${recommendations.length} raccomandazioni AI`, "recommendations");
+        
+        // Formattazione e validazione delle raccomandazioni
+        const formattedRecs = recommendations.map((rec: any) => ({
+          userId: user.id,
+          title: rec.title || "Suggerimento personalizzato",
+          content: rec.content || "Suggerimento basato sulla tua attività recente.",
+          category: rec.category || "learning",
+          relevanceScore: Math.min(1.0, Math.max(0.1, rec.relevanceScore || 0.7)),
+          relatedDocumentIds: [],
+          relatedSignatureIds: [],
+          relatedQueryIds: [],
+          metadata: { generatedBy: 'ai', model: 'gpt-4o' }
+        })).slice(0, count);
+        
+        return formattedRecs;
+      }
+      
+      log(`Nessuna raccomandazione trovata nella risposta: ${aiResponse}`, "recommendations");
       return [];
     } catch (parseError) {
       log(`Errore nel parsing della risposta AI: ${parseError}. Risposta: ${aiResponse}`, "recommendations");
