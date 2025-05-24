@@ -40,6 +40,11 @@ import {
   failProgress,
   transferProgress
 } from "./progress-tracker";
+import {
+  generateRecommendations,
+  getUserRecommendations,
+  updateRecommendationStatus
+} from "./recommendation-service";
 
 // Initialize multer for file uploads
 const upload = multer({

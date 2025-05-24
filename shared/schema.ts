@@ -377,3 +377,43 @@ export const insertSettingsSchema = createInsertSchema(settings).pick({
 
 export type Setting = typeof settings.$inferSelect;
 export type InsertSetting = z.infer<typeof insertSettingsSchema>;
+
+// Schema per il sistema di raccomandazione
+export const recommendations = pgTable("recommendations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  category: text("category").notNull(), // 'document', 'signature', 'workflow', etc.
+  relevanceScore: real("relevance_score").notNull(),
+  viewed: boolean("viewed").default(false).notNull(),
+  dismissed: boolean("dismissed").default(false).notNull(),
+  relatedDocumentIds: json("related_document_ids").$type<number[]>().default([]),
+  relatedSignatureIds: json("related_signature_ids").$type<number[]>().default([]),
+  relatedQueryIds: json("related_query_ids").$type<number[]>().default([]),
+  metadata: jsonb("metadata").default({}),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const recommendationsRelations = relations(recommendations, ({ one }) => ({
+  user: one(users, {
+    fields: [recommendations.userId],
+    references: [users.id],
+  }),
+}));
+
+export const insertRecommendationSchema = createInsertSchema(recommendations).pick({
+  userId: true,
+  title: true,
+  content: true,
+  category: true,
+  relevanceScore: true,
+  relatedDocumentIds: true,
+  relatedSignatureIds: true,
+  relatedQueryIds: true,
+  metadata: true,
+});
+
+export type Recommendation = typeof recommendations.$inferSelect;
+export type InsertRecommendation = z.infer<typeof insertRecommendationSchema>;
