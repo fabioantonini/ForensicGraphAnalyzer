@@ -34,7 +34,11 @@ export function RecommendationsPanel() {
     refresh: "Aggiorna",
     generate: "Genera Suggerimenti",
     markViewed: "Segna come visualizzato",
-    dismiss: "Ignora"
+    dismiss: "Ignora",
+    generated: "Suggerimenti Generati",
+    generatedSuccess: "Nuovi suggerimenti sono stati generati in base alla tua attività.",
+    error: "Errore",
+    generationError: "Si è verificato un errore durante la generazione dei suggerimenti. Riprova più tardi."
   };
 
   // Recupera le raccomandazioni non visualizzate e non rifiutate
@@ -74,15 +78,15 @@ export function RecommendationsPanel() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/recommendations"] });
       toast({
-        title: t("recommendations.generated"),
-        description: t("recommendations.generatedSuccess"),
+        title: translations.generated,
+        description: translations.generatedSuccess,
       });
       setIsGenerating(false);
     },
     onError: () => {
       toast({
-        title: t("recommendations.error"),
-        description: t("recommendations.generationError"),
+        title: translations.error,
+        description: translations.generationError,
         variant: "destructive",
       });
       setIsGenerating(false);
@@ -114,8 +118,15 @@ export function RecommendationsPanel() {
   };
 
   // Traduce la categoria
-  const translateCategory = (category: string) => {
-    return t(`recommendations.categories.${category.toLowerCase()}`);
+  const translateCategory = (category: string): string => {
+    switch (category.toLowerCase()) {
+      case 'document': return "Analisi Documenti";
+      case 'signature': return "Analisi Firme";
+      case 'workflow': return "Flusso di Lavoro";
+      case 'learning': return "Apprendimento";
+      case 'tool': return "Strumento";
+      default: return category;
+    }
   };
 
   if (isLoading) {
@@ -157,16 +168,16 @@ export function RecommendationsPanel() {
     return (
       <Card className="col-span-full">
         <CardHeader>
-          <CardTitle>{t("recommendations.title")}</CardTitle>
+          <CardTitle>{translations.title}</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-center text-muted-foreground">
-            {t("recommendations.noRecommendations")}
+            {translations.noRecommendations}
           </p>
           <div className="flex justify-center mt-4">
             <Button onClick={handleGenerateClick} disabled={isGenerating}>
               {isGenerating ? <LoadingSpinner size="sm" /> : <RefreshCw className="mr-2 h-4 w-4" />}
-              {t("recommendations.generate")}
+              {translations.generate}
             </Button>
           </div>
         </CardContent>
@@ -177,7 +188,7 @@ export function RecommendationsPanel() {
   return (
     <Card className="col-span-full">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>{t("recommendations.title")}</CardTitle>
+        <CardTitle>{translations.title}</CardTitle>
         <Button 
           variant="outline" 
           size="sm" 
@@ -189,7 +200,7 @@ export function RecommendationsPanel() {
           ) : (
             <RefreshCw className="mr-2 h-4 w-4" />
           )}
-          {t("recommendations.refresh")}
+          {translations.refresh}
         </Button>
       </CardHeader>
       <CardContent>
@@ -214,7 +225,7 @@ export function RecommendationsPanel() {
                     className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
                     onClick={() => viewMutation.mutate(recommendation.id)}
                     disabled={viewMutation.isPending}
-                    title={t("recommendations.markViewed")}
+                    title={translations.markViewed}
                   >
                     <CheckIcon className="h-4 w-4" />
                   </Button>
@@ -224,7 +235,7 @@ export function RecommendationsPanel() {
                     className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
                     onClick={() => dismissMutation.mutate(recommendation.id)}
                     disabled={dismissMutation.isPending}
-                    title={t("recommendations.dismiss")}
+                    title={translations.dismiss}
                   >
                     <XIcon className="h-4 w-4" />
                   </Button>
