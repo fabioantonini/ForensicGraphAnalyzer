@@ -15,6 +15,8 @@ export function HelpTourButton() {
     if (location === '/documents') return 'documents';
     if (location === '/signatures') return 'signatures';
     if (location === '/query') return 'assistant';
+    if (location === '/settings') return 'settings';
+    if (location === '/admin') return 'admin';
     return 'main';
   };
 
