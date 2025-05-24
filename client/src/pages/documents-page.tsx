@@ -226,10 +226,10 @@ export default function DocumentsPage() {
 
   return (
     <div className="container mx-auto py-6">
-      <div className="flex flex-wrap justify-between items-center mb-6">
+      <div className="flex flex-wrap justify-between items-center mb-6" data-tour="documents-header">
         <h2 className="text-2xl font-bold text-primary">{t("documents.title", "Document Library")}</h2>
         <div className="flex items-center space-x-2 mt-2 sm:mt-0">
-          <div className="flex items-center border rounded-md overflow-hidden">
+          <div className="flex items-center border rounded-md overflow-hidden" data-tour="documents-view">
             <Button
               variant={viewMode === 'grid' ? "default" : "ghost"}
               size="sm"
@@ -250,6 +250,7 @@ export default function DocumentsPage() {
           <Button
             onClick={() => setShowUploadModal(true)}
             className="bg-secondary hover:bg-secondary-dark"
+            data-tour="upload-button"
           >
             <PlusCircle className="h-5 w-5 mr-2" />
             {t("documents.upload", "Upload Document")}
@@ -258,7 +259,7 @@ export default function DocumentsPage() {
       </div>
 
       {/* Search and Filters */}
-      <Card className="mb-6">
+      <Card className="mb-6" data-tour="documents-filters">
         <CardContent className="p-4">
           <div className="flex flex-col md:flex-row md:items-center space-y-3 md:space-y-0 md:space-x-4">
             <div className="relative flex-1">
