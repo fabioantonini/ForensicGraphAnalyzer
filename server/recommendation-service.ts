@@ -5,7 +5,7 @@
 
 import { db } from './db';
 import { User, Recommendation, insertRecommendationSchema, recommendations, queries, signatures, signatureProjects, documents, users, insertRecommendationSchema as insertSchema } from '@shared/schema';
-import { chatWithRAG } from './openai';
+import { chatWithRAG, createOpenAIClient } from './openai';
 import { eq, desc, and, sql, isNull, not, lt } from 'drizzle-orm';
 import { log } from './vite';
 
@@ -481,90 +481,78 @@ async function createAIRecommendations(userData: UserData, count: number, apiKey
       }
     };
 
-    // Crea un client OpenAI con la chiave fornita
-    const openai = new OpenAI({ apiKey });
+    // Preparazione del prompt per l'AI con un contesto non vuoto
+    const prompt = `
+Sei un assistente esperto di grafologia forense che fornisce consigli personalizzati agli utenti di Grapholex Insight.
+In base ai dati dell'utente, genera ${count} raccomandazioni personalizzate che possano migliorare la sua esperienza e produttività.
 
-    // Preparazione del messaggio per l'API OpenAI
-    const messages = [
-      {
-        role: "system",
-        content: `Sei un assistente esperto di grafologia forense che fornisce consigli personalizzati agli utenti di Grapholex Insight.
-Genera ${count} raccomandazioni personalizzate che possano migliorare l'esperienza e la produttività dell'utente in base ai dati forniti.
+Dati dell'utente:
+${JSON.stringify(existingData, null, 2)}
 
-Ogni raccomandazione deve essere strutturata esattamente così:
+Ogni raccomandazione deve essere strutturata come segue:
 1. Un titolo breve e incisivo (massimo 60 caratteri)
 2. Un contenuto dettagliato (massimo 200 caratteri) che spiega il consiglio
 3. Una categoria tra: 'document', 'signature', 'workflow', 'learning' o 'tool'
-4. Un punteggio di rilevanza da 0.1 a 1.0 basato sulla probabilità che la raccomandazione sia utile
+4. Un punteggio di rilevanza da 0.1 a 1.0 basato sulla probabilità che la raccomandazione sia utile per l'utente
 
-IMPORTANTE: Rispondi SOLO con un array JSON di oggetti, senza alcun testo introduttivo o conclusivo.`
-      },
-      {
-        role: "user",
-        content: `Ecco i dati del mio profilo e attività recenti, genera ${count} raccomandazioni personalizzate:
-${JSON.stringify(existingData, null, 2)}`
-      }
-    ];
+Rispondi con un array JSON in questo formato:
+[
+  {
+    "title": "Titolo della raccomandazione 1",
+    "content": "Contenuto dettagliato della raccomandazione 1",
+    "category": "signature",
+    "relevanceScore": 0.85
+  },
+  {
+    "title": "Titolo della raccomandazione 2",
+    "content": "Contenuto dettagliato della raccomandazione 2",
+    "category": "document",
+    "relevanceScore": 0.75
+  }
+]
 
+IMPORTANTE: Rispondi SOLO con un array JSON. Non aggiungere testo prima o dopo l'array.
+`;
+
+    // Utilizziamo un contesto fittizio per evitare il messaggio di errore in chatWithRAG
+    const fakeContext = ["Questo è un contesto per il sistema di raccomandazioni di Grapholex Insight."];
+    
     log(`Richiesta raccomandazioni AI per utente ${user.id}`, "recommendations");
 
-    // Chiamata diretta all'API di OpenAI con richiesta di formato JSON
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
-      messages: messages,
-      temperature: 0.7,
-      response_format: { type: "json_object" } // Richiede esplicitamente JSON
-    });
-
-    const content = response.choices[0].message.content;
-    
-    if (!content) {
-      log("Risposta vuota da OpenAI", "recommendations");
-      return [];
-    }
+    // Chiamata all'API di OpenAI tramite la funzione chatWithRAG esistente
+    const aiResponse = await chatWithRAG(prompt, fakeContext, apiKey, "gpt-4o", 0.7);
 
     try {
-      // Parsing del JSON ricevuto
-      const parsedResponse = JSON.parse(content);
+      // Parsing della risposta dell'AI (che deve essere in formato JSON)
+      const startJson = aiResponse.indexOf('[');
+      const endJson = aiResponse.lastIndexOf(']') + 1;
       
-      // Estrai l'array di raccomandazioni (potrebbe essere direttamente un array o in una proprietà)
-      let recommendations = [];
-      
-      if (Array.isArray(parsedResponse)) {
-        recommendations = parsedResponse;
-      } else if (parsedResponse.recommendations && Array.isArray(parsedResponse.recommendations)) {
-        recommendations = parsedResponse.recommendations;
-      } else {
-        // Cerca qualsiasi proprietà che contenga un array
-        for (const key in parsedResponse) {
-          if (Array.isArray(parsedResponse[key])) {
-            recommendations = parsedResponse[key];
-            break;
-          }
+      if (startJson >= 0 && endJson > startJson) {
+        const jsonStr = aiResponse.substring(startJson, endJson);
+        const recommendations = JSON.parse(jsonStr);
+        
+        if (Array.isArray(recommendations) && recommendations.length > 0) {
+          log(`Generate ${recommendations.length} raccomandazioni AI`, "recommendations");
+          
+          // Formattazione e validazione delle raccomandazioni
+          return recommendations.map((rec: any) => ({
+            userId: user.id,
+            title: rec.title || "Suggerimento personalizzato",
+            content: rec.content || "Suggerimento basato sulla tua attività recente.",
+            category: rec.category || "learning",
+            relevanceScore: Math.min(1.0, Math.max(0.1, rec.relevanceScore || 0.7)),
+            relatedDocumentIds: [],
+            relatedSignatureIds: [],
+            relatedQueryIds: [],
+            metadata: { generatedBy: 'ai', model: 'gpt-4o' }
+          })).slice(0, count);
         }
       }
       
-      if (recommendations.length === 0) {
-        log(`Nessuna raccomandazione trovata nella risposta: ${content}`, "recommendations");
-        return [];
-      }
-      
-      log(`Generate ${recommendations.length} raccomandazioni AI`, "recommendations");
-      
-      // Formattazione e validazione delle raccomandazioni
-      return recommendations.map((rec: any) => ({
-        userId: user.id,
-        title: rec.title || "Suggerimento personalizzato",
-        content: rec.content || "Suggerimento basato sulla tua attività recente.",
-        category: rec.category || "learning",
-        relevanceScore: Math.min(1.0, Math.max(0.1, rec.relevanceScore || 0.7)),
-        relatedDocumentIds: [],
-        relatedSignatureIds: [],
-        relatedQueryIds: [],
-        metadata: { generatedBy: 'ai', model: 'gpt-4o' }
-      })).slice(0, count);
+      log(`Formato di risposta AI non valido: ${aiResponse}`, "recommendations");
+      return [];
     } catch (parseError) {
-      log(`Errore nel parsing della risposta AI: ${parseError}. Risposta: ${content}`, "recommendations");
+      log(`Errore nel parsing della risposta AI: ${parseError}. Risposta: ${aiResponse}`, "recommendations");
       return [];
     }
   } catch (error) {
