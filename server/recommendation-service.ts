@@ -25,20 +25,21 @@ interface UserData {
  */
 export async function generateRecommendations(
   userId: number,
-  count: number = 3
+  count: number = 3,
+  locale: string = 'it'
 ): Promise<Recommendation[]> {
   try {
     // Recupera i dati dell'utente necessari per generare raccomandazioni
     const userData = await collectUserData(userId);
     if (!userData) {
       log(`Impossibile generare raccomandazioni: dati utente non disponibili per userId ${userId}`, "recommendations");
-      return generateFallbackRecommendations(userId, count);
+      return generateFallbackRecommendations(userId, count, locale);
     }
 
     const apiKey = userData.user.openaiApiKey || process.env.OPENAI_API_KEY;
     if (!apiKey) {
       log(`Impossibile generare raccomandazioni: API key non disponibile`, "recommendations");
-      return generateFallbackRecommendations(userId, count);
+      return generateFallbackRecommendations(userId, count, locale);
     }
 
     // Genera nuove raccomandazioni tramite AI
@@ -47,7 +48,7 @@ export async function generateRecommendations(
     // Se non ci sono raccomandazioni generate, usa quelle di fallback
     if (!generatedRecommendations || generatedRecommendations.length === 0) {
       log(`Nessuna raccomandazione generata dall'AI, uso fallback`, "recommendations");
-      return generateFallbackRecommendations(userId, count);
+      return generateFallbackRecommendations(userId, count, locale);
     }
     
     // Salva le raccomandazioni nel database
@@ -65,13 +66,13 @@ export async function generateRecommendations(
 
     // Se non ci sono raccomandazioni salvate, usa quelle di fallback
     if (savedRecommendations.length === 0) {
-      return generateFallbackRecommendations(userId, count);
+      return generateFallbackRecommendations(userId, count, locale);
     }
 
     return savedRecommendations;
   } catch (error) {
     log(`Errore nella generazione delle raccomandazioni: ${error}`, "recommendations");
-    return generateFallbackRecommendations(userId, count);
+    return generateFallbackRecommendations(userId, count, locale);
   }
 }
 
@@ -79,10 +80,16 @@ export async function generateRecommendations(
  * Genera raccomandazioni predefinite quando non è possibile generarle con l'AI
  * @param userId ID dell'utente
  * @param count Numero di raccomandazioni da generare
+ * @param locale Lingua da utilizzare per i suggerimenti (default: 'it')
  * @returns Array di raccomandazioni predefinite
  */
-async function generateFallbackRecommendations(userId: number, count: number = 3): Promise<Recommendation[]> {
-  const fallbackRecs = [
+async function generateFallbackRecommendations(userId: number, count: number = 3, locale: string = 'it'): Promise<Recommendation[]> {
+  // Ottieni la lingua dell'utente dalle richieste HTTP o usa quella predefinita
+  const isItalian = locale === 'it';
+
+  // Definisci i suggerimenti predefiniti in base alla lingua
+  const fallbackRecs = isItalian ? [
+    // Suggerimenti in italiano
     {
       userId,
       title: "Analizza le firme contestate con confronto avanzato",
@@ -94,7 +101,7 @@ async function generateFallbackRecommendations(userId: number, count: number = 3
       relatedDocumentIds: [],
       relatedSignatureIds: [],
       relatedQueryIds: [],
-      metadata: { generatedBy: 'fallback' }
+      metadata: { generatedBy: 'fallback', locale: 'it' }
     },
     {
       userId,
@@ -107,7 +114,7 @@ async function generateFallbackRecommendations(userId: number, count: number = 3
       relatedDocumentIds: [],
       relatedSignatureIds: [],
       relatedQueryIds: [],
-      metadata: { generatedBy: 'fallback' }
+      metadata: { generatedBy: 'fallback', locale: 'it' }
     },
     {
       userId,
@@ -120,7 +127,7 @@ async function generateFallbackRecommendations(userId: number, count: number = 3
       relatedDocumentIds: [],
       relatedSignatureIds: [],
       relatedQueryIds: [],
-      metadata: { generatedBy: 'fallback' }
+      metadata: { generatedBy: 'fallback', locale: 'it' }
     },
     {
       userId,
@@ -133,7 +140,7 @@ async function generateFallbackRecommendations(userId: number, count: number = 3
       relatedDocumentIds: [],
       relatedSignatureIds: [],
       relatedQueryIds: [],
-      metadata: { generatedBy: 'fallback' }
+      metadata: { generatedBy: 'fallback', locale: 'it' }
     },
     {
       userId,
@@ -146,9 +153,92 @@ async function generateFallbackRecommendations(userId: number, count: number = 3
       relatedDocumentIds: [],
       relatedSignatureIds: [],
       relatedQueryIds: [],
-      metadata: { generatedBy: 'fallback' }
+      metadata: { generatedBy: 'fallback', locale: 'it' }
+    }
+  ] : [
+    // Suggerimenti in inglese
+    {
+      userId,
+      title: "Analyze contested signatures with advanced comparison",
+      content: "Use the signature comparison tool to analyze differences between contested signatures and reference samples.",
+      category: "signature",
+      relevanceScore: 0.9,
+      viewed: false,
+      dismissed: false,
+      relatedDocumentIds: [],
+      relatedSignatureIds: [],
+      relatedQueryIds: [],
+      metadata: { generatedBy: 'fallback', locale: 'en' }
+    },
+    {
+      userId,
+      title: "Optimize text extraction from documents",
+      content: "Improve the quality of text extraction by configuring advanced OCR options for poorly readable documents.",
+      category: "document",
+      relevanceScore: 0.85,
+      viewed: false,
+      dismissed: false,
+      relatedDocumentIds: [],
+      relatedSignatureIds: [],
+      relatedQueryIds: [],
+      metadata: { generatedBy: 'fallback', locale: 'en' }
+    },
+    {
+      userId,
+      title: "Explore in-depth document analysis",
+      content: "Use semantic search to find hidden information in your analyzed documents.",
+      category: "learning",
+      relevanceScore: 0.8,
+      viewed: false,
+      dismissed: false,
+      relatedDocumentIds: [],
+      relatedSignatureIds: [],
+      relatedQueryIds: [],
+      metadata: { generatedBy: 'fallback', locale: 'en' }
+    },
+    {
+      userId,
+      title: "Create personalized reports for forensic cases",
+      content: "Use advanced report templates to create professional documentation of your analyses.",
+      category: "workflow",
+      relevanceScore: 0.75,
+      viewed: false,
+      dismissed: false,
+      relatedDocumentIds: [],
+      relatedSignatureIds: [],
+      relatedQueryIds: [],
+      metadata: { generatedBy: 'fallback', locale: 'en' }
+    },
+    {
+      userId,
+      title: "Improve accuracy with AI training",
+      content: "Train the AI with your specific data to get more accurate analyses for your document types.",
+      category: "tool",
+      relevanceScore: 0.7,
+      viewed: false,
+      dismissed: false,
+      relatedDocumentIds: [],
+      relatedSignatureIds: [],
+      relatedQueryIds: [],
+      metadata: { generatedBy: 'fallback', locale: 'en' }
     }
   ];
+
+  // Prima elimina tutte le raccomandazioni non visualizzate dell'utente
+  // Questo evita l'accumulo di suggerimenti ogni volta che si preme "Aggiorna"
+  try {
+    await db.delete(recommendations)
+      .where(
+        and(
+          eq(recommendations.userId, userId),
+          eq(recommendations.viewed, false),
+          eq(recommendations.dismissed, false)
+        )
+      );
+    log(`Raccomandazioni precedenti eliminate per l'utente ${userId}`, "recommendations");
+  } catch (err) {
+    log(`Errore nell'eliminare le vecchie raccomandazioni: ${err}`, "recommendations");
+  }
 
   // Salva le raccomandazioni di fallback nel database
   const savedRecommendations: Recommendation[] = [];

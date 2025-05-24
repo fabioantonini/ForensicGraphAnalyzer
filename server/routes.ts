@@ -802,7 +802,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user!.id;
       
       const count = req.body.count || 3;
-      const recommendations = await generateRecommendations(userId, count);
+      // Passa la lingua preferita dell'utente alla funzione di generazione
+      const locale = req.headers["accept-language"]?.split(',')[0].substring(0, 2) || 'it';
+      const recommendations = await generateRecommendations(userId, count, locale);
       res.json(recommendations);
     } catch (error) {
       next(error);
