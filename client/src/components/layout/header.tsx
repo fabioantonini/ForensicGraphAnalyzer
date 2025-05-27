@@ -69,7 +69,7 @@ export function Header({ className }: HeaderProps) {
                   <Button variant="ghost" className="p-1 rounded-full">
                     <Avatar className="h-8 w-8 bg-secondary text-white">
                       <AvatarFallback>
-                        {getInitials(user.fullName || user.username)}
+                        {getInitials(user.username === 'demouser' ? 'Demo User' : (user.fullName || user.username))}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
