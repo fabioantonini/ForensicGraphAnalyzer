@@ -86,7 +86,7 @@ export function RecommendationsPanel() {
   // Mutazione per generare nuove raccomandazioni
   const generateMutation = useMutation({
     mutationFn: () => 
-      apiRequest("/api/recommendations/generate", "POST", {
+      apiRequest("POST", "/api/recommendations/generate", {
         count: 3,
         locale: i18n.language // Passa la lingua attuale all'API
       }),
