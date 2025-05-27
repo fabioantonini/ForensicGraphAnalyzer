@@ -82,7 +82,7 @@ export function DocumentSelection({
           </div>
         ) : (
           <>
-            <ScrollArea className="h-96 pr-4">
+            <ScrollArea className="h-[calc(100vh-350px)] pr-4">
               <div className="space-y-3">
                 {documents.map((document) => (
                   <div

@@ -62,20 +62,20 @@ export default function QueryPage() {
           <LoadingSpinner text={t('query.loadingDocuments')} />
         </div>
       ) : (
-        <div className="flex flex-col md:flex-row gap-6">
-          <div data-tour="document-selection">
+        <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-200px)]">
+          <div data-tour="document-selection" className="lg:w-2/5">
             <DocumentSelection
               selectedDocumentIds={selectedDocumentIds}
               onSelectionChange={handleSelectionChange}
-              className="md:w-1/3"
+              className="h-full"
             />
           </div>
           
-          <div data-tour="chat-interface">
+          <div data-tour="chat-interface" className="lg:w-3/5 flex-1">
             <ChatInterface
               selectedDocumentIds={selectedDocumentIds}
               documentMap={documentMap}
-              className="md:w-2/3 flex-1"
+              className="h-full"
               initialQuery={initialQuery}
             />
           </div>

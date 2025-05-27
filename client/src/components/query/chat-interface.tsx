@@ -254,7 +254,7 @@ export function ChatInterface({
         
         {/* Chat Messages */}
         <ScrollArea 
-          className="flex-1 mb-4 border border-gray-200 rounded-lg p-4 min-h-[300px] max-h-[500px] overflow-y-auto" 
+          className="flex-1 mb-4 border border-gray-200 rounded-lg p-4 h-[calc(100vh-400px)] overflow-y-auto" 
           ref={scrollAreaRef}
           type="always"
         >
