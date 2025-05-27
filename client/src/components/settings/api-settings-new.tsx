@@ -28,15 +28,13 @@ type ApiSettingsFormValues = z.infer<typeof apiSettingsSchema>;
 export function ApiSettings() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [showApiKey, setShowApiKey] = useState(false);
-
-  // Format API key for display
+  // Format API key for display - always masked for security
   const formatApiKey = (key: string) => {
     if (!key) return "";
     if (key.startsWith("sk-") && key.length > 10) {
-      return `sk-${"\u2022".repeat(10)}${key.substring(key.length - 5)}`;
+      return `sk-${"\u2022".repeat(10)}${key.substring(key.length - 4)}`;
     }
-    return key;
+    return "\u2022".repeat(key.length);
   };
 
   // Initialize form with user data
@@ -49,10 +47,7 @@ export function ApiSettings() {
     },
   });
 
-  // Handle API key visibility toggle
-  const toggleApiKeyVisibility = () => {
-    setShowApiKey(!showApiKey);
-  };
+
 
   // Update API key mutation
   const updateApiKeyMutation = useMutation({
@@ -89,37 +84,49 @@ export function ApiSettings() {
         <h3 className="text-lg font-medium text-gray-700 mb-4">API Configuration</h3>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {/* Current API Key Display */}
+            {user?.openaiApiKey && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Current API Key</label>
+                <div className="relative">
+                  <Input
+                    type="password"
+                    value={formatApiKey(user.openaiApiKey)}
+                    readOnly
+                    className="pr-20 bg-gray-50"
+                  />
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                    <span className="text-xs text-gray-400">Secured</span>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500">
+                  Your API key is encrypted and stored securely
+                </p>
+              </div>
+            )}
+
+            {/* New API Key Input */}
             <FormField
               control={form.control}
               name="openaiApiKey"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>OpenAI API Key</FormLabel>
+                  <FormLabel>
+                    {user?.openaiApiKey ? "Update API Key" : "OpenAI API Key"}
+                  </FormLabel>
                   <FormControl>
-                    <div className="relative">
-                      <Input
-                        {...field}
-                        type={showApiKey ? "text" : "password"}
-                        placeholder="sk-..."
-                        value={showApiKey ? field.value : formatApiKey(field.value)}
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
-                        onClick={toggleApiKeyVisibility}
-                      >
-                        {showApiKey ? (
-                          <EyeOff className="h-5 w-5" />
-                        ) : (
-                          <Eye className="h-5 w-5" />
-                        )}
-                      </Button>
-                    </div>
+                    <Input
+                      {...field}
+                      type="password"
+                      placeholder="sk-..."
+                      autoComplete="new-password"
+                    />
                   </FormControl>
                   <p className="text-xs text-gray-500 mt-1">
-                    Your API key is encrypted and stored securely
+                    {user?.openaiApiKey 
+                      ? "Enter a new API key to replace the current one"
+                      : "Enter your OpenAI API key to enable AI features"
+                    }
                   </p>
                   <FormMessage />
                 </FormItem>

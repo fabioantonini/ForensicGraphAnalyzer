@@ -28,16 +28,15 @@ type ApiSettingsFormValues = z.infer<typeof apiSettingsSchema>;
 export function ApiSettings() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [showApiKey, setShowApiKey] = useState(false);
   const [selectedModel, setSelectedModel] = useState(user?.model || "gpt-4o");
 
-  // Format API key for display
+  // Format API key for display - always masked for security
   const formatApiKey = (key: string) => {
     if (!key) return "";
     if (key.startsWith("sk-") && key.length > 10) {
-      return `sk-${"\u2022".repeat(10)}${key.substring(key.length - 5)}`;
+      return `sk-${"\u2022".repeat(10)}${key.substring(key.length - 4)}`;
     }
-    return key;
+    return "\u2022".repeat(key.length);
   };
 
   // Initialize form with user data
@@ -50,10 +49,7 @@ export function ApiSettings() {
     },
   });
 
-  // Handle API key visibility toggle
-  const toggleApiKeyVisibility = () => {
-    setShowApiKey(!showApiKey);
-  };
+
 
   // Update API key mutation
   const updateApiKeyMutation = useMutation({
@@ -100,23 +96,13 @@ export function ApiSettings() {
                     <div className="relative">
                       <Input
                         {...field}
-                        type={showApiKey ? "text" : "password"}
+                        type="password"
                         placeholder="sk-..."
-                        value={showApiKey ? field.value : formatApiKey(field.value)}
+                        autoComplete="new-password"
                       />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
-                        onClick={toggleApiKeyVisibility}
-                      >
-                        {showApiKey ? (
-                          <EyeOff className="h-5 w-5" />
-                        ) : (
-                          <Eye className="h-5 w-5" />
-                        )}
-                      </Button>
+                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                        <span className="text-xs text-gray-400">Secured</span>
+                      </div>
                     </div>
                   </FormControl>
                   <p className="text-xs text-gray-500 mt-1">
