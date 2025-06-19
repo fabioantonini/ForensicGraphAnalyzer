@@ -255,12 +255,12 @@ export default function OCRPage() {
               )}
 
               <div>
-                <Label htmlFor="document-title">Titolo documento</Label>
+                <Label htmlFor="document-title">{t('save.documentTitle')}</Label>
                 <Input
                   id="document-title"
                   value={documentTitle}
                   onChange={(e) => setDocumentTitle(e.target.value)}
-                  placeholder="Inserisci il titolo del documento"
+                  placeholder={t('save.titlePlaceholder')}
                   className="mt-1"
                 />
               </div>
@@ -272,12 +272,12 @@ export default function OCRPage() {
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Settings className="h-5 w-5 mr-2" />
-                Impostazioni OCR
+                {t('settings.title')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label>Lingua</Label>
+                <Label>{t('settings.language.label')}</Label>
                 <Select 
                   value={ocrSettings.language} 
                   onValueChange={(value) => setOcrSettings(prev => ({...prev, language: value}))}
@@ -286,18 +286,18 @@ export default function OCRPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ita">Italiano</SelectItem>
-                    <SelectItem value="eng">Inglese</SelectItem>
-                    <SelectItem value="ita+eng">Italiano + Inglese</SelectItem>
-                    <SelectItem value="fra">Francese</SelectItem>
-                    <SelectItem value="deu">Tedesco</SelectItem>
-                    <SelectItem value="spa">Spagnolo</SelectItem>
+                    <SelectItem value="ita">{t('settings.language.options.ita')}</SelectItem>
+                    <SelectItem value="eng">{t('settings.language.options.eng')}</SelectItem>
+                    <SelectItem value="ita+eng">{t('settings.language.options.ita+eng')}</SelectItem>
+                    <SelectItem value="fra">{t('settings.language.options.fra')}</SelectItem>
+                    <SelectItem value="deu">{t('settings.language.options.deu')}</SelectItem>
+                    <SelectItem value="spa">{t('settings.language.options.spa')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
-                <Label>Risoluzione DPI</Label>
+                <Label>{t('settings.dpi.label')}</Label>
                 <Select 
                   value={ocrSettings.dpi.toString()} 
                   onValueChange={(value) => setOcrSettings(prev => ({...prev, dpi: parseInt(value)}))}
@@ -306,15 +306,15 @@ export default function OCRPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="150">150 DPI (Veloce)</SelectItem>
+                    <SelectItem value="150">150 DPI (Fast)</SelectItem>
                     <SelectItem value="300">300 DPI (Standard)</SelectItem>
-                    <SelectItem value="600">600 DPI (Alta qualità)</SelectItem>
+                    <SelectItem value="600">600 DPI (High Quality)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
-                <Label>Pre-elaborazione</Label>
+                <Label>{t('settings.preprocessing.label')}</Label>
                 <Select 
                   value={ocrSettings.preprocessingMode} 
                   onValueChange={(value) => setOcrSettings(prev => ({...prev, preprocessingMode: value}))}
@@ -323,10 +323,10 @@ export default function OCRPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="auto">Automatica</SelectItem>
-                    <SelectItem value="clean">Pulizia avanzata</SelectItem>
-                    <SelectItem value="enhance">Miglioramento contrasto</SelectItem>
-                    <SelectItem value="none">Nessuna</SelectItem>
+                    <SelectItem value="auto">{t('settings.preprocessing.options.auto')}</SelectItem>
+                    <SelectItem value="enhance">{t('settings.preprocessing.options.enhance')}</SelectItem>
+                    <SelectItem value="denoise">{t('settings.preprocessing.options.denoise')}</SelectItem>
+                    <SelectItem value="sharpen">{t('settings.preprocessing.options.sharpen')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -345,7 +345,7 @@ export default function OCRPage() {
               ) : (
                 <Eye className="h-4 w-4 mr-2" />
               )}
-              {isProcessing ? "Elaborazione..." : "Avvia OCR"}
+              {isProcessing ? t('actions.processing') : t('actions.processFile')}
             </Button>
 
             <Button
@@ -353,7 +353,7 @@ export default function OCRPage() {
               onClick={resetForm}
               disabled={isProcessing}
             >
-              Reset
+              {t('actions.clear')}
             </Button>
           </div>
 
@@ -363,7 +363,7 @@ export default function OCRPage() {
               <CardContent className="pt-6">
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>Elaborazione in corso...</span>
+                    <span>{t('processing.analyzing')}</span>
                     <span>{progress}%</span>
                   </div>
                   <Progress value={progress} className="h-2" />
@@ -379,7 +379,7 @@ export default function OCRPage() {
           {previewUrl && (
             <Card data-tour="ocr-preview">
               <CardHeader>
-                <CardTitle>Anteprima</CardTitle>
+                <CardTitle>{t('results.preview')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="border rounded-lg overflow-hidden">
