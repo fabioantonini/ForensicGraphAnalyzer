@@ -166,5 +166,9 @@ Preferred communication style: Simple, everyday language.
 
 ## Changelog
 
+## Next Steps
+- Sistema di verifica firme: miglioramenti e ottimizzazioni in programma
+- Possibili implementazioni future: tour guidato, raccomandazioni AI personalizzate
+
 Changelog:
-- June 19, 2025. Initial setup and OCR system completion
+- June 19, 2025. Initial setup and OCR system completion with full multilingual support
