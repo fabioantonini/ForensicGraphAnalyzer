@@ -133,11 +133,16 @@ Preferred communication style: Simple, everyday language.
 ## Recent Changes
 
 ### June 19, 2025 - OCR System Implementation
-- **OCR Advanced System**: Complete implementation of Optical Character Recognition functionality
+- **OCR Real Implementation**: Complete implementation with Tesseract.js for actual text extraction
   - Frontend: Responsive React interface with file upload, settings, and results display
-  - Backend: Express endpoints with multer file handling and text extraction simulation
+  - Backend: Express endpoints with real OCR processing using Tesseract.js
   - Translation: Full multilingual support for Italian and English
   - Integration: Automatic document saving to knowledge base with vector indexing
+- **Image Preprocessing**: Real image enhancement with Sharp library
+  - Auto: Standard normalization and light sharpening
+  - Enhance: Improved contrast, gamma correction, and sharpening
+  - Sharpen: Aggressive sharpening with brightness modulation
+  - Denoise: Noise reduction with blur and threshold conversion
 - **Translation System Fixes**: 
   - Resolved "layout.ocr" display issue in sidebar navigation
   - Added OCR namespace to i18n configuration with complete translation files
@@ -146,7 +151,10 @@ Preferred communication style: Simple, everyday language.
 - **Document Processing**: OCR results can be saved directly to the RAG system for querying
 
 ### Technical Implementation Details
-- OCR Service: Python-integrated backend with configurable DPI, language, and preprocessing
+- OCR Service: Tesseract.js with real text extraction (not simulation)
+- Image Processing: Sharp library for preprocessing with 4 different modes
+- Language Support: Italian, English, French, German, Spanish with proper mapping
+- DPI Configuration: Applied to image metadata for quality optimization
 - File Support: JPEG, PNG, TIFF, BMP, PDF formats with 10MB size limit
 - UI Components: Professional drag-drop interface with progress tracking and result preview
 - Database Integration: Seamless document creation and vector embedding storage
