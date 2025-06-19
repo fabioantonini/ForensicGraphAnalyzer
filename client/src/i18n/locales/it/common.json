@@ -36,5 +36,16 @@
     "successTitle": "Password reimpostata con successo",
     "successDescription": "La tua password è stata reimpostata. Sarai reindirizzato alla pagina di accesso.",
     "goToLogin": "Vai alla pagina di accesso"
+  },
+  "layout": {
+    "appName": "Grapholex Insight",
+    "appDescription": "Assistente di Grafologia Forense",
+    "dashboard": "Dashboard",
+    "documents": "Documenti",
+    "ragQuery": "Query RAG",
+    "ocr": "OCR Avanzato",
+    "signatures": "Verifica Firme",
+    "settings": "Impostazioni",
+    "admin": "Amministrazione"
   }
 }

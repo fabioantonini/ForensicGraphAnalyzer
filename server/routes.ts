@@ -25,9 +25,10 @@ import {
 import { chatWithRAG, validateAPIKey } from "./openai";
 import { log } from "./vite";
 import { registerSignatureRoutes } from "./signature-routes";
+import { processOCR, saveOCRDocument, ocrUpload } from "./ocr-service";
 import { eq, desc, sql } from "drizzle-orm";
 import { db, pool } from "./db";
-import { users } from "@shared/schema";
+import { users, documents } from "@shared/schema";
 import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";
 import { 
@@ -779,6 +780,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // OCR endpoints
+  // Process OCR for uploaded file
+  app.post("/api/ocr/process", isAuthenticated, isActiveUser, ocrUpload.single('file'), async (req, res, next) => {
+    try {
+      const userId = req.user!.id;
+      const file = req.file;
+      
+      if (!file) {
+        return res.status(400).json({ message: "Nessun file caricato" });
+      }
+
+      // Parse settings from request
+      let settings;
+      try {
+        settings = JSON.parse(req.body.settings || '{}');
+      } catch {
+        settings = {
+          language: "ita+eng",
+          dpi: 300,
+          preprocessingMode: "auto",
+          outputFormat: "text"
+        };
+      }
+
+      log("ocr", `Processamento OCR avviato per utente ${userId}, file: ${file.originalname}`);
+
+      // Process OCR
+      const result = await processOCR(file.buffer, file.originalname, settings);
+      
+      res.json(result);
+    } catch (error: any) {
+      log("ocr", `Errore processamento OCR: ${error.message}`);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Save OCR result as document
+  app.post("/api/documents/from-ocr", isAuthenticated, isActiveUser, async (req, res, next) => {
+    try {
+      const userId = req.user!.id;
+      const { title, content, originalFilename, metadata } = req.body;
+
+      if (!title || !content) {
+        return res.status(400).json({ message: "Titolo e contenuto sono obbligatori" });
+      }
+
+      log("ocr", `Salvataggio documento OCR per utente ${userId}: ${title}`);
+
+      // Save as new document using existing storage system
+      const timestamp = Date.now();
+      const filename = `ocr_${timestamp}_${title.replace(/[^a-zA-Z0-9]/g, '_')}.txt`;
+      
+      // Create document data
+      const documentData = {
+        userId,
+        filename,
+        originalFilename: `${title}.txt`,
+        fileSize: Buffer.byteLength(content, 'utf8'),
+        fileType: 'text/plain',
+        content,
+        indexed: false,
+        source: 'ocr',
+        metadata: JSON.stringify(metadata || {})
+      };
+
+      // Save using storage interface
+      const document = await storage.createDocument(documentData);
+      
+      // Add to vector store for RAG
+      try {
+        await addDocumentToCollection(document, userId.toString());
+        // Mark as indexed - using direct database update since storage interface doesn't have updateDocument
+        await db.update(documents).set({ indexed: true }).where(eq(documents.id, document.id));
+        log("ocr", `Documento OCR indicizzato nel vector store: ${document.id}`);
+      } catch (indexError: any) {
+        log("ocr", `Errore indicizzazione documento OCR: ${indexError.message}`);
+        // Continue even if indexing fails
+      }
+
+      res.json({
+        id: document.id,
+        message: "Documento OCR salvato e aggiunto alla base di conoscenza"
+      });
+    } catch (error: any) {
+      log("ocr", `Errore salvataggio documento OCR: ${error.message}`);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Recommendation endpoints
   // Get recommendations for current user
   app.get("/api/recommendations", isAuthenticated, isActiveUser, async (req, res, next) => {

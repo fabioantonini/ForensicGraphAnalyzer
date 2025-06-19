@@ -78,7 +78,7 @@ export async function processOCR(
       processingTime
     };
 
-  } catch (error) {
+  } catch (error: any) {
     log("ocr", `Errore durante processamento OCR: ${error.message}`);
     throw new Error(`Errore OCR: ${error.message}`);
   }
@@ -274,7 +274,7 @@ ${content}`;
     // Restituisci un ID mock (da implementare con storage reale)
     return timestamp;
 
-  } catch (error) {
+  } catch (error: any) {
     log("ocr", `Errore nel salvataggio documento OCR: ${error.message}`);
     throw new Error(`Errore nel salvataggio: ${error.message}`);
   }
