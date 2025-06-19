@@ -45,6 +45,7 @@
     "ragQuery": "Query RAG",
     "ocr": "OCR Avanzato",
     "signatures": "Verifica Firme",
+    "signatureQuality": "Controllo Qualità Firme",
     "settings": "Impostazioni",
     "admin": "Amministrazione"
   }

@@ -36,7 +36,7 @@ interface ImageQualityResult {
 
 export default function SignatureQualityCheck() {
   const { t } = useTranslation();
-  const [, navigate] = useNavigate();
+  const [, setLocation] = useLocation();
   const [analyzedImages, setAnalyzedImages] = useState<Array<{
     file: File;
     result: ImageQualityResult;
@@ -61,7 +61,7 @@ export default function SignatureQualityCheck() {
   };
 
   const proceedToVerification = () => {
-    navigate('/signatures');
+    setLocation('/signatures');
   };
 
   return (
@@ -76,7 +76,7 @@ export default function SignatureQualityCheck() {
             {t('qualityCheck.description', 'Check the quality of your signature images before proceeding with verification analysis')}
           </p>
         </div>
-        <Button variant="outline" onClick={() => navigate('/')}>
+        <Button variant="outline" onClick={() => setLocation('/')}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           {t('common.back', 'Back')}
         </Button>

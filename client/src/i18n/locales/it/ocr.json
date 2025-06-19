@@ -157,5 +157,25 @@
       "completeness": "Completezza",
       "signaturePresence": "Presenza Firma"
     }
+  },
+  "qualityCheck": {
+    "description": "Controlla la qualità delle immagini delle firme prima di procedere con l'analisi di verifica",
+    "info": "Questo strumento ti aiuta a valutare la qualità delle immagini delle firme prima di eseguire l'analisi di verifica. Immagini di buona qualità portano a risultati più accurati.",
+    "analyzeTitle": "Analizza Qualità Firma",
+    "analyzeDescription": "Carica immagini di firme per verificare la loro idoneità all'analisi di verifica",
+    "tips": {
+      "title": "Consigli per la Qualità",
+      "resolution": "Usa immagini ad alta risoluzione (almeno 300 DPI)",
+      "lighting": "Assicurati buona illuminazione e contrasto",
+      "complete": "Includi la firma completa senza tagli",
+      "clean": "Usa documenti puliti e non piegati"
+    },
+    "results": {
+      "title": "Risultati Analisi",
+      "description": "Valutazione qualità per le immagini caricate"
+    },
+    "proceedToVerification": "Procedi alla Verifica",
+    "noResults": "Carica immagini di firme per vedere i risultati dell'analisi di qualità",
+    "warning": "Nessuna delle immagini analizzate soddisfa gli standard minimi di qualità per una verifica affidabile. Migliora la qualità delle immagini prima di procedere."
   }
 }

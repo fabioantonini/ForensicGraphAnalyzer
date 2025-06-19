@@ -45,6 +45,7 @@
     "ragQuery": "RAG Query", 
     "ocr": "Advanced OCR",
     "signatures": "Signature Verification",
+    "signatureQuality": "Signature Quality Check",
     "settings": "Settings",
     "admin": "Administration"
   }

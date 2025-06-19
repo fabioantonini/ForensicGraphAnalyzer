@@ -69,6 +69,12 @@ export function Sidebar({ className }: SidebarProps) {
       icon: <Pen className="h-5 w-5 mr-3" />,
     },
     {
+      href: "/signature-quality",
+      label: "Signature Quality Check",
+      translationKey: "layout.signatureQuality",
+      icon: <ShieldCheck className="h-5 w-5 mr-3" />,
+    },
+    {
       href: "/settings",
       label: "Settings",
       translationKey: "layout.settings",

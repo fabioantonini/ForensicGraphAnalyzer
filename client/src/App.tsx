@@ -80,6 +80,12 @@ function Router() {
           <SignaturesPage />
         </AppLayout>
       )} />
+
+      <ProtectedRoute path="/signature-quality" component={() => (
+        <AppLayout>
+          <SignatureQualityCheck />
+        </AppLayout>
+      )} />
       
       <ProtectedRoute 
         path="/admin" 
