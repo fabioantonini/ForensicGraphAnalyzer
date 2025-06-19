@@ -100,7 +100,7 @@ export default function OCRPage() {
   // Mutazione per processare OCR
   const ocrMutation = useMutation({
     mutationFn: async () => {
-      if (!selectedFile) throw new Error("Nessun file selezionato");
+      if (!selectedFile) throw new Error(t('errors.noFile'));
 
       const formData = new FormData();
       formData.append('file', selectedFile);
@@ -113,14 +113,14 @@ export default function OCRPage() {
       setOcrResult(result);
       setProgress(100);
       toast({
-        title: "OCR completato",
-        description: `Testo estratto con confidenza ${result.confidence}%`,
+        title: t('processing.completed'),
+        description: `${t('results.confidence')}: ${result.confidence}%`,
         variant: "default",
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Errore OCR",
+        title: t('errors.processingFailed'),
         description: error.message,
         variant: "destructive",
       });
@@ -132,7 +132,7 @@ export default function OCRPage() {
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!ocrResult || !documentTitle) {
-        throw new Error("Dati mancanti per il salvataggio");
+        throw new Error(t('errors.invalidTitle'));
       }
 
       const documentData = {
@@ -156,8 +156,8 @@ export default function OCRPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       toast({
-        title: "Documento salvato",
-        description: "Il documento è stato aggiunto alla base di conoscenza",
+        title: t('save.success'),
+        description: t('save.success'),
         variant: "default",
       });
       // Reset del form
@@ -165,7 +165,7 @@ export default function OCRPage() {
     },
     onError: (error: Error) => {
       toast({
-        title: "Errore salvataggio",
+        title: t('save.error'),
         description: error.message,
         variant: "destructive",
       });
@@ -183,8 +183,8 @@ export default function OCRPage() {
   const handleProcessOCR = () => {
     if (!selectedFile) {
       toast({
-        title: "Nessun file selezionato",
-        description: "Seleziona un file da processare",
+        title: t('errors.noFile'),
+        description: t('errors.noFile'),
         variant: "destructive",
       });
       return;
@@ -210,10 +210,10 @@ export default function OCRPage() {
   return (
     <div className="container mx-auto py-6" data-tour="ocr-page">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-primary">OCR Avanzato</h2>
+        <h2 className="text-2xl font-bold text-primary">{t('title')}</h2>
         <Badge variant="secondary">
           <FileImage className="h-4 w-4 mr-1" />
-          Estrazione Testo da Immagini
+          {t('subtitle')}
         </Badge>
       </div>
 
@@ -225,12 +225,12 @@ export default function OCRPage() {
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Upload className="h-5 w-5 mr-2" />
-                Carica Documento
+                {t('uploadArea.title')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="file-upload">Seleziona file (JPEG, PNG, TIFF, BMP, PDF)</Label>
+                <Label htmlFor="file-upload">{t('uploadArea.supportedFormats')}</Label>
                 <Input
                   id="file-upload"
                   type="file"
