@@ -86,8 +86,10 @@ export function SignatureConfidenceMeter({
       formData.append('image', file);
 
       // Analyze image quality
-      const response = await apiRequest('POST', '/api/analyze-image-quality', formData, {
-        headers: {} // Don't set Content-Type, let browser set it for FormData
+      const response = await fetch('/api/analyze-image-quality', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
       });
 
       if (response.ok) {

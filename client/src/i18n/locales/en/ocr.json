@@ -137,5 +137,25 @@
     "networkError": "Connection error",
     "serverError": "Server error",
     "invalidTitle": "Enter a valid title for the document"
+  },
+  "confidence": {
+    "title": "Signature Quality Analyzer",
+    "analyzing": "Analyzing image quality...",
+    "analyzeAnother": "Analyze Another",
+    "dropHere": "Drop signature image here",
+    "dragDrop": "Drag & drop signature image or click to browse",
+    "supportedFormats": "Supports JPEG, PNG, TIFF, BMP (max 10MB)",
+    "overallScore": "Overall Confidence",
+    "suitable": "Suitable for Analysis",
+    "needsImprovement": "Needs Improvement",
+    "detailedAnalysis": "Detailed Analysis",
+    "recommendations": "Recommendations",
+    "metrics": {
+      "resolution": "Resolution",
+      "contrast": "Contrast",
+      "sharpness": "Sharpness",
+      "completeness": "Completeness",
+      "signaturePresence": "Signature Presence"
+    }
   }
 }

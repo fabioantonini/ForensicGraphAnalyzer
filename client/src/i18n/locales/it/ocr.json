@@ -137,5 +137,25 @@
     "networkError": "Errore di connessione",
     "serverError": "Errore del server",
     "invalidTitle": "Inserisci un titolo valido per il documento"
+  },
+  "confidence": {
+    "title": "Analizzatore Qualità Firma",
+    "analyzing": "Analisi qualità immagine in corso...",
+    "analyzeAnother": "Analizza Altra",
+    "dropHere": "Rilascia l'immagine della firma qui",
+    "dragDrop": "Trascina e rilascia l'immagine della firma o clicca per sfogliare",
+    "supportedFormats": "Supporta JPEG, PNG, TIFF, BMP (max 10MB)",
+    "overallScore": "Punteggio Generale",
+    "suitable": "Adatta per l'Analisi",
+    "needsImprovement": "Necessita Miglioramenti",
+    "detailedAnalysis": "Analisi Dettagliata",
+    "recommendations": "Raccomandazioni",
+    "metrics": {
+      "resolution": "Risoluzione",
+      "contrast": "Contrasto",
+      "sharpness": "Nitidezza",
+      "completeness": "Completezza",
+      "signaturePresence": "Presenza Firma"
+    }
   }
 }
