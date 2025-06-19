@@ -157,5 +157,25 @@
       "completeness": "Completeness",
       "signaturePresence": "Signature Presence"
     }
+  },
+  "qualityCheck": {
+    "description": "Check the quality of your signature images before proceeding with verification analysis",
+    "info": "This tool helps you evaluate the quality of signature images before performing verification analysis. Good quality images lead to more accurate results.",
+    "analyzeTitle": "Analyze Signature Quality",
+    "analyzeDescription": "Upload signature images to check their suitability for verification analysis",
+    "tips": {
+      "title": "Quality Tips",
+      "resolution": "Use high resolution images (at least 300 DPI)",
+      "lighting": "Ensure good lighting and contrast",
+      "complete": "Include the complete signature without cropping",
+      "clean": "Use clean, unfolded documents"
+    },
+    "results": {
+      "title": "Analysis Results",
+      "description": "Quality assessment for uploaded images"
+    },
+    "proceedToVerification": "Proceed to Verification",
+    "noResults": "Upload signature images to see quality analysis results",
+    "warning": "None of the analyzed images meet the minimum quality standards for reliable verification. Please improve image quality before proceeding."
   }
 }
