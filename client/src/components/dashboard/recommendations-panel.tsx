@@ -64,7 +64,7 @@ export function RecommendationsPanel() {
   // Mutazione per contrassegnare una raccomandazione come visualizzata
   const viewMutation = useMutation({
     mutationFn: (id: number) => 
-      apiRequest(`/api/recommendations/${id}`, "PATCH", {
+      apiRequest("PATCH", `/api/recommendations/${id}`, {
         viewed: true
       }),
     onSuccess: () => {
@@ -75,7 +75,7 @@ export function RecommendationsPanel() {
   // Mutazione per contrassegnare una raccomandazione come rifiutata
   const dismissMutation = useMutation({
     mutationFn: (id: number) => 
-      apiRequest(`/api/recommendations/${id}`, "PATCH", {
+      apiRequest("PATCH", `/api/recommendations/${id}`, {
         dismissed: true
       }),
     onSuccess: () => {
