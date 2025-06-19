@@ -76,14 +76,12 @@ async function testTesseractOCR() {
 }
 
 // Esegue il test
-if (require.main === module) {
-  testTesseractOCR()
-    .then(() => {
-      console.log('\n🏁 Test completato');
-      process.exit(0);
-    })
-    .catch((error) => {
-      console.error('\n💥 Test fallito:', error);
-      process.exit(1);
-    });
-}
+testTesseractOCR()
+  .then(() => {
+    console.log('\n🏁 Test completato');
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error('\n💥 Test fallito:', error);
+    process.exit(1);
+  });
