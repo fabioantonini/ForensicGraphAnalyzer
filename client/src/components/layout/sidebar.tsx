@@ -24,7 +24,7 @@ export function Sidebar({ className }: SidebarProps) {
   const isMobile = useIsMobile();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { t } = useTranslation();
+  const { t } = useTranslation('common');
   const { user } = useAuth();
   
   // Controlla se l'utente è admin
