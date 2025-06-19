@@ -2,8 +2,7 @@ import { Request, Response } from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs/promises";
-import { spawn } from "child_process";
-import { promisify } from "util";
+import { createWorker, PSM, OEM } from 'tesseract.js';
 import { log } from "./vite";
 
 // Configurazione multer per upload OCR
@@ -44,7 +43,7 @@ interface OCRResult {
   pageCount?: number;
 }
 
-// Simula processamento OCR con Tesseract (da implementare con libreria reale)
+// Processamento OCR reale con Tesseract.js
 export async function processOCR(
   fileBuffer: Buffer,
   filename: string,
@@ -52,36 +51,95 @@ export async function processOCR(
 ): Promise<OCRResult> {
   const startTime = Date.now();
   
-  log("ocr", `Avvio processamento OCR per file: ${filename}`);
+  log("ocr", `Avvio processamento OCR reale per file: ${filename}`);
   log("ocr", `Impostazioni: ${JSON.stringify(settings)}`);
 
   try {
-    // Salva temporaneamente il file
-    const tempDir = path.join(process.cwd(), 'temp');
-    await fs.mkdir(tempDir, { recursive: true });
+    // Crea worker Tesseract
+    const worker = await createWorker();
     
-    const tempFilePath = path.join(tempDir, `ocr_${Date.now()}_${filename}`);
-    await fs.writeFile(tempFilePath, fileBuffer);
-
-    // Simula processamento OCR (da sostituire con Tesseract reale)
-    const mockResult = await simulateOCRProcessing(tempFilePath, settings);
-
-    // Pulisci file temporaneo
-    await fs.unlink(tempFilePath);
-
+    // Mappa le lingue dal formato UI al formato Tesseract
+    const tesseractLanguage = mapLanguageToTesseract(settings.language);
+    
+    log("ocr", `Inizializzazione Tesseract con lingua: ${tesseractLanguage}`);
+    
+    // Inizializza il worker con la lingua specificata
+    await worker.loadLanguage(tesseractLanguage);
+    await worker.initialize(tesseractLanguage);
+    
+    // Configura parametri OCR basati sulle impostazioni
+    await worker.setParameters({
+      tessedit_pageseg_mode: PSM.SINGLE_BLOCK,
+      tessedit_ocr_engine_mode: OEM.LSTM_ONLY,
+    });
+    
+    log("ocr", `Esecuzione OCR su ${filename}...`);
+    
+    // Esegui OCR
+    const { data } = await worker.recognize(fileBuffer);
+    
+    // Cleanup worker
+    await worker.terminate();
+    
     const processingTime = Math.round((Date.now() - startTime) / 1000);
     
-    log("ocr", `OCR completato in ${processingTime}s con confidenza ${mockResult.confidence}%`);
-
-    return {
-      ...mockResult,
-      processingTime
+    // Calcola confidence media
+    const avgConfidence = Math.round(data.confidence || 0);
+    
+    // Determina la lingua rilevata
+    const detectedLanguage = data.text.length > 0 ? 
+      detectLanguageFromText(data.text) : settings.language;
+    
+    const result: OCRResult = {
+      extractedText: data.text.trim(),
+      confidence: avgConfidence,
+      language: detectedLanguage,
+      processingTime,
+      pageCount: 1
     };
+    
+    log("ocr", `OCR completato: ${result.extractedText.length} caratteri estratti con confidenza ${avgConfidence}%`);
+    
+    return result;
 
   } catch (error: any) {
     log("ocr", `Errore durante processamento OCR: ${error.message}`);
     throw new Error(`Errore OCR: ${error.message}`);
   }
+}
+
+// Mappa le lingue dal formato UI al formato Tesseract
+function mapLanguageToTesseract(language: string): string {
+  const languageMap: { [key: string]: string } = {
+    'auto': 'eng', // Default per auto-detection
+    'ita': 'ita',
+    'eng': 'eng',
+    'ita+eng': 'ita+eng',
+    'fra': 'fra',
+    'deu': 'deu', 
+    'spa': 'spa'
+  };
+  
+  return languageMap[language] || 'eng';
+}
+
+// Rileva la lingua dal testo estratto (semplice euristica)
+function detectLanguageFromText(text: string): string {
+  const italianWords = ['il', 'la', 'di', 'che', 'e', 'per', 'con', 'del', 'della', 'sul', 'sulla'];
+  const englishWords = ['the', 'and', 'of', 'to', 'in', 'for', 'with', 'on', 'at', 'by'];
+  
+  const words = text.toLowerCase().split(/\s+/);
+  let italianCount = 0;
+  let englishCount = 0;
+  
+  words.forEach(word => {
+    if (italianWords.includes(word)) italianCount++;
+    if (englishWords.includes(word)) englishCount++;
+  });
+  
+  if (italianCount > englishCount) return 'ita';
+  if (englishCount > italianCount) return 'eng';
+  return 'ita+eng'; // Mixed o incerto
 }
 
 // Simulazione processamento OCR (da sostituire con implementazione reale)
