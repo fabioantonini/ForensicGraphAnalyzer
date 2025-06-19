@@ -1,0 +1,99 @@
+{
+  "title": "OCR Avanzato",
+  "subtitle": "Estrai testo da immagini e documenti",
+  "description": "Carica immagini o documenti PDF per estrarre automaticamente il testo e aggiungerlo alla tua base di conoscenza per analisi grafologiche avanzate.",
+  "uploadArea": {
+    "title": "Carica File",
+    "description": "Trascina qui i tuoi file o clicca per selezionarli",
+    "supportedFormats": "Formati supportati: JPG, PNG, PDF, TIFF",
+    "maxSize": "Dimensione massima: 10MB"
+  },
+  "settings": {
+    "title": "Impostazioni OCR",
+    "language": {
+      "label": "Lingua",
+      "options": {
+        "auto": "Rilevamento automatico",
+        "ita": "Italiano",
+        "eng": "Inglese", 
+        "ita+eng": "Italiano + Inglese",
+        "fra": "Francese",
+        "deu": "Tedesco",
+        "spa": "Spagnolo"
+      }
+    },
+    "dpi": {
+      "label": "Risoluzione DPI",
+      "description": "Maggiore risoluzione = migliore qualità, ma processamento più lento"
+    },
+    "preprocessing": {
+      "label": "Preprocessamento",
+      "options": {
+        "auto": "Automatico",
+        "enhance": "Migliora contrasto",
+        "denoise": "Riduci rumore",
+        "sharpen": "Aumenta nitidezza"
+      }
+    },
+    "outputFormat": {
+      "label": "Formato Output",
+      "options": {
+        "text": "Solo testo",
+        "structured": "Testo strutturato",
+        "markdown": "Markdown"
+      }
+    }
+  },
+  "processing": {
+    "title": "Processamento in corso...",
+    "analyzing": "Analizzando il documento...",
+    "extracting": "Estraendo il testo...",
+    "optimizing": "Ottimizzando i risultati...",
+    "completed": "Processamento completato!"
+  },
+  "results": {
+    "title": "Risultati OCR",
+    "extractedText": "Testo Estratto",
+    "confidence": "Confidenza",
+    "language": "Lingua Rilevata",
+    "processingTime": "Tempo di Processamento",
+    "pageCount": "Numero di Pagine",
+    "wordCount": "Numero di Parole",
+    "preview": "Anteprima"
+  },
+  "save": {
+    "title": "Salva nella Base di Conoscenza",
+    "documentTitle": "Titolo Documento",
+    "titlePlaceholder": "Inserisci un titolo per il documento...",
+    "addMetadata": "Aggiungi Metadati",
+    "metadata": {
+      "source": "Fonte",
+      "author": "Autore", 
+      "date": "Data",
+      "category": "Categoria",
+      "tags": "Tag (separati da virgola)"
+    },
+    "saveButton": "Salva Documento",
+    "saving": "Salvataggio in corso...",
+    "success": "Documento salvato con successo!",
+    "error": "Errore durante il salvataggio"
+  },
+  "actions": {
+    "processFile": "Elabora File",
+    "processing": "Elaborazione...",
+    "retry": "Riprova",
+    "clear": "Pulisci",
+    "download": "Scarica",
+    "copy": "Copia",
+    "edit": "Modifica"
+  },
+  "errors": {
+    "noFile": "Seleziona un file da elaborare",
+    "unsupportedFormat": "Formato file non supportato",
+    "fileTooLarge": "File troppo grande (max 10MB)",
+    "processingFailed": "Errore durante l'elaborazione del file",
+    "networkError": "Errore di connessione",
+    "serverError": "Errore del server",
+    "invalidTitle": "Inserisci un titolo valido per il documento"
+  }
+}

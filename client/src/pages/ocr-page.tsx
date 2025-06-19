@@ -51,7 +51,7 @@ interface OCRSettings {
 }
 
 export default function OCRPage() {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['ocr', 'common']);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -79,8 +79,8 @@ export default function OCRPage() {
       const supportedTypes = ['image/jpeg', 'image/png', 'image/tiff', 'image/bmp', 'application/pdf'];
       if (!supportedTypes.includes(file.type)) {
         toast({
-          title: "Tipo file non supportato",
-          description: "Supportati: JPEG, PNG, TIFF, BMP, PDF",
+          title: t('errors.unsupportedFormat'),
+          description: t('uploadArea.supportedFormats'),
           variant: "destructive",
         });
         return;

@@ -36,5 +36,16 @@
     "successTitle": "Password Successfully Reset",
     "successDescription": "Your password has been reset. You will be redirected to the login page.",
     "goToLogin": "Go to login page"
+  },
+  "layout": {
+    "appName": "Grapholex Insight",
+    "appDescription": "Forensic Graphology Assistant",
+    "dashboard": "Dashboard",
+    "documents": "Documents",
+    "ragQuery": "RAG Query", 
+    "ocr": "Advanced OCR",
+    "signatures": "Signature Verification",
+    "settings": "Settings",
+    "admin": "Administration"
   }
 }

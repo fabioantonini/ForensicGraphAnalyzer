@@ -1,0 +1,99 @@
+{
+  "title": "Advanced OCR",
+  "subtitle": "Extract text from images and documents",
+  "description": "Upload images or PDF documents to automatically extract text and add it to your knowledge base for advanced graphological analysis.",
+  "uploadArea": {
+    "title": "Upload File",
+    "description": "Drag your files here or click to select them",
+    "supportedFormats": "Supported formats: JPG, PNG, PDF, TIFF",
+    "maxSize": "Max size: 10MB"
+  },
+  "settings": {
+    "title": "OCR Settings",
+    "language": {
+      "label": "Language",
+      "options": {
+        "auto": "Auto detection",
+        "ita": "Italian",
+        "eng": "English", 
+        "ita+eng": "Italian + English",
+        "fra": "French",
+        "deu": "German",
+        "spa": "Spanish"
+      }
+    },
+    "dpi": {
+      "label": "DPI Resolution",
+      "description": "Higher resolution = better quality, but slower processing"
+    },
+    "preprocessing": {
+      "label": "Preprocessing",
+      "options": {
+        "auto": "Automatic",
+        "enhance": "Enhance contrast",
+        "denoise": "Reduce noise",
+        "sharpen": "Increase sharpness"
+      }
+    },
+    "outputFormat": {
+      "label": "Output Format",
+      "options": {
+        "text": "Text only",
+        "structured": "Structured text",
+        "markdown": "Markdown"
+      }
+    }
+  },
+  "processing": {
+    "title": "Processing...",
+    "analyzing": "Analyzing document...",
+    "extracting": "Extracting text...",
+    "optimizing": "Optimizing results...",
+    "completed": "Processing completed!"
+  },
+  "results": {
+    "title": "OCR Results",
+    "extractedText": "Extracted Text",
+    "confidence": "Confidence",
+    "language": "Detected Language",
+    "processingTime": "Processing Time",
+    "pageCount": "Page Count",
+    "wordCount": "Word Count",
+    "preview": "Preview"
+  },
+  "save": {
+    "title": "Save to Knowledge Base",
+    "documentTitle": "Document Title",
+    "titlePlaceholder": "Enter a title for the document...",
+    "addMetadata": "Add Metadata",
+    "metadata": {
+      "source": "Source",
+      "author": "Author", 
+      "date": "Date",
+      "category": "Category",
+      "tags": "Tags (comma separated)"
+    },
+    "saveButton": "Save Document",
+    "saving": "Saving...",
+    "success": "Document saved successfully!",
+    "error": "Error saving document"
+  },
+  "actions": {
+    "processFile": "Process File",
+    "processing": "Processing...",
+    "retry": "Retry",
+    "clear": "Clear",
+    "download": "Download",
+    "copy": "Copy",
+    "edit": "Edit"
+  },
+  "errors": {
+    "noFile": "Select a file to process",
+    "unsupportedFormat": "Unsupported file format",
+    "fileTooLarge": "File too large (max 10MB)",
+    "processingFailed": "Error processing file",
+    "networkError": "Connection error",
+    "serverError": "Server error",
+    "invalidTitle": "Enter a valid title for the document"
+  }
+}
