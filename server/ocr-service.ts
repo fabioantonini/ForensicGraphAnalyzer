@@ -44,11 +44,12 @@ interface OCRResult {
   pageCount?: number;
 }
 
-// Processamento OCR reale con Tesseract.js
+// Processamento OCR reale con Tesseract.js e callback per progresso
 export async function processOCR(
   fileBuffer: Buffer,
   filename: string,
-  settings: OCRSettings
+  settings: OCRSettings,
+  progressCallback?: (progress: number, stage: string) => void
 ): Promise<OCRResult> {
   const startTime = Date.now();
   
@@ -56,21 +57,40 @@ export async function processOCR(
   log("ocr", `Impostazioni: ${JSON.stringify(settings)}`);
 
   try {
+    // Fase 1: Inizializzazione (0-20%)
+    progressCallback?.(10, 'Inizializzazione sistema OCR...');
+    
     // Mappa le lingue dal formato UI al formato Tesseract
     const tesseractLanguage = mapLanguageToTesseract(settings.language);
     
     log("ocr", `Inizializzazione Tesseract con lingua: ${tesseractLanguage}`);
     
-    // Applica preprocessing dell'immagine se necessario
+    // Fase 2: Preprocessing (20-40%)
+    progressCallback?.(25, 'Preprocessing dell\'immagine...');
     const processedBuffer = await preprocessImage(fileBuffer, settings);
+    
+    progressCallback?.(40, 'Caricamento modello di riconoscimento...');
     
     // Crea e configura worker Tesseract
     const worker = await createWorker(tesseractLanguage);
     
+    // Fase 3: Riconoscimento (40-90%)
+    progressCallback?.(50, 'Analisi del documento in corso...');
+    
     log("ocr", `Esecuzione OCR su ${filename} con preprocessing: ${settings.preprocessingMode}`);
     
-    // Esegui OCR
-    const { data } = await worker.recognize(processedBuffer);
+    // Esegui OCR con callback di progresso
+    const { data } = await worker.recognize(processedBuffer, {}, {
+      logger: m => {
+        if (m.status === 'recognizing text') {
+          const progress = Math.round(50 + (m.progress * 40)); // 50-90%
+          progressCallback?.(progress, `Riconoscimento testo: ${Math.round(m.progress * 100)}%`);
+        }
+      }
+    });
+    
+    // Fase 4: Finalizzazione (90-100%)
+    progressCallback?.(95, 'Finalizzazione risultati...');
     
     // Cleanup worker
     await worker.terminate();
@@ -91,6 +111,8 @@ export async function processOCR(
       processingTime,
       pageCount: 1
     };
+    
+    progressCallback?.(100, 'Processamento completato!');
     
     log("ocr", `OCR completato: ${result.extractedText.length} caratteri estratti con confidenza ${avgConfidence}%`);
     
