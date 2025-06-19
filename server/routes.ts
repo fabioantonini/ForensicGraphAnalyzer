@@ -46,6 +46,7 @@ import {
   getUserRecommendations,
   updateRecommendationStatus
 } from "./recommendation-service";
+import { analyzeImageQuality } from "./image-quality-analyzer";
 
 // Initialize multer for file uploads
 const upload = multer({
@@ -1337,6 +1338,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
         purgeReadyAccounts: accountsToPurge.length
       });
     } catch (err) {
+      next(err);
+    }
+  });
+
+  // Image Quality Analysis endpoint for drag & drop confidence meter
+  app.post("/api/analyze-image-quality", isAuthenticated, isActiveUser, upload.single('image'), async (req, res, next) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No image file provided" });
+      }
+
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/tiff', 'image/bmp'];
+      if (!allowedTypes.includes(req.file.mimetype)) {
+        // Clean up uploaded file
+        try {
+          await fs.unlink(req.file.path);
+        } catch (cleanupError) {
+          console.error('Error cleaning up invalid file:', cleanupError);
+        }
+        return res.status(400).json({ message: "Invalid file type. Please upload JPEG, PNG, TIFF, or BMP images." });
+      }
+
+      // Analyze image quality
+      const qualityResult = await analyzeImageQuality(req.file.path);
+
+      // Clean up the temporary file after analysis
+      try {
+        await fs.unlink(req.file.path);
+      } catch (cleanupError) {
+        console.error('Error cleaning up analyzed file:', cleanupError);
+      }
+
+      res.json(qualityResult);
+    } catch (err) {
+      // Clean up file on error
+      if (req.file?.path) {
+        try {
+          await fs.unlink(req.file.path);
+        } catch (cleanupError) {
+          console.error('Error cleaning up file after error:', cleanupError);
+        }
+      }
       next(err);
     }
   });
