@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Home, FileText, MessageSquare, Settings, ChevronRight, ChevronLeft, Pen, ShieldCheck } from "lucide-react";
+import { Home, FileText, MessageSquare, Settings, ChevronRight, ChevronLeft, Pen, ShieldCheck, FileImage } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/use-auth";
 import React from "react";
@@ -55,6 +55,12 @@ export function Sidebar({ className }: SidebarProps) {
       label: "RAG Query",
       translationKey: "layout.ragQuery",
       icon: <MessageSquare className="h-5 w-5 mr-3" />,
+    },
+    {
+      href: "/ocr",
+      label: "OCR Advanced",
+      translationKey: "layout.ocr",
+      icon: <FileImage className="h-5 w-5 mr-3" />,
     },
     {
       href: "/signatures",

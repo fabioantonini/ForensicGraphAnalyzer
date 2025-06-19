@@ -16,6 +16,7 @@ import AuthPage from "@/pages/auth-page";
 import DashboardPage from "@/pages/dashboard-page";
 import DocumentsPage from "@/pages/documents-page";
 import QueryPage from "@/pages/query-page";
+import OCRPage from "@/pages/ocr-page";
 import SettingsPage from "@/pages/settings-page";
 import SignaturesPage from "@/pages/signatures-page";
 import AdminPage from "@/pages/admin-page";
@@ -58,6 +59,12 @@ function Router() {
       <ProtectedRoute path="/query" component={() => (
         <AppLayout>
           <QueryPage />
+        </AppLayout>
+      )} />
+      
+      <ProtectedRoute path="/ocr" component={() => (
+        <AppLayout>
+          <OCRPage />
         </AppLayout>
       )} />
       
