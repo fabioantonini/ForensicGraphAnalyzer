@@ -398,10 +398,10 @@ export default function OCRPage() {
             <Card data-tour="ocr-results">
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
-                  <span>Testo Estratto</span>
+                  <span>{t('results.extractedText')}</span>
                   <div className="flex items-center gap-2">
                     <Badge variant={ocrResult.confidence > 80 ? "default" : "secondary"}>
-                      {ocrResult.confidence}% confidenza
+                      {ocrResult.confidence}% {t('results.confidence')}
                     </Badge>
                     {ocrResult.confidence > 80 ? (
                       <CheckCircle className="h-4 w-4 text-green-500" />
@@ -414,8 +414,8 @@ export default function OCRPage() {
               <CardContent className="space-y-4">
                 <Tabs defaultValue="text">
                   <TabsList>
-                    <TabsTrigger value="text">Testo</TabsTrigger>
-                    <TabsTrigger value="info">Informazioni</TabsTrigger>
+                    <TabsTrigger value="text">{t('results.extractedText')}</TabsTrigger>
+                    <TabsTrigger value="info">Info</TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="text" className="space-y-4">
@@ -437,7 +437,7 @@ export default function OCRPage() {
                         ) : (
                           <Save className="h-4 w-4 mr-2" />
                         )}
-                        Salva nella Base di Conoscenza
+                        {t('save.saveButton')}
                       </Button>
                       
                       <Button
@@ -445,8 +445,8 @@ export default function OCRPage() {
                         onClick={() => {
                           navigator.clipboard.writeText(ocrResult.extractedText);
                           toast({
-                            title: "Copiato",
-                            description: "Testo copiato negli appunti",
+                            title: "Copied",
+                            description: t('actions.copy'),
                           });
                         }}
                       >
