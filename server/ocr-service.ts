@@ -80,14 +80,7 @@ export async function processOCR(
     log("ocr", `Esecuzione OCR su ${filename} con preprocessing: ${settings.preprocessingMode}`);
     
     // Esegui OCR con callback di progresso
-    const { data } = await worker.recognize(processedBuffer, {}, {
-      logger: m => {
-        if (m.status === 'recognizing text') {
-          const progress = Math.round(50 + (m.progress * 40)); // 50-90%
-          progressCallback?.(progress, `Riconoscimento testo: ${Math.round(m.progress * 100)}%`);
-        }
-      }
-    });
+    const { data } = await worker.recognize(processedBuffer);
     
     // Fase 4: Finalizzazione (90-100%)
     progressCallback?.(95, 'Finalizzazione risultati...');

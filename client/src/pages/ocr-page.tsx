@@ -17,6 +17,7 @@ import {
   Download, 
   CheckCircle,
   AlertCircle,
+  Clock,
   Loader2,
   Save,
   Settings
@@ -194,20 +195,53 @@ export default function OCRPage() {
     }
 
     setIsProcessing(true);
-    setProgress(10);
+    setProgress(0);
+    setProgressStage("Preparazione del documento...");
+    setProcessingStartTime(Date.now());
+    setEstimatedTimeRemaining(null);
 
-    // Simula progresso
+    // Stima tempo basata su dimensione file
+    const estimatedSeconds = Math.ceil(selectedFile.size / (1024 * 1024)) * 3; // ~3 secondi per MB
+    setEstimatedTimeRemaining(estimatedSeconds);
+
+    // Progresso simulato intelligente basato su fasi reali
+    const stages = [
+      { progress: 5, stage: "Caricamento file...", duration: 500 },
+      { progress: 15, stage: "Inizializzazione sistema OCR...", duration: 800 },
+      { progress: 25, stage: "Preprocessing dell'immagine...", duration: 1000 },
+      { progress: 40, stage: "Caricamento modello linguistico...", duration: 1200 },
+      { progress: 50, stage: "Analisi del documento...", duration: 2000 },
+      { progress: 70, stage: "Riconoscimento testo in corso...", duration: 3000 },
+      { progress: 85, stage: "Ottimizzazione risultati...", duration: 1000 },
+      { progress: 95, stage: "Finalizzazione...", duration: 500 }
+    ];
+
+    let currentStageIndex = 0;
     const progressInterval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 90) {
-          clearInterval(progressInterval);
-          return prev;
-        }
-        return prev + 10;
-      });
-    }, 500);
+      if (currentStageIndex < stages.length) {
+        const stage = stages[currentStageIndex];
+        setProgress(stage.progress);
+        setProgressStage(stage.stage);
+        
+        // Aggiorna tempo rimanente
+        const elapsed = (Date.now() - (processingStartTime || Date.now())) / 1000;
+        const remaining = Math.max(0, estimatedSeconds - elapsed);
+        setEstimatedTimeRemaining(Math.ceil(remaining));
+        
+        currentStageIndex++;
+      } else {
+        clearInterval(progressInterval);
+      }
+    }, 800);
 
-    ocrMutation.mutate();
+    ocrMutation.mutate(undefined, {
+      onSettled: () => {
+        clearInterval(progressInterval);
+        setProgress(100);
+        setProgressStage("Completato!");
+        setEstimatedTimeRemaining(0);
+      }
+    });
   };
 
   return (
@@ -360,16 +394,77 @@ export default function OCRPage() {
             </Button>
           </div>
 
-          {/* Barra di progresso */}
+          {/* Indicatore di progresso avanzato */}
           {isProcessing && (
-            <Card>
-              <CardContent className="pt-6">
+            <Card className="border-primary/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  {t('processing.title')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Barra di progresso principale */}
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>{t('processing.analyzing')}</span>
-                    <span>{progress}%</span>
+                    <span className="font-medium">{progressStage}</span>
+                    <span className="text-primary font-semibold">{progress}%</span>
                   </div>
-                  <Progress value={progress} className="h-2" />
+                  <Progress value={progress} className="h-3" />
+                </div>
+
+                {/* Informazioni dettagliate */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                  <div className="flex items-center gap-2">
+                    <FileImage className="h-4 w-4 text-gray-500" />
+                    <div>
+                      <div className="font-medium">File</div>
+                      <div className="text-gray-600 truncate">
+                        {selectedFile?.name || "N/A"}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-gray-500" />
+                    <div>
+                      <div className="font-medium">Tempo rimanente</div>
+                      <div className="text-gray-600">
+                        {estimatedTimeRemaining !== null 
+                          ? `~${estimatedTimeRemaining}s` 
+                          : "Calcolando..."}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Settings className="h-4 w-4 text-gray-500" />
+                    <div>
+                      <div className="font-medium">Preprocessing</div>
+                      <div className="text-gray-600 capitalize">
+                        {ocrSettings.preprocessingMode}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Timeline delle fasi */}
+                <div className="space-y-1 text-xs">
+                  <div className="font-medium text-gray-700">Fasi di processamento:</div>
+                  <div className="grid grid-cols-2 gap-1 text-gray-500">
+                    <div className={progress >= 15 ? "text-green-600 font-medium" : ""}>
+                      {progress >= 15 ? "✓" : "⏳"} Inizializzazione
+                    </div>
+                    <div className={progress >= 40 ? "text-green-600 font-medium" : ""}>
+                      {progress >= 40 ? "✓" : "⏳"} Preprocessing
+                    </div>
+                    <div className={progress >= 70 ? "text-green-600 font-medium" : ""}>
+                      {progress >= 70 ? "✓" : "⏳"} Riconoscimento
+                    </div>
+                    <div className={progress >= 100 ? "text-green-600 font-medium" : ""}>
+                      {progress >= 100 ? "✓" : "⏳"} Finalizzazione
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
