@@ -149,6 +149,11 @@ Preferred communication style: Simple, everyday language.
   - Fixed namespace loading for proper multilingual functionality
 - **Navigation Enhancement**: Sidebar now correctly displays translated menu items
 - **Document Processing**: OCR results can be saved directly to the RAG system for querying
+- **User Experience Enhancement**: 
+  - Added comprehensive processing options guide with visual indicators
+  - Implemented tooltip system with detailed explanations for each preprocessing mode
+  - Complete multilingual support for all guide content and tooltips
+  - Color-coded visual system to help users understand when to use each option
 
 ### Technical Implementation Details
 - OCR Service: Tesseract.js with real text extraction (not simulation)

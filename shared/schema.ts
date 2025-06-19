@@ -417,3 +417,214 @@ export const insertRecommendationSchema = createInsertSchema(recommendations).pi
 
 export type Recommendation = typeof recommendations.$inferSelect;
 export type InsertRecommendation = z.infer<typeof insertRecommendationSchema>;
+
+// Gamification System - Achievements
+export const achievements = pgTable("achievements", {
+  id: serial("id").primaryKey(),
+  code: text("code").notNull().unique(), // unique identifier like 'first_ocr', 'ocr_master'
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  category: text("category").notNull(), // 'ocr', 'signature', 'document', 'analysis'
+  type: text("type").notNull(), // 'milestone', 'streak', 'accuracy', 'volume'
+  tier: text("tier").notNull(), // 'bronze', 'silver', 'gold', 'platinum'
+  points: integer("points").notNull(),
+  criteria: jsonb("criteria").notNull(), // achievement unlock criteria
+  icon: text("icon").notNull(), // icon name from lucide-react
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const achievementsRelations = relations(achievements, ({ many }) => ({
+  userAchievements: many(userAchievements),
+}));
+
+// User Achievement Progress
+export const userAchievements = pgTable("user_achievements", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  achievementId: integer("achievement_id").notNull().references(() => achievements.id),
+  unlockedAt: timestamp("unlocked_at").defaultNow().notNull(),
+  progress: jsonb("progress").default({}), // progress data for partial achievements
+  notificationSent: boolean("notification_sent").default(false).notNull(),
+});
+
+export const userAchievementsRelations = relations(userAchievements, ({ one }) => ({
+  user: one(users, {
+    fields: [userAchievements.userId],
+    references: [users.id],
+  }),
+  achievement: one(achievements, {
+    fields: [userAchievements.achievementId],
+    references: [achievements.id],
+  }),
+}));
+
+// User Skill Levels and Progress
+export const userSkills = pgTable("user_skills", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  skillType: text("skill_type").notNull(), // 'ocr', 'signature_analysis', 'document_analysis'
+  level: integer("level").default(1).notNull(),
+  experience: integer("experience").default(0).notNull(),
+  experienceToNext: integer("experience_to_next").default(100).notNull(),
+  accuracy: real("accuracy").default(0.0).notNull(), // average accuracy percentage
+  totalTasks: integer("total_tasks").default(0).notNull(),
+  successfulTasks: integer("successful_tasks").default(0).notNull(),
+  streak: integer("streak").default(0).notNull(), // current streak
+  bestStreak: integer("best_streak").default(0).notNull(),
+  lastActivityAt: timestamp("last_activity_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const userSkillsRelations = relations(userSkills, ({ one }) => ({
+  user: one(users, {
+    fields: [userSkills.userId],
+    references: [users.id],
+  }),
+}));
+
+// Learning Challenges
+export const learningChallenges = pgTable("learning_challenges", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  category: text("category").notNull(), // 'ocr', 'signature', 'analysis'
+  difficulty: text("difficulty").notNull(), // 'beginner', 'intermediate', 'advanced'
+  type: text("type").notNull(), // 'tutorial', 'practice', 'quiz', 'challenge'
+  content: jsonb("content").notNull(), // challenge content and instructions
+  expectedResults: jsonb("expected_results"), // what the user should achieve
+  hints: json("hints").$type<string[]>().default([]),
+  points: integer("points").notNull(),
+  timeLimit: integer("time_limit"), // time limit in minutes
+  prerequisites: json("prerequisites").$type<string[]>().default([]), // required achievement codes
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const learningChallengesRelations = relations(learningChallenges, ({ many }) => ({
+  userChallenges: many(userChallenges),
+}));
+
+// User Challenge Progress
+export const userChallenges = pgTable("user_challenges", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  challengeId: integer("challenge_id").notNull().references(() => learningChallenges.id),
+  status: text("status").default("not_started").notNull(), // 'not_started', 'in_progress', 'completed', 'failed'
+  score: integer("score").default(0).notNull(),
+  maxScore: integer("max_score").notNull(),
+  accuracy: real("accuracy").default(0.0).notNull(),
+  timeSpent: integer("time_spent").default(0).notNull(), // time in seconds
+  attempts: integer("attempts").default(0).notNull(),
+  completedAt: timestamp("completed_at"),
+  startedAt: timestamp("started_at"),
+  lastAttemptAt: timestamp("last_attempt_at").defaultNow().notNull(),
+  progressData: jsonb("progress_data").default({}), // detailed progress information
+});
+
+export const userChallengesRelations = relations(userChallenges, ({ one }) => ({
+  user: one(users, {
+    fields: [userChallenges.userId],
+    references: [users.id],
+  }),
+  challenge: one(learningChallenges, {
+    fields: [userChallenges.challengeId],
+    references: [learningChallenges.id],
+  }),
+}));
+
+// User Statistics and Leaderboards
+export const userStats = pgTable("user_stats", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  totalPoints: integer("total_points").default(0).notNull(),
+  weeklyPoints: integer("weekly_points").default(0).notNull(),
+  monthlyPoints: integer("monthly_points").default(0).notNull(),
+  totalAchievements: integer("total_achievements").default(0).notNull(),
+  completedChallenges: integer("completed_challenges").default(0).notNull(),
+  ocrTasksCompleted: integer("ocr_tasks_completed").default(0).notNull(),
+  signatureAnalysesCompleted: integer("signature_analyses_completed").default(0).notNull(),
+  documentsProcessed: integer("documents_processed").default(0).notNull(),
+  averageAccuracy: real("average_accuracy").default(0.0).notNull(),
+  longestStreak: integer("longest_streak").default(0).notNull(),
+  currentStreak: integer("current_streak").default(0).notNull(),
+  lastActiveDate: timestamp("last_active_date").defaultNow().notNull(),
+  weeklyResetAt: timestamp("weekly_reset_at").defaultNow().notNull(),
+  monthlyResetAt: timestamp("monthly_reset_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const userStatsRelations = relations(userStats, ({ one }) => ({
+  user: one(users, {
+    fields: [userStats.userId],
+    references: [users.id],
+  }),
+}));
+
+// Insert schemas for gamification
+export const insertAchievementSchema = createInsertSchema(achievements).pick({
+  code: true,
+  name: true,
+  description: true,
+  category: true,
+  type: true,
+  tier: true,
+  points: true,
+  criteria: true,
+  icon: true,
+});
+
+export const insertUserAchievementSchema = createInsertSchema(userAchievements).pick({
+  userId: true,
+  achievementId: true,
+  progress: true,
+});
+
+export const insertUserSkillSchema = createInsertSchema(userSkills).pick({
+  userId: true,
+  skillType: true,
+  level: true,
+  experience: true,
+});
+
+export const insertLearningChallengeSchema = createInsertSchema(learningChallenges).pick({
+  title: true,
+  description: true,
+  category: true,
+  difficulty: true,
+  type: true,
+  content: true,
+  expectedResults: true,
+  hints: true,
+  points: true,
+  timeLimit: true,
+  prerequisites: true,
+});
+
+export const insertUserChallengeSchema = createInsertSchema(userChallenges).pick({
+  userId: true,
+  challengeId: true,
+  status: true,
+  score: true,
+  maxScore: true,
+  accuracy: true,
+  timeSpent: true,
+});
+
+export const insertUserStatsSchema = createInsertSchema(userStats).pick({
+  userId: true,
+});
+
+// Types for gamification system
+export type Achievement = typeof achievements.$inferSelect;
+export type InsertAchievement = z.infer<typeof insertAchievementSchema>;
+export type UserAchievement = typeof userAchievements.$inferSelect;
+export type InsertUserAchievement = z.infer<typeof insertUserAchievementSchema>;
+export type UserSkill = typeof userSkills.$inferSelect;
+export type InsertUserSkill = z.infer<typeof insertUserSkillSchema>;
+export type LearningChallenge = typeof learningChallenges.$inferSelect;
+export type InsertLearningChallenge = z.infer<typeof insertLearningChallengeSchema>;
+export type UserChallenge = typeof userChallenges.$inferSelect;
+export type InsertUserChallenge = z.infer<typeof insertUserChallengeSchema>;
+export type UserStats = typeof userStats.$inferSelect;
+export type InsertUserStats = z.infer<typeof insertUserStatsSchema>;
