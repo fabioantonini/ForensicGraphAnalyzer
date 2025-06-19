@@ -57,6 +57,35 @@
       }
     }
   },
+  "guide": {
+    "title": "Processing Options Guide",
+    "options": {
+      "auto": {
+        "title": "Automatic",
+        "description": "Standard corrections for most documents.",
+        "useFor": "Use for: Clean documents, good quality scans, when unsure which option to choose."
+      },
+      "enhance": {
+        "title": "Enhance Contrast", 
+        "description": "Increases contrast and brightness for faded text.",
+        "useFor": "Use for: Faded documents, poor lighting photos, barely visible text."
+      },
+      "denoise": {
+        "title": "Reduce Noise",
+        "description": "Removes spots and interference by converting to black/white.",
+        "useFor": "Use for: Dirty scans, documents with spots, grainy images."
+      },
+      "sharpen": {
+        "title": "Increase Sharpness",
+        "description": "Makes characters more defined and readable.",
+        "useFor": "Use for: Blurry photos, low resolution images, poorly defined text."
+      }
+    },
+    "tip": {
+      "title": "Tip:",
+      "text": "If unsure, start with \"Automatic\". You can always retry with a different option if results aren't satisfactory."
+    }
+  },
   "processing": {
     "title": "Processing...",
     "analyzing": "Analyzing document...",

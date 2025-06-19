@@ -57,6 +57,35 @@
       }
     }
   },
+  "guide": {
+    "title": "Guida alle Opzioni di Processamento",
+    "options": {
+      "auto": {
+        "title": "Automatico",
+        "description": "Correzioni standard per la maggior parte dei documenti.",
+        "useFor": "Usa per: Documenti puliti, scansioni di buona qualità, quando non sai cosa scegliere."
+      },
+      "enhance": {
+        "title": "Migliora Contrasto", 
+        "description": "Aumenta contrasto e luminosità per testi sbiaditi.",
+        "useFor": "Usa per: Documenti sbiaditi, foto con poca luce, testo poco visibile."
+      },
+      "denoise": {
+        "title": "Riduci Rumore",
+        "description": "Elimina macchie e disturbi convertendo in bianco/nero.",
+        "useFor": "Usa per: Scansioni sporche, documenti con macchie, immagini granulate."
+      },
+      "sharpen": {
+        "title": "Aumenta Nitidezza",
+        "description": "Rende i caratteri più definiti e leggibili.",
+        "useFor": "Usa per: Foto sfocate, immagini a bassa risoluzione, testo poco definito."
+      }
+    },
+    "tip": {
+      "title": "Suggerimento:",
+      "text": "Se non sei sicuro, inizia con \"Automatico\". Puoi sempre riprovare con un'opzione diversa se i risultati non sono soddisfacenti."
+    }
+  },
   "processing": {
     "title": "Processamento in corso...",
     "analyzing": "Analizzando il documento...",

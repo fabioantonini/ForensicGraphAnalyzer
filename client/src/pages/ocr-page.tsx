@@ -481,7 +481,7 @@ export default function OCRPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-blue-800">
                 <HelpCircle className="h-5 w-5" />
-                Guida alle Opzioni di Processamento
+                {t('guide.title')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -491,13 +491,13 @@ export default function OCRPage() {
                 <div className="p-3 bg-blue-100 rounded-lg border border-blue-200">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                    <span className="font-semibold text-blue-800">Automatico</span>
+                    <span className="font-semibold text-blue-800">{t('guide.options.auto.title')}</span>
                   </div>
                   <p className="text-blue-700 mb-2">
-                    Correzioni standard per la maggior parte dei documenti.
+                    {t('guide.options.auto.description')}
                   </p>
                   <div className="text-xs text-blue-600">
-                    <strong>Usa per:</strong> Documenti puliti, scansioni di buona qualità, quando non sai cosa scegliere.
+                    <strong>{t('guide.options.auto.useFor')}</strong>
                   </div>
                 </div>
 
@@ -505,13 +505,13 @@ export default function OCRPage() {
                 <div className="p-3 bg-green-100 rounded-lg border border-green-200">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    <span className="font-semibold text-green-800">Migliora Contrasto</span>
+                    <span className="font-semibold text-green-800">{t('guide.options.enhance.title')}</span>
                   </div>
                   <p className="text-green-700 mb-2">
-                    Aumenta contrasto e luminosità per testi sbiaditi.
+                    {t('guide.options.enhance.description')}
                   </p>
                   <div className="text-xs text-green-600">
-                    <strong>Usa per:</strong> Documenti sbiaditi, foto con poca luce, testo poco visibile.
+                    <strong>{t('guide.options.enhance.useFor')}</strong>
                   </div>
                 </div>
 
@@ -519,13 +519,13 @@ export default function OCRPage() {
                 <div className="p-3 bg-purple-100 rounded-lg border border-purple-200">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-                    <span className="font-semibold text-purple-800">Riduci Rumore</span>
+                    <span className="font-semibold text-purple-800">{t('guide.options.denoise.title')}</span>
                   </div>
                   <p className="text-purple-700 mb-2">
-                    Elimina macchie e disturbi convertendo in bianco/nero.
+                    {t('guide.options.denoise.description')}
                   </p>
                   <div className="text-xs text-purple-600">
-                    <strong>Usa per:</strong> Scansioni sporche, documenti con macchie, immagini granulate.
+                    <strong>{t('guide.options.denoise.useFor')}</strong>
                   </div>
                 </div>
 
@@ -533,13 +533,13 @@ export default function OCRPage() {
                 <div className="p-3 bg-orange-100 rounded-lg border border-orange-200">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-                    <span className="font-semibold text-orange-800">Aumenta Nitidezza</span>
+                    <span className="font-semibold text-orange-800">{t('guide.options.sharpen.title')}</span>
                   </div>
                   <p className="text-orange-700 mb-2">
-                    Rende i caratteri più definiti e leggibili.
+                    {t('guide.options.sharpen.description')}
                   </p>
                   <div className="text-xs text-orange-600">
-                    <strong>Usa per:</strong> Foto sfocate, immagini a bassa risoluzione, testo poco definito.
+                    <strong>{t('guide.options.sharpen.useFor')}</strong>
                   </div>
                 </div>
               </div>
@@ -548,8 +548,7 @@ export default function OCRPage() {
                 <div className="flex items-start gap-2">
                   <Info className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
                   <div className="text-xs text-yellow-800">
-                    <strong>Suggerimento:</strong> Se non sei sicuro, inizia con "Automatico". 
-                    Puoi sempre riprovare con un'opzione diversa se i risultati non sono soddisfacenti.
+                    <strong>{t('guide.tip.title')}</strong> {t('guide.tip.text')}
                   </div>
                 </div>
               </div>
