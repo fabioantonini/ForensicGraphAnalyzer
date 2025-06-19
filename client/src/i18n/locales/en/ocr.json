@@ -28,11 +28,24 @@
     },
     "preprocessing": {
       "label": "Preprocessing",
+      "description": "Choose how to process the image before text extraction",
       "options": {
         "auto": "Automatic",
         "enhance": "Enhance contrast",
         "denoise": "Reduce noise",
         "sharpen": "Increase sharpness"
+      },
+      "explanations": {
+        "auto": "Automatically applies standard corrections for most documents. Recommended for good quality documents.",
+        "enhance": "Improves contrast and brightness of the image. Ideal for faded documents, low contrast, or poor lighting.",
+        "denoise": "Reduces background noise and converts to pure black and white. Perfect for badly scanned documents with spots and interference.",
+        "sharpen": "Increases character sharpness. Great for blurry document photos or low resolution images."
+      },
+      "whenToUse": {
+        "auto": "• Good quality printed documents\n• Clean, well-lit scans\n• When you're unsure which option to choose",
+        "enhance": "• Faded or hard-to-read documents\n• Photos with poor lighting\n• Low contrast between text and background",
+        "denoise": "• Documents with spots or marks\n• Scans with background noise\n• Grainy or pixelated images",
+        "sharpen": "• Blurry document photos\n• Low resolution images\n• Text that appears poorly defined"
       }
     },
     "outputFormat": {

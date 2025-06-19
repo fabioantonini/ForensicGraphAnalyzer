@@ -28,11 +28,24 @@
     },
     "preprocessing": {
       "label": "Preprocessamento",
+      "description": "Scegli come elaborare l'immagine prima dell'estrazione del testo",
       "options": {
         "auto": "Automatico",
         "enhance": "Migliora contrasto",
         "denoise": "Riduci rumore",
         "sharpen": "Aumenta nitidezza"
+      },
+      "explanations": {
+        "auto": "Applica automaticamente le correzioni standard per la maggior parte dei documenti. Consigliato per documenti di buona qualità.",
+        "enhance": "Migliora il contrasto e la luminosità dell'immagine. Ideale per documenti sbiaditi, poco contrastati o con illuminazione scarsa.",
+        "denoise": "Riduce il rumore di fondo e converte in bianco e nero puro. Perfetto per documenti scansionati male o con macchie e disturbi.",
+        "sharpen": "Aumenta la nitidezza dei caratteri. Ottimo per foto di documenti sfocate o immagini a bassa risoluzione."
+      },
+      "whenToUse": {
+        "auto": "• Documenti stampati di buona qualità\n• Scansioni pulite e ben illuminate\n• Quando non sai quale opzione scegliere",
+        "enhance": "• Documenti sbiaditi o poco leggibili\n• Foto con illuminazione scarsa\n• Contrasto troppo basso tra testo e sfondo",
+        "denoise": "• Documenti con macchie o segni\n• Scansioni con rumore di fondo\n• Immagini granulate o pixelate",
+        "sharpen": "• Foto sfocate di documenti\n• Immagini a bassa risoluzione\n• Testo che appare poco definito"
       }
     },
     "outputFormat": {

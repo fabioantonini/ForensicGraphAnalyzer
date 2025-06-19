@@ -35,6 +35,16 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  HelpCircle,
+  Info
+} from "lucide-react";
 
 interface OCRResult {
   extractedText: string;
@@ -351,7 +361,20 @@ export default function OCRPage() {
               </div>
 
               <div>
-                <Label>{t('settings.preprocessing.label')}</Label>
+                <div className="flex items-center gap-2 mb-2">
+                  <Label>{t('settings.preprocessing.label')}</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="h-4 w-4 text-gray-400 cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p className="text-sm">{t('settings.preprocessing.description')}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                
                 <Select 
                   value={ocrSettings.preprocessingMode} 
                   onValueChange={(value) => setOcrSettings(prev => ({...prev, preprocessingMode: value}))}
@@ -360,12 +383,175 @@ export default function OCRPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="auto">{t('settings.preprocessing.options.auto')}</SelectItem>
-                    <SelectItem value="enhance">{t('settings.preprocessing.options.enhance')}</SelectItem>
-                    <SelectItem value="denoise">{t('settings.preprocessing.options.denoise')}</SelectItem>
-                    <SelectItem value="sharpen">{t('settings.preprocessing.options.sharpen')}</SelectItem>
+                    <SelectItem value="auto">
+                      <div className="flex items-center gap-2">
+                        <span>{t('settings.preprocessing.options.auto')}</span>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="h-3 w-3 text-blue-500" />
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-sm">
+                              <div className="space-y-2">
+                                <p className="font-medium">{t('settings.preprocessing.explanations.auto')}</p>
+                                <div className="text-xs text-gray-600">
+                                  <strong>Quando usarlo:</strong>
+                                  <pre className="whitespace-pre-wrap mt-1">{t('settings.preprocessing.whenToUse.auto')}</pre>
+                                </div>
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                    </SelectItem>
+                    
+                    <SelectItem value="enhance">
+                      <div className="flex items-center gap-2">
+                        <span>{t('settings.preprocessing.options.enhance')}</span>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="h-3 w-3 text-green-500" />
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-sm">
+                              <div className="space-y-2">
+                                <p className="font-medium">{t('settings.preprocessing.explanations.enhance')}</p>
+                                <div className="text-xs text-gray-600">
+                                  <strong>Quando usarlo:</strong>
+                                  <pre className="whitespace-pre-wrap mt-1">{t('settings.preprocessing.whenToUse.enhance')}</pre>
+                                </div>
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                    </SelectItem>
+                    
+                    <SelectItem value="denoise">
+                      <div className="flex items-center gap-2">
+                        <span>{t('settings.preprocessing.options.denoise')}</span>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="h-3 w-3 text-purple-500" />
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-sm">
+                              <div className="space-y-2">
+                                <p className="font-medium">{t('settings.preprocessing.explanations.denoise')}</p>
+                                <div className="text-xs text-gray-600">
+                                  <strong>Quando usarlo:</strong>
+                                  <pre className="whitespace-pre-wrap mt-1">{t('settings.preprocessing.whenToUse.denoise')}</pre>
+                                </div>
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                    </SelectItem>
+                    
+                    <SelectItem value="sharpen">
+                      <div className="flex items-center gap-2">
+                        <span>{t('settings.preprocessing.options.sharpen')}</span>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="h-3 w-3 text-orange-500" />
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-sm">
+                              <div className="space-y-2">
+                                <p className="font-medium">{t('settings.preprocessing.explanations.sharpen')}</p>
+                                <div className="text-xs text-gray-600">
+                                  <strong>Quando usarlo:</strong>
+                                  <pre className="whitespace-pre-wrap mt-1">{t('settings.preprocessing.whenToUse.sharpen')}</pre>
+                                </div>
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Guida alle opzioni di processamento */}
+          <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-blue-800">
+                <HelpCircle className="h-5 w-5" />
+                Guida alle Opzioni di Processamento
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                
+                {/* Automatico */}
+                <div className="p-3 bg-blue-100 rounded-lg border border-blue-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                    <span className="font-semibold text-blue-800">Automatico</span>
+                  </div>
+                  <p className="text-blue-700 mb-2">
+                    Correzioni standard per la maggior parte dei documenti.
+                  </p>
+                  <div className="text-xs text-blue-600">
+                    <strong>Usa per:</strong> Documenti puliti, scansioni di buona qualità, quando non sai cosa scegliere.
+                  </div>
+                </div>
+
+                {/* Migliora Contrasto */}
+                <div className="p-3 bg-green-100 rounded-lg border border-green-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <span className="font-semibold text-green-800">Migliora Contrasto</span>
+                  </div>
+                  <p className="text-green-700 mb-2">
+                    Aumenta contrasto e luminosità per testi sbiaditi.
+                  </p>
+                  <div className="text-xs text-green-600">
+                    <strong>Usa per:</strong> Documenti sbiaditi, foto con poca luce, testo poco visibile.
+                  </div>
+                </div>
+
+                {/* Riduci Rumore */}
+                <div className="p-3 bg-purple-100 rounded-lg border border-purple-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+                    <span className="font-semibold text-purple-800">Riduci Rumore</span>
+                  </div>
+                  <p className="text-purple-700 mb-2">
+                    Elimina macchie e disturbi convertendo in bianco/nero.
+                  </p>
+                  <div className="text-xs text-purple-600">
+                    <strong>Usa per:</strong> Scansioni sporche, documenti con macchie, immagini granulate.
+                  </div>
+                </div>
+
+                {/* Aumenta Nitidezza */}
+                <div className="p-3 bg-orange-100 rounded-lg border border-orange-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                    <span className="font-semibold text-orange-800">Aumenta Nitidezza</span>
+                  </div>
+                  <p className="text-orange-700 mb-2">
+                    Rende i caratteri più definiti e leggibili.
+                  </p>
+                  <div className="text-xs text-orange-600">
+                    <strong>Usa per:</strong> Foto sfocate, immagini a bassa risoluzione, testo poco definito.
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <Info className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+                  <div className="text-xs text-yellow-800">
+                    <strong>Suggerimento:</strong> Se non sei sicuro, inizia con "Automatico". 
+                    Puoi sempre riprovare con un'opzione diversa se i risultati non sono soddisfacenti.
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
