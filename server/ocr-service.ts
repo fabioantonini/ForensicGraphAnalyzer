@@ -3,6 +3,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs/promises";
 import { createWorker } from 'tesseract.js';
+import sharp from 'sharp';
 import { log } from "./vite";
 
 // Configurazione multer per upload OCR
@@ -60,13 +61,16 @@ export async function processOCR(
     
     log("ocr", `Inizializzazione Tesseract con lingua: ${tesseractLanguage}`);
     
+    // Applica preprocessing dell'immagine se necessario
+    const processedBuffer = await preprocessImage(fileBuffer, settings);
+    
     // Crea e configura worker Tesseract
     const worker = await createWorker(tesseractLanguage);
     
-    log("ocr", `Esecuzione OCR su ${filename}...`);
+    log("ocr", `Esecuzione OCR su ${filename} con preprocessing: ${settings.preprocessingMode}`);
     
     // Esegui OCR
-    const { data } = await worker.recognize(fileBuffer);
+    const { data } = await worker.recognize(processedBuffer);
     
     // Cleanup worker
     await worker.terminate();
@@ -130,6 +134,67 @@ function detectLanguageFromText(text: string): string {
   if (italianCount > englishCount) return 'ita';
   if (englishCount > italianCount) return 'eng';
   return 'ita+eng'; // Mixed o incerto
+}
+
+// Preprocessing dell'immagine con Sharp per migliorare l'OCR
+async function preprocessImage(buffer: Buffer, settings: OCRSettings): Promise<Buffer> {
+  try {
+    let image = sharp(buffer);
+    
+    // Applica DPI se specificato (per immagini che lo supportano)
+    if (settings.dpi && settings.dpi !== 300) {
+      image = image.withMetadata({ density: settings.dpi });
+    }
+    
+    // Applica preprocessing in base alle impostazioni
+    switch (settings.preprocessingMode) {
+      case 'enhance':
+        // Migliora contrasto e nitidezza
+        image = image
+          .normalize() // Normalizza i livelli
+          .sharpen(1.0, 1.0, 2.0) // Aumenta nitidezza
+          .gamma(1.2); // Regola gamma per migliorare contrasto
+        log("ocr", "Applicato preprocessing: enhance (contrasto e nitidezza)");
+        break;
+        
+      case 'denoise':
+        // Riduce il rumore
+        image = image
+          .blur(0.3) // Leggera sfocatura per ridurre rumore
+          .normalize() // Normalizza i livelli
+          .threshold(128); // Converte in bianco e nero con soglia
+        log("ocr", "Applicato preprocessing: denoise (riduzione rumore)");
+        break;
+        
+      case 'sharpen':
+        // Aumenta la nitidezza
+        image = image
+          .sharpen(2.0, 1.0, 3.0) // Nitidezza più aggressiva
+          .modulate({ brightness: 1.1, saturation: 0.8 }); // Regola luminosità
+        log("ocr", "Applicato preprocessing: sharpen (nitidezza)");
+        break;
+        
+      case 'auto':
+      default:
+        // Preprocessing automatico standard
+        image = image
+          .normalize() // Normalizza automaticamente
+          .sharpen(); // Nitidezza leggera
+        log("ocr", "Applicato preprocessing: auto (standard)");
+        break;
+    }
+    
+    // Converte sempre in formato ottimale per OCR
+    const processedBuffer = await image
+      .png({ quality: 100 }) // PNG senza perdita per OCR migliore
+      .toBuffer();
+    
+    return processedBuffer;
+    
+  } catch (error: any) {
+    log("ocr", `Errore durante preprocessing: ${error.message}, uso immagine originale`);
+    return buffer; // Fallback all'immagine originale
+  }
 }
 
 
