@@ -130,7 +130,28 @@ GrapholexInsight is a full-stack web application for forensic graphology analysi
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+### June 19, 2025 - OCR System Implementation
+- **OCR Advanced System**: Complete implementation of Optical Character Recognition functionality
+  - Frontend: Responsive React interface with file upload, settings, and results display
+  - Backend: Express endpoints with multer file handling and text extraction simulation
+  - Translation: Full multilingual support for Italian and English
+  - Integration: Automatic document saving to knowledge base with vector indexing
+- **Translation System Fixes**: 
+  - Resolved "layout.ocr" display issue in sidebar navigation
+  - Added OCR namespace to i18n configuration with complete translation files
+  - Fixed namespace loading for proper multilingual functionality
+- **Navigation Enhancement**: Sidebar now correctly displays translated menu items
+- **Document Processing**: OCR results can be saved directly to the RAG system for querying
+
+### Technical Implementation Details
+- OCR Service: Python-integrated backend with configurable DPI, language, and preprocessing
+- File Support: JPEG, PNG, TIFF, BMP, PDF formats with 10MB size limit
+- UI Components: Professional drag-drop interface with progress tracking and result preview
+- Database Integration: Seamless document creation and vector embedding storage
+
 ## Changelog
 
 Changelog:
-- June 19, 2025. Initial setup
+- June 19, 2025. Initial setup and OCR system completion
