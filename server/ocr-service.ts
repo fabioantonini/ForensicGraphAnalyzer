@@ -48,9 +48,14 @@ export async function processOCRWithProgress(
   });
 
   try {
+    log("ocr", `Inizio processamento OCR per processId: ${processId}`);
+    
     const result = await processOCR(fileBuffer, filename, settings, (progress, stage) => {
+      log("ocr", `Progresso ${processId}: ${progress}% - ${stage}`);
       updateOCRProcessStatus(processId, { progress, stage });
     });
+
+    log("ocr", `OCR completato per processId: ${processId}, risultato: ${result.extractedText.length} caratteri`);
 
     // Segna come completato con risultato
     updateOCRProcessStatus(processId, {
@@ -60,12 +65,16 @@ export async function processOCRWithProgress(
       result
     });
 
+    log("ocr", `Status finale aggiornato per processId: ${processId}`);
+
     // Cleanup dopo 5 minuti
     setTimeout(() => {
       ocrProcesses.delete(processId);
     }, 5 * 60 * 1000);
 
   } catch (error: any) {
+    log("ocr", `Errore OCR per processId: ${processId}: ${error.message}`);
+    
     updateOCRProcessStatus(processId, {
       progress: 0,
       stage: 'Errore',
@@ -173,7 +182,9 @@ async function processPdfText(pdfBuffer: Buffer, filename: string, progressCallb
 
 // Funzione per processare PDF scansionati con OCR usando pdf2pic
 async function processPdfWithOCR(pdfBuffer: Buffer, filename: string, progressCallback?: (progress: number, stage: string) => void): Promise<string> {
-  const tempPdfPath = path.join('./temp', `temp_ocr_${Date.now()}_${filename}`);
+  const uniqueId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const sanitizedFilename = filename.replace(/[^a-zA-Z0-9.-]/g, '_');
+  const tempPdfPath = path.join('./temp', `temp_ocr_${uniqueId}_${sanitizedFilename}`);
   
   try {
     log("ocr", "Avvio conversione PDF scansionato in immagini per OCR...");
@@ -194,11 +205,15 @@ async function processPdfWithOCR(pdfBuffer: Buffer, filename: string, progressCa
     
     log("ocr", "PDF salvato temporaneamente, avvio conversione...");
     
+    // Crea directory temporanea specifica per questo processamento
+    const tempDir = path.join('./temp', `ocr_${uniqueId}`);
+    await fs.mkdir(tempDir, { recursive: true });
+
     // Configura pdf2pic con impostazioni ottimizzate per file grandi
     const convert = pdf2pic.fromPath(tempPdfPath, {
       density: isLargeFile ? 200 : 300,     // DPI ridotto per file grandi
-      saveFilename: "page",
-      savePath: "./temp",
+      saveFilename: `page_${uniqueId}`,
+      savePath: tempDir,
       format: "png",
       width: isLargeFile ? 1800 : 2480,     // Dimensioni ridotte per file grandi
       height: isLargeFile ? 2500 : 3508
@@ -275,23 +290,47 @@ async function processPdfWithOCR(pdfBuffer: Buffer, filename: string, progressCa
         await new Promise(resolve => setTimeout(resolve, 500));
       }
       
-      // Cleanup
+      // Cleanup completo
       await worker.terminate();
       await fs.unlink(tempPdfPath).catch(() => {});
       
+      // Rimuovi directory temporanea specifica
+      try {
+        await fs.rm(tempDir, { recursive: true, force: true });
+        log("ocr", `Directory temporanea ${tempDir} rimossa`);
+      } catch (cleanupError) {
+        log("ocr", `Errore rimozione directory temporanea: ${cleanupError}`);
+      }
+      
       const finalText = allText.trim();
       log("ocr", `OCR PDF completato: ${finalText.length} caratteri estratti da ${processedPages} pagine`);
+      
+      progressCallback?.(90, 'Finalizzazione risultati...');
       
       return finalText;
       
     } catch (processingError: any) {
       log("ocr", `Errore durante processamento OCR: ${processingError.message}`);
       await fs.unlink(tempPdfPath).catch(() => {});
+      
+      // Pulizia directory temporanea anche in caso di errore
+      try {
+        await fs.rm(tempDir, { recursive: true, force: true });
+      } catch {}
+      
       throw processingError;
     }
     
   } catch (error: any) {
     log("ocr", `Errore OCR PDF: ${error.message}`);
+    
+    // Cleanup finale in caso di errore globale
+    await fs.unlink(tempPdfPath).catch(() => {});
+    try {
+      const tempDir = path.join('./temp', `ocr_${uniqueId}`);
+      await fs.rm(tempDir, { recursive: true, force: true });
+    } catch {}
+    
     return "";
   }
 }
