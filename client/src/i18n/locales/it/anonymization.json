@@ -1,0 +1,103 @@
+{
+  "title": "Anonimizzazione Documenti",
+  "description": "Proteggi la privacy rimuovendo informazioni sensibili dai tuoi documenti",
+  "upload": {
+    "title": "Carica Documento",
+    "dropzone": {
+      "active": "Rilascia il file qui...",
+      "inactive": "Trascina un documento qui o clicca per selezionare",
+      "formats": "Formati supportati: PDF, DOCX, TXT (max 10MB)"
+    }
+  },
+  "settings": {
+    "title": "Configurazione Anonimizzazione",
+    "entityTypes": "Tipi di Informazioni da Anonimizzare",
+    "replacementTag": "Tag sostituzione:",
+    "preview": "Anteprima",
+    "anonymize": "Anonimizza"
+  },
+  "preview": {
+    "title": "Anteprima Anonimizzazione",
+    "foundEntities": "Trovate {{count}} informazioni sensibili in \"{{filename}}\"",
+    "originalText": "Testo Originale (anteprima)",
+    "anonymizedText": "Testo Anonimizzato (anteprima)",
+    "detectedEntities": "Entità Rilevate",
+    "modifySettings": "Modifica Impostazioni",
+    "proceed": "Procedi con l'Anonimizzazione"
+  },
+  "result": {
+    "title": "Anonimizzazione Completata",
+    "success": "Il documento \"{{filename}}\" è stato anonimizzato con successo.",
+    "protectedCount": "Sono state protette {{count}} informazioni sensibili.",
+    "download": "Scarica Documento Anonimizzato",
+    "newDocument": "Nuovo Documento",
+    "protectedEntities": "Entità Protette"
+  },
+  "entities": {
+    "PERSON": {
+      "label": "Nomi e cognomi",
+      "description": "Nomi e cognomi di persone fisiche"
+    },
+    "LOCATION": {
+      "label": "Luoghi",
+      "description": "Città, province, regioni, paesi"
+    },
+    "EMAIL": {
+      "label": "Email",
+      "description": "Indirizzi di posta elettronica"
+    },
+    "PHONE": {
+      "label": "Telefoni",
+      "description": "Numeri di telefono fissi e cellulari"
+    },
+    "ORGANIZATION": {
+      "label": "Organizzazioni",
+      "description": "Nomi di aziende, enti, organizzazioni"
+    },
+    "DATE": {
+      "label": "Date",
+      "description": "Date specifiche (non anni generici)"
+    },
+    "ADDRESS": {
+      "label": "Indirizzi",
+      "description": "Indirizzi completi con via e numero civico"
+    },
+    "POSTAL_CODE": {
+      "label": "CAP",
+      "description": "Codici postali italiani"
+    },
+    "FISCAL_CODE": {
+      "label": "Codici Fiscali",
+      "description": "Codici fiscali italiani"
+    },
+    "VAT_NUMBER": {
+      "label": "Partite IVA",
+      "description": "Partite IVA italiane"
+    },
+    "MONEY": {
+      "label": "Importi",
+      "description": "Importi in denaro e valute"
+    },
+    "CREDIT_CARD": {
+      "label": "Carte di Credito",
+      "description": "Numeri di carte di credito"
+    },
+    "IBAN": {
+      "label": "IBAN",
+      "description": "Codici IBAN bancari"
+    }
+  },
+  "tabs": {
+    "upload": "Upload",
+    "settings": "Impostazioni",
+    "preview": "Anteprima",
+    "result": "Risultato"
+  },
+  "errors": {
+    "previewFailed": "Errore durante l'anteprima",
+    "anonymizationFailed": "Errore durante l'anonimizzazione",
+    "downloadFailed": "Errore durante il download",
+    "noFileSelected": "Nessun file selezionato",
+    "noEntityTypes": "Seleziona almeno un tipo di entità"
+  }
+}

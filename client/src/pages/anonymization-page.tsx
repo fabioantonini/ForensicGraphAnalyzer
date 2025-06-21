@@ -76,8 +76,10 @@ export default function AnonymizationPage() {
   const { data: entityTypesData, isLoading: entityTypesLoading } = useQuery({
     queryKey: ['/api/anonymize/entity-types'],
     queryFn: async () => {
-      const response = await apiRequest('/api/anonymize/entity-types');
-      return response as { entityTypes: EntityType[], defaultReplacements: Record<string, string> };
+      const response = await fetch('/api/anonymize/entity-types');
+      if (!response.ok) throw new Error('Failed to fetch entity types');
+      const data = await response.json();
+      return data as { entityTypes: EntityType[], defaultReplacements: Record<string, string> };
     }
   });
 
@@ -94,11 +96,13 @@ export default function AnonymizationPage() {
 
   // Mutation per l'anteprima
   const previewMutation = useMutation({
-    mutationFn: async (formData: FormData) => {
-      return apiRequest('/api/anonymize/preview', {
+    mutationFn: async (formData: FormData): Promise<AnonymizationPreview> => {
+      const response = await fetch('/api/anonymize/preview', {
         method: 'POST',
         body: formData
       });
+      if (!response.ok) throw new Error('Preview failed');
+      return response.json();
     },
     onSuccess: (data: AnonymizationPreview) => {
       setPreviewData(data);
@@ -111,11 +115,13 @@ export default function AnonymizationPage() {
 
   // Mutation per l'anonimizzazione completa
   const anonymizeMutation = useMutation({
-    mutationFn: async (formData: FormData) => {
-      return apiRequest('/api/anonymize/upload', {
+    mutationFn: async (formData: FormData): Promise<AnonymizationResult> => {
+      const response = await fetch('/api/anonymize/upload', {
         method: 'POST',
         body: formData
       });
+      if (!response.ok) throw new Error('Anonymization failed');
+      return response.json();
     },
     onSuccess: (data: AnonymizationResult) => {
       setProcessingResult(data);

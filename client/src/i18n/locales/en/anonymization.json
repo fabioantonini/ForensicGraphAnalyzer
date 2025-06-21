@@ -1,0 +1,103 @@
+{
+  "title": "Document Anonymization",
+  "description": "Protect privacy by removing sensitive information from your documents",
+  "upload": {
+    "title": "Upload Document",
+    "dropzone": {
+      "active": "Drop the file here...",
+      "inactive": "Drag a document here or click to select",
+      "formats": "Supported formats: PDF, DOCX, TXT (max 10MB)"
+    }
+  },
+  "settings": {
+    "title": "Anonymization Configuration",
+    "entityTypes": "Types of Information to Anonymize",
+    "replacementTag": "Replacement tag:",
+    "preview": "Preview",
+    "anonymize": "Anonymize"
+  },
+  "preview": {
+    "title": "Anonymization Preview",
+    "foundEntities": "Found {{count}} sensitive information in \"{{filename}}\"",
+    "originalText": "Original Text (preview)",
+    "anonymizedText": "Anonymized Text (preview)",
+    "detectedEntities": "Detected Entities",
+    "modifySettings": "Modify Settings",
+    "proceed": "Proceed with Anonymization"
+  },
+  "result": {
+    "title": "Anonymization Completed",
+    "success": "The document \"{{filename}}\" has been successfully anonymized.",
+    "protectedCount": "{{count}} sensitive information items have been protected.",
+    "download": "Download Anonymized Document",
+    "newDocument": "New Document",
+    "protectedEntities": "Protected Entities"
+  },
+  "entities": {
+    "PERSON": {
+      "label": "Names and surnames",
+      "description": "Names and surnames of individuals"
+    },
+    "LOCATION": {
+      "label": "Locations",
+      "description": "Cities, provinces, regions, countries"
+    },
+    "EMAIL": {
+      "label": "Emails",
+      "description": "Email addresses"
+    },
+    "PHONE": {
+      "label": "Phone numbers",
+      "description": "Landline and mobile phone numbers"
+    },
+    "ORGANIZATION": {
+      "label": "Organizations",
+      "description": "Company names, entities, organizations"
+    },
+    "DATE": {
+      "label": "Dates",
+      "description": "Specific dates (not generic years)"
+    },
+    "ADDRESS": {
+      "label": "Addresses",
+      "description": "Complete addresses with street and number"
+    },
+    "POSTAL_CODE": {
+      "label": "Postal codes",
+      "description": "Postal codes"
+    },
+    "FISCAL_CODE": {
+      "label": "Tax codes",
+      "description": "Tax identification codes"
+    },
+    "VAT_NUMBER": {
+      "label": "VAT numbers",
+      "description": "VAT identification numbers"
+    },
+    "MONEY": {
+      "label": "Amounts",
+      "description": "Money amounts and currencies"
+    },
+    "CREDIT_CARD": {
+      "label": "Credit cards",
+      "description": "Credit card numbers"
+    },
+    "IBAN": {
+      "label": "IBAN",
+      "description": "Bank IBAN codes"
+    }
+  },
+  "tabs": {
+    "upload": "Upload",
+    "settings": "Settings",
+    "preview": "Preview",
+    "result": "Result"
+  },
+  "errors": {
+    "previewFailed": "Error during preview",
+    "anonymizationFailed": "Error during anonymization",
+    "downloadFailed": "Error during download",
+    "noFileSelected": "No file selected",
+    "noEntityTypes": "Select at least one entity type"
+  }
+}

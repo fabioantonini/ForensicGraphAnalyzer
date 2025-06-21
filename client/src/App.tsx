@@ -87,6 +87,12 @@ function Router() {
           <SignatureQualityCheck />
         </AppLayout>
       )} />
+
+      <ProtectedRoute path="/anonymize" component={() => (
+        <AppLayout>
+          <AnonymizationPage />
+        </AppLayout>
+      )} />
       
       <ProtectedRoute 
         path="/admin" 
