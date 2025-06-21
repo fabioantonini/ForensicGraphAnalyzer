@@ -313,7 +313,7 @@ export async function processUploadedFileForAnonymization(
       where: eq(users.id, userId)
     });
     
-    const userApiKey = user?.openaiApiKey;
+    const userApiKey = user?.openaiApiKey ? user.openaiApiKey : undefined;
     
     // Estrai testo dal file
     let text: string;

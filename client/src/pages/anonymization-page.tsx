@@ -108,8 +108,10 @@ export default function AnonymizationPage() {
       setPreviewData(data);
       setActiveTab("preview");
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Preview error:', error);
+      // Mostra un messaggio di errore all'utente
+      alert('Errore durante l\'anteprima: ' + (error?.message || 'Errore sconosciuto'));
     }
   });
 
@@ -127,8 +129,10 @@ export default function AnonymizationPage() {
       setProcessingResult(data);
       setActiveTab("result");
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Anonymization error:', error);
+      // Mostra un messaggio di errore all'utente
+      alert('Errore durante l\'anonimizzazione: ' + (error?.message || 'Errore sconosciuto'));
     }
   });
 
