@@ -88,25 +88,40 @@ export async function extractTextFromPDF(filepath: string): Promise<string> {
     log(`PDF parse result - first 100 chars: ${pdfData.text?.substring(0, 100) || 'EMPTY'}`, "document-processor");
     
     const extractedText = pdfData.text || "";
-    const cleanText = extractedText.trim();
     
-    if (!cleanText || cleanText.length === 0 || cleanText.includes("parsing failed")) {
+    // Normalizza il testo rimuovendo spazi multipli ma preservando la struttura
+    const normalizedText = extractedText
+      .replace(/\s+/g, ' ')  // Sostituisce spazi multipli con uno singolo
+      .replace(/\n\s+/g, '\n')  // Rimuove spazi all'inizio delle righe
+      .replace(/\s+\n/g, '\n')  // Rimuove spazi alla fine delle righe
+      .trim();
+    
+    log(`PDF text normalized - original: ${extractedText.length}, normalized: ${normalizedText.length}`, "document-processor");
+    log(`PDF normalized text preview (first 200 chars): ${normalizedText.substring(0, 200)}`, "document-processor");
+    log(`PDF normalized text end (last 100 chars): ${normalizedText.substring(Math.max(0, normalizedText.length - 100))}`, "document-processor");
+    
+    if (!normalizedText || normalizedText.length === 0 || normalizedText.includes("parsing failed")) {
       log(`PDF extraction returned empty or error text, trying fallback`, "document-processor");
       // Fallback to a simpler approach - try to extract text without custom options
       const basicData = await pdfParser(buffer);
       const fallbackText = basicData.text || "";
       log(`Fallback PDF parse - text length: ${fallbackText.length}`, "document-processor");
-      log(`Fallback PDF parse - first 100 chars: ${fallbackText.substring(0, 100) || 'EMPTY'}`, "document-processor");
       
       if (fallbackText.trim().length > 0) {
-        return fallbackText.trim();
+        const normalizedFallback = fallbackText
+          .replace(/\s+/g, ' ')
+          .replace(/\n\s+/g, '\n')
+          .replace(/\s+\n/g, '\n')
+          .trim();
+        log(`Fallback text normalized - length: ${normalizedFallback.length}`, "document-processor");
+        return normalizedFallback;
       }
       
       return "PDF text extraction failed - no readable text found";
     }
     
-    log(`Returning extracted text with ${cleanText.length} characters`, "document-processor");
-    return cleanText;
+    log(`Returning extracted text with ${normalizedText.length} characters`, "document-processor");
+    return normalizedText;
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     log(`Error extracting text from PDF: ${errorMessage}`, "document-processor");
