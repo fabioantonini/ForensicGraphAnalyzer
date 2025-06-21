@@ -243,6 +243,8 @@ export function setupAnonymizationRoutes(app: Express) {
       
       if (extension === '.pdf') {
         contentType = 'application/pdf';
+      } else if (extension === '.txt') {
+        contentType = 'text/plain; charset=utf-8';
       } else if (extension === '.docx') {
         contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
       }
