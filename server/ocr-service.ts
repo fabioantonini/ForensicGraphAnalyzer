@@ -197,54 +197,70 @@ async function processPdfWithOCR(pdfBuffer: Buffer, filename: string, progressCa
     });
     
     log("ocr", "Conversione PDF in immagini...");
+    progressCallback?.(20, 'Conversione PDF in immagini (può richiedere diversi minuti)...');
     
-    // Converte tutte le pagine del PDF
-    const pages = await convert.bulk(-1, { responseType: "buffer" });
+    // Timer per aggiornamenti di progresso durante la conversione
+    const progressTimer = setInterval(() => {
+      progressCallback?.(25 + Math.random() * 5, 'Conversione PDF in corso...');
+    }, 5000); // Aggiorna ogni 5 secondi
     
-    if (!pages || pages.length === 0) {
-      log("ocr", "Nessuna pagina convertita dal PDF");
-      await fs.unlink(tempPdfPath).catch(() => {}); // Cleanup
-      return "";
-    }
-    
-    log("ocr", `Convertite ${pages.length} pagine, avvio OCR...`);
-    
-    // Crea worker Tesseract per OCR
-    const worker = await createWorker(['ita', 'eng']);
-    
-    let allText = "";
-    
-    // Processa tutte le pagine con OCR
-    for (let i = 0; i < pages.length; i++) {
-      const page = pages[i];
-      if (page.buffer) {
-        // Calcola progresso basato sulle pagine processate
-        const pageProgress = 40 + Math.round((i / pages.length) * 50); // Da 40% a 90%
-        progressCallback?.(pageProgress, `OCR pagina ${i + 1}/${pages.length}...`);
-        
-        log("ocr", `Processamento OCR pagina ${i + 1}/${pages.length}...`);
-        
-        const { data } = await worker.recognize(page.buffer);
-        const pageText = data.text.trim();
-        
-        if (pageText.length > 0) {
-          allText += `\n=== Pagina ${i + 1} ===\n${pageText}\n`;
-        }
-        
-        log("ocr", `Pagina ${i + 1}: ${pageText.length} caratteri estratti`);
+    let pages;
+    try {
+      // Converte tutte le pagine del PDF
+      pages = await convert.bulk(-1, { responseType: "buffer" });
+      clearInterval(progressTimer);
+      
+      progressCallback?.(35, 'Conversione completata, preparazione OCR...');
+      
+      if (!pages || pages.length === 0) {
+        log("ocr", "Nessuna pagina convertita dal PDF");
+        await fs.unlink(tempPdfPath).catch(() => {}); // Cleanup
+        return "";
       }
+      
+      log("ocr", `Convertite ${pages.length} pagine, avvio OCR...`);
+      
+      // Crea worker Tesseract per OCR
+      const worker = await createWorker(['ita', 'eng']);
+      
+      let allText = "";
+      
+      // Processa tutte le pagine con OCR
+      for (let i = 0; i < pages.length; i++) {
+        const page = pages[i];
+        if (page.buffer) {
+          // Calcola progresso basato sulle pagine processate
+          const pageProgress = 40 + Math.round((i / pages.length) * 50); // Da 40% a 90%
+          progressCallback?.(pageProgress, `OCR pagina ${i + 1}/${pages.length}...`);
+          
+          log("ocr", `Processamento OCR pagina ${i + 1}/${pages.length}...`);
+          
+          const { data } = await worker.recognize(page.buffer);
+          const pageText = data.text.trim();
+          
+          if (pageText.length > 0) {
+            allText += `\n=== Pagina ${i + 1} ===\n${pageText}\n`;
+          }
+          
+          log("ocr", `Pagina ${i + 1}: ${pageText.length} caratteri estratti`);
+        }
+      }
+      
+      // Cleanup
+      await worker.terminate();
+      await fs.unlink(tempPdfPath).catch(() => {});
+      
+      const finalText = allText.trim();
+      log("ocr", `OCR PDF completato: ${finalText.length} caratteri totali estratti`);
+      
+      return finalText;
+      
+    } catch (conversionError: any) {
+      clearInterval(progressTimer);
+      log("ocr", `Errore durante conversione PDF: ${conversionError.message}`);
+      await fs.unlink(tempPdfPath).catch(() => {});
+      throw conversionError;
     }
-    
-    // Cleanup
-    await worker.terminate();
-    await fs.unlink(tempPdfPath).catch(() => {});
-    
-    // Cleanup automatico - pdf2pic con responseType: "buffer" non crea file temporanei
-    
-    const finalText = allText.trim();
-    log("ocr", `OCR PDF completato: ${finalText.length} caratteri totali estratti`);
-    
-    return finalText;
     
   } catch (error: any) {
     log("ocr", `Errore OCR PDF: ${error.message}`);
