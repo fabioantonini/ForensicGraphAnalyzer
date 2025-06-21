@@ -46,6 +46,7 @@
     "ocr": "OCR Avanzato",
     "signatures": "Verifica Firme",
     "signatureQuality": "Controllo Qualità Firme",
+    "anonymize": "Anonimizzazione Documenti",
     "settings": "Impostazioni",
     "admin": "Amministrazione"
   }

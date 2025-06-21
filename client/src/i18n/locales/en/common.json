@@ -46,6 +46,7 @@
     "ocr": "Advanced OCR",
     "signatures": "Signature Verification",
     "signatureQuality": "Signature Quality Check",
+    "anonymize": "Document Anonymization",
     "settings": "Settings",
     "admin": "Administration"
   }
