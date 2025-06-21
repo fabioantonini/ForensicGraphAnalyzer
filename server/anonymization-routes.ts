@@ -330,11 +330,14 @@ export function setupAnonymizationRoutes(app: Express) {
         entityTypes
       );
 
+      console.log(`[preview] Original text length: ${result.originalText.length}`);
+      console.log(`[preview] Anonymized text length: ${result.anonymizedText.length}`);
+      
       res.json({
         success: true,
         preview: true,
-        originalText: result.originalText.substring(0, 1000) + (result.originalText.length > 1000 ? '...' : ''),
-        anonymizedText: result.anonymizedText.substring(0, 1000) + (result.anonymizedText.length > 1000 ? '...' : ''),
+        originalText: result.originalText,
+        anonymizedText: result.anonymizedText,
         detectedEntities: result.detectedEntities,
         totalEntities: result.detectedEntities.length,
         originalFilename: req.file.originalname
