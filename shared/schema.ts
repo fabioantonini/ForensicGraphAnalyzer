@@ -85,6 +85,7 @@ export const documents = pgTable("documents", {
   fileSize: integer("file_size").notNull(),
   content: text("content").notNull(),
   indexed: boolean("indexed").default(false),
+  source: text("source").default("upload").notNull(), // 'upload', 'ocr'
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -105,6 +106,7 @@ export const insertDocumentSchema = createInsertSchema(documents).pick({
   fileSize: true,
   content: true,
   indexed: true,
+  source: true,
 });
 
 // Activity schema

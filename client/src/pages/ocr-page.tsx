@@ -15,6 +15,7 @@ import {
   FileImage, 
   Eye, 
   Download, 
+  Copy,
   CheckCircle,
   AlertCircle,
   Clock,
@@ -736,8 +737,31 @@ export default function OCRPage() {
                         onClick={() => {
                           navigator.clipboard.writeText(ocrResult.extractedText);
                           toast({
-                            title: "Copied",
-                            description: t('actions.copy'),
+                            title: "Copiato",
+                            description: "Testo copiato negli appunti",
+                          });
+                        }}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          // Crea e scarica il file di testo
+                          const blob = new Blob([ocrResult.extractedText], { type: 'text/plain;charset=utf-8' });
+                          const url = URL.createObjectURL(blob);
+                          const link = document.createElement('a');
+                          link.href = url;
+                          link.download = `${documentTitle || 'documento-ocr'}.txt`;
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                          URL.revokeObjectURL(url);
+                          
+                          toast({
+                            title: "Download avviato",
+                            description: "Il documento è stato scaricato",
                           });
                         }}
                       >
