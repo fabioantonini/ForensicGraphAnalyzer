@@ -25,6 +25,7 @@ import {
 import { chatWithRAG, validateAPIKey } from "./openai";
 import { log } from "./vite";
 import { registerSignatureRoutes } from "./signature-routes";
+import { setupAnonymizationRoutes } from "./anonymization-routes";
 import { processOCR, saveOCRDocument, ocrUpload, processOCRWithProgress, getOCRProcessStatus } from "./ocr-service";
 import { eq, desc, sql } from "drizzle-orm";
 import { db, pool } from "./db";
@@ -127,6 +128,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register signature routes
   const router = Router();
   registerSignatureRoutes(router);
+
+  // Register anonymization routes
+  setupAnonymizationRoutes(app);
   
   // Risposta API per indicare quale versione di codice sta eseguendo
   router.get("/api/version", (req, res) => {

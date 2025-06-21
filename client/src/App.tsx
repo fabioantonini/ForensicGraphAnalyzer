@@ -20,6 +20,7 @@ import OCRPage from "@/pages/ocr-page";
 import SettingsPage from "@/pages/settings-page";
 import SignaturesPage from "@/pages/signatures-page";
 import SignatureQualityCheck from "@/pages/signature-quality-check";
+import AnonymizationPage from "@/pages/anonymization-page";
 import AdminPage from "@/pages/admin-page";
 import ForgotPasswordPage from "@/pages/forgot-password-page";
 import ResetPasswordPage from "@/pages/reset-password-page";
