@@ -113,7 +113,14 @@ export async function extractTextFromPDF(filepath: string): Promise<string> {
     
     // For PDF parsing issues, provide helpful guidance
     if (errorMessage.includes('bad XRef entry') || errorMessage.includes('parsing failed')) {
-      throw new Error(`Il PDF non può essere processato automaticamente. Ti consiglio di copiare il testo del documento e incollarlo in un file .txt per l'anonimizzazione. In alternativa, prova a salvare il PDF con "Stampa > Salva come PDF" dal browser per riparare eventuali problemi di formattazione.`);
+      throw new Error(`Questo PDF ha problemi strutturali che impediscono l'estrazione del testo.
+
+Soluzioni alternative:
+• Apri il PDF, seleziona tutto il testo (Ctrl+A) e copialo in un file .txt
+• Usa "Stampa > Salva come PDF" per riparare il file
+• Prova un convertitore online per convertire PDF in testo
+
+Il sistema funziona perfettamente con file .txt come hai visto.`);
     }
     
     throw new Error(`PDF parsing failed: ${errorMessage}. Please try with a different PDF file or convert it to text format.`);
