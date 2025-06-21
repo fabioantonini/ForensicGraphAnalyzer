@@ -199,7 +199,17 @@ export function setupAnonymizationRoutes(app: Express) {
 
     } catch (error) {
       console.error('Error processing uploaded file:', error);
-      res.status(500).json({ error: 'Failed to process file: ' + (error as Error).message });
+      
+      // Gestione specifica per errori PDF
+      const errorMessage = (error as Error).message;
+      if (errorMessage.includes('PDF parsing failed') || errorMessage.includes('bad XRef entry')) {
+        res.status(400).json({ 
+          error: 'Il file PDF è corrotto o non può essere elaborato. Prova a utilizzare un PDF diverso o converti il documento in formato testo (.txt).',
+          details: errorMessage
+        });
+      } else {
+        res.status(500).json({ error: 'Errore durante l\'elaborazione: ' + errorMessage });
+      }
     } finally {
       // Cleanup temp file
       if (tempFilePath) {
@@ -315,7 +325,17 @@ export function setupAnonymizationRoutes(app: Express) {
 
     } catch (error) {
       console.error('Error previewing anonymization:', error);
-      res.status(500).json({ error: 'Failed to preview anonymization: ' + (error as Error).message });
+      
+      // Gestione specifica per errori PDF
+      const errorMessage = (error as Error).message;
+      if (errorMessage.includes('PDF parsing failed') || errorMessage.includes('bad XRef entry')) {
+        res.status(400).json({ 
+          error: 'Il file PDF è corrotto o non può essere elaborato. Prova a utilizzare un PDF diverso o converti il documento in formato testo (.txt).',
+          details: errorMessage
+        });
+      } else {
+        res.status(500).json({ error: 'Errore durante l\'anteprima: ' + errorMessage });
+      }
     } finally {
       // Cleanup temp file
       if (tempFilePath) {

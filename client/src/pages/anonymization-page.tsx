@@ -110,8 +110,14 @@ export default function AnonymizationPage() {
     },
     onError: (error: any) => {
       console.error('Preview error:', error);
-      // Mostra un messaggio di errore all'utente
-      alert('Errore durante l\'anteprima: ' + (error?.message || 'Errore sconosciuto'));
+      // Gestione specifica per errori PDF
+      let errorMessage = 'Errore durante l\'anteprima';
+      if (error?.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error?.message) {
+        errorMessage += ': ' + error.message;
+      }
+      alert(errorMessage);
     }
   });
 
@@ -131,8 +137,14 @@ export default function AnonymizationPage() {
     },
     onError: (error: any) => {
       console.error('Anonymization error:', error);
-      // Mostra un messaggio di errore all'utente
-      alert('Errore durante l\'anonimizzazione: ' + (error?.message || 'Errore sconosciuto'));
+      // Gestione specifica per errori PDF
+      let errorMessage = 'Errore durante l\'anonimizzazione';
+      if (error?.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error?.message) {
+        errorMessage += ': ' + error.message;
+      }
+      alert(errorMessage);
     }
   });
 

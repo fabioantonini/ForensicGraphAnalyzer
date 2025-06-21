@@ -110,8 +110,10 @@ export async function extractTextFromPDF(filepath: string): Promise<string> {
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     log(`Error extracting text from PDF: ${errorMessage}`, "document-processor");
-    // Return a more helpful error message
-    return `Failed to extract text from PDF. Error: ${errorMessage}`;
+    
+    // For anonymization, we should throw the error instead of returning an error message
+    // that would be processed as if it were document content
+    throw new Error(`PDF parsing failed: ${errorMessage}. Please try with a different PDF file or convert it to text format.`);
   }
 }
 
