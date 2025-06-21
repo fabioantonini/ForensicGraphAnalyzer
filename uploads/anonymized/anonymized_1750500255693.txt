@@ -1,0 +1,19 @@
+DOCUMENTO ANONIMIZZATO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+File originale: testamento_fittizio.txt
+Generato il: 21/06/2025 alle 10:04:15
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Testamento di [PERSON]
+Io, [PERSON], nato a [LOCATION], il [DATE], residente a Via Roma 12, [LOCATION], in pieno possesso delle mie facoltà mentali, redigo e firmo questo testamento come mia ultima volontà.
+Articolo 1 - Disposizione dei beni
+1. Beni immobili: Tutti i miei beni immobili, compresa la casa situata a Via Verdi 34, [LOCATION], vengono trasferiti al mio primo erede, [PERSON].
+2. Conti bancari: I fondi presenti sui miei conti bancari, con il saldo complessivo di [MONEY], saranno divisi tra i miei eredi, come segue:
+   - [PERSON]: 50%
+   - [PERSON]: 50%
+3. Oggetti personali: I miei oggetti personali, inclusi orologi, gioielli e mobili antichi, verranno distribuiti tra [PERSON] e [PERSON] in base al loro desiderio.
+Articolo 2 - Esecutore testamentario
+Nomino come mio esecutore testamentario [PERSON], residente a Via [LOCATION] 20, [LOCATION], affinché esegua le disposizioni di questo testamento nel modo più fedele possibile.
+Articolo 3 - Ben...
