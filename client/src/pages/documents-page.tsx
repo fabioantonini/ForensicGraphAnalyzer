@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PlusCircle, Search, LayoutGrid, List, Trash } from "lucide-react";
+import { PlusCircle, Search, LayoutGrid, List, Trash, ScanText } from "lucide-react";
 import { Document, FilterOptions } from "@/lib/types";
 import { DocumentGrid } from "@/components/documents/document-grid";
 import { UploadModal } from "@/components/documents/upload-modal-corrected";
@@ -191,7 +191,17 @@ export default function DocumentsPage() {
           <TableBody>
             {filteredDocuments.map((doc) => (
               <TableRow key={doc.id}>
-                <TableCell className="font-medium">{doc.originalFilename}</TableCell>
+                <TableCell className="font-medium">
+                  <div className="flex items-center gap-2">
+                    {doc.originalFilename}
+                    {doc.source === 'ocr' && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                        <ScanText className="h-3 w-3 mr-1" />
+                        OCR
+                      </span>
+                    )}
+                  </div>
+                </TableCell>
                 <TableCell>{getFileTypeLabel(doc.fileType)}</TableCell>
                 <TableCell>{formatFileSize(doc.fileSize)}</TableCell>
                 <TableCell>{formatDistanceToNow(new Date(doc.createdAt), { addSuffix: true })}</TableCell>

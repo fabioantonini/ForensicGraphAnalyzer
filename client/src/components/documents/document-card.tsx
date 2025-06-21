@@ -209,7 +209,7 @@ export function DocumentCard({ document }: DocumentCardProps) {
                   <h3 className="font-medium text-gray-900 truncate">
                     {document.originalFilename}
                   </h3>
-                  {(document as any).source === 'ocr' && (
+                  {document.source === 'ocr' && (
                     <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
                       <ScanText className="h-3 w-3 mr-1" />
                       OCR
