@@ -119,7 +119,7 @@ interface OCRResult {
 }
 
 // Funzione per processare PDF usando estrazione di testo diretta con fallback OCR
-async function processPdfText(pdfBuffer: Buffer, filename: string): Promise<string> {
+async function processPdfText(pdfBuffer: Buffer, filename: string, progressCallback?: (progress: number, stage: string) => void): Promise<string> {
   try {
     log("ocr", "Estrazione testo diretto da PDF...");
     
@@ -153,7 +153,7 @@ async function processPdfText(pdfBuffer: Buffer, filename: string): Promise<stri
       
       try {
         // Usa OCR come fallback per PDF scansionati
-        const ocrText = await processPdfWithOCR(pdfBuffer, filename);
+        const ocrText = await processPdfWithOCR(pdfBuffer, filename, progressCallback);
         if (ocrText.length > extractedText.length) {
           log("ocr", `OCR ha prodotto più testo: ${ocrText.length} vs ${extractedText.length} caratteri`);
           return ocrText;
@@ -172,7 +172,7 @@ async function processPdfText(pdfBuffer: Buffer, filename: string): Promise<stri
 }
 
 // Funzione per processare PDF scansionati con OCR usando pdf2pic
-async function processPdfWithOCR(pdfBuffer: Buffer, filename: string): Promise<string> {
+async function processPdfWithOCR(pdfBuffer: Buffer, filename: string, progressCallback?: (progress: number, stage: string) => void): Promise<string> {
   try {
     log("ocr", "Avvio conversione PDF scansionato in immagini per OCR...");
     
@@ -198,7 +198,7 @@ async function processPdfWithOCR(pdfBuffer: Buffer, filename: string): Promise<s
     
     log("ocr", "Conversione PDF in immagini...");
     
-    // Converte le prime 5 pagine (limite per performance)
+    // Converte tutte le pagine del PDF
     const pages = await convert.bulk(-1, { responseType: "buffer" });
     
     if (!pages || pages.length === 0) {
@@ -214,10 +214,14 @@ async function processPdfWithOCR(pdfBuffer: Buffer, filename: string): Promise<s
     
     let allText = "";
     
-    // Processa ogni pagina con OCR
-    for (let i = 0; i < Math.min(pages.length, 5); i++) {
+    // Processa tutte le pagine con OCR
+    for (let i = 0; i < pages.length; i++) {
       const page = pages[i];
       if (page.buffer) {
+        // Calcola progresso basato sulle pagine processate
+        const pageProgress = 40 + Math.round((i / pages.length) * 50); // Da 40% a 90%
+        progressCallback?.(pageProgress, `OCR pagina ${i + 1}/${pages.length}...`);
+        
         log("ocr", `Processamento OCR pagina ${i + 1}/${pages.length}...`);
         
         const { data } = await worker.recognize(page.buffer);
@@ -235,12 +239,7 @@ async function processPdfWithOCR(pdfBuffer: Buffer, filename: string): Promise<s
     await worker.terminate();
     await fs.unlink(tempPdfPath).catch(() => {});
     
-    // Rimuovi file immagini temporanei
-    for (const page of pages) {
-      if (page.path) {
-        await fs.unlink(page.path).catch(() => {});
-      }
-    }
+    // Cleanup automatico - pdf2pic con responseType: "buffer" non crea file temporanei
     
     const finalText = allText.trim();
     log("ocr", `OCR PDF completato: ${finalText.length} caratteri totali estratti`);
@@ -280,7 +279,7 @@ export async function processOCR(
       progressCallback?.(15, 'Estrazione testo da PDF...');
       
       // Per i PDF, usa estrazione diretta del testo (più veloce e affidabile)
-      const extractedText = await processPdfText(fileBuffer, filename);
+      const extractedText = await processPdfText(fileBuffer, filename, progressCallback);
       
       progressCallback?.(90, 'Finalizzazione risultati PDF...');
       
