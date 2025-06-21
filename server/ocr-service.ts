@@ -219,9 +219,18 @@ export async function processOCR(
       const detectedLanguage = extractedText.length > 0 ? 
         detectLanguageFromText(extractedText) : settings.language;
       
+      // Debug dettagliato per identificare il problema
+      log("ocr", `=== DEBUG PDF EXTRACTION ===`);
+      log("ocr", `Testo estratto grezzo: "${extractedText}"`);
+      log("ocr", `Lunghezza testo: ${extractedText.length}`);
+      log("ocr", `Testo trimmed: "${extractedText.trim()}"`);
+      log("ocr", `Lunghezza trimmed: ${extractedText.trim().length}`);
+      log("ocr", `=== END DEBUG ===`);
+      
+      const finalText = extractedText.trim();
       const result: OCRResult = {
-        extractedText: extractedText.trim(),
-        confidence: 95, // Alta confidenza per estrazione diretta PDF
+        extractedText: finalText,
+        confidence: finalText.length > 0 ? 95 : 50, // Riduce confidenza se nessun testo
         language: detectedLanguage,
         processingTime,
         pageCount: 1
