@@ -397,9 +397,7 @@ export async function processUploadedFileForAnonymization(
   fileSize: number,
   userId: number,
   entityReplacements: Record<string, string> = DEFAULT_ENTITY_REPLACEMENTS,
-  entityTypes: string[] = Object.keys(DEFAULT_ENTITY_REPLACEMENTS),
-  extractedText?: string,
-  detectedEntities?: DetectedEntity[]
+  entityTypes: string[] = Object.keys(DEFAULT_ENTITY_REPLACEMENTS)
 ): Promise<AnonymizationResult> {
   try {
     // Recupera la chiave OpenAI dell'utente
@@ -409,36 +407,22 @@ export async function processUploadedFileForAnonymization(
     
     const userApiKey = user?.openaiApiKey ? user.openaiApiKey : undefined;
     
-    // Usa il testo già estratto se disponibile, altrimenti estrai dal file
+    // Estrai testo dal file
     let text: string;
     
-    if (extractedText) {
-      console.log('[processUploadedFileForAnonymization] Using pre-extracted text from preview');
-      text = extractedText;
+    if (fileType === 'application/pdf') {
+      text = await extractTextFromPDF(filePath);
+    } else if (fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+      text = await extractTextFromDOCX(filePath);
     } else {
-      console.log('[processUploadedFileForAnonymization] Extracting text from file');
-      if (fileType === 'application/pdf') {
-        text = await extractTextFromPDF(filePath);
-      } else if (fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-        text = await extractTextFromDOCX(filePath);
-      } else {
-        text = await fs.readFile(filePath, 'utf-8');
-      }
+      text = await fs.readFile(filePath, 'utf-8');
     }
     
-    // Usa entità già rilevate dall'anteprima o rileva ex novo
-    let entities: DetectedEntity[];
-    
-    if (detectedEntities) {
-      console.log('[processUploadedFileForAnonymization] Using pre-detected entities from preview');
-      entities = detectedEntities;
-    } else {
-      console.log('[processUploadedFileForAnonymization] Detecting entities in text');
-      entities = await detectEntities(text, userApiKey);
-    }
+    // Rileva entità sensibili
+    const detectedEntities = await detectEntities(text, userApiKey);
     
     // Filtra solo le entità richieste
-    const filteredEntities = entities.filter(entity => 
+    const filteredEntities = detectedEntities.filter(entity => 
       entityTypes.includes(entity.type)
     );
     
@@ -453,6 +437,38 @@ export async function processUploadedFileForAnonymization(
     
   } catch (error) {
     console.error('Error processing uploaded file for anonymization:', error);
+    throw new Error('Failed to process file: ' + (error as Error).message);
+  }
+}
+
+/**
+ * Processa un file usando testo e entità già estratti dall'anteprima
+ */
+export async function processFileWithPreExtractedData(
+  extractedText: string,
+  detectedEntities: DetectedEntity[],
+  entityReplacements: Record<string, string> = DEFAULT_ENTITY_REPLACEMENTS,
+  entityTypes: string[] = Object.keys(DEFAULT_ENTITY_REPLACEMENTS)
+): Promise<AnonymizationResult> {
+  try {
+    console.log('[processFileWithPreExtractedData] Using pre-extracted text and entities');
+    
+    // Filtra solo le entità richieste
+    const filteredEntities = detectedEntities.filter(entity => 
+      entityTypes.includes(entity.type)
+    );
+    
+    // Anonimizza il testo
+    const anonymizedText = anonymizeText(extractedText, filteredEntities, entityReplacements);
+    
+    return {
+      anonymizedText,
+      detectedEntities: filteredEntities,
+      originalText: extractedText
+    };
+    
+  } catch (error) {
+    console.error('Error processing file with pre-extracted data:', error);
     throw new Error('Failed to process file: ' + (error as Error).message);
   }
 }

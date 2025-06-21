@@ -5,6 +5,7 @@ import fs from "fs/promises";
 import { 
   processDocumentForAnonymization,
   processUploadedFileForAnonymization,
+  processFileWithPreExtractedData,
   getAnonymizationStatus,
   getUserAnonymizations,
   generateAnonymizedPDF,
@@ -163,17 +164,28 @@ export function setupAnonymizationRoutes(app: Express) {
       const extractedText = req.body.extractedText;
       const detectedEntities = req.body.detectedEntities ? JSON.parse(req.body.detectedEntities) : null;
       
-      const result = await processUploadedFileForAnonymization(
-        req.file.path,
-        req.file.originalname || 'document',
-        req.file.mimetype,
-        req.file.size,
-        req.user!.id,
-        entityReplacements,
-        entityTypes,
-        extractedText,
-        detectedEntities
-      );
+      let result: any;
+      
+      if (extractedText && detectedEntities) {
+        // Usa dati pre-estratti dall'anteprima
+        result = await processFileWithPreExtractedData(
+          extractedText,
+          detectedEntities,
+          entityReplacements,
+          entityTypes
+        );
+      } else {
+        // Processa il file normalmente
+        result = await processUploadedFileForAnonymization(
+          req.file.path,
+          req.file.originalname || 'document',
+          req.file.mimetype,
+          req.file.size,
+          req.user!.id,
+          entityReplacements,
+          entityTypes
+        );
+      }
 
       // Genera file anonimizzato
       const uploadsDir = path.join(process.cwd(), 'uploads', 'anonymized');
