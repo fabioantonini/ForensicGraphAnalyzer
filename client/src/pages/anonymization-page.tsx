@@ -426,20 +426,26 @@ export default function AnonymizationPage() {
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div>
-                      <h3 className="font-medium mb-2">Testo Originale (anteprima)</h3>
+                      <h3 className="font-medium mb-2">Testo Originale (completo)</h3>
                       <Textarea
                         value={previewData.originalText}
                         readOnly
-                        className="h-48 resize-none"
+                        className="h-96 resize-none text-sm"
                       />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {previewData.originalText.length} caratteri
+                      </p>
                     </div>
                     <div>
-                      <h3 className="font-medium mb-2">Testo Anonimizzato (anteprima)</h3>
+                      <h3 className="font-medium mb-2">Testo Anonimizzato (completo)</h3>
                       <Textarea
                         value={previewData.anonymizedText}
                         readOnly
-                        className="h-48 resize-none"
+                        className="h-96 resize-none text-sm"
                       />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {previewData.anonymizedText.length} caratteri
+                      </p>
                     </div>
                   </div>
 
