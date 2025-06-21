@@ -200,12 +200,16 @@ export default function AnonymizationPage() {
 
   // Anonimizzazione completa
   const handleAnonymize = async () => {
-    if (!selectedFile) return;
+    if (!selectedFile || !previewData) return;
 
     const formData = new FormData();
     formData.append('file', selectedFile);
     formData.append('entityTypes', JSON.stringify(selectedEntityTypes));
     formData.append('entityReplacements', JSON.stringify(entityReplacements));
+    
+    // Invia il testo già estratto dall'anteprima per evitare di riprocessare PDF problematici
+    formData.append('extractedText', previewData.originalText);
+    formData.append('detectedEntities', JSON.stringify(previewData.detectedEntities));
 
     anonymizeMutation.mutate(formData);
   };

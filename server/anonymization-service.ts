@@ -397,7 +397,9 @@ export async function processUploadedFileForAnonymization(
   fileSize: number,
   userId: number,
   entityReplacements: Record<string, string> = DEFAULT_ENTITY_REPLACEMENTS,
-  entityTypes: string[] = Object.keys(DEFAULT_ENTITY_REPLACEMENTS)
+  entityTypes: string[] = Object.keys(DEFAULT_ENTITY_REPLACEMENTS),
+  extractedText?: string,
+  detectedEntities?: DetectedEntity[]
 ): Promise<AnonymizationResult> {
   try {
     // Recupera la chiave OpenAI dell'utente
@@ -407,22 +409,36 @@ export async function processUploadedFileForAnonymization(
     
     const userApiKey = user?.openaiApiKey ? user.openaiApiKey : undefined;
     
-    // Estrai testo dal file
+    // Usa il testo già estratto se disponibile, altrimenti estrai dal file
     let text: string;
     
-    if (fileType === 'application/pdf') {
-      text = await extractTextFromPDF(filePath);
-    } else if (fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-      text = await extractTextFromDOCX(filePath);
+    if (extractedText) {
+      console.log('[processUploadedFileForAnonymization] Using pre-extracted text from preview');
+      text = extractedText;
     } else {
-      text = await fs.readFile(filePath, 'utf-8');
+      console.log('[processUploadedFileForAnonymization] Extracting text from file');
+      if (fileType === 'application/pdf') {
+        text = await extractTextFromPDF(filePath);
+      } else if (fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+        text = await extractTextFromDOCX(filePath);
+      } else {
+        text = await fs.readFile(filePath, 'utf-8');
+      }
     }
     
-    // Rileva entità sensibili
-    const detectedEntities = await detectEntities(text, userApiKey);
+    // Usa entità già rilevate dall'anteprima o rileva ex novo
+    let entities: DetectedEntity[];
+    
+    if (detectedEntities) {
+      console.log('[processUploadedFileForAnonymization] Using pre-detected entities from preview');
+      entities = detectedEntities;
+    } else {
+      console.log('[processUploadedFileForAnonymization] Detecting entities in text');
+      entities = await detectEntities(text, userApiKey);
+    }
     
     // Filtra solo le entità richieste
-    const filteredEntities = detectedEntities.filter(entity => 
+    const filteredEntities = entities.filter(entity => 
       entityTypes.includes(entity.type)
     );
     

@@ -159,7 +159,10 @@ export function setupAnonymizationRoutes(app: Express) {
         }
       }
 
-      // Processa il file per l'anonimizzazione
+      // Usa il testo già estratto dall'anteprima se disponibile
+      const extractedText = req.body.extractedText;
+      const detectedEntities = req.body.detectedEntities ? JSON.parse(req.body.detectedEntities) : null;
+      
       const result = await processUploadedFileForAnonymization(
         req.file.path,
         req.file.originalname || 'document',
@@ -167,7 +170,9 @@ export function setupAnonymizationRoutes(app: Express) {
         req.file.size,
         req.user!.id,
         entityReplacements,
-        entityTypes
+        entityTypes,
+        extractedText,
+        detectedEntities
       );
 
       // Genera file anonimizzato
