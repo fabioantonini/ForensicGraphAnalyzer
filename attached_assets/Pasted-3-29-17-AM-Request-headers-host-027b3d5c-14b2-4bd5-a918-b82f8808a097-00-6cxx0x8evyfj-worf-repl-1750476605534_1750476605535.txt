@@ -1,0 +1,25 @@
+3:29:17 AM [Request headers: {"host":"027b3d5c-14b2-4bd5-a918-b82f8808a097-00-6cxx0x8evyfj.worf.replit.dev","user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 Edg/137.0.0.0","content-length":"22716494","accept":"*/*","accept-encoding":"gzip, deflate, br, zstd","accept-language":"en,it;q=0.9,it-IT;q=0.8,en-GB;q=0.7,en-US;q=0.6","content-type":"multipart/form-data; boundary=----WebKitFormBoundaryC4nZHKbvHNJlmDpl","cookie":"connect.sid=s%3ApNfzrc6yZv9zldPZdZPdYk_Q1pOWya2E.tJtsIOMot5kQSeQ3gRtK5nq0p6cqXe5kjaZ3TEle2ok","origin":"https://027b3d5c-14b2-4bd5-a918-b82f8808a097-00-6cxx0x8evyfj.worf.replit.dev","referer":"https://027b3d5c-14b2-4bd5-a918-b82f8808a097-00-6cxx0x8evyfj.worf.replit.dev/ocr","sec-ch-ua":"\"Microsoft Edge\";v=\"137\", \"Chromium\";v=\"137\", \"Not/A)Brand\";v=\"24\"","sec-ch-ua-mobile":"?0","sec-ch-ua-platform":"\"Windows\"","sec-fetch-dest":"empty","sec-fetch-mode":"cors","sec-fetch-site":"same-origin","sec-fetch-storage-access":"active","x-forwarded-for":"158.47.229.154, 10.83.6.28","x-forwarded-proto":"https","x-replit-user-bio":"","x-replit-user-id":"","x-replit-user-name":"","x-replit-user-profile-image":"","x-replit-user-roles":"","x-replit-user-teams":"","x-replit-user-url":""}] ocr
+3:29:17 AM [Request body keys: settings] ocr
+3:29:17 AM [File object: PRESENTE] ocr
+3:29:17 AM [File details: {"originalname":"Pirone Gennaro - Il Falso in  Scritture.pdf","mimetype":"application/pdf","size":22716096}] ocr
+3:29:17 AM [Processamento OCR avviato per utente 3, file: Pirone Gennaro - Il Falso in  Scritture.pdf] ocr
+3:29:17 AM [Avvio processamento OCR reale per file: Pirone Gennaro - Il Falso in  Scritture.pdf] ocr
+3:29:17 AM [Impostazioni: {"language":"ita+eng","dpi":300,"preprocessingMode":"auto","outputFormat":"text"}] ocr
+3:29:17 AM [Inizializzazione Tesseract con lingua: ita+eng] ocr
+3:29:18 AM [Applicato preprocessing: auto (standard)] ocr
+3:29:18 AM [Errore durante preprocessing: Input buffer contains unsupported image format, uso immagine originale] ocr
+Error: failed to load ./ita.special-words
+3:29:21 AM [Esecuzione OCR su Pirone Gennaro - Il Falso in  Scritture.pdf con preprocessing: auto] ocr
+Error in pixReadStream: Pdf reading is not supported
+node:internal/event_target:1094
+  process.nextTick(() => { throw err; });
+                           ^
+
+Error: Error: Error attempting to read image.
+    at Worker.<anonymous> (/home/runner/workspace/node_modules/tesseract.js/src/createWorker.js:217:15)
+    at Worker.emit (node:events:518:28)
+    at MessagePort.<anonymous> (node:internal/worker:263:53)
+    at [nodejs.internal.kHybridDispatch] (node:internal/event_target:820:20)
+    at MessagePort.<anonymous> (node:internal/per_context/messageport:23:28)
+
+Node.js v20.18.1

@@ -5,6 +5,7 @@ import fs from "fs/promises";
 import { createWorker } from 'tesseract.js';
 import sharp from 'sharp';
 import { log } from "./vite";
+import { fromBuffer } from 'pdf2pic';
 
 // Store per tracciare lo stato dei processi OCR
 interface OCRProcessStatus {
@@ -117,6 +118,48 @@ interface OCRResult {
   pageCount?: number;
 }
 
+// Funzione per convertire PDF in immagini
+async function convertPdfToImages(pdfBuffer: Buffer): Promise<Buffer[]> {
+  try {
+    log("ocr", "Conversione PDF in immagini...");
+    
+    const convert = fromBuffer(pdfBuffer, {
+      density: 300,           // DPI per qualità OCR ottimale
+      saveFilename: "page",
+      savePath: "./temp",
+      format: "png",
+      width: 2480,           // Larghezza ottimale per OCR
+      height: 3508           // Altezza A4 a 300 DPI
+    });
+
+    const results = await convert.bulk(-1); // Converte tutte le pagine
+    
+    log("ocr", `PDF convertito in ${results.length} immagini`);
+    
+    // Leggi i file immagine e restituisci i buffer
+    const imageBuffers: Buffer[] = [];
+    for (const result of results) {
+      if (result.path) {
+        const imageBuffer = await fs.readFile(result.path);
+        imageBuffers.push(imageBuffer);
+        
+        // Cleanup temporaneo
+        try {
+          await fs.unlink(result.path);
+        } catch (e) {
+          // Ignora errori di cleanup
+        }
+      }
+    }
+    
+    return imageBuffers;
+    
+  } catch (error: any) {
+    log("ocr", `Errore conversione PDF: ${error.message}`);
+    throw new Error(`Impossibile convertire PDF: ${error.message}`);
+  }
+}
+
 // Processamento OCR reale con Tesseract.js e callback per progresso
 export async function processOCR(
   fileBuffer: Buffer,
@@ -130,72 +173,87 @@ export async function processOCR(
   log("ocr", `Impostazioni: ${JSON.stringify(settings)}`);
 
   try {
-    // Fase 1: Inizializzazione (0-20%)
+    // Fase 1: Inizializzazione (0-10%)
     progressCallback?.(5, 'Inizializzazione sistema OCR...');
-    await new Promise(resolve => setTimeout(resolve, 500)); // Simula tempo reale
     
     // Mappa le lingue dal formato UI al formato Tesseract
     const tesseractLanguage = mapLanguageToTesseract(settings.language);
-    
     log("ocr", `Inizializzazione Tesseract con lingua: ${tesseractLanguage}`);
-    progressCallback?.(15, 'Caricamento modelli linguistici...');
-    await new Promise(resolve => setTimeout(resolve, 800));
     
-    // Fase 2: Preprocessing (20-40%)
-    progressCallback?.(25, 'Preprocessing dell\'immagine...');
-    const processedBuffer = await preprocessImage(fileBuffer, settings);
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Fase 2: Gestione PDF o immagine (10-30%)
+    let imagesToProcess: Buffer[] = [];
+    const isPdf = filename.toLowerCase().endsWith('.pdf');
     
-    progressCallback?.(40, 'Caricamento modello di riconoscimento...');
-    await new Promise(resolve => setTimeout(resolve, 1200));
+    if (isPdf) {
+      progressCallback?.(10, 'Conversione PDF in immagini...');
+      imagesToProcess = await convertPdfToImages(fileBuffer);
+      log("ocr", `PDF convertito in ${imagesToProcess.length} pagine`);
+    } else {
+      progressCallback?.(15, 'Preprocessing dell\'immagine...');
+      const processedBuffer = await preprocessImage(fileBuffer, settings);
+      imagesToProcess = [processedBuffer];
+    }
     
-    // Crea e configura worker Tesseract con callback di progresso
-    const worker = await createWorker(tesseractLanguage, undefined, {
-      logger: (m) => {
-        if (m.status === 'recognizing text') {
-          const progress = Math.round(40 + (m.progress * 45)); // 40-85%
-          progressCallback?.(progress, `Riconoscimento testo: ${Math.round(m.progress * 100)}%`);
+    progressCallback?.(30, 'Caricamento modelli linguistici...');
+    
+    // Crea worker Tesseract
+    const worker = await createWorker(tesseractLanguage);
+    
+    // Fase 3: Processamento immagini (30-90%)
+    let allText = '';
+    let totalConfidence = 0;
+    let processedPages = 0;
+    
+    log("ocr", `Processamento di ${imagesToProcess.length} ${isPdf ? 'pagine' : 'immagine/i'}`);
+    
+    for (let i = 0; i < imagesToProcess.length; i++) {
+      const currentProgress = 30 + (i / imagesToProcess.length) * 60; // 30-90%
+      progressCallback?.(currentProgress, `Analisi ${isPdf ? `pagina ${i + 1}` : 'immagine'}...`);
+      
+      try {
+        // Esegui OCR sull'immagine corrente
+        const { data } = await worker.recognize(imagesToProcess[i]);
+        
+        if (data.text && data.text.trim()) {
+          allText += data.text.trim() + '\n\n';
+          totalConfidence += data.confidence || 0;
+          processedPages++;
         }
+        
+        log("ocr", `${isPdf ? `Pagina ${i + 1}` : 'Immagine'} processata: ${data.text.length} caratteri, confidenza ${Math.round(data.confidence || 0)}%`);
+        
+      } catch (pageError: any) {
+        log("ocr", `Errore processamento ${isPdf ? `pagina ${i + 1}` : 'immagine'}: ${pageError.message}`);
+        // Continua con le altre pagine
       }
-    });
-    
-    // Fase 3: Riconoscimento (40-90%)
-    progressCallback?.(50, 'Analisi del documento in corso...');
-    
-    log("ocr", `Esecuzione OCR su ${filename} con preprocessing: ${settings.preprocessingMode}`);
-    
-    // Esegui OCR con callback di progresso integrato
-    const { data } = await worker.recognize(processedBuffer);
+    }
     
     // Fase 4: Finalizzazione (90-100%)
     progressCallback?.(90, 'Finalizzazione risultati...');
-    await new Promise(resolve => setTimeout(resolve, 500));
     
     // Cleanup worker
     await worker.terminate();
     
-    progressCallback?.(100, 'Completato!');
-    
     const processingTime = Math.round((Date.now() - startTime) / 1000);
     
     // Calcola confidence media
-    const avgConfidence = Math.round(data.confidence || 0);
+    const avgConfidence = processedPages > 0 ? Math.round(totalConfidence / processedPages) : 0;
     
     // Determina la lingua rilevata
-    const detectedLanguage = data.text.length > 0 ? 
-      detectLanguageFromText(data.text) : settings.language;
+    const detectedLanguage = allText.length > 0 ? 
+      detectLanguageFromText(allText) : settings.language;
     
     const result: OCRResult = {
-      extractedText: data.text.trim(),
+      extractedText: allText.trim(),
       confidence: avgConfidence,
       language: detectedLanguage,
       processingTime,
-      pageCount: 1
+      pageCount: processedPages
     };
     
-    progressCallback?.(100, 'Processamento completato!');
+    progressCallback?.(100, 'Completato!');
     
-    log("ocr", `OCR completato: ${result.extractedText.length} caratteri estratti con confidenza ${avgConfidence}%`);
+    log("ocr", `OCR completato: ${result.extractedText.length} caratteri estratti da ${processedPages} ${isPdf ? 'pagine' : 'immagine/i'} con confidenza media ${avgConfidence}%`);
     
     return result;
 
