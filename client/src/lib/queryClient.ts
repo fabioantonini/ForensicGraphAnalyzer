@@ -12,10 +12,25 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  // Determina headers e body in base al tipo di data
+  let headers: Record<string, string> = {};
+  let body: any = undefined;
+
+  if (data) {
+    if (data instanceof FormData) {
+      // Per FormData, lascia che il browser imposti automaticamente Content-Type con boundary
+      body = data;
+    } else {
+      // Per dati JSON normali
+      headers["Content-Type"] = "application/json";
+      body = JSON.stringify(data);
+    }
+  }
+
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
+    headers,
+    body,
     credentials: "include",
   });
 

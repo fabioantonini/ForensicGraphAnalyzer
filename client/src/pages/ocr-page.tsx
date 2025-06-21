@@ -206,47 +206,55 @@ export default function OCRPage() {
 
     setIsProcessing(true);
     setProgress(0);
-    setProgressStage("Preparazione del documento...");
+    setProgressStage("Inizializzazione processamento OCR...");
     setProcessingStartTime(Date.now());
-    setEstimatedTimeRemaining(null);
-
-    // Stima tempo basata su dimensione file
-    const estimatedSeconds = Math.ceil(selectedFile.size / (1024 * 1024)) * 3; // ~3 secondi per MB
+    
+    // Stima tempo realistico basato su dimensione file e complessità
+    const fileSizeMB = selectedFile.size / (1024 * 1024);
+    const baseTime = Math.max(3, Math.ceil(fileSizeMB * 2)); // Minimo 3 secondi, 2 sec per MB
+    
+    // Fattore complessità basato su preprocessing
+    const complexityFactor = {
+      'auto': 1.0,
+      'enhance': 1.3,
+      'sharpen': 1.2,
+      'denoise': 1.5
+    }[ocrSettings.preprocessingMode] || 1.0;
+    
+    const estimatedSeconds = Math.ceil(baseTime * complexityFactor);
     setEstimatedTimeRemaining(estimatedSeconds);
 
-    // Progresso simulato intelligente basato su fasi reali
-    const stages = [
-      { progress: 5, stage: "Caricamento file...", duration: 500 },
-      { progress: 15, stage: "Inizializzazione sistema OCR...", duration: 800 },
-      { progress: 25, stage: "Preprocessing dell'immagine...", duration: 1000 },
-      { progress: 40, stage: "Caricamento modello linguistico...", duration: 1200 },
-      { progress: 50, stage: "Analisi del documento...", duration: 2000 },
-      { progress: 70, stage: "Riconoscimento testo in corso...", duration: 3000 },
-      { progress: 85, stage: "Ottimizzazione risultati...", duration: 1000 },
-      { progress: 95, stage: "Finalizzazione...", duration: 500 }
+    // Progresso realistico che riflette il processamento reale
+    const progressStages = [
+      { progress: 5, stage: "Caricamento e validazione file...", duration: 300 },
+      { progress: 15, stage: "Inizializzazione Tesseract.js...", duration: 800 },
+      { progress: 25, stage: "Preprocessing immagine...", duration: Math.ceil(1000 * complexityFactor) },
+      { progress: 40, stage: "Caricamento modelli linguistici...", duration: 1200 },
+      { progress: 60, stage: "Analisi testo in corso...", duration: Math.ceil(2000 * complexityFactor) },
+      { progress: 85, stage: "Ottimizzazione risultati...", duration: 800 },
+      { progress: 95, stage: "Finalizzazione...", duration: 400 }
     ];
 
-    let currentStageIndex = 0;
+    let stageIndex = 0;
     const progressInterval = setInterval(() => {
-      if (currentStageIndex < stages.length) {
-        const stage = stages[currentStageIndex];
+      if (stageIndex < progressStages.length && isProcessing) {
+        const stage = progressStages[stageIndex];
         setProgress(stage.progress);
         setProgressStage(stage.stage);
         
-        // Aggiorna tempo rimanente
+        // Aggiorna tempo rimanente in modo più accurato
         const elapsed = (Date.now() - (processingStartTime || Date.now())) / 1000;
         const remaining = Math.max(0, estimatedSeconds - elapsed);
         setEstimatedTimeRemaining(Math.ceil(remaining));
         
-        currentStageIndex++;
-      } else {
-        clearInterval(progressInterval);
+        stageIndex++;
       }
-    }, 800);
+    }, 600);
 
     ocrMutation.mutate(undefined, {
       onSettled: () => {
         clearInterval(progressInterval);
+        setIsProcessing(false);
         setProgress(100);
         setProgressStage("Completato!");
         setEstimatedTimeRemaining(0);
