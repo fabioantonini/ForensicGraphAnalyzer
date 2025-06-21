@@ -77,6 +77,7 @@ export default function OCRPage() {
   const [estimatedTimeRemaining, setEstimatedTimeRemaining] = useState<number | null>(null);
   const [processingStartTime, setProcessingStartTime] = useState<number | null>(null);
   const [documentTitle, setDocumentTitle] = useState("");
+  const [saveToKnowledgeBase, setSaveToKnowledgeBase] = useState(true);
 
   // Impostazioni OCR
   const [ocrSettings, setOcrSettings] = useState<OCRSettings>({
@@ -319,6 +320,19 @@ export default function OCRPage() {
                   placeholder={t('save.titlePlaceholder')}
                   className="mt-1"
                 />
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="save-to-kb"
+                  checked={saveToKnowledgeBase}
+                  onChange={(e) => setSaveToKnowledgeBase(e.target.checked)}
+                  className="rounded border-gray-300"
+                />
+                <Label htmlFor="save-to-kb" className="text-sm">
+                  Salva nella base di conoscenza per query future
+                </Label>
               </div>
             </CardContent>
           </Card>
@@ -719,18 +733,20 @@ export default function OCRPage() {
                     />
                     
                     <div className="flex gap-2">
-                      <Button
-                        onClick={() => saveMutation.mutate()}
-                        disabled={saveMutation.isPending}
-                        className="flex-1"
-                      >
-                        {saveMutation.isPending ? (
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        ) : (
-                          <Save className="h-4 w-4 mr-2" />
-                        )}
-                        {t('save.saveButton')}
-                      </Button>
+                      {saveToKnowledgeBase && (
+                        <Button
+                          onClick={() => saveMutation.mutate()}
+                          disabled={saveMutation.isPending}
+                          className="flex-1"
+                        >
+                          {saveMutation.isPending ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          ) : (
+                            <Save className="h-4 w-4 mr-2" />
+                          )}
+                          {t('save.saveButton')}
+                        </Button>
+                      )}
                       
                       <Button
                         variant="outline"
@@ -741,8 +757,10 @@ export default function OCRPage() {
                             description: "Testo copiato negli appunti",
                           });
                         }}
+                        className={saveToKnowledgeBase ? "" : "flex-1"}
                       >
-                        <Copy className="h-4 w-4" />
+                        <Copy className="h-4 w-4 mr-2" />
+                        Copia
                       </Button>
                       
                       <Button
@@ -764,8 +782,10 @@ export default function OCRPage() {
                             description: "Il documento è stato scaricato",
                           });
                         }}
+                        className={saveToKnowledgeBase ? "" : "flex-1"}
                       >
-                        <Download className="h-4 w-4" />
+                        <Download className="h-4 w-4 mr-2" />
+                        Scarica
                       </Button>
                     </div>
                   </TabsContent>

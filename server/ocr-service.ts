@@ -171,13 +171,82 @@ async function processPdfText(pdfBuffer: Buffer, filename: string): Promise<stri
   }
 }
 
-// Funzione per processare PDF scansionati con OCR
+// Funzione per processare PDF scansionati con OCR usando pdf2pic
 async function processPdfWithOCR(pdfBuffer: Buffer, filename: string): Promise<string> {
   try {
-    // Converte PDF in immagini e applica OCR
-    // Per ora ritorna una stringa vuota - implementazione futura
-    log("ocr", "Conversione PDF in immagini per OCR non ancora implementata");
-    return "";
+    log("ocr", "Avvio conversione PDF scansionato in immagini per OCR...");
+    
+    const pdf2pic = await import('pdf2pic');
+    const { createWorker } = await import('tesseract.js');
+    
+    // Salva temporaneamente il PDF
+    const tempPdfPath = path.join('./temp', `temp_ocr_${Date.now()}_${filename}`);
+    await fs.mkdir('./temp', { recursive: true });
+    await fs.writeFile(tempPdfPath, pdfBuffer);
+    
+    log("ocr", "PDF salvato temporaneamente, avvio conversione...");
+    
+    // Configura pdf2pic per convertire PDF in immagini
+    const convert = pdf2pic.fromPath(tempPdfPath, {
+      density: 300,           // DPI per qualità OCR
+      saveFilename: "page",
+      savePath: "./temp",
+      format: "png",
+      width: 2480,            // Larghezza per qualità OCR
+      height: 3508            // Altezza per qualità OCR
+    });
+    
+    log("ocr", "Conversione PDF in immagini...");
+    
+    // Converte le prime 5 pagine (limite per performance)
+    const pages = await convert.bulk(-1, { responseType: "buffer" });
+    
+    if (!pages || pages.length === 0) {
+      log("ocr", "Nessuna pagina convertita dal PDF");
+      await fs.unlink(tempPdfPath).catch(() => {}); // Cleanup
+      return "";
+    }
+    
+    log("ocr", `Convertite ${pages.length} pagine, avvio OCR...`);
+    
+    // Crea worker Tesseract per OCR
+    const worker = await createWorker(['ita', 'eng']);
+    
+    let allText = "";
+    
+    // Processa ogni pagina con OCR
+    for (let i = 0; i < Math.min(pages.length, 5); i++) {
+      const page = pages[i];
+      if (page.buffer) {
+        log("ocr", `Processamento OCR pagina ${i + 1}/${pages.length}...`);
+        
+        const { data } = await worker.recognize(page.buffer);
+        const pageText = data.text.trim();
+        
+        if (pageText.length > 0) {
+          allText += `\n=== Pagina ${i + 1} ===\n${pageText}\n`;
+        }
+        
+        log("ocr", `Pagina ${i + 1}: ${pageText.length} caratteri estratti`);
+      }
+    }
+    
+    // Cleanup
+    await worker.terminate();
+    await fs.unlink(tempPdfPath).catch(() => {});
+    
+    // Rimuovi file immagini temporanei
+    for (const page of pages) {
+      if (page.path) {
+        await fs.unlink(page.path).catch(() => {});
+      }
+    }
+    
+    const finalText = allText.trim();
+    log("ocr", `OCR PDF completato: ${finalText.length} caratteri totali estratti`);
+    
+    return finalText;
+    
   } catch (error: any) {
     log("ocr", `Errore OCR PDF: ${error.message}`);
     return "";
