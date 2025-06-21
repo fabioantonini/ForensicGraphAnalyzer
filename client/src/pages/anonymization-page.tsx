@@ -336,7 +336,28 @@ export default function AnonymizationPage() {
               ) : (
                 <>
                   <div>
-                    <h3 className="text-lg font-medium mb-3">Tipi di Informazioni da Anonimizzare</h3>
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-lg font-medium">Tipi di Informazioni da Anonimizzare</h3>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const allTypes = entityTypes.map(et => et.key);
+                            setSelectedEntityTypes(allTypes);
+                          }}
+                        >
+                          Seleziona tutto
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedEntityTypes([])}
+                        >
+                          Deseleziona tutto
+                        </Button>
+                      </div>
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {entityTypes.map((entityType) => (
                         <div key={entityType.key} className="space-y-2">

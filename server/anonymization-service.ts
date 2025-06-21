@@ -49,6 +49,10 @@ export async function detectEntities(text: string, apiKey?: string): Promise<Det
     // Usa la chiave API dell'utente se fornita, altrimenti quella di sistema
     const openaiClient = apiKey ? new OpenAI({ apiKey }) : openai;
     
+    console.log(`[detectEntities] Input text length: ${text.length}`);
+    console.log(`[detectEntities] Input text preview:`, text.substring(0, 200));
+    console.log(`[detectEntities] Input text end:`, text.substring(Math.max(0, text.length - 100)));
+    
     // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
     const response = await openaiClient.chat.completions.create({
       model: "gpt-4o",
