@@ -29,6 +29,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   activities: many(activities),
   queries: many(queries),
   signatureProjects: many(signatureProjects),
+  anonymizations: many(anonymizations),
 }));
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -630,3 +631,79 @@ export type UserChallenge = typeof userChallenges.$inferSelect;
 export type InsertUserChallenge = z.infer<typeof insertUserChallengeSchema>;
 export type UserStats = typeof userStats.$inferSelect;
 export type InsertUserStats = z.infer<typeof insertUserStatsSchema>;
+
+// Document Anonymization schema
+export const anonymizations = pgTable("anonymizations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  originalDocumentId: integer("original_document_id").references(() => documents.id),
+  filename: text("filename").notNull(),
+  originalFilename: text("original_filename").notNull(),
+  fileType: text("file_type").notNull(),
+  fileSize: integer("file_size").notNull(),
+  anonymizedFilePath: text("anonymized_file_path").notNull(),
+  entityTypes: json("entity_types").notNull().$type<string[]>(), // ['PERSON', 'LOCATION', 'EMAIL', etc.]
+  entityReplacements: jsonb("entity_replacements").notNull().$type<Record<string, string>>(), // { 'PERSON': '[NOME]', 'LOCATION': '[CITTÀ]' }
+  detectedEntities: jsonb("detected_entities").notNull().$type<Array<{
+    text: string;
+    type: string;
+    position: { start: number; end: number };
+    confidence: number;
+  }>>(),
+  processingStatus: text("processing_status").default("pending").notNull(), // 'pending', 'processing', 'completed', 'failed'
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const anonymizationsRelations = relations(anonymizations, ({ one }) => ({
+  user: one(users, {
+    fields: [anonymizations.userId],
+    references: [users.id],
+  }),
+  originalDocument: one(documents, {
+    fields: [anonymizations.originalDocumentId],
+    references: [documents.id],
+  }),
+}));
+
+export const insertAnonymizationSchema = createInsertSchema(anonymizations).pick({
+  userId: true,
+  originalDocumentId: true,
+  filename: true,
+  originalFilename: true,
+  fileType: true,
+  fileSize: true,
+  anonymizedFilePath: true,
+  entityTypes: true,
+  entityReplacements: true,
+  detectedEntities: true,
+  processingStatus: true,
+  errorMessage: true,
+});
+
+// Schema per la richiesta di anonimizzazione
+export const anonymizationRequestSchema = z.object({
+  documentId: z.number().optional(),
+  entityReplacements: z.record(z.string(), z.string()).default({
+    'PERSON': '[NOME]',
+    'LOCATION': '[CITTÀ]',
+    'EMAIL': '[EMAIL]',
+    'PHONE': '[TELEFONO]',
+    'ORGANIZATION': '[ORGANIZZAZIONE]',
+    'DATE': '[DATA]',
+    'ADDRESS': '[INDIRIZZO]',
+    'POSTAL_CODE': '[CAP]',
+    'FISCAL_CODE': '[CODICE_FISCALE]',
+    'VAT_NUMBER': '[PARTITA_IVA]'
+  }),
+  entityTypes: z.array(z.string()).default([
+    'PERSON', 'LOCATION', 'EMAIL', 'PHONE', 'ORGANIZATION', 
+    'DATE', 'ADDRESS', 'POSTAL_CODE', 'FISCAL_CODE', 'VAT_NUMBER'
+  ])
+});
+
+// Types per il sistema di anonimizzazione
+export type Anonymization = typeof anonymizations.$inferSelect;
+export type InsertAnonymization = z.infer<typeof insertAnonymizationSchema>;
+export type AnonymizationRequest = z.infer<typeof anonymizationRequestSchema>;
