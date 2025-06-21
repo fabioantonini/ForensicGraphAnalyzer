@@ -788,7 +788,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user!.id;
       const file = req.file;
       
+      // Debug logging dettagliato
+      log("ocr", `=== DEBUG OCR UPLOAD ===`);
+      log("ocr", `User ID: ${userId}`);
+      log("ocr", `Request headers: ${JSON.stringify(req.headers)}`);
+      log("ocr", `Request body keys: ${Object.keys(req.body)}`);
+      log("ocr", `File object: ${file ? 'PRESENTE' : 'NULL'}`);
+      if (file) {
+        log("ocr", `File details: ${JSON.stringify({
+          originalname: file.originalname,
+          mimetype: file.mimetype,
+          size: file.size
+        })}`);
+      }
+      
       if (!file) {
+        log("ocr", `ERRORE: Nessun file ricevuto dal middleware multer`);
         return res.status(400).json({ message: "Nessun file caricato" });
       }
 
