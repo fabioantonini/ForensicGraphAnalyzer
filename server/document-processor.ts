@@ -74,23 +74,39 @@ export async function extractTextFromPDF(filepath: string): Promise<string> {
     // Get the pdf-parse function dynamically
     const pdfParser = await getPdfParse();
     
-    // Define our own options to avoid requiring test files
+    // Define our own options to improve text extraction
     const options = {
-      // Simple text extraction without custom rendering to avoid dependencies
-      // This may result in less formatted text but is more reliable
+      // Normalize whitespace and improve text extraction
+      normalize: true,
+      disableCombineTextItems: false
     };
     
     log(`Extracting text from PDF file: ${filepath}`, "document-processor");
     const pdfData = await pdfParser(buffer, options);
     
-    if (!pdfData.text || pdfData.text.includes("parsing failed")) {
-      log(`PDF extraction returned empty or error text`, "document-processor");
+    log(`PDF parse result - text length: ${pdfData.text?.length || 0}`, "document-processor");
+    log(`PDF parse result - first 100 chars: ${pdfData.text?.substring(0, 100) || 'EMPTY'}`, "document-processor");
+    
+    const extractedText = pdfData.text || "";
+    const cleanText = extractedText.trim();
+    
+    if (!cleanText || cleanText.length === 0 || cleanText.includes("parsing failed")) {
+      log(`PDF extraction returned empty or error text, trying fallback`, "document-processor");
       // Fallback to a simpler approach - try to extract text without custom options
       const basicData = await pdfParser(buffer);
-      return basicData.text || "PDF text extraction failed";
+      const fallbackText = basicData.text || "";
+      log(`Fallback PDF parse - text length: ${fallbackText.length}`, "document-processor");
+      log(`Fallback PDF parse - first 100 chars: ${fallbackText.substring(0, 100) || 'EMPTY'}`, "document-processor");
+      
+      if (fallbackText.trim().length > 0) {
+        return fallbackText.trim();
+      }
+      
+      return "PDF text extraction failed - no readable text found";
     }
     
-    return pdfData.text;
+    log(`Returning extracted text with ${cleanText.length} characters`, "document-processor");
+    return cleanText;
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     log(`Error extracting text from PDF: ${errorMessage}`, "document-processor");

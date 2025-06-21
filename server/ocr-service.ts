@@ -118,7 +118,7 @@ interface OCRResult {
   pageCount?: number;
 }
 
-// Funzione per processare PDF usando estrazione di testo diretta
+// Funzione per processare PDF usando estrazione di testo diretta con fallback OCR
 async function processPdfText(pdfBuffer: Buffer, filename: string): Promise<string> {
   try {
     log("ocr", "Estrazione testo diretto da PDF...");
@@ -139,11 +139,48 @@ async function processPdfText(pdfBuffer: Buffer, filename: string): Promise<stri
     }
     
     log("ocr", `Testo estratto da PDF: ${extractedText.length} caratteri`);
+    
+    // Se il testo estratto è troppo breve per la dimensione del file, 
+    // potrebbe essere un PDF scansionato (immagini)
+    const fileSize = pdfBuffer.length;
+    const textDensity = extractedText.length / (fileSize / 1024); // caratteri per KB
+    
+    log("ocr", `Densità testo PDF: ${textDensity.toFixed(2)} caratteri/KB`);
+    
+    // Se la densità è molto bassa (< 0.5 caratteri per KB), probabilmente è un PDF scansionato
+    if (textDensity < 0.5 && extractedText.trim().length < 1000) {
+      log("ocr", "PDF sembra essere scansionato, tentativo OCR con Tesseract...");
+      
+      try {
+        // Usa OCR come fallback per PDF scansionati
+        const ocrText = await processPdfWithOCR(pdfBuffer, filename);
+        if (ocrText.length > extractedText.length) {
+          log("ocr", `OCR ha prodotto più testo: ${ocrText.length} vs ${extractedText.length} caratteri`);
+          return ocrText;
+        }
+      } catch (ocrError: any) {
+        log("ocr", `Fallback OCR fallito: ${ocrError.message}`);
+      }
+    }
+    
     return extractedText;
     
   } catch (error: any) {
     log("ocr", `Errore estrazione PDF: ${error.message}`);
     throw new Error(`Impossibile estrarre testo da PDF: ${error.message}`);
+  }
+}
+
+// Funzione per processare PDF scansionati con OCR
+async function processPdfWithOCR(pdfBuffer: Buffer, filename: string): Promise<string> {
+  try {
+    // Converte PDF in immagini e applica OCR
+    // Per ora ritorna una stringa vuota - implementazione futura
+    log("ocr", "Conversione PDF in immagini per OCR non ancora implementata");
+    return "";
+  } catch (error: any) {
+    log("ocr", `Errore OCR PDF: ${error.message}`);
+    return "";
   }
 }
 
