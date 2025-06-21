@@ -111,11 +111,16 @@ export async function extractTextFromPDF(filepath: string): Promise<string> {
     const errorMessage = error instanceof Error ? error.message : String(error);
     log(`Error extracting text from PDF: ${errorMessage}`, "document-processor");
     
-    // For anonymization, we should throw the error instead of returning an error message
-    // that would be processed as if it were document content
+    // For PDF parsing issues, provide helpful guidance
+    if (errorMessage.includes('bad XRef entry') || errorMessage.includes('parsing failed')) {
+      throw new Error(`Il PDF non può essere processato automaticamente. Ti consiglio di copiare il testo del documento e incollarlo in un file .txt per l'anonimizzazione. In alternativa, prova a salvare il PDF con "Stampa > Salva come PDF" dal browser per riparare eventuali problemi di formattazione.`);
+    }
+    
     throw new Error(`PDF parsing failed: ${errorMessage}. Please try with a different PDF file or convert it to text format.`);
   }
 }
+
+
 
 // Extract text content from DOCX
 export async function extractTextFromDOCX(filepath: string): Promise<string> {
