@@ -427,24 +427,24 @@ export default function AnonymizationPage() {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                     <div>
                       <h3 className="font-medium mb-2">Testo Originale (completo)</h3>
-                      <Textarea
-                        value={previewData.originalText}
-                        readOnly
-                        className="h-96 resize-none text-sm"
-                      />
+                      <div className="border rounded-md p-3 h-96 overflow-y-auto bg-muted/50">
+                        <pre className="text-sm whitespace-pre-wrap">
+                          {previewData.originalText}
+                        </pre>
+                      </div>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {previewData.originalText.length} caratteri
+                        {previewData.originalText.length} caratteri - {previewData.originalText.split('\n').length} righe
                       </p>
                     </div>
                     <div>
                       <h3 className="font-medium mb-2">Testo Anonimizzato (completo)</h3>
-                      <Textarea
-                        value={previewData.anonymizedText}
-                        readOnly
-                        className="h-96 resize-none text-sm"
-                      />
+                      <div className="border rounded-md p-3 h-96 overflow-y-auto bg-muted/50">
+                        <pre className="text-sm whitespace-pre-wrap">
+                          {previewData.anonymizedText}
+                        </pre>
+                      </div>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {previewData.anonymizedText.length} caratteri
+                        {previewData.anonymizedText.length} caratteri - {previewData.anonymizedText.split('\n').length} righe
                       </p>
                     </div>
                   </div>
