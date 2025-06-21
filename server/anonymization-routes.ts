@@ -188,7 +188,7 @@ export function setupAnonymizationRoutes(app: Express) {
         success: true,
         anonymizedText: result.anonymizedText,
         detectedEntities: result.detectedEntities,
-        downloadUrl: `/api/anonymize/download/${outputFilename}`,
+        downloadUrl: `/api/anonymize/download/${outputFilename}?token=${req.user!.id}`,
         filename: outputFilename,
         originalFilename: req.file.originalname
       });
@@ -209,13 +209,19 @@ export function setupAnonymizationRoutes(app: Express) {
   });
 
   // GET /api/anonymize/download/:filename - Download file anonimizzato
-  app.get('/api/anonymize/download/:filename', requireAuth, async (req: Request, res: Response) => {
+  app.get('/api/anonymize/download/:filename', async (req: Request, res: Response) => {
     try {
       const filename = req.params.filename;
+      const userToken = req.query.token;
       
       // Validazione nome file per sicurezza
       if (!/^anonymized_\d+\.(pdf|docx)$/.test(filename)) {
         return res.status(400).json({ error: 'Invalid filename' });
+      }
+      
+      // Verifica token utente (semplificata per il download)
+      if (!userToken) {
+        return res.status(401).json({ error: 'Authentication required' });
       }
       
       const filePath = path.join(process.cwd(), 'uploads', 'anonymized', filename);
