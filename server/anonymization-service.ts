@@ -55,34 +55,38 @@ export async function detectEntities(text: string, apiKey?: string): Promise<Det
       messages: [
         {
           role: "system",
-          content: `Sei un esperto in riconoscimento di entità sensibili per l'anonimizzazione di documenti legali italiani.
+          content: `You are an expert in sensitive entity recognition for anonymization of legal and administrative documents in Italian and English.
 
-          IDENTIFICA TUTTE queste entità sensibili:
-          - PERSON: Ogni nome di persona completo (es. "Giovanni Rossi", "Marta Bianchi", "Marco Neri")
-          - ADDRESS: Ogni indirizzo completo con via e numero (es. "Via Roma 12", "Via Verdi 34, Milano")
-          - LOCATION: Città specifiche quando indicate come luoghi di residenza (es. "Milano")
-          - MONEY: Importi monetari specifici (es. "EUR 500.000", "€ 10.000")
-          - DATE: Date complete specifiche (es. "5 maggio 1975", "21 giugno 2025")
-          - ORGANIZATION: Nomi di enti, fondazioni, aziende (es. "Fondazione Bambini Sorridenti")
-          - EMAIL: Indirizzi email completi
-          - PHONE: Numeri di telefono
-          - FISCAL_CODE: Codici fiscali italiani
-          - VAT_NUMBER: Partite IVA
-          - IBAN: Codici IBAN
-          - CREDIT_CARD: Numeri carte di credito
+          IDENTIFY ALL these sensitive entities in both Italian and English:
+          - PERSON: Full person names (e.g., "Giovanni Rossi", "John Smith", "Maria Garcia")
+          - ADDRESS: Complete addresses with street and number (e.g., "Via Roma 12", "123 Main Street", "Via Verdi 34, Milano")
+          - LOCATION: Specific cities when mentioned as places of residence (e.g., "Milano", "New York", "Roma")
+          - MONEY: Specific monetary amounts (e.g., "EUR 500.000", "€ 10.000", "$1,000", "£500")
+          - DATE: Complete specific dates (e.g., "5 maggio 1975", "June 21, 2025", "21/06/2025")
+          - ORGANIZATION: Names of entities, foundations, companies (e.g., "Fondazione Bambini Sorridenti", "Microsoft Corp")
+          - EMAIL: Complete email addresses
+          - PHONE: Phone numbers (all formats)
+          - FISCAL_CODE: Italian tax codes
+          - VAT_NUMBER: VAT numbers
+          - IBAN: IBAN codes
+          - CREDIT_CARD: Credit card numbers
 
-          IMPORTANTE: Identifica OGNI SINGOLA occorrenza di nomi di persona, anche se ripetuti più volte nel testo.
+          IMPORTANT: 
+          - Identify EVERY SINGLE occurrence of person names, even if repeated multiple times in the text
+          - Support both Italian and English text patterns
+          - Recognize Italian addresses (Via, Corso, Piazza) and English addresses (Street, Avenue, Road)
+          - Handle both Italian and English date formats
 
-          Calcola le posizioni esatte dei caratteri. Usa le posizioni del testo originale.
+          Calculate exact character positions. Use positions from the original text.
 
-          Rispondi SOLO con JSON valido:
+          Respond ONLY with valid JSON:
           {
             "entities": [
               {
-                "text": "testo_esatto_dal_documento",
+                "text": "exact_text_from_document",
                 "type": "PERSON",
-                "start": posizione_carattere_inizio,
-                "end": posizione_carattere_fine,
+                "start": character_position_start,
+                "end": character_position_end,
                 "confidence": 0.95
               }
             ]

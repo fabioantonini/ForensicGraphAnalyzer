@@ -176,16 +176,22 @@ Preferred communication style: Simple, everyday language.
 
 ### June 21, 2025 - Document Anonymization System Implementation
 - **Complete Anonymization Pipeline**: Full document privacy protection system
-  - AI-powered entity recognition using OpenAI GPT-4o for Italian legal documents
+  - AI-powered entity recognition using OpenAI GPT-4o for Italian and English documents
   - Support for 13 entity types: names, locations, emails, phones, organizations, dates, addresses, postal codes, fiscal codes, VAT numbers, money amounts, credit cards, IBAN
   - Multi-format document support: PDF, DOCX, TXT with intelligent text extraction
   - User API key integration: Uses individual OpenAI keys from user database
+  - Enhanced formatting preservation: Professional PDF output with structured text files for other formats
 - **Professional Frontend Interface**: Complete React-based anonymization workflow
   - Four-tab interface: Upload → Settings → Preview → Result
   - Drag-and-drop file upload with format validation (10MB limit)
   - Interactive entity selection with customizable replacement tags
   - Real-time preview with before/after text comparison
-  - Download functionality for anonymized documents
+  - Download functionality for anonymized documents with proper content types
+- **Multilingual Support**: Full Italian and English language support
+  - Entity recognition optimized for both Italian and English text patterns
+  - Support for Italian addresses (Via, Corso, Piazza) and English addresses (Street, Avenue, Road)
+  - Italian and English date format recognition
+  - Complete UI translations for both languages
 - **Database Integration**: Full data persistence and tracking
   - New anonymizations table with processing status tracking
   - Entity detection results storage and retrieval
@@ -195,7 +201,7 @@ Preferred communication style: Simple, everyday language.
   - Secure file processing with temporary file cleanup
   - Token-based download authentication
   - User-specific processing using individual API keys
-  - Complete multilingual support (Italian/English)
+  - Debug logging for troubleshooting entity recognition
 
 ### Technical Implementation Details
 - OCR Service: Tesseract.js with real text extraction (not simulation)
