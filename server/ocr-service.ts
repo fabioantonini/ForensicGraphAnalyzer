@@ -6,6 +6,79 @@ import { createWorker } from 'tesseract.js';
 import sharp from 'sharp';
 import { log } from "./vite";
 
+// Store per tracciare lo stato dei processi OCR
+interface OCRProcessStatus {
+  processId: string;
+  progress: number;
+  stage: string;
+  completed: boolean;
+  error?: string;
+  result?: OCRResult;
+}
+
+const ocrProcesses = new Map<string, OCRProcessStatus>();
+
+// Funzione per ottenere lo stato di un processo OCR
+export function getOCRProcessStatus(processId: string): OCRProcessStatus | undefined {
+  return ocrProcesses.get(processId);
+}
+
+// Funzione per aggiornare lo stato di un processo OCR
+function updateOCRProcessStatus(processId: string, update: Partial<OCRProcessStatus>) {
+  const current = ocrProcesses.get(processId);
+  if (current) {
+    ocrProcesses.set(processId, { ...current, ...update });
+  }
+}
+
+// Funzione per processare OCR con progresso trackabile
+export async function processOCRWithProgress(
+  fileBuffer: Buffer,
+  filename: string,
+  settings: OCRSettings,
+  processId: string
+): Promise<void> {
+  // Inizializza lo stato del processo
+  ocrProcesses.set(processId, {
+    processId,
+    progress: 0,
+    stage: 'Inizializzazione...',
+    completed: false
+  });
+
+  try {
+    const result = await processOCR(fileBuffer, filename, settings, (progress, stage) => {
+      updateOCRProcessStatus(processId, { progress, stage });
+    });
+
+    // Segna come completato con risultato
+    updateOCRProcessStatus(processId, {
+      progress: 100,
+      stage: 'Completato!',
+      completed: true,
+      result
+    });
+
+    // Cleanup dopo 5 minuti
+    setTimeout(() => {
+      ocrProcesses.delete(processId);
+    }, 5 * 60 * 1000);
+
+  } catch (error: any) {
+    updateOCRProcessStatus(processId, {
+      progress: 0,
+      stage: 'Errore',
+      completed: true,
+      error: error.message
+    });
+
+    // Cleanup dopo 1 minuto in caso di errore
+    setTimeout(() => {
+      ocrProcesses.delete(processId);
+    }, 60 * 1000);
+  }
+}
+
 // Configurazione multer per upload OCR
 export const ocrUpload = multer({
   storage: multer.memoryStorage(),
@@ -58,35 +131,50 @@ export async function processOCR(
 
   try {
     // Fase 1: Inizializzazione (0-20%)
-    progressCallback?.(10, 'Inizializzazione sistema OCR...');
+    progressCallback?.(5, 'Inizializzazione sistema OCR...');
+    await new Promise(resolve => setTimeout(resolve, 500)); // Simula tempo reale
     
     // Mappa le lingue dal formato UI al formato Tesseract
     const tesseractLanguage = mapLanguageToTesseract(settings.language);
     
     log("ocr", `Inizializzazione Tesseract con lingua: ${tesseractLanguage}`);
+    progressCallback?.(15, 'Caricamento modelli linguistici...');
+    await new Promise(resolve => setTimeout(resolve, 800));
     
     // Fase 2: Preprocessing (20-40%)
     progressCallback?.(25, 'Preprocessing dell\'immagine...');
     const processedBuffer = await preprocessImage(fileBuffer, settings);
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
     progressCallback?.(40, 'Caricamento modello di riconoscimento...');
+    await new Promise(resolve => setTimeout(resolve, 1200));
     
-    // Crea e configura worker Tesseract
-    const worker = await createWorker(tesseractLanguage);
+    // Crea e configura worker Tesseract con callback di progresso
+    const worker = await createWorker(tesseractLanguage, undefined, {
+      logger: (m) => {
+        if (m.status === 'recognizing text') {
+          const progress = Math.round(40 + (m.progress * 45)); // 40-85%
+          progressCallback?.(progress, `Riconoscimento testo: ${Math.round(m.progress * 100)}%`);
+        }
+      }
+    });
     
     // Fase 3: Riconoscimento (40-90%)
     progressCallback?.(50, 'Analisi del documento in corso...');
     
     log("ocr", `Esecuzione OCR su ${filename} con preprocessing: ${settings.preprocessingMode}`);
     
-    // Esegui OCR con callback di progresso
+    // Esegui OCR con callback di progresso integrato
     const { data } = await worker.recognize(processedBuffer);
     
     // Fase 4: Finalizzazione (90-100%)
-    progressCallback?.(95, 'Finalizzazione risultati...');
+    progressCallback?.(90, 'Finalizzazione risultati...');
+    await new Promise(resolve => setTimeout(resolve, 500));
     
     // Cleanup worker
     await worker.terminate();
+    
+    progressCallback?.(100, 'Completato!');
     
     const processingTime = Math.round((Date.now() - startTime) / 1000);
     

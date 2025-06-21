@@ -25,7 +25,7 @@ import {
 import { chatWithRAG, validateAPIKey } from "./openai";
 import { log } from "./vite";
 import { registerSignatureRoutes } from "./signature-routes";
-import { processOCR, saveOCRDocument, ocrUpload } from "./ocr-service";
+import { processOCR, saveOCRDocument, ocrUpload, processOCRWithProgress, getOCRProcessStatus } from "./ocr-service";
 import { eq, desc, sql } from "drizzle-orm";
 import { db, pool } from "./db";
 import { users, documents } from "@shared/schema";
@@ -782,7 +782,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // OCR endpoints
-  // Process OCR for uploaded file
+  // Process OCR for uploaded file con progress tracking
   app.post("/api/ocr/process", isAuthenticated, isActiveUser, ocrUpload.single('file'), async (req, res, next) => {
     try {
       const userId = req.user!.id;
@@ -807,12 +807,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       log("ocr", `Processamento OCR avviato per utente ${userId}, file: ${file.originalname}`);
 
-      // Process OCR
-      const result = await processOCR(file.buffer, file.originalname, settings);
+      // Genera un ID univoco per tracciare il progresso
+      const processId = `ocr_${userId}_${Date.now()}`;
       
-      res.json(result);
+      // Avvia processamento OCR in background
+      processOCRWithProgress(file.buffer, file.originalname, settings, processId);
+      
+      // Ritorna immediatamente l'ID del processo
+      res.json({ processId, message: "Processamento avviato" });
+      
     } catch (error: any) {
       log("ocr", `Errore processamento OCR: ${error.message}`);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Endpoint per ottenere lo stato del processamento OCR
+  app.get("/api/ocr/status/:processId", isAuthenticated, async (req, res) => {
+    try {
+      const { processId } = req.params;
+      const status = getOCRProcessStatus(processId);
+      
+      if (!status) {
+        return res.status(404).json({ message: "Processo non trovato" });
+      }
+      
+      res.json(status);
+    } catch (error: any) {
       res.status(500).json({ message: error.message });
     }
   });
