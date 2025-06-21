@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { db } from "./db";
-import { anonymizations, documents } from "../shared/schema";
+import { anonymizations, documents, users } from "../shared/schema";
 import { eq } from "drizzle-orm";
 import fs from "fs/promises";
 import fsSync from "fs";
@@ -44,10 +44,13 @@ export interface AnonymizationResult {
 /**
  * Utilizza OpenAI per riconoscere entità sensibili nel testo
  */
-export async function detectEntities(text: string): Promise<DetectedEntity[]> {
+export async function detectEntities(text: string, apiKey?: string): Promise<DetectedEntity[]> {
   try {
+    // Usa la chiave API dell'utente se fornita, altrimenti quella di sistema
+    const openaiClient = apiKey ? new OpenAI({ apiKey }) : openai;
+    
     // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-    const response = await openai.chat.completions.create({
+    const response = await openaiClient.chat.completions.create({
       model: "gpt-4o",
       messages: [
         {
@@ -227,12 +230,19 @@ export async function processDocumentForAnonymization(
   }).returning();
   
   try {
+    // Recupera la chiave OpenAI dell'utente
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, userId)
+    });
+    
+    const userApiKey = user?.openaiApiKey ? user.openaiApiKey : undefined;
+    
     // Estrai testo dal documento
     let text = document.content;
     
     // Rileva entità sensibili
     console.log('Detecting entities in document...');
-    const detectedEntities = await detectEntities(text);
+    const detectedEntities = await detectEntities(text, userApiKey);
     
     // Filtra solo le entità richieste
     const filteredEntities = detectedEntities.filter(entity => 
@@ -298,6 +308,13 @@ export async function processUploadedFileForAnonymization(
   entityTypes: string[] = Object.keys(DEFAULT_ENTITY_REPLACEMENTS)
 ): Promise<AnonymizationResult> {
   try {
+    // Recupera la chiave OpenAI dell'utente
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, userId)
+    });
+    
+    const userApiKey = user?.openaiApiKey;
+    
     // Estrai testo dal file
     let text: string;
     
@@ -310,7 +327,7 @@ export async function processUploadedFileForAnonymization(
     }
     
     // Rileva entità sensibili
-    const detectedEntities = await detectEntities(text);
+    const detectedEntities = await detectEntities(text, userApiKey);
     
     // Filtra solo le entità richieste
     const filteredEntities = detectedEntities.filter(entity => 
