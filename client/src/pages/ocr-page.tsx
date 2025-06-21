@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { 
   Upload, 
@@ -114,7 +114,46 @@ export default function OCRPage() {
     }
   };
 
-  // Mutazione per processare OCR
+  // Query per il polling del progresso OCR
+  const { data: processStatus } = useQuery({
+    queryKey: ["/api/ocr/status", processId],
+    queryFn: () => apiRequest("GET", `/api/ocr/status/${processId}`).then(res => res.json()),
+    enabled: !!processId && isProcessing,
+    refetchInterval: processId && isProcessing ? 2000 : false, // Polling ogni 2 secondi
+  });
+
+  // Effetto per aggiornare il progresso basato sui dati del server
+  useEffect(() => {
+    if (processStatus) {
+      setProgress(processStatus.progress);
+      setProgressStage(processStatus.stage);
+      
+      if (processStatus.completed) {
+        setIsProcessing(false);
+        
+        if (processStatus.error) {
+          toast({
+            title: t('errors.processingFailed'),
+            description: processStatus.error,
+            variant: "destructive",
+          });
+          setProgress(0);
+        } else if (processStatus.result) {
+          setOcrResult(processStatus.result);
+          setProgress(100);
+          toast({
+            title: t('processing.completed'),
+            description: `${t('results.confidence')}: ${processStatus.result.confidence}%`,
+            variant: "default",
+          });
+        }
+        
+        setProcessId(null);
+      }
+    }
+  }, [processStatus, t, toast]);
+
+  // Mutazione per avviare processamento OCR
   const ocrMutation = useMutation({
     mutationFn: async () => {
       if (!selectedFile) throw new Error(t('errors.noFile'));
@@ -126,14 +165,9 @@ export default function OCRPage() {
       const response = await apiRequest("POST", "/api/ocr/process", formData);
       return await response.json();
     },
-    onSuccess: (result: OCRResult) => {
-      setOcrResult(result);
-      setProgress(100);
-      toast({
-        title: t('processing.completed'),
-        description: `${t('results.confidence')}: ${result.confidence}%`,
-        variant: "default",
-      });
+    onSuccess: (result: { processId: string; message: string }) => {
+      setProcessId(result.processId);
+      // Il polling si occuperà del resto
     },
     onError: (error: Error) => {
       toast({
@@ -142,6 +176,7 @@ export default function OCRPage() {
         variant: "destructive",
       });
       setProgress(0);
+      setIsProcessing(false);
     },
   });
 
