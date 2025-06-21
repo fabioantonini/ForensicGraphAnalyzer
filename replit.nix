@@ -1,5 +1,6 @@
 {pkgs}: {
   deps = [
+    pkgs.graphicsmagick
     pkgs.imagemagick
     pkgs.jq
     pkgs.libreoffice

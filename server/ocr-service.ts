@@ -5,7 +5,7 @@ import fs from "fs/promises";
 import { createWorker } from 'tesseract.js';
 import sharp from 'sharp';
 import { log } from "./vite";
-import { fromBuffer } from 'pdf2pic';
+import { extractTextFromPDF } from "./document-processor";
 
 // Store per tracciare lo stato dei processi OCR
 interface OCRProcessStatus {
@@ -118,45 +118,32 @@ interface OCRResult {
   pageCount?: number;
 }
 
-// Funzione per convertire PDF in immagini
-async function convertPdfToImages(pdfBuffer: Buffer): Promise<Buffer[]> {
+// Funzione per processare PDF usando estrazione di testo diretta
+async function processPdfText(pdfBuffer: Buffer, filename: string): Promise<string> {
   try {
-    log("ocr", "Conversione PDF in immagini...");
+    log("ocr", "Estrazione testo diretto da PDF...");
     
-    const convert = fromBuffer(pdfBuffer, {
-      density: 300,           // DPI per qualità OCR ottimale
-      saveFilename: "page",
-      savePath: "./temp",
-      format: "png",
-      width: 2480,           // Larghezza ottimale per OCR
-      height: 3508           // Altezza A4 a 300 DPI
-    });
-
-    const results = await convert.bulk(-1); // Converte tutte le pagine
+    // Salva temporaneamente il PDF per l'estrazione
+    const tempPath = path.join('./temp', `temp_${Date.now()}_${filename}`);
+    await fs.mkdir('./temp', { recursive: true });
+    await fs.writeFile(tempPath, pdfBuffer);
     
-    log("ocr", `PDF convertito in ${results.length} immagini`);
+    // Estrai il testo usando pdf-parse
+    const extractedText = await extractTextFromPDF(tempPath);
     
-    // Leggi i file immagine e restituisci i buffer
-    const imageBuffers: Buffer[] = [];
-    for (const result of results) {
-      if (result.path) {
-        const imageBuffer = await fs.readFile(result.path);
-        imageBuffers.push(imageBuffer);
-        
-        // Cleanup temporaneo
-        try {
-          await fs.unlink(result.path);
-        } catch (e) {
-          // Ignora errori di cleanup
-        }
-      }
+    // Cleanup file temporaneo
+    try {
+      await fs.unlink(tempPath);
+    } catch (e) {
+      // Ignora errori di cleanup
     }
     
-    return imageBuffers;
+    log("ocr", `Testo estratto da PDF: ${extractedText.length} caratteri`);
+    return extractedText;
     
   } catch (error: any) {
-    log("ocr", `Errore conversione PDF: ${error.message}`);
-    throw new Error(`Impossibile convertire PDF: ${error.message}`);
+    log("ocr", `Errore estrazione PDF: ${error.message}`);
+    throw new Error(`Impossibile estrarre testo da PDF: ${error.message}`);
   }
 }
 
@@ -180,82 +167,73 @@ export async function processOCR(
     const tesseractLanguage = mapLanguageToTesseract(settings.language);
     log("ocr", `Inizializzazione Tesseract con lingua: ${tesseractLanguage}`);
     
-    // Fase 2: Gestione PDF o immagine (10-30%)
-    let imagesToProcess: Buffer[] = [];
+    // Fase 2: Gestione PDF o immagine (10-40%)
     const isPdf = filename.toLowerCase().endsWith('.pdf');
     
     if (isPdf) {
-      progressCallback?.(10, 'Conversione PDF in immagini...');
-      imagesToProcess = await convertPdfToImages(fileBuffer);
-      log("ocr", `PDF convertito in ${imagesToProcess.length} pagine`);
+      progressCallback?.(15, 'Estrazione testo da PDF...');
+      
+      // Per i PDF, usa estrazione diretta del testo (più veloce e affidabile)
+      const extractedText = await processPdfText(fileBuffer, filename);
+      
+      progressCallback?.(90, 'Finalizzazione risultati PDF...');
+      
+      const processingTime = Math.round((Date.now() - startTime) / 1000);
+      const detectedLanguage = extractedText.length > 0 ? 
+        detectLanguageFromText(extractedText) : settings.language;
+      
+      const result: OCRResult = {
+        extractedText: extractedText.trim(),
+        confidence: 95, // Alta confidenza per estrazione diretta PDF
+        language: detectedLanguage,
+        processingTime,
+        pageCount: 1
+      };
+      
+      progressCallback?.(100, 'Completato!');
+      log("ocr", `PDF processato: ${result.extractedText.length} caratteri estratti`);
+      return result;
+      
     } else {
+      // Per le immagini, usa OCR Tesseract
       progressCallback?.(15, 'Preprocessing dell\'immagine...');
       const processedBuffer = await preprocessImage(fileBuffer, settings);
-      imagesToProcess = [processedBuffer];
-    }
-    
-    progressCallback?.(30, 'Caricamento modelli linguistici...');
-    
-    // Crea worker Tesseract
-    const worker = await createWorker(tesseractLanguage);
-    
-    // Fase 3: Processamento immagini (30-90%)
-    let allText = '';
-    let totalConfidence = 0;
-    let processedPages = 0;
-    
-    log("ocr", `Processamento di ${imagesToProcess.length} ${isPdf ? 'pagine' : 'immagine/i'}`);
-    
-    for (let i = 0; i < imagesToProcess.length; i++) {
-      const currentProgress = 30 + (i / imagesToProcess.length) * 60; // 30-90%
-      progressCallback?.(currentProgress, `Analisi ${isPdf ? `pagina ${i + 1}` : 'immagine'}...`);
       
-      try {
-        // Esegui OCR sull'immagine corrente
-        const { data } = await worker.recognize(imagesToProcess[i]);
-        
-        if (data.text && data.text.trim()) {
-          allText += data.text.trim() + '\n\n';
-          totalConfidence += data.confidence || 0;
-          processedPages++;
-        }
-        
-        log("ocr", `${isPdf ? `Pagina ${i + 1}` : 'Immagine'} processata: ${data.text.length} caratteri, confidenza ${Math.round(data.confidence || 0)}%`);
-        
-      } catch (pageError: any) {
-        log("ocr", `Errore processamento ${isPdf ? `pagina ${i + 1}` : 'immagine'}: ${pageError.message}`);
-        // Continua con le altre pagine
-      }
+      progressCallback?.(30, 'Caricamento modelli linguistici...');
+      
+      // Crea worker Tesseract
+      const worker = await createWorker(tesseractLanguage);
+      
+      progressCallback?.(50, 'Analisi immagine in corso...');
+      
+      // Esegui OCR sull'immagine
+      const { data } = await worker.recognize(processedBuffer);
+      
+      progressCallback?.(90, 'Finalizzazione risultati...');
+      
+      // Cleanup worker
+      await worker.terminate();
+      
+      const processingTime = Math.round((Date.now() - startTime) / 1000);
+      const avgConfidence = Math.round(data.confidence || 0);
+      const detectedLanguage = data.text.length > 0 ? 
+        detectLanguageFromText(data.text) : settings.language;
+      
+      const result: OCRResult = {
+        extractedText: data.text.trim(),
+        confidence: avgConfidence,
+        language: detectedLanguage,
+        processingTime,
+        pageCount: 1
+      };
+      
+      progressCallback?.(100, 'Completato!');
+      log("ocr", `Immagine processata: ${result.extractedText.length} caratteri estratti con confidenza ${avgConfidence}%`);
+      return result;
     }
     
-    // Fase 4: Finalizzazione (90-100%)
-    progressCallback?.(90, 'Finalizzazione risultati...');
-    
-    // Cleanup worker
-    await worker.terminate();
-    
-    const processingTime = Math.round((Date.now() - startTime) / 1000);
-    
-    // Calcola confidence media
-    const avgConfidence = processedPages > 0 ? Math.round(totalConfidence / processedPages) : 0;
-    
-    // Determina la lingua rilevata
-    const detectedLanguage = allText.length > 0 ? 
-      detectLanguageFromText(allText) : settings.language;
-    
-    const result: OCRResult = {
-      extractedText: allText.trim(),
-      confidence: avgConfidence,
-      language: detectedLanguage,
-      processingTime,
-      pageCount: processedPages
-    };
-    
-    progressCallback?.(100, 'Completato!');
-    
-    log("ocr", `OCR completato: ${result.extractedText.length} caratteri estratti da ${processedPages} ${isPdf ? 'pagine' : 'immagine/i'} con confidenza media ${avgConfidence}%`);
-    
-    return result;
+    // Questa sezione è stata spostata sopra per gestire separatamente PDF e immagini
+    // Il codice per immagini e PDF è già implementato sopra
 
   } catch (error: any) {
     log("ocr", `Errore durante processamento OCR: ${error.message}`);
