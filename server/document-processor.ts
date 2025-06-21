@@ -70,58 +70,47 @@ export async function saveFile(buffer: Buffer, filename: string): Promise<string
 export async function extractTextFromPDF(filepath: string): Promise<string> {
   try {
     const buffer = await fs.readFile(filepath);
-    
-    // Get the pdf-parse function dynamically
     const pdfParser = await getPdfParse();
     
-    // Define our own options to improve text extraction
-    const options = {
-      // Normalize whitespace and improve text extraction
-      normalize: true,
-      disableCombineTextItems: false
-    };
-    
     log(`Extracting text from PDF file: ${filepath}`, "document-processor");
-    const pdfData = await pdfParser(buffer, options);
     
-    log(`PDF parse result - text length: ${pdfData.text?.length || 0}`, "document-processor");
-    log(`PDF parse result - first 100 chars: ${pdfData.text?.substring(0, 100) || 'EMPTY'}`, "document-processor");
-    
-    const extractedText = pdfData.text || "";
-    
-    // Normalizza il testo rimuovendo spazi multipli ma preservando la struttura
-    const normalizedText = extractedText
-      .replace(/\s+/g, ' ')  // Sostituisce spazi multipli con uno singolo
-      .replace(/\n\s+/g, '\n')  // Rimuove spazi all'inizio delle righe
-      .replace(/\s+\n/g, '\n')  // Rimuove spazi alla fine delle righe
-      .trim();
-    
-    log(`PDF text normalized - original: ${extractedText.length}, normalized: ${normalizedText.length}`, "document-processor");
-    log(`PDF normalized text preview (first 200 chars): ${normalizedText.substring(0, 200)}`, "document-processor");
-    log(`PDF normalized text end (last 100 chars): ${normalizedText.substring(Math.max(0, normalizedText.length - 100))}`, "document-processor");
-    
-    if (!normalizedText || normalizedText.length === 0 || normalizedText.includes("parsing failed")) {
-      log(`PDF extraction returned empty or error text, trying fallback`, "document-processor");
-      // Fallback to a simpler approach - try to extract text without custom options
-      const basicData = await pdfParser(buffer);
-      const fallbackText = basicData.text || "";
-      log(`Fallback PDF parse - text length: ${fallbackText.length}`, "document-processor");
-      
-      if (fallbackText.trim().length > 0) {
-        const normalizedFallback = fallbackText
-          .replace(/\s+/g, ' ')
-          .replace(/\n\s+/g, '\n')
-          .replace(/\s+\n/g, '\n')
-          .trim();
-        log(`Fallback text normalized - length: ${normalizedFallback.length}`, "document-processor");
-        return normalizedFallback;
+    // Primo tentativo con opzioni normali
+    try {
+      const pdfData = await pdfParser(buffer, { normalize: true });
+      if (pdfData.text && pdfData.text.trim().length > 0) {
+        const cleanText = pdfData.text.replace(/\s+/g, ' ').trim();
+        log(`PDF extraction successful - ${cleanText.length} characters`, "document-processor");
+        return cleanText;
       }
-      
-      return "PDF text extraction failed - no readable text found";
+    } catch (firstError) {
+      log(`First extraction attempt failed: ${(firstError as Error).message}`, "document-processor");
     }
     
-    log(`Returning extracted text with ${normalizedText.length} characters`, "document-processor");
-    return normalizedText;
+    // Secondo tentativo senza opzioni
+    try {
+      const basicData = await pdfParser(buffer);
+      if (basicData.text && basicData.text.trim().length > 0) {
+        const cleanText = basicData.text.replace(/\s+/g, ' ').trim();
+        log(`PDF fallback extraction successful - ${cleanText.length} characters`, "document-processor");
+        return cleanText;
+      }
+    } catch (secondError) {
+      log(`Second extraction attempt failed: ${(secondError as Error).message}`, "document-processor");
+    }
+    
+    // Terzo tentativo con opzioni minime
+    try {
+      const minimalData = await pdfParser(buffer, { disableCombineTextItems: true });
+      if (minimalData.text && minimalData.text.trim().length > 0) {
+        const cleanText = minimalData.text.replace(/\s+/g, ' ').trim();
+        log(`PDF minimal extraction successful - ${cleanText.length} characters`, "document-processor");
+        return cleanText;
+      }
+    } catch (thirdError) {
+      log(`Third extraction attempt failed: ${(thirdError as Error).message}`, "document-processor");
+    }
+    
+    throw new Error('All PDF extraction methods failed');
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     log(`Error extracting text from PDF: ${errorMessage}`, "document-processor");
