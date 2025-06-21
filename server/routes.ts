@@ -782,6 +782,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // OCR endpoints
+  // Get OCR process status
+  app.get("/api/ocr/status/:processId", isAuthenticated, async (req, res, next) => {
+    try {
+      const { processId } = req.params;
+      const status = getOCRProcessStatus(processId);
+      
+      if (!status) {
+        return res.status(404).json({ message: "Processo non trovato" });
+      }
+      
+      res.json(status);
+    } catch (error: any) {
+      log("ocr", `Errore status OCR: ${error.message}`);
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Process OCR for uploaded file
   app.post("/api/ocr/process", isAuthenticated, isActiveUser, ocrUpload.single('file'), async (req, res, next) => {
     try {
@@ -822,10 +839,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       log("ocr", `Processamento OCR avviato per utente ${userId}, file: ${file.originalname}`);
 
-      // Process OCR direttamente con tempo realistico
-      const result = await processOCR(file.buffer, file.originalname, settings);
+      // Genera un ID univoco per il processo
+      const processId = `ocr_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
-      res.json(result);
+      // Avvia processamento asincrono
+      processOCRWithProgress(file.buffer, file.originalname, settings, processId);
+      
+      // Restituisci immediatamente l'ID del processo per il polling
+      res.json({ processId, message: "Processamento avviato" });
     } catch (error: any) {
       log("ocr", `Errore processamento OCR: ${error.message}`);
       res.status(500).json({ message: error.message });

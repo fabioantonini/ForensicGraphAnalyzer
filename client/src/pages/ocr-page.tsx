@@ -78,6 +78,7 @@ export default function OCRPage() {
   const [processingStartTime, setProcessingStartTime] = useState<number | null>(null);
   const [documentTitle, setDocumentTitle] = useState("");
   const [saveToKnowledgeBase, setSaveToKnowledgeBase] = useState(true);
+  const [processId, setProcessId] = useState<string | null>(null);
 
   // Impostazioni OCR
   const [ocrSettings, setOcrSettings] = useState<OCRSettings>({
