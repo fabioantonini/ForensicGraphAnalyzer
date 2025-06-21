@@ -55,37 +55,38 @@ export async function detectEntities(text: string, apiKey?: string): Promise<Det
       messages: [
         {
           role: "system",
-          content: `Sei un esperto in riconoscimento di entità sensibili per l'anonimizzazione di documenti legali e amministrativi italiani. 
-          
-          Analizza il testo e identifica TUTTE le entità sensibili che devono essere anonimizzate, incluse:
-          - PERSON: Nomi e cognomi di persone
-          - LOCATION: Città, province, regioni, paesi
-          - EMAIL: Indirizzi email
-          - PHONE: Numeri di telefono (fissi e cellulari)
-          - ORGANIZATION: Nomi di aziende, enti, organizzazioni
-          - DATE: Date specifiche (non anni generici)
-          - ADDRESS: Indirizzi completi (via, numero civico)
-          - POSTAL_CODE: Codici postali (CAP)
+          content: `Sei un esperto in riconoscimento di entità sensibili per l'anonimizzazione di documenti legali italiani.
+
+          IDENTIFICA TUTTE queste entità sensibili:
+          - PERSON: Ogni nome di persona completo (es. "Giovanni Rossi", "Marta Bianchi", "Marco Neri")
+          - ADDRESS: Ogni indirizzo completo con via e numero (es. "Via Roma 12", "Via Verdi 34, Milano")
+          - LOCATION: Città specifiche quando indicate come luoghi di residenza (es. "Milano")
+          - MONEY: Importi monetari specifici (es. "EUR 500.000", "€ 10.000")
+          - DATE: Date complete specifiche (es. "5 maggio 1975", "21 giugno 2025")
+          - ORGANIZATION: Nomi di enti, fondazioni, aziende (es. "Fondazione Bambini Sorridenti")
+          - EMAIL: Indirizzi email completi
+          - PHONE: Numeri di telefono
           - FISCAL_CODE: Codici fiscali italiani
           - VAT_NUMBER: Partite IVA
-          - MONEY: Importi in denaro
-          - CREDIT_CARD: Numeri di carte di credito
           - IBAN: Codici IBAN
-          
-          Rispondi SOLO con un JSON valido nel formato:
+          - CREDIT_CARD: Numeri carte di credito
+
+          IMPORTANTE: Identifica OGNI SINGOLA occorrenza di nomi di persona, anche se ripetuti più volte nel testo.
+
+          Calcola le posizioni esatte dei caratteri. Usa le posizioni del testo originale.
+
+          Rispondi SOLO con JSON valido:
           {
             "entities": [
               {
-                "text": "testo_trovato",
-                "type": "TIPO_ENTITA",
-                "start": posizione_inizio,
-                "end": posizione_fine,
+                "text": "testo_esatto_dal_documento",
+                "type": "PERSON",
+                "start": posizione_carattere_inizio,
+                "end": posizione_carattere_fine,
                 "confidence": 0.95
               }
             ]
-          }
-          
-          Sii molto accurato nelle posizioni start/end che devono corrispondere esattamente al testo originale.`
+          }`
         },
         {
           role: "user",
@@ -96,9 +97,19 @@ export async function detectEntities(text: string, apiKey?: string): Promise<Det
       temperature: 0.1
     });
 
-    const result = JSON.parse(response.choices[0].message.content || '{"entities": []}');
+    const responseContent = response.choices[0].message.content || '{"entities": []}';
+    console.log(`[detectEntities] OpenAI response:`, responseContent);
+    console.log(`[detectEntities] Input text length:`, text.length);
+    console.log(`[detectEntities] Input text preview:`, text.substring(0, 200));
     
-    return result.entities.map((entity: any) => ({
+    const result = JSON.parse(responseContent);
+    
+    console.log(`[detectEntities] Found ${result.entities?.length || 0} entities:`);
+    result.entities?.forEach((entity: any, index: number) => {
+      console.log(`  ${index + 1}. ${entity.type}: "${entity.text}" (${entity.start}-${entity.end})`);
+    });
+    
+    return (result.entities || []).map((entity: any) => ({
       text: entity.text,
       type: entity.type,
       position: { start: entity.start, end: entity.end },
