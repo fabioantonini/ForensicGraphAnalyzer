@@ -207,25 +207,12 @@ async function processPdfWithOCR(pdfBuffer: Buffer, filename: string, progressCa
     log("ocr", "Inizio processamento con strategia ottimizzata...");
     progressCallback?.(20, isLargeFile ? 'Processamento documento grande in corso...' : 'Conversione PDF in corso...');
     
-    // Per documenti grandi, limita il processamento per evitare timeout
-    const maxPages = isLargeFile ? 30 : 50; // Limite più basso per file grandi
+    // Per documenti grandi, usa una strategia molto conservativa
+    const maxPages = isLargeFile ? 10 : 20; // Molto più limitato per garantire completamento
     let totalPages = maxPages; // Default sicuro
     
-    try {
-      // Prima verifica il numero di pagine senza convertire tutto
-      const pageCount = await convert.bulk(1, { responseType: "buffer" });
-      if (pageCount && pageCount.length > 0) {
-        // Stima il numero totale di pagine in base al file size
-        const estimatedPages = Math.ceil(pdfBuffer.length / (1024 * 100)); // Stima approssimativa
-        totalPages = Math.min(estimatedPages, maxPages);
-        
-        log("ocr", `Processamento limitato a ${totalPages} pagine per documenti grandi`);
-        progressCallback?.(30, `Processamento limitato a ${totalPages} pagine per performance...`);
-      }
-    } catch (estError) {
-      log("ocr", "Impossibile stimare numero pagine, uso limite default");
-      totalPages = maxPages;
-    }
+    log("ocr", `Modalità conservativa: processamento limitato a ${totalPages} pagine per garantire stabilità`);
+    progressCallback?.(30, `Estratto campione di ${totalPages} pagine per documenti grandi...`);
     
     let allText = "";
     let processedPages = 0;
@@ -234,49 +221,58 @@ async function processPdfWithOCR(pdfBuffer: Buffer, filename: string, progressCa
       // Crea worker Tesseract per OCR
       const worker = await createWorker(['ita', 'eng']);
       
-      // Processa le pagine in lotti per evitare problemi di memoria
-      const batchSize = 5;
+      // Processa le pagine una alla volta per massima stabilità
+      const batchSize = 1;
+      const processingTimeout = 300000; // 5 minuti timeout totale
+      const startTime = Date.now();
       
-      for (let batchStart = 1; batchStart <= totalPages; batchStart += batchSize) {
-        const batchEnd = Math.min(batchStart + batchSize - 1, totalPages);
-        
-        log("ocr", `Processamento lotto pagine ${batchStart}-${batchEnd}...`);
-        progressCallback?.(35 + Math.round((batchStart / totalPages) * 55), 
-          `OCR lotto ${Math.ceil(batchStart / batchSize)}/${Math.ceil(totalPages / batchSize)}...`);
-        
-        try {
-          // Converte solo il lotto corrente
-          const batchPages = await convert.bulk([batchStart, batchEnd], { responseType: "buffer" });
-          
-          if (batchPages && batchPages.length > 0) {
-            for (let i = 0; i < batchPages.length; i++) {
-              const page = batchPages[i];
-              const pageNum = batchStart + i;
-              
-              if (page.buffer) {
-                try {
-                  const { data } = await worker.recognize(page.buffer);
-                  const pageText = data.text.trim();
-                  
-                  if (pageText.length > 0) {
-                    allText += `\n=== Pagina ${pageNum} ===\n${pageText}\n`;
-                  }
-                  
-                  processedPages++;
-                  log("ocr", `Pagina ${pageNum}: ${pageText.length} caratteri estratti`);
-                } catch (pageError: any) {
-                  log("ocr", `Errore OCR pagina ${pageNum}: ${pageError.message}`);
-                }
-              }
-            }
-          }
-        } catch (batchError: any) {
-          log("ocr", `Errore processamento lotto ${batchStart}-${batchEnd}: ${batchError.message}`);
-          // Continua con il prossimo lotto
+      for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+        // Verifica timeout
+        if (Date.now() - startTime > processingTimeout) {
+          log("ocr", `Timeout raggiunto dopo ${(Date.now() - startTime) / 1000} secondi`);
+          break;
         }
         
-        // Pausa breve tra lotti per evitare sovraccarico
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        const progress = 35 + Math.round((pageNum / totalPages) * 55);
+        progressCallback?.(progress, `OCR pagina ${pageNum}/${totalPages}...`);
+        
+        try {
+          // Converte una pagina alla volta con timeout per pagina
+          const pageTimeout = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Timeout pagina')), 30000)); // 30 sec per pagina
+          
+          const pageConversion = convert.bulk([pageNum, pageNum], { responseType: "buffer" });
+          
+          const batchPages = await Promise.race([pageConversion, pageTimeout]);
+          
+          if (batchPages && batchPages.length > 0 && batchPages[0].buffer) {
+            try {
+              // OCR con timeout per pagina
+              const ocrTimeout = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('OCR timeout')), 15000)); // 15 sec per OCR
+              
+              const ocrPromise = worker.recognize(batchPages[0].buffer);
+              const { data } = await Promise.race([ocrPromise, ocrTimeout]);
+              
+              const pageText = data.text.trim();
+              
+              if (pageText.length > 0) {
+                allText += `\n=== Pagina ${pageNum} ===\n${pageText}\n`;
+              }
+              
+              processedPages++;
+              log("ocr", `Pagina ${pageNum}: ${pageText.length} caratteri estratti`);
+            } catch (ocrError: any) {
+              log("ocr", `Errore OCR pagina ${pageNum}: ${ocrError.message}`);
+            }
+          }
+        } catch (pageError: any) {
+          log("ocr", `Errore processamento pagina ${pageNum}: ${pageError.message}`);
+          // Continua con la pagina successiva
+        }
+        
+        // Pausa tra pagine per stabilità
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
       
       // Cleanup
