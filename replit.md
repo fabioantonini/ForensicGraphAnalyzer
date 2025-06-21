@@ -181,6 +181,11 @@ Preferred communication style: Simple, everyday language.
   - Multi-format document support: PDF, DOCX, TXT with intelligent text extraction
   - User API key integration: Uses individual OpenAI keys from user database
   - Enhanced formatting preservation: Professional PDF output with structured text files for other formats
+  - **Text-based Entity Replacement**: Robust anonymization using text search instead of AI positions
+    - Fixed position accuracy issues that prevented entity substitution
+    - Regex-based search for reliable entity detection and replacement
+    - Handles multiple occurrences and prevents partial substitutions
+    - Successfully tested with Italian testamento document (18 entities detected and replaced)
 - **Professional Frontend Interface**: Complete React-based anonymization workflow
   - Four-tab interface: Upload → Settings → Preview → Result
   - Drag-and-drop file upload with format validation (10MB limit)
