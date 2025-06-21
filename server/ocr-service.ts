@@ -4,6 +4,7 @@ import path from "path";
 import fs from "fs/promises";
 import { createWorker } from 'tesseract.js';
 import sharp from 'sharp';
+import crypto from 'crypto';
 import { log } from "./vite";
 import { extractTextFromPDF } from "./document-processor";
 
@@ -182,12 +183,15 @@ async function processPdfText(pdfBuffer: Buffer, filename: string, progressCallb
 
 // Funzione per processare PDF scansionati con OCR usando pdf2pic
 async function processPdfWithOCR(pdfBuffer: Buffer, filename: string, progressCallback?: (progress: number, stage: string) => void): Promise<string> {
-  const uniqueId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  // Crea hash del contenuto del file per garantire unicità
+  const fileHash = crypto.createHash('md5').update(pdfBuffer).digest('hex').substr(0, 8);
+  const uniqueId = `${Date.now()}_${fileHash}_${Math.random().toString(36).substr(2, 6)}`;
   const sanitizedFilename = filename.replace(/[^a-zA-Z0-9.-]/g, '_');
   const tempPdfPath = path.join('./temp', `temp_ocr_${uniqueId}_${sanitizedFilename}`);
   
   try {
-    log("ocr", "Avvio conversione PDF scansionato in immagini per OCR...");
+    log("ocr", `[${uniqueId}] Avvio conversione PDF scansionato - File: ${filename}`);
+    log("ocr", `[${uniqueId}] Hash contenuto: ${fileHash} - Path temp: ${tempPdfPath}`);
     
     const pdf2pic = await import('pdf2pic');
     const { createWorker } = await import('tesseract.js');
@@ -196,7 +200,7 @@ async function processPdfWithOCR(pdfBuffer: Buffer, filename: string, progressCa
     const fileSizeMB = pdfBuffer.length / (1024 * 1024);
     const isLargeFile = fileSizeMB > 10; // Documenti sopra 10MB sono considerati grandi
     
-    log("ocr", `File size: ${fileSizeMB.toFixed(1)}MB - ${isLargeFile ? 'Modalità documento grande' : 'Modalità standard'}`);
+    log("ocr", `[${uniqueId}] File size: ${fileSizeMB.toFixed(1)}MB - ${isLargeFile ? 'Modalità documento grande' : 'Modalità standard'}`);
     progressCallback?.(10, `Preparazione ${isLargeFile ? 'documento grande' : 'documento'}...`);
     
     // Salva temporaneamente il PDF
