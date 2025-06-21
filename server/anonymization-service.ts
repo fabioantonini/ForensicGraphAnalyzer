@@ -133,58 +133,41 @@ export function anonymizeText(
   entities: DetectedEntity[], 
   replacements: Record<string, string>
 ): string {
-  // Filtra e valida le entità per evitare sovrapposizioni e posizioni errate
-  const validEntities = entities.filter(entity => {
-    // Verifica che le posizioni siano valide
-    if (entity.position.start < 0 || entity.position.end > text.length || entity.position.start >= entity.position.end) {
-      console.warn(`Invalid entity position: ${entity.text} (${entity.position.start}-${entity.position.end})`);
-      return false;
-    }
-    
-    // Verifica che il testo estratto corrisponda all'entità
-    const extractedText = text.substring(entity.position.start, entity.position.end);
-    if (extractedText !== entity.text) {
-      console.warn(`Entity text mismatch: expected "${entity.text}", found "${extractedText}"`);
-      return false;
-    }
-    
-    return true;
-  });
-
-  // Rimuovi entità sovrapposte (mantieni quelle più lunghe)
-  const nonOverlappingEntities: DetectedEntity[] = [];
-  const sortedByStart = [...validEntities].sort((a, b) => a.position.start - b.position.start);
-  
-  for (const entity of sortedByStart) {
-    const hasOverlap = nonOverlappingEntities.some(existing => 
-      !(entity.position.end <= existing.position.start || entity.position.start >= existing.position.end)
-    );
-    
-    if (!hasOverlap) {
-      nonOverlappingEntities.push(entity);
-    } else {
-      console.warn(`Skipping overlapping entity: ${entity.text}`);
-    }
-  }
-
-  // Ordina per posizione (dalla fine all'inizio per evitare problemi di offset)
-  const finalEntities = nonOverlappingEntities.sort((a, b) => b.position.start - a.position.start);
-  
+  // Usa un approccio basato su ricerca del testo invece di posizioni precise
   let anonymizedText = text;
   
-  console.log(`[anonymizeText] Processing ${finalEntities.length} entities for replacement`);
-  
-  for (const entity of finalEntities) {
-    const replacement = replacements[entity.type] || `[${entity.type}]`;
-    const originalSegment = anonymizedText.substring(entity.position.start, entity.position.end);
+  // Raggruppa entità per tipo e ordina per lunghezza (più lunghe prima per evitare sostituzioni parziali)
+  const entityGroups: { [key: string]: DetectedEntity[] } = {};
+  entities.forEach(entity => {
+    if (!entityGroups[entity.type]) {
+      entityGroups[entity.type] = [];
+    }
+    entityGroups[entity.type].push(entity);
+  });
+
+  // Processa ogni tipo di entità
+  Object.entries(entityGroups).forEach(([type, typeEntities]) => {
+    const replacement = replacements[type] || `[${type}]`;
     
-    console.log(`[anonymizeText] Replacing "${originalSegment}" with "${replacement}" at position ${entity.position.start}-${entity.position.end}`);
+    // Rimuovi duplicati e ordina per lunghezza decrescente
+    const uniqueEntities = Array.from(new Set(typeEntities.map(e => e.text)))
+      .sort((a, b) => b.length - a.length);
     
-    const before = anonymizedText.substring(0, entity.position.start);
-    const after = anonymizedText.substring(entity.position.end);
-    anonymizedText = before + replacement + after;
-  }
-  
+    console.log(`[anonymizeText] Processing ${uniqueEntities.length} unique entities of type ${type}:`, uniqueEntities);
+    
+    uniqueEntities.forEach(entityText => {
+      // Usa regex per trovare tutte le occorrenze, ignorando case e spazi extra
+      const escapedText = entityText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`\\b${escapedText}\\b`, 'gi');
+      
+      const matchCount = (anonymizedText.match(regex) || []).length;
+      if (matchCount > 0) {
+        console.log(`[anonymizeText] Replacing ${matchCount} occurrences of "${entityText}" with "${replacement}"`);
+        anonymizedText = anonymizedText.replace(regex, replacement);
+      }
+    });
+  });
+
   return anonymizedText;
 }
 
