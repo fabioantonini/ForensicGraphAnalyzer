@@ -133,13 +133,53 @@ export function anonymizeText(
   entities: DetectedEntity[], 
   replacements: Record<string, string>
 ): string {
-  // Ordina le entità per posizione (dalla fine all'inizio per evitare problemi di offset)
-  const sortedEntities = [...entities].sort((a, b) => b.position.start - a.position.start);
+  // Filtra e valida le entità per evitare sovrapposizioni e posizioni errate
+  const validEntities = entities.filter(entity => {
+    // Verifica che le posizioni siano valide
+    if (entity.position.start < 0 || entity.position.end > text.length || entity.position.start >= entity.position.end) {
+      console.warn(`Invalid entity position: ${entity.text} (${entity.position.start}-${entity.position.end})`);
+      return false;
+    }
+    
+    // Verifica che il testo estratto corrisponda all'entità
+    const extractedText = text.substring(entity.position.start, entity.position.end);
+    if (extractedText !== entity.text) {
+      console.warn(`Entity text mismatch: expected "${entity.text}", found "${extractedText}"`);
+      return false;
+    }
+    
+    return true;
+  });
+
+  // Rimuovi entità sovrapposte (mantieni quelle più lunghe)
+  const nonOverlappingEntities: DetectedEntity[] = [];
+  const sortedByStart = [...validEntities].sort((a, b) => a.position.start - b.position.start);
+  
+  for (const entity of sortedByStart) {
+    const hasOverlap = nonOverlappingEntities.some(existing => 
+      !(entity.position.end <= existing.position.start || entity.position.start >= existing.position.end)
+    );
+    
+    if (!hasOverlap) {
+      nonOverlappingEntities.push(entity);
+    } else {
+      console.warn(`Skipping overlapping entity: ${entity.text}`);
+    }
+  }
+
+  // Ordina per posizione (dalla fine all'inizio per evitare problemi di offset)
+  const finalEntities = nonOverlappingEntities.sort((a, b) => b.position.start - a.position.start);
   
   let anonymizedText = text;
   
-  for (const entity of sortedEntities) {
+  console.log(`[anonymizeText] Processing ${finalEntities.length} entities for replacement`);
+  
+  for (const entity of finalEntities) {
     const replacement = replacements[entity.type] || `[${entity.type}]`;
+    const originalSegment = anonymizedText.substring(entity.position.start, entity.position.end);
+    
+    console.log(`[anonymizeText] Replacing "${originalSegment}" with "${replacement}" at position ${entity.position.start}-${entity.position.end}`);
+    
     const before = anonymizedText.substring(0, entity.position.start);
     const after = anonymizedText.substring(entity.position.end);
     anonymizedText = before + replacement + after;
