@@ -41,6 +41,7 @@ export interface Document {
   fileType: string;
   fileSize: number;
   indexed: boolean;
+  source?: string; // 'upload' or 'ocr'
   createdAt: Date;
   updatedAt: Date;
 }
