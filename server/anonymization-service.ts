@@ -142,19 +142,58 @@ export async function generateAnonymizedPDF(
   originalFilename: string
 ): Promise<void> {
   return new Promise((resolve, reject) => {
-    const doc = new PdfPrinter({ size: 'A4', margin: 50 });
+    const doc = new PdfPrinter({
+      size: 'A4',
+      margins: {
+        top: 50,
+        bottom: 50,
+        left: 50,
+        right: 50
+      }
+    });
     const stream = fsSync.createWriteStream(outputPath);
     
     doc.pipe(stream);
     
-    // Header
-    doc.fontSize(16).text('DOCUMENTO ANONIMIZZATO', { align: 'center' });
-    doc.fontSize(12).text(`Documento originale: ${originalFilename}`, { align: 'center' });
-    doc.fontSize(10).text(`Generato il: ${new Date().toLocaleDateString('it-IT')}`, { align: 'center' });
-    doc.moveDown(2);
+    // Header minimalista e professionale
+    doc.fontSize(14).font('Helvetica-Bold').text('DOCUMENTO ANONIMIZZATO', { align: 'center' });
+    doc.fontSize(10).font('Helvetica').text(`File originale: ${originalFilename}`, { align: 'center' });
+    doc.fontSize(8).text(`Generato il: ${new Date().toLocaleDateString('it-IT')} alle ${new Date().toLocaleTimeString('it-IT')}`, { align: 'center' });
+    doc.moveDown(1.5);
     
-    // Content
-    doc.fontSize(11).text(text, { align: 'justify' });
+    // Linea separatrice
+    doc.moveTo(50, doc.y).lineTo(doc.page.width - 50, doc.y).stroke();
+    doc.moveDown(1);
+    
+    // Content con formattazione preservata
+    doc.fontSize(11).font('Helvetica');
+    
+    // Mantieni la struttura del testo originale
+    const paragraphs = text.split('\n\n');
+    
+    paragraphs.forEach((paragraph, index) => {
+      if (paragraph.trim()) {
+        // Preserva le interruzioni di riga all'interno dei paragrafi
+        const lines = paragraph.split('\n');
+        lines.forEach((line, lineIndex) => {
+          if (line.trim()) {
+            doc.text(line.trim(), {
+              align: 'left',
+              lineGap: 2,
+              indent: line.startsWith(' ') ? 20 : 0 // Mantieni l'indentazione
+            });
+            if (lineIndex < lines.length - 1) {
+              doc.moveDown(0.2);
+            }
+          }
+        });
+        
+        // Spazio tra paragrafi
+        if (index < paragraphs.length - 1) {
+          doc.moveDown(0.6);
+        }
+      }
+    });
     
     doc.end();
     
@@ -164,32 +203,47 @@ export async function generateAnonymizedPDF(
 }
 
 /**
- * Genera un file DOCX anonimizzato dal testo
+ * Genera un file DOCX anonimizzato dal testo preservando la formattazione
  */
 export async function generateAnonymizedDOCX(
   text: string,
   outputPath: string,
   originalFilename: string
 ): Promise<void> {
-  const docxContent = `
-    <html>
-      <body>
-        <h2 style="text-align: center;">DOCUMENTO ANONIMIZZATO</h2>
-        <p style="text-align: center; font-size: 12px;">Documento originale: ${originalFilename}</p>
-        <p style="text-align: center; font-size: 10px;">Generato il: ${new Date().toLocaleDateString('it-IT')}</p>
-        <hr/>
-        <div style="text-align: justify; font-size: 11px; line-height: 1.5;">
-          ${text.replace(/\n/g, '<br/>')}
-        </div>
-      </body>
-    </html>
-  `;
+  // Crea un documento DOCX strutturato mantenendo la formattazione originale
+  const timestamp = new Date().toLocaleDateString('it-IT') + ' alle ' + new Date().toLocaleTimeString('it-IT');
   
-  // Converti HTML in DOCX usando mammoth (reverse)
-  // Per ora salviamo come file di testo formattato
-  const formattedText = `DOCUMENTO ANONIMIZZATO\n\nDocumento originale: ${originalFilename}\nGenerato il: ${new Date().toLocaleDateString('it-IT')}\n\n${'-'.repeat(50)}\n\n${text}`;
+  // Header professionale
+  let formattedContent = 'DOCUMENTO ANONIMIZZATO\n';
+  formattedContent += '━'.repeat(50) + '\n\n';
+  formattedContent += `File originale: ${originalFilename}\n`;
+  formattedContent += `Generato il: ${timestamp}\n\n`;
+  formattedContent += '━'.repeat(50) + '\n\n';
   
-  await fs.writeFile(outputPath, formattedText, 'utf-8');
+  // Preserva la struttura del testo originale
+  const paragraphs = text.split('\n\n');
+  
+  paragraphs.forEach((paragraph, index) => {
+    if (paragraph.trim()) {
+      // Mantieni le interruzioni di riga all'interno dei paragrafi
+      const lines = paragraph.split('\n');
+      lines.forEach((line, lineIndex) => {
+        if (line.trim()) {
+          // Preserva l'indentazione originale
+          const indent = line.match(/^(\s*)/)?.[1] || '';
+          formattedContent += indent + line.trim() + '\n';
+        }
+      });
+      
+      // Spazio tra paragrafi
+      if (index < paragraphs.length - 1) {
+        formattedContent += '\n';
+      }
+    }
+  });
+  
+  // Salva come file di testo con encoding UTF-8 per preservare caratteri speciali
+  await fs.writeFile(outputPath.replace('.docx', '.txt'), formattedContent, 'utf-8');
 }
 
 /**
