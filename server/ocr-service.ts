@@ -276,16 +276,17 @@ async function processPdfWithOCR(pdfBuffer: Buffer, filename: string, progressCa
           
           const pageConversion = convert.bulk([pageNum, pageNum], { responseType: "buffer" });
           
-          const batchPages = await Promise.race([pageConversion, pageTimeout]);
+          const batchPages = await Promise.race([pageConversion, pageTimeout]) as any[];
           
-          if (batchPages && batchPages.length > 0 && batchPages[0].buffer) {
+          if (batchPages && Array.isArray(batchPages) && batchPages.length > 0 && batchPages[0]?.buffer) {
             try {
               // OCR con timeout per pagina
               const ocrTimeout = new Promise((_, reject) => 
                 setTimeout(() => reject(new Error('OCR timeout')), 15000)); // 15 sec per OCR
               
               const ocrPromise = worker.recognize(batchPages[0].buffer);
-              const { data } = await Promise.race([ocrPromise, ocrTimeout]);
+              const ocrResult = await Promise.race([ocrPromise, ocrTimeout]) as any;
+              const { data } = ocrResult;
               
               const pageText = data.text.trim();
               

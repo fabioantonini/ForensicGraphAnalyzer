@@ -742,6 +742,30 @@ export default function OCRPage() {
                 <CardTitle className="flex items-center justify-between">
                   <span>{t('results.extractedText')}</span>
                   <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        // Crea e scarica il file di testo
+                        const blob = new Blob([ocrResult.extractedText], { type: 'text/plain;charset=utf-8' });
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = `${documentTitle || 'documento-ocr'}.txt`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(url);
+                        
+                        toast({
+                          title: "Download avviato",
+                          description: "Il documento è stato scaricato",
+                        });
+                      }}
+                    >
+                      <Download className="h-4 w-4 mr-1" />
+                      Scarica TXT
+                    </Button>
                     <Badge variant={ocrResult.confidence > 80 ? "default" : "secondary"}>
                       {ocrResult.confidence}% {t('results.confidence')}
                     </Badge>
@@ -768,12 +792,12 @@ export default function OCRPage() {
                       placeholder="Il testo estratto apparirà qui..."
                     />
                     
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       {saveToKnowledgeBase && (
                         <Button
                           onClick={() => saveMutation.mutate()}
                           disabled={saveMutation.isPending}
-                          className="flex-1"
+                          className="flex-1 min-w-[120px]"
                         >
                           {saveMutation.isPending ? (
                             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -793,7 +817,7 @@ export default function OCRPage() {
                             description: "Testo copiato negli appunti",
                           });
                         }}
-                        className={saveToKnowledgeBase ? "" : "flex-1"}
+                        className={saveToKnowledgeBase ? "min-w-[100px]" : "flex-1 min-w-[100px]"}
                       >
                         <Copy className="h-4 w-4 mr-2" />
                         Copia
@@ -818,7 +842,7 @@ export default function OCRPage() {
                             description: "Il documento è stato scaricato",
                           });
                         }}
-                        className={saveToKnowledgeBase ? "" : "flex-1"}
+                        className={saveToKnowledgeBase ? "min-w-[100px]" : "flex-1 min-w-[100px]"}
                       >
                         <Download className="h-4 w-4 mr-2" />
                         Scarica
