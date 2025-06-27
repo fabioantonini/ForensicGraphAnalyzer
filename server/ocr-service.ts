@@ -177,6 +177,20 @@ async function processPdfText(pdfBuffer: Buffer, filename: string, progressCallb
     
   } catch (error: any) {
     log("ocr", `Errore estrazione PDF: ${error.message}`);
+    
+    // Se l'estrazione diretta fallisce, prova con OCR come fallback
+    log("ocr", "Tentativo fallback OCR per PDF problematico...");
+    
+    try {
+      const ocrText = await processPdfWithOCR(pdfBuffer, filename, progressCallback);
+      if (ocrText && ocrText.trim().length > 0) {
+        log("ocr", `Fallback OCR riuscito: ${ocrText.length} caratteri estratti`);
+        return ocrText;
+      }
+    } catch (ocrError: any) {
+      log("ocr", `Fallback OCR fallito: ${ocrError.message}`);
+    }
+    
     throw new Error(`Impossibile estrarre testo da PDF: ${error.message}`);
   }
 }
