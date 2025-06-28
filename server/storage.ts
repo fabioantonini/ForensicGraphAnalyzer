@@ -7,7 +7,7 @@ import {
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
-import { and, desc, eq, gt, lt, sql } from "drizzle-orm";
+import { and, desc, eq, gt, lt, sql, inArray } from "drizzle-orm";
 import { db } from "./db";
 import connectPg from "connect-pg-simple";
 import { Pool } from "@neondatabase/serverless";
@@ -1773,7 +1773,7 @@ export class DatabaseStorage implements IStorage {
     return db
       .select()
       .from(documents)
-      .where(sql`${documents.id} IN (${ids.join(',')})`);
+      .where(inArray(documents.id, ids));
   }
 
   async getDocumentCount(userId: number): Promise<number> {
