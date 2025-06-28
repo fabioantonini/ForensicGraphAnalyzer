@@ -89,9 +89,18 @@ export async function processOCRWithProgress(
   try {
     log("ocr", `Inizio processamento OCR per processId: ${processId}`);
     
+    // Verifica validità del buffer
+    if (!fileBuffer || fileBuffer.length === 0) {
+      throw new Error('File buffer vuoto o non valido');
+    }
+    
     const result = await processOCR(fileBuffer, filename, settings, (progress: number, stage: string) => {
-      log("ocr", `Progresso ${processId}: ${progress}% - ${stage}`);
-      updateOCRProcessStatus(processId, { progress, stage });
+      try {
+        log("ocr", `Progresso ${processId}: ${progress}% - ${stage}`);
+        updateOCRProcessStatus(processId, { progress, stage });
+      } catch (updateError) {
+        log("ocr", `Errore aggiornamento progresso: ${updateError}`);
+      }
     });
 
     log("ocr", `OCR completato per processId: ${processId}, risultato: ${result.extractedText.length} caratteri`);
@@ -106,22 +115,49 @@ export async function processOCRWithProgress(
 
     // Cleanup dopo 5 minuti
     setTimeout(() => {
-      ocrProcesses.delete(processId);
+      try {
+        ocrProcesses.delete(processId);
+      } catch (cleanupError) {
+        log("ocr", `Errore cleanup processId ${processId}: ${cleanupError}`);
+      }
     }, 5 * 60 * 1000);
 
   } catch (error: any) {
     log("ocr", `Errore OCR per processId: ${processId}: ${error.message}`);
     
+    // Crea un risultato di errore invece di fallire completamente
+    const errorResult: OCRResult = {
+      extractedText: `Errore durante l'elaborazione: ${error.message}
+
+Dettagli tecnici:
+- File: ${filename}
+- Errore: ${error.message}
+
+Possibili soluzioni:
+- Verifica che il file non sia corrotto
+- Prova con un file più piccolo
+- Assicurati che il formato sia supportato`,
+      confidence: 0,
+      language: 'err',
+      processingTime: 0,
+      pageCount: 0
+    };
+    
     updateOCRProcessStatus(processId, {
-      progress: 0,
-      stage: 'Errore',
+      progress: 100,
+      stage: 'Completato con errori',
       completed: true,
+      result: errorResult,
       error: error.message
     });
 
     // Cleanup dopo 1 minuto in caso di errore
     setTimeout(() => {
-      ocrProcesses.delete(processId);
+      try {
+        ocrProcesses.delete(processId);
+      } catch (cleanupError) {
+        log("ocr", `Errore cleanup processId ${processId}: ${cleanupError}`);
+      }
     }, 60 * 1000);
   }
 }
@@ -134,6 +170,7 @@ export async function processOCR(
   progressCallback?: (progress: number, stage: string) => void
 ): Promise<OCRResult> {
   const startTime = Date.now();
+  let worker: any = null;
   
   log("ocr", `Avvio processamento OCR per file: ${filename}`);
 
@@ -141,10 +178,15 @@ export async function processOCR(
     // Inizializzazione
     progressCallback?.(5, 'Inizializzazione sistema OCR...');
     
+    // Verifica validità del buffer
+    if (!fileBuffer || fileBuffer.length === 0) {
+      throw new Error('Buffer file vuoto o non valido');
+    }
+    
     const isPdf = filename.toLowerCase().endsWith('.pdf');
     
     if (isPdf) {
-      // Per i PDF, usa solo estrazione diretta del testo
+      // Per i PDF, usa estrazione diretta del testo con fallback OCR
       progressCallback?.(15, 'Estrazione testo da PDF...');
       
       const extractedText = await processPdfText(fileBuffer, filename, progressCallback);
@@ -153,9 +195,17 @@ export async function processOCR(
       
       const processingTime = Math.round((Date.now() - startTime) / 1000);
       
+      // Determina confidence basato sulla lunghezza del testo estratto
+      let confidence = 50;
+      if (extractedText.trim().length > 100) {
+        confidence = 85;
+      } else if (extractedText.trim().length > 20) {
+        confidence = 70;
+      }
+      
       const result: OCRResult = {
         extractedText: extractedText.trim(),
-        confidence: extractedText.trim().length > 0 ? 85 : 50,
+        confidence,
         language: 'ita',
         processingTime,
         pageCount: 1
@@ -166,42 +216,105 @@ export async function processOCR(
       
     } else {
       // Per le immagini, usa OCR Tesseract
-      progressCallback?.(15, 'Preprocessing dell\'immagine...');
-      const processedBuffer = await preprocessImage(fileBuffer, settings);
-      
-      progressCallback?.(30, 'Caricamento modelli linguistici...');
-      
-      // Crea worker Tesseract con solo inglese per stabilità
-      const worker = await createWorker('eng');
-      
-      progressCallback?.(50, 'Analisi immagine in corso...');
-      
-      // Esegui OCR sull'immagine
-      const { data } = await worker.recognize(processedBuffer);
-      
-      progressCallback?.(90, 'Finalizzazione risultati...');
-      
-      // Cleanup worker
-      await worker.terminate();
-      
-      const processingTime = Math.round((Date.now() - startTime) / 1000);
-      const avgConfidence = Math.round(data.confidence || 0);
-      
-      const result: OCRResult = {
-        extractedText: data.text,
-        confidence: avgConfidence,
-        language: 'eng',
-        processingTime,
-        pageCount: 1
-      };
-      
-      progressCallback?.(100, 'Completato!');
-      return result;
+      try {
+        progressCallback?.(15, 'Preprocessing dell\'immagine...');
+        const processedBuffer = await preprocessImage(fileBuffer, settings);
+        
+        progressCallback?.(30, 'Caricamento modelli linguistici...');
+        
+        // Crea worker Tesseract con timeout
+        const workerPromise = createWorker('eng');
+        const timeoutPromise = new Promise<any>((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout inizializzazione OCR')), 30000)
+        );
+        
+        worker = await Promise.race([workerPromise, timeoutPromise]);
+        
+        progressCallback?.(50, 'Analisi immagine in corso...');
+        
+        // Esegui OCR sull'immagine con timeout
+        const recognitionPromise = worker.recognize(processedBuffer);
+        const recognitionTimeoutPromise = new Promise<any>((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout riconoscimento testo')), 60000)
+        );
+        
+        const { data } = await Promise.race([recognitionPromise, recognitionTimeoutPromise]);
+        
+        progressCallback?.(90, 'Finalizzazione risultati...');
+        
+        const processingTime = Math.round((Date.now() - startTime) / 1000);
+        const avgConfidence = Math.round(data.confidence || 0);
+        
+        const result: OCRResult = {
+          extractedText: data.text || '',
+          confidence: avgConfidence,
+          language: 'eng',
+          processingTime,
+          pageCount: 1
+        };
+        
+        progressCallback?.(100, 'Completato!');
+        return result;
+        
+      } catch (imageError: any) {
+        log("ocr", `Errore processamento immagine: ${imageError.message}`);
+        
+        // Ritorna un risultato di errore invece di fallire
+        const processingTime = Math.round((Date.now() - startTime) / 1000);
+        
+        return {
+          extractedText: `Impossibile processare l'immagine: ${imageError.message}
+
+Possibili cause:
+- Formato immagine non supportato o corrotto
+- Immagine troppo grande o di qualità troppo bassa
+- Timeout durante il processamento
+
+Suggerimenti:
+- Verifica che l'immagine sia in formato JPEG, PNG, TIFF o BMP
+- Riduci le dimensioni dell'immagine se è molto grande
+- Migliora la qualità di scansione se il testo è poco leggibile`,
+          confidence: 0,
+          language: 'err',
+          processingTime,
+          pageCount: 1
+        };
+      }
     }
 
   } catch (error: any) {
     log("ocr", `Errore durante processamento OCR: ${error.message}`);
-    throw new Error(`Errore OCR: ${error.message}`);
+    
+    const processingTime = Math.round((Date.now() - startTime) / 1000);
+    
+    // Ritorna un risultato di errore invece di propagare l'eccezione
+    return {
+      extractedText: `Errore durante l'elaborazione: ${error.message}
+
+Dettagli:
+- File: ${filename}
+- Tipo: ${filename.toLowerCase().endsWith('.pdf') ? 'PDF' : 'Immagine'}
+- Errore: ${error.message}
+
+Soluzioni possibili:
+- Verifica che il file non sia corrotto
+- Prova con un formato diverso
+- Riduci le dimensioni del file`,
+      confidence: 0,
+      language: 'err',
+      processingTime,
+      pageCount: 0
+    };
+    
+  } finally {
+    // Cleanup worker se è stato creato
+    if (worker) {
+      try {
+        await worker.terminate();
+      } catch (workerError) {
+        log("ocr", `Errore terminazione worker: ${workerError}`);
+      }
+    }
   }
 }
 
@@ -293,76 +406,128 @@ async function processPdfWithOCR(pdfBuffer: Buffer, filename: string, progressCa
   const sanitizedFilename = filename.replace(/[^a-zA-Z0-9.-]/g, '_');
   const tempPdfPath = path.join('./temp', `temp_ocr_${uniqueId}_${sanitizedFilename}`);
   
+  let worker: any = null;
+  
   try {
     log("ocr", `[${uniqueId}] Avvio conversione PDF scansionato - File: ${filename}`);
     
-    // Importa dinamicamente pdf2pic
-    const pdf2pic = await import('pdf2pic');
-    
     progressCallback?.(20, 'Conversione PDF in immagini...');
+    
+    // Verifica che il buffer PDF sia valido
+    if (!pdfBuffer || pdfBuffer.length === 0) {
+      throw new Error('Buffer PDF vuoto o non valido');
+    }
     
     // Salva temporaneamente il PDF
     await fs.mkdir('./temp', { recursive: true });
     await fs.writeFile(tempPdfPath, pdfBuffer);
     
+    // Verifica che il file sia stato scritto correttamente
+    const stats = await fs.stat(tempPdfPath);
+    if (stats.size === 0) {
+      throw new Error('File PDF temporaneo vuoto');
+    }
+    
+    log("ocr", `File PDF temporaneo salvato: ${stats.size} bytes`);
+    
     // Crea directory temporanea per le immagini
     const tempDir = path.join('./temp', `ocr_${uniqueId}`);
     await fs.mkdir(tempDir, { recursive: true });
 
-    // Configura pdf2pic
+    // Prima crea il worker Tesseract per verificare che funzioni
+    progressCallback?.(30, 'Inizializzazione OCR...');
+    worker = await createWorker('eng');
+    
+    // Importa dinamicamente pdf2pic
+    const pdf2pic = await import('pdf2pic');
+    
+    progressCallback?.(40, 'Conversione pagine in corso...');
+
+    // Configura pdf2pic con impostazioni più conservative
     const convert = pdf2pic.fromPath(tempPdfPath, {
-      density: 200,           // DPI ridotto per performance
+      density: 150,           // DPI ridotto ulteriormente
       saveFilename: `page_${uniqueId}`,
       savePath: tempDir,
       format: "png",
-      width: 1800,            // Dimensioni ottimizzate
-      height: 2500
+      width: 1200,            // Dimensioni ridotte per stabilità
+      height: 1600
     });
     
-    progressCallback?.(40, 'Conversione pagine in corso...');
-    
-    // Converte fino a 5 pagine per non sovraccaricare il sistema
-    const maxPages = 5;
+    // Converte solo le prime 3 pagine per evitare sovraccarico
+    const maxPages = 3;
     let allText = "";
     
     try {
-      // Crea worker Tesseract
-      const worker = await createWorker('eng');
+      progressCallback?.(50, 'Conversione immagini...');
       
-      progressCallback?.(50, 'Inizializzazione OCR...');
-      
-      // Converti le prime pagine
-      const pages = await convert.bulk([1, maxPages], { responseType: "buffer" });
-      
-      progressCallback?.(60, 'Analisi testo in corso...');
-      
-      let processedPages = 0;
-      for (const page of pages) {
-        if (page.buffer) {
-          try {
-            const { data } = await worker.recognize(page.buffer);
-            const pageText = data.text.trim();
+      // Converti una pagina alla volta per gestire meglio gli errori
+      for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
+        try {
+          log("ocr", `Conversione pagina ${pageNum}...`);
+          
+          // Converti singola pagina con timeout
+          const convertPromise = convert(pageNum, { responseType: "buffer" });
+          const timeoutPromise = new Promise<any>((_, reject) => 
+            setTimeout(() => reject(new Error(`Timeout conversione pagina ${pageNum}`)), 30000)
+          );
+          
+          const pageResult = await Promise.race([convertPromise, timeoutPromise]);
+          
+          if (pageResult && pageResult.buffer && pageResult.buffer.length > 0) {
+            log("ocr", `Pagina ${pageNum} convertita: ${pageResult.buffer.length} bytes`);
             
-            if (pageText.length > 0) {
-              allText += `\n=== Pagina ${processedPages + 1} ===\n${pageText}\n`;
+            // Verifica che il buffer dell'immagine sia valido
+            try {
+              const imageMetadata = await sharp(pageResult.buffer).metadata();
+              if (!imageMetadata.width || !imageMetadata.height) {
+                throw new Error(`Immagine pagina ${pageNum} non valida`);
+              }
+              
+              log("ocr", `Immagine pagina ${pageNum} valida: ${imageMetadata.width}x${imageMetadata.height}`);
+              
+              // Processa con OCR
+              const { data } = await worker.recognize(pageResult.buffer);
+              const pageText = data.text.trim();
+              
+              if (pageText.length > 0) {
+                allText += `\n=== Pagina ${pageNum} ===\n${pageText}\n`;
+                log("ocr", `Pagina ${pageNum} processata: ${pageText.length} caratteri`);
+              }
+              
+            } catch (ocrError: any) {
+              log("ocr", `Errore OCR pagina ${pageNum}: ${ocrError.message}`);
+              // Continua con la prossima pagina
             }
-            
-            processedPages++;
-            progressCallback?.(60 + (processedPages / pages.length) * 25, `Elaborando pagina ${processedPages}/${pages.length}...`);
-            
-          } catch (pageError: any) {
-            log("ocr", `Errore OCR pagina ${processedPages + 1}: ${pageError.message}`);
+          } else {
+            log("ocr", `Pagina ${pageNum} non convertita o buffer vuoto`);
           }
+          
+          progressCallback?.(50 + (pageNum / maxPages) * 35, `Elaborando pagina ${pageNum}/${maxPages}...`);
+          
+        } catch (pageError: any) {
+          log("ocr", `Errore conversione pagina ${pageNum}: ${pageError.message}`);
+          // Continua con la prossima pagina
         }
       }
-      
-      // Cleanup
-      await worker.terminate();
       
       progressCallback?.(90, 'Finalizzazione...');
       
       const finalText = allText.trim();
-      log("ocr", `OCR PDF completato: ${finalText.length} caratteri estratti da ${processedPages} pagine`);
+      log("ocr", `OCR PDF completato: ${finalText.length} caratteri estratti`);
+      
+      if (finalText.length === 0) {
+        return `Impossibile estrarre testo leggibile da questo PDF.
+
+Il documento potrebbe essere:
+- Un PDF con qualità di scansione molto bassa
+- Un PDF con testo in lingue non supportate
+- Un PDF con formato particolare o protetto
+
+Suggerimenti:
+- Verifica la qualità di scansione del documento originale
+- Prova a convertire il PDF in formato immagine con qualità più alta
+- Usa software specializzato per il riconoscimento ottico`;
+      }
       
       return finalText;
       
@@ -373,10 +538,30 @@ async function processPdfWithOCR(pdfBuffer: Buffer, filename: string, progressCa
     
   } catch (error: any) {
     log("ocr", `Errore OCR PDF: ${error.message}`);
-    throw error;
+    
+    // Ritorna un messaggio di errore utile invece di propagare l'eccezione
+    return `Errore durante l'elaborazione OCR del PDF: ${error.message}
+
+Possibili cause:
+- Documento PDF corrotto o non standard
+- Memoria insufficiente per il processamento
+- Formato PDF non supportato
+
+Soluzioni alternative:
+- Prova con un documento più piccolo
+- Converti il PDF in formato immagine (PNG/JPEG)
+- Copia manualmente il testo se è selezionabile`;
     
   } finally {
     // Cleanup finale
+    try {
+      if (worker) {
+        await worker.terminate();
+      }
+    } catch (workerError) {
+      log("ocr", `Errore terminazione worker: ${workerError}`);
+    }
+    
     try {
       await fs.unlink(tempPdfPath);
       const tempDir = path.join('./temp', `ocr_${uniqueId}`);
