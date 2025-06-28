@@ -891,7 +891,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Add to vector store for RAG
       try {
-        await addDocumentToCollection(document);
+        const user = await storage.getUser(userId);
+        await addDocumentToCollection(document, user?.openaiApiKey);
         // Mark as indexed - using direct database update since storage interface doesn't have updateDocument  
         await db.update(documents).set({ indexed: true }).where(eq(documents.id, document.id));
         log("ocr", `Documento OCR indicizzato nel vector store: ${document.id}`);
