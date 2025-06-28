@@ -205,7 +205,7 @@ export async function processOCR(
   }
 }
 
-// Funzione semplificata per processare PDF
+// Funzione migliorata per processare PDF con fallback OCR
 async function processPdfText(pdfBuffer: Buffer, filename: string, progressCallback?: (progress: number, stage: string) => void): Promise<string> {
   try {
     log("ocr", "Estrazione testo diretto da PDF...");
@@ -225,15 +225,34 @@ async function processPdfText(pdfBuffer: Buffer, filename: string, progressCallb
       // Estrai il testo con timeout
       const extractionPromise = extractTextFromPDF(tempPath);
       const timeoutPromise = new Promise<string>((_, reject) => 
-        setTimeout(() => reject(new Error('PDF extraction timeout')), 30000)
+        setTimeout(() => reject(new Error('PDF extraction timeout')), 15000)
       );
       
       extractedText = await Promise.race([extractionPromise, timeoutPromise]);
       
-    } catch (extractionError: any) {
-      log("ocr", `Errore estrazione PDF: ${extractionError.message}`);
+      // Se il testo estratto è molto breve, prova con OCR
+      if (extractedText.trim().length < 50) {
+        log("ocr", "Testo estratto troppo breve, tentativo OCR...");
+        const ocrText = await processPdfWithOCR(pdfBuffer, filename, progressCallback);
+        if (ocrText.length > extractedText.length) {
+          extractedText = ocrText;
+        }
+      }
       
-      extractedText = `Impossibile estrarre il testo da questo PDF.
+    } catch (extractionError: any) {
+      log("ocr", `Errore estrazione PDF diretta: ${extractionError.message}`);
+      
+      // Prova con OCR come fallback
+      log("ocr", "Tentativo OCR per PDF scansionato...");
+      try {
+        extractedText = await processPdfWithOCR(pdfBuffer, filename, progressCallback);
+        if (extractedText.length > 0) {
+          log("ocr", `OCR riuscito: ${extractedText.length} caratteri estratti`);
+        }
+      } catch (ocrError: any) {
+        log("ocr", `OCR fallito: ${ocrError.message}`);
+        
+        extractedText = `Impossibile estrarre il testo da questo PDF.
 
 Il file potrebbe essere:
 - Un PDF scansionato (immagini)
@@ -244,6 +263,7 @@ Suggerimenti:
 - Prova a copiare e incollare il testo manualmente
 - Converti il PDF in formato testo (.txt)
 - Usa un altro software per riparare il PDF`;
+      }
     }
     
     // Cleanup
@@ -264,6 +284,106 @@ Per risolvere il problema:
 - Verifica che il file sia un PDF valido
 - Prova con un file più piccolo
 - Converti il PDF in formato testo (.txt)`;
+  }
+}
+
+// Funzione per processare PDF scansionati con OCR
+async function processPdfWithOCR(pdfBuffer: Buffer, filename: string, progressCallback?: (progress: number, stage: string) => void): Promise<string> {
+  const uniqueId = `${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+  const sanitizedFilename = filename.replace(/[^a-zA-Z0-9.-]/g, '_');
+  const tempPdfPath = path.join('./temp', `temp_ocr_${uniqueId}_${sanitizedFilename}`);
+  
+  try {
+    log("ocr", `[${uniqueId}] Avvio conversione PDF scansionato - File: ${filename}`);
+    
+    // Importa dinamicamente pdf2pic
+    const pdf2pic = await import('pdf2pic');
+    
+    progressCallback?.(20, 'Conversione PDF in immagini...');
+    
+    // Salva temporaneamente il PDF
+    await fs.mkdir('./temp', { recursive: true });
+    await fs.writeFile(tempPdfPath, pdfBuffer);
+    
+    // Crea directory temporanea per le immagini
+    const tempDir = path.join('./temp', `ocr_${uniqueId}`);
+    await fs.mkdir(tempDir, { recursive: true });
+
+    // Configura pdf2pic
+    const convert = pdf2pic.fromPath(tempPdfPath, {
+      density: 200,           // DPI ridotto per performance
+      saveFilename: `page_${uniqueId}`,
+      savePath: tempDir,
+      format: "png",
+      width: 1800,            // Dimensioni ottimizzate
+      height: 2500
+    });
+    
+    progressCallback?.(40, 'Conversione pagine in corso...');
+    
+    // Converte fino a 5 pagine per non sovraccaricare il sistema
+    const maxPages = 5;
+    let allText = "";
+    
+    try {
+      // Crea worker Tesseract
+      const worker = await createWorker('eng');
+      
+      progressCallback?.(50, 'Inizializzazione OCR...');
+      
+      // Converti le prime pagine
+      const pages = await convert.bulk([1, maxPages], { responseType: "buffer" });
+      
+      progressCallback?.(60, 'Analisi testo in corso...');
+      
+      let processedPages = 0;
+      for (const page of pages) {
+        if (page.buffer) {
+          try {
+            const { data } = await worker.recognize(page.buffer);
+            const pageText = data.text.trim();
+            
+            if (pageText.length > 0) {
+              allText += `\n=== Pagina ${processedPages + 1} ===\n${pageText}\n`;
+            }
+            
+            processedPages++;
+            progressCallback?.(60 + (processedPages / pages.length) * 25, `Elaborando pagina ${processedPages}/${pages.length}...`);
+            
+          } catch (pageError: any) {
+            log("ocr", `Errore OCR pagina ${processedPages + 1}: ${pageError.message}`);
+          }
+        }
+      }
+      
+      // Cleanup
+      await worker.terminate();
+      
+      progressCallback?.(90, 'Finalizzazione...');
+      
+      const finalText = allText.trim();
+      log("ocr", `OCR PDF completato: ${finalText.length} caratteri estratti da ${processedPages} pagine`);
+      
+      return finalText;
+      
+    } catch (processingError: any) {
+      log("ocr", `Errore durante processamento OCR: ${processingError.message}`);
+      throw processingError;
+    }
+    
+  } catch (error: any) {
+    log("ocr", `Errore OCR PDF: ${error.message}`);
+    throw error;
+    
+  } finally {
+    // Cleanup finale
+    try {
+      await fs.unlink(tempPdfPath);
+      const tempDir = path.join('./temp', `ocr_${uniqueId}`);
+      await fs.rm(tempDir, { recursive: true, force: true });
+    } catch (cleanupError) {
+      log("ocr", `Errore cleanup: ${cleanupError}`);
+    }
   }
 }
 
