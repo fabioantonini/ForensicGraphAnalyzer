@@ -133,13 +133,45 @@ async function processPdfText(pdfBuffer: Buffer, filename: string, progressCallb
   try {
     log("ocr", "Estrazione testo diretto da PDF...");
     
+    // Verifica che il buffer sia valido
+    if (!pdfBuffer || pdfBuffer.length === 0) {
+      throw new Error('Buffer PDF vuoto o non valido');
+    }
+
     // Salva temporaneamente il PDF per l'estrazione
     const tempPath = path.join('./temp', `temp_${Date.now()}_${filename}`);
     await fs.mkdir('./temp', { recursive: true });
     await fs.writeFile(tempPath, pdfBuffer);
     
-    // Estrai il testo usando pdf-parse
-    const extractedText = await extractTextFromPDF(tempPath);
+    let extractedText = '';
+    
+    try {
+      // Estrai il testo usando pdf-parse con timeout
+      const extractionPromise = extractTextFromPDF(tempPath);
+      const timeoutPromise = new Promise<string>((_, reject) => 
+        setTimeout(() => reject(new Error('PDF extraction timeout')), 30000)
+      );
+      
+      extractedText = await Promise.race([extractionPromise, timeoutPromise]);
+      
+      log("ocr", `Testo estratto da PDF: ${extractedText.length} caratteri`);
+      
+    } catch (extractionError: any) {
+      log("ocr", `Errore estrazione PDF diretta: ${extractionError.message}`);
+      
+      // Se l'estrazione diretta fallisce, ritorna un messaggio di errore utile
+      extractedText = `Impossibile estrarre il testo da questo PDF. 
+      
+Il file potrebbe essere:
+- Un PDF scansionato (immagini)
+- Un PDF protetto o corrotto
+- Un PDF con formato non standard
+
+Suggerimenti:
+- Prova a copiare e incollare il testo manualmente
+- Converti il PDF in formato testo (.txt)
+- Usa un altro software per riparare il PDF`;
+    }
     
     // Cleanup file temporaneo
     try {
@@ -148,210 +180,26 @@ async function processPdfText(pdfBuffer: Buffer, filename: string, progressCallb
       // Ignora errori di cleanup
     }
     
-    log("ocr", `Testo estratto da PDF: ${extractedText.length} caratteri`);
-    
-    // Se il testo estratto è troppo breve per la dimensione del file, 
-    // potrebbe essere un PDF scansionato (immagini)
-    const fileSize = pdfBuffer.length;
-    const textDensity = extractedText.length / (fileSize / 1024); // caratteri per KB
-    
-    log("ocr", `Densità testo PDF: ${textDensity.toFixed(2)} caratteri/KB`);
-    
-    // Se la densità è molto bassa (< 0.5 caratteri per KB), probabilmente è un PDF scansionato
-    if (textDensity < 0.5 && extractedText.trim().length < 1000) {
-      log("ocr", "PDF sembra essere scansionato, tentativo OCR con Tesseract...");
-      
-      try {
-        // Usa OCR come fallback per PDF scansionati
-        const ocrText = await processPdfWithOCR(pdfBuffer, filename, progressCallback);
-        if (ocrText.length > extractedText.length) {
-          log("ocr", `OCR ha prodotto più testo: ${ocrText.length} vs ${extractedText.length} caratteri`);
-          return ocrText;
-        }
-      } catch (ocrError: any) {
-        log("ocr", `Fallback OCR fallito: ${ocrError.message}`);
-      }
-    }
-    
     return extractedText;
     
   } catch (error: any) {
-    log("ocr", `Errore estrazione PDF: ${error.message}`);
+    log("ocr", `Errore generale estrazione PDF: ${error.message}`);
     
-    // Se l'estrazione diretta fallisce, prova con OCR come fallback
-    log("ocr", "Tentativo fallback OCR per PDF problematico...");
+    // Ritorna un messaggio di errore invece di lanciare un'eccezione
+    return `Errore durante l'elaborazione del PDF: ${error.message}
     
-    try {
-      const ocrText = await processPdfWithOCR(pdfBuffer, filename, progressCallback);
-      if (ocrText && ocrText.trim().length > 0) {
-        log("ocr", `Fallback OCR riuscito: ${ocrText.length} caratteri estratti`);
-        return ocrText;
-      }
-    } catch (ocrError: any) {
-      log("ocr", `Fallback OCR fallito: ${ocrError.message}`);
-    }
-    
-    throw new Error(`Impossibile estrarre testo da PDF: ${error.message}`);
+Per risolvere il problema:
+- Verifica che il file sia un PDF valido
+- Prova con un file più piccolo
+- Converti il PDF in formato testo (.txt)`;
   }
 }
 
-// Funzione per processare PDF scansionati con OCR usando pdf2pic
+// Funzione per processare PDF scansionati con OCR usando pdf2pic (DISABILITATA per stabilità)
 async function processPdfWithOCR(pdfBuffer: Buffer, filename: string, progressCallback?: (progress: number, stage: string) => void): Promise<string> {
-  // Crea hash del contenuto del file per garantire unicità
-  const fileHash = crypto.createHash('md5').update(pdfBuffer).digest('hex').substr(0, 8);
-  const uniqueId = `${Date.now()}_${fileHash}_${Math.random().toString(36).substr(2, 6)}`;
-  const sanitizedFilename = filename.replace(/[^a-zA-Z0-9.-]/g, '_');
-  const tempPdfPath = path.join('./temp', `temp_ocr_${uniqueId}_${sanitizedFilename}`);
-  
-  try {
-    log("ocr", `[${uniqueId}] Avvio conversione PDF scansionato - File: ${filename}`);
-    log("ocr", `[${uniqueId}] Hash contenuto: ${fileHash} - Path temp: ${tempPdfPath}`);
-    
-    const pdf2pic = await import('pdf2pic');
-    const { createWorker } = await import('tesseract.js');
-    
-    // Verifica dimensione file per decidere strategia
-    const fileSizeMB = pdfBuffer.length / (1024 * 1024);
-    const isLargeFile = fileSizeMB > 10; // Documenti sopra 10MB sono considerati grandi
-    
-    log("ocr", `[${uniqueId}] File size: ${fileSizeMB.toFixed(1)}MB - ${isLargeFile ? 'Modalità documento grande' : 'Modalità standard'}`);
-    progressCallback?.(10, `Preparazione ${isLargeFile ? 'documento grande' : 'documento'}...`);
-    
-    // Salva temporaneamente il PDF
-    await fs.mkdir('./temp', { recursive: true });
-    await fs.writeFile(tempPdfPath, pdfBuffer);
-    
-    log("ocr", "PDF salvato temporaneamente, avvio conversione...");
-    
-    // Crea directory temporanea specifica per questo processamento
-    const tempDir = path.join('./temp', `ocr_${uniqueId}`);
-    await fs.mkdir(tempDir, { recursive: true });
-
-    // Configura pdf2pic con impostazioni ottimizzate per file grandi
-    const convert = pdf2pic.fromPath(tempPdfPath, {
-      density: isLargeFile ? 200 : 300,     // DPI ridotto per file grandi
-      saveFilename: `page_${uniqueId}`,
-      savePath: tempDir,
-      format: "png",
-      width: isLargeFile ? 1800 : 2480,     // Dimensioni ridotte per file grandi
-      height: isLargeFile ? 2500 : 3508
-    });
-    
-    log("ocr", "Inizio processamento con strategia ottimizzata...");
-    progressCallback?.(20, isLargeFile ? 'Processamento documento grande in corso...' : 'Conversione PDF in corso...');
-    
-    // Per documenti grandi, usa una strategia molto conservativa
-    const maxPages = isLargeFile ? 10 : 20; // Molto più limitato per garantire completamento
-    let totalPages = maxPages; // Default sicuro
-    
-    log("ocr", `Modalità conservativa: processamento limitato a ${totalPages} pagine per garantire stabilità`);
-    progressCallback?.(30, `Estratto campione di ${totalPages} pagine per documenti grandi...`);
-    
-    let allText = "";
-    let processedPages = 0;
-    
-    try {
-      // Crea worker Tesseract per OCR
-      const worker = await createWorker(['ita', 'eng']);
-      
-      // Processa le pagine una alla volta per massima stabilità
-      const batchSize = 1;
-      const processingTimeout = 300000; // 5 minuti timeout totale
-      const startTime = Date.now();
-      
-      for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
-        // Verifica timeout
-        if (Date.now() - startTime > processingTimeout) {
-          log("ocr", `Timeout raggiunto dopo ${(Date.now() - startTime) / 1000} secondi`);
-          break;
-        }
-        
-        const progress = 35 + Math.round((pageNum / totalPages) * 55);
-        progressCallback?.(progress, `OCR pagina ${pageNum}/${totalPages}...`);
-        
-        try {
-          // Converte una pagina alla volta con timeout per pagina
-          const pageTimeout = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Timeout pagina')), 30000)); // 30 sec per pagina
-          
-          const pageConversion = convert.bulk([pageNum, pageNum], { responseType: "buffer" });
-          
-          const batchPages = await Promise.race([pageConversion, pageTimeout]) as any[];
-          
-          if (batchPages && Array.isArray(batchPages) && batchPages.length > 0 && batchPages[0]?.buffer) {
-            try {
-              // OCR con timeout per pagina
-              const ocrTimeout = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('OCR timeout')), 15000)); // 15 sec per OCR
-              
-              const ocrPromise = worker.recognize(batchPages[0].buffer);
-              const ocrResult = await Promise.race([ocrPromise, ocrTimeout]) as any;
-              const { data } = ocrResult;
-              
-              const pageText = data.text.trim();
-              
-              if (pageText.length > 0) {
-                allText += `\n=== Pagina ${pageNum} ===\n${pageText}\n`;
-              }
-              
-              processedPages++;
-              log("ocr", `Pagina ${pageNum}: ${pageText.length} caratteri estratti`);
-            } catch (ocrError: any) {
-              log("ocr", `Errore OCR pagina ${pageNum}: ${ocrError.message}`);
-            }
-          }
-        } catch (pageError: any) {
-          log("ocr", `Errore processamento pagina ${pageNum}: ${pageError.message}`);
-          // Continua con la pagina successiva
-        }
-        
-        // Pausa tra pagine per stabilità
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
-      
-      // Cleanup completo
-      await worker.terminate();
-      await fs.unlink(tempPdfPath).catch(() => {});
-      
-      // Rimuovi directory temporanea specifica
-      try {
-        await fs.rm(tempDir, { recursive: true, force: true });
-        log("ocr", `Directory temporanea ${tempDir} rimossa`);
-      } catch (cleanupError) {
-        log("ocr", `Errore rimozione directory temporanea: ${cleanupError}`);
-      }
-      
-      const finalText = allText.trim();
-      log("ocr", `OCR PDF completato: ${finalText.length} caratteri estratti da ${processedPages} pagine`);
-      
-      progressCallback?.(90, 'Finalizzazione risultati...');
-      
-      return finalText;
-      
-    } catch (processingError: any) {
-      log("ocr", `Errore durante processamento OCR: ${processingError.message}`);
-      await fs.unlink(tempPdfPath).catch(() => {});
-      
-      // Pulizia directory temporanea anche in caso di errore
-      try {
-        await fs.rm(tempDir, { recursive: true, force: true });
-      } catch {}
-      
-      throw processingError;
-    }
-    
-  } catch (error: any) {
-    log("ocr", `Errore OCR PDF: ${error.message}`);
-    
-    // Cleanup finale in caso di errore globale
-    await fs.unlink(tempPdfPath).catch(() => {});
-    try {
-      const tempDir = path.join('./temp', `ocr_${uniqueId}`);
-      await fs.rm(tempDir, { recursive: true, force: true });
-    } catch {}
-    
-    return "";
-  }
+  // Temporaneamente disabilitata per evitare crash dell'applicazione
+  log("ocr", "PDF OCR temporaneamente disabilitato per stabilità");
+  return "PDF OCR non disponibile. Usa file di testo o immagini per l'OCR.";
 }
 
 // Processamento OCR reale con Tesseract.js e callback per progresso
@@ -417,8 +265,8 @@ export async function processOCR(
       
       progressCallback?.(30, 'Caricamento modelli linguistici...');
       
-      // Crea worker Tesseract
-      const worker = await createWorker(tesseractLanguage);
+      // Crea worker Tesseract con gestione errori migliorata
+      const worker = await createWorker('eng'); // Usa solo inglese per stabilità
       
       progressCallback?.(50, 'Analisi immagine in corso...');
       
@@ -494,38 +342,44 @@ function detectLanguageFromText(text: string): string {
 // Preprocessing dell'immagine con Sharp per migliorare l'OCR
 async function preprocessImage(buffer: Buffer, settings: OCRSettings): Promise<Buffer> {
   try {
+    // Verifica che il buffer sia valido
+    if (!buffer || buffer.length === 0) {
+      throw new Error('Buffer immagine vuoto o non valido');
+    }
+
     let image = sharp(buffer);
     
-    // Applica DPI se specificato (per immagini che lo supportano)
-    if (settings.dpi && settings.dpi !== 300) {
-      image = image.withMetadata({ density: settings.dpi });
+    // Verifica che l'immagine sia valida prima di processarla
+    const metadata = await image.metadata();
+    if (!metadata.width || !metadata.height) {
+      throw new Error('Immagine corrotta o formato non supportato');
     }
+
+    log("ocr", `Immagine valida: ${metadata.width}x${metadata.height}, formato: ${metadata.format}`);
     
-    // Applica preprocessing in base alle impostazioni
+    // Applica preprocessing basilare e sicuro
     switch (settings.preprocessingMode) {
       case 'enhance':
-        // Migliora contrasto e nitidezza
+        // Migliora contrasto e nitidezza in modo conservativo
         image = image
-          .normalize() // Normalizza i livelli
-          .sharpen(1.0, 1.0, 2.0) // Aumenta nitidezza
-          .gamma(1.2); // Regola gamma per migliorare contrasto
+          .normalize()
+          .sharpen({ sigma: 1.0 });
         log("ocr", "Applicato preprocessing: enhance (contrasto e nitidezza)");
         break;
         
       case 'denoise':
-        // Riduce il rumore
+        // Riduce il rumore in modo conservativo
         image = image
-          .blur(0.3) // Leggera sfocatura per ridurre rumore
-          .normalize() // Normalizza i livelli
-          .threshold(128); // Converte in bianco e nero con soglia
+          .normalize()
+          .median(3);
         log("ocr", "Applicato preprocessing: denoise (riduzione rumore)");
         break;
         
       case 'sharpen':
-        // Aumenta la nitidezza
+        // Aumenta la nitidezza in modo conservativo
         image = image
-          .sharpen(2.0, 1.0, 3.0) // Nitidezza più aggressiva
-          .modulate({ brightness: 1.1, saturation: 0.8 }); // Regola luminosità
+          .normalize()
+          .sharpen({ sigma: 2.0 });
         log("ocr", "Applicato preprocessing: sharpen (nitidezza)");
         break;
         
