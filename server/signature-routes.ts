@@ -84,12 +84,12 @@ PUNTEGGIO SIMILARITÀ ALGORITMICO: ${(similarityScore * 100).toFixed(1)}%
 
 Fornisci un'analisi dettagliata che includa:
 1. Confronto parametro per parametro evidenziando differenze significative
-2. Valutazione della coerenza dimensionale e proporzionale
+2. Valutazione della coerenza dimensionale e proporzionale  
 3. Analisi delle caratteristiche grafologiche (pressione, fluidità, controllo motorio)
 4. Identificazione di eventuali anomalie o elementi sospetti
 5. Conclusione professionale sull'autenticità con raccomandazioni
 
-Mantieni un tono tecnico-scientifico e oggettivo, come in un report peritale.
+IMPORTANTE: Non utilizzare tag Markdown (**, *, #, etc.) nel testo. Usa solo testo semplice formattato con maiuscole per i titoli e struttura chiara con paragrafi separati.
 `;
 
     const response = await openaiClient.chat.completions.create({
@@ -99,7 +99,17 @@ Mantieni un tono tecnico-scientifico e oggettivo, come in un report peritale.
       temperature: 0.3 // Bassa temperatura per analisi più oggettiva
     });
 
-    return response.choices[0].message.content || "Analisi AI non disponibile";
+    let analysisText = response.choices[0].message.content || "Analisi AI non disponibile";
+    
+    // Rimuovi eventuali tag Markdown dal testo
+    analysisText = analysisText
+      .replace(/\*\*(.*?)\*\*/g, '$1')  // Rimuovi **bold**
+      .replace(/\*(.*?)\*/g, '$1')      // Rimuovi *italic*
+      .replace(/#{1,6}\s/g, '')         // Rimuovi # headers
+      .replace(/`(.*?)`/g, '$1')        // Rimuovi `code`
+      .replace(/\[(.*?)\]\(.*?\)/g, '$1'); // Rimuovi [links](url)
+    
+    return analysisText;
   } catch (error) {
     console.error(`[AI ANALYSIS] Errore nell'analisi AI:`, error);
     return "Analisi AI non disponibile - procedere con valutazione manuale dei parametri tecnici.";
