@@ -38,21 +38,21 @@ FIRMA IN VERIFICA:
 - Numero componenti connesse: ${signatureParams.connectedComponents}
 - Curvatura media: ${signatureParams.averageCurvature?.toFixed(3)}
 - PARAMETRI AVANZATI PYTHON/OPENCV:
-  • Inclinazione: ${signatureParams.inclination?.toFixed(1) || 'N/A'}°
-  • Pressione media: ${signatureParams.pressureMean?.toFixed(0) || 'N/A'}
-  • Deviazione pressione: ${signatureParams.pressureStd?.toFixed(1) || 'N/A'}
-  • Spaziatura media: ${signatureParams.avgSpacing?.toFixed(2) || 'N/A'} mm
-  • Velocità scrittura: ${signatureParams.velocity || 'N/A'}/5
-  • Proporzione: ${signatureParams.proportion?.toFixed(3) || 'N/A'}
-  • Dimensione asole: ${signatureParams.avgAsolaSize?.toFixed(3) || 'N/A'} mm
-  • Curvatura: ${signatureParams.avgCurvature?.toFixed(3) || 'N/A'}
-  • Deviazione baseline: ${signatureParams.baselineStdMm?.toFixed(2) || 'N/A'} mm
-  • Stile scrittura: ${signatureParams.writingStyle || 'N/A'}
-  • Leggibilità: ${signatureParams.readability || 'N/A'}
-  • Contrasto: ${signatureParams.contrastLevel ? (signatureParams.contrastLevel * 100).toFixed(0) + '%' : 'N/A'}
-  • Qualità immagine: ${signatureParams.imageQuality ? (signatureParams.imageQuality * 100).toFixed(0) + '%' : 'N/A'}
-  • Connettività: ${signatureParams.connectivity?.connectedComponents || 'N/A'} componenti
-  • Complessità tratto: ${signatureParams.connectivity?.strokeComplexity ? (signatureParams.connectivity.strokeComplexity * 100).toFixed(0) + '%' : 'N/A'}
+  • Inclinazione: ${signatureParams.inclination != null ? signatureParams.inclination.toFixed(1) + '°' : 'Non disponibile per confronto'}
+  • Pressione media: ${signatureParams.pressureMean != null ? signatureParams.pressureMean.toFixed(0) : 'Non disponibile per confronto'}
+  • Deviazione pressione: ${signatureParams.pressureStd != null ? signatureParams.pressureStd.toFixed(1) : 'Non disponibile per confronto'}
+  • Spaziatura media: ${signatureParams.avgSpacing != null ? signatureParams.avgSpacing.toFixed(2) + ' mm' : 'Non disponibile per confronto'}
+  • Velocità scrittura: ${signatureParams.velocity != null ? signatureParams.velocity + '/5' : 'Non disponibile per confronto'}
+  • Proporzione: ${signatureParams.proportion != null ? signatureParams.proportion.toFixed(3) : 'Non disponibile per confronto'}
+  • Dimensione asole: ${signatureParams.avgAsolaSize != null ? signatureParams.avgAsolaSize.toFixed(3) + ' mm' : 'Non disponibile per confronto'}
+  • Curvatura: ${signatureParams.avgCurvature != null ? signatureParams.avgCurvature.toFixed(3) : 'Non disponibile per confronto'}
+  • Deviazione baseline: ${signatureParams.baselineStdMm != null ? signatureParams.baselineStdMm.toFixed(2) + ' mm' : 'Non disponibile per confronto'}
+  • Stile scrittura: ${signatureParams.writingStyle || 'Non disponibile per confronto'}
+  • Leggibilità: ${signatureParams.readability || 'Non disponibile per confronto'}
+  • Contrasto: ${signatureParams.contrastLevel != null ? (signatureParams.contrastLevel * 100).toFixed(0) + '%' : 'Non disponibile per confronto'}
+  • Qualità immagine: ${signatureParams.imageQuality != null ? (signatureParams.imageQuality * 100).toFixed(0) + '%' : 'Non disponibile per confronto'}
+  • Connettività: ${signatureParams.connectivity?.connectedComponents != null ? signatureParams.connectivity.connectedComponents + ' componenti' : 'Non disponibile per confronto'}
+  • Complessità tratto: ${signatureParams.connectivity?.strokeComplexity != null ? (signatureParams.connectivity.strokeComplexity * 100).toFixed(0) + '%' : 'Non disponibile per confronto'}
 
 FIRMA DI RIFERIMENTO:
 - Dimensioni: ${referenceParams.width}x${referenceParams.height} px (${referenceParams.realDimensions?.widthMm?.toFixed(1)}x${referenceParams.realDimensions?.heightMm?.toFixed(1)} mm)
@@ -64,21 +64,21 @@ FIRMA DI RIFERIMENTO:
 - Numero componenti connesse: ${referenceParams.connectedComponents}
 - Curvatura media: ${referenceParams.averageCurvature?.toFixed(3)}
 - PARAMETRI AVANZATI PYTHON/OPENCV:
-  • Inclinazione: ${referenceParams.inclination?.toFixed(1) || 'N/A'}°
-  • Pressione media: ${referenceParams.pressureMean?.toFixed(0) || 'N/A'}
-  • Deviazione pressione: ${referenceParams.pressureStd?.toFixed(1) || 'N/A'}
-  • Spaziatura media: ${referenceParams.avgSpacing?.toFixed(2) || 'N/A'} mm
-  • Velocità scrittura: ${referenceParams.velocity || 'N/A'}/5
-  • Proporzione: ${referenceParams.proportion?.toFixed(3) || 'N/A'}
-  • Dimensione asole: ${referenceParams.avgAsolaSize?.toFixed(3) || 'N/A'} mm
-  • Curvatura: ${referenceParams.avgCurvature?.toFixed(3) || 'N/A'}
-  • Deviazione baseline: ${referenceParams.baselineStdMm?.toFixed(2) || 'N/A'} mm
-  • Stile scrittura: ${referenceParams.writingStyle || 'N/A'}
-  • Leggibilità: ${referenceParams.readability || 'N/A'}
-  • Contrasto: ${referenceParams.contrastLevel ? (referenceParams.contrastLevel * 100).toFixed(0) + '%' : 'N/A'}
-  • Qualità immagine: ${referenceParams.imageQuality ? (referenceParams.imageQuality * 100).toFixed(0) + '%' : 'N/A'}
-  • Connettività: ${referenceParams.connectivity?.connectedComponents || 'N/A'} componenti
-  • Complessità tratto: ${referenceParams.connectivity?.strokeComplexity ? (referenceParams.connectivity.strokeComplexity * 100).toFixed(0) + '%' : 'N/A'}
+  • Inclinazione: ${referenceParams.inclination != null ? referenceParams.inclination.toFixed(1) + '°' : 'Non disponibile per confronto'}
+  • Pressione media: ${referenceParams.pressureMean != null ? referenceParams.pressureMean.toFixed(0) : 'Non disponibile per confronto'}
+  • Deviazione pressione: ${referenceParams.pressureStd != null ? referenceParams.pressureStd.toFixed(1) : 'Non disponibile per confronto'}
+  • Spaziatura media: ${referenceParams.avgSpacing != null ? referenceParams.avgSpacing.toFixed(2) + ' mm' : 'Non disponibile per confronto'}
+  • Velocità scrittura: ${referenceParams.velocity != null ? referenceParams.velocity + '/5' : 'Non disponibile per confronto'}
+  • Proporzione: ${referenceParams.proportion != null ? referenceParams.proportion.toFixed(3) : 'Non disponibile per confronto'}
+  • Dimensione asole: ${referenceParams.avgAsolaSize != null ? referenceParams.avgAsolaSize.toFixed(3) + ' mm' : 'Non disponibile per confronto'}
+  • Curvatura: ${referenceParams.avgCurvature != null ? referenceParams.avgCurvature.toFixed(3) : 'Non disponibile per confronto'}
+  • Deviazione baseline: ${referenceParams.baselineStdMm != null ? referenceParams.baselineStdMm.toFixed(2) + ' mm' : 'Non disponibile per confronto'}
+  • Stile scrittura: ${referenceParams.writingStyle || 'Non disponibile per confronto'}
+  • Leggibilità: ${referenceParams.readability || 'Non disponibile per confronto'}
+  • Contrasto: ${referenceParams.contrastLevel != null ? (referenceParams.contrastLevel * 100).toFixed(0) + '%' : 'Non disponibile per confronto'}
+  • Qualità immagine: ${referenceParams.imageQuality != null ? (referenceParams.imageQuality * 100).toFixed(0) + '%' : 'Non disponibile per confronto'}
+  • Connettività: ${referenceParams.connectivity?.connectedComponents != null ? referenceParams.connectivity.connectedComponents + ' componenti' : 'Non disponibile per confronto'}
+  • Complessità tratto: ${referenceParams.connectivity?.strokeComplexity != null ? (referenceParams.connectivity.strokeComplexity * 100).toFixed(0) + '%' : 'Non disponibile per confronto'}
 
 PUNTEGGIO SIMILARITÀ ALGORITMICO: ${(similarityScore * 100).toFixed(1)}%
 
@@ -101,13 +101,18 @@ IMPORTANTE: Non utilizzare tag Markdown (**, *, #, etc.) nel testo. Usa solo tes
 
     let analysisText = response.choices[0].message.content || "Analisi AI non disponibile";
     
-    // Rimuovi eventuali tag Markdown dal testo
+    // Rimuovi eventuali tag Markdown dal testo (più completo)
     analysisText = analysisText
       .replace(/\*\*(.*?)\*\*/g, '$1')  // Rimuovi **bold**
       .replace(/\*(.*?)\*/g, '$1')      // Rimuovi *italic*
-      .replace(/#{1,6}\s/g, '')         // Rimuovi # headers
+      .replace(/#{1,6}\s?/g, '')        // Rimuovi # headers
       .replace(/`(.*?)`/g, '$1')        // Rimuovi `code`
-      .replace(/\[(.*?)\]\(.*?\)/g, '$1'); // Rimuovi [links](url)
+      .replace(/\[(.*?)\]\(.*?\)/g, '$1') // Rimuovi [links](url)
+      .replace(/^\s*[\*\-\+]\s+/gm, '')  // Rimuovi bullet points
+      .replace(/_{2,}/g, '')            // Rimuovi __underline__
+      .replace(/~~(.*?)~~/g, '$1')      // Rimuovi ~~strikethrough~~
+      .replace(/\|/g, ' ')              // Rimuovi separatori tabelle
+      .replace(/(\r?\n){3,}/g, '\n\n'); // Riduci multiple newlines
     
     return analysisText;
   } catch (error) {
@@ -224,6 +229,8 @@ async function generatePDFReportFromExistingData(params: {
   let aiAnalysis = '';
   if (signature.parameters && referenceSignature.parameters) {
     console.log(`[PDF REPORT] Generazione analisi AI per firma ${signature.id} - timeout 15s`);
+    console.log(`[PDF REPORT] Parametri firma da verificare:`, JSON.stringify(signature.parameters, null, 2));
+    console.log(`[PDF REPORT] Parametri firma di riferimento:`, JSON.stringify(referenceSignature.parameters, null, 2));
     try {
       // Ottieni la chiave API dell'utente
       const project = await storage.getSignatureProject(signature.projectId);
@@ -237,6 +244,8 @@ async function generatePDFReportFromExistingData(params: {
       // Genera analisi fallback veloce
       aiAnalysis = generateFallbackAnalysis(signature.parameters, referenceSignature.parameters, similarityScore);
     }
+  } else {
+    console.log(`[PDF REPORT] Parametri mancanti - signature.parameters: ${!!signature.parameters}, referenceSignature.parameters: ${!!referenceSignature.parameters}`);
   }
   
   // Report di analisi AI
