@@ -1247,16 +1247,20 @@ export class DatabaseStorage implements IStorage {
     // Log completo per debug problemi di segregazione progetti
     console.log(`[STORAGE] Richiesta firme per progetto ${projectId} (referenceOnly: ${referenceOnly})`);
     
-    let query = db
-      .select()
-      .from(signatures)
-      .where(eq(signatures.projectId, projectId));
+    // Query diretta per evitare bug di cross-contaminazione
+    let whereConditions: any[] = [eq(signatures.projectId, projectId)];
     
-    if (referenceOnly !== undefined) {
-      query = query.where(eq(signatures.isReference, referenceOnly));
+    if (referenceOnly === true) {
+      whereConditions.push(eq(signatures.isReference, true));
+    } else if (referenceOnly === false) {
+      whereConditions.push(eq(signatures.isReference, false));
     }
     
-    const results = await query.orderBy(desc(signatures.createdAt));
+    const results = await db
+      .select()
+      .from(signatures)
+      .where(and(...whereConditions))
+      .orderBy(desc(signatures.createdAt));
     
     // Verifica che tutte le firme appartengano effettivamente al progetto richiesto
     const differentProjectSignatures = results.filter(sig => sig.projectId !== projectId);
