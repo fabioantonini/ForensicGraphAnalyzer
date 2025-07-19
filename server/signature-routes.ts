@@ -319,27 +319,35 @@ export function registerSignatureRoutes(router: Router) {
   // Upload di una firma di riferimento
   router.post("/signature-projects/:id/signatures/reference", isAuthenticated, upload.single('signature'), async (req, res) => {
     try {
+      log(`INIZIO caricamento firma di riferimento per progetto ${req.params.id}`, 'signatures');
       const projectId = parseInt(req.params.id);
       const project = await storage.getSignatureProject(projectId);
       
       if (!project) {
+        log(`Progetto ${projectId} non trovato`, 'signatures');
         return res.status(404).json({ error: 'Progetto non trovato' });
       }
       
       // Verifica che il progetto appartenga all'utente corrente
       if (project.userId !== req.user!.id) {
+        log(`Utente ${req.user!.id} non autorizzato per progetto ${projectId}`, 'signatures');
         return res.status(403).json({ error: 'Non autorizzato' });
       }
       
       if (!req.file) {
+        log(`Nessun file ricevuto nella richiesta`, 'signatures');
         return res.status(400).json({ error: 'Nessun file caricato' });
       }
+      
+      log(`File ricevuto: ${req.file.filename}, body: ${JSON.stringify(req.body)}`, 'signatures');
       
       // Estrai le dimensioni reali dai dati del form
       const realWidthMm = parseFloat(req.body.realWidthMm);
       const realHeightMm = parseFloat(req.body.realHeightMm);
+      log(`RIFERIMENTO - Dimensioni parsate: width=${realWidthMm} (${typeof realWidthMm}), height=${realHeightMm} (${typeof realHeightMm})`, 'signatures');
       
       if (!realWidthMm || !realHeightMm || realWidthMm <= 0 || realHeightMm <= 0) {
+        log(`RIFERIMENTO - ERRORE validazione dimensioni: width=${realWidthMm}, height=${realHeightMm}`, 'signatures');
         return res.status(400).json({ 
           error: 'Le dimensioni reali della firma sono obbligatorie e devono essere positive'
         });
@@ -366,8 +374,11 @@ export function registerSignatureRoutes(router: Router) {
       // Avvia l'analisi della firma in background
       processSignature(signature.id, req.file.path);
       
+      log(`RIFERIMENTO - Firma salvata con successo con ID ${signature.id}`, 'signatures');
       res.status(201).json(signature);
     } catch (error: any) {
+      log(`RIFERIMENTO - ERRORE durante caricamento: ${error.message}`, 'signatures');
+      log(`RIFERIMENTO - Stack trace: ${error.stack}`, 'signatures');
       res.status(400).json({ error: error.message });
     }
   });
