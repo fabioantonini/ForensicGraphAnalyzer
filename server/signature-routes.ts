@@ -74,6 +74,39 @@ Mantieni un tono tecnico-scientifico e oggettivo, come in un report peritale.
   }
 }
 
+// Funzione per analisi fallback veloce (senza AI)
+function generateFallbackAnalysis(signatureParams: any, referenceParams: any, similarityScore: number): string {
+  const percentageScore = (similarityScore * 100).toFixed(1);
+  
+  let analysis = `ANALISI TECNICA AUTOMATICA\n\n`;
+  analysis += `Punteggio di similarità: ${percentageScore}%\n\n`;
+  
+  if (similarityScore >= 0.85) {
+    analysis += `VALUTAZIONE: AUTENTICA - I parametri tecnici mostrano alta compatibilità con la firma di riferimento.\n\n`;
+  } else if (similarityScore >= 0.65) {
+    analysis += `VALUTAZIONE: PROBABILE AUTENTICA - I parametri mostrano buona compatibilità ma con alcune variazioni.\n\n`;
+  } else {
+    analysis += `VALUTAZIONE: SOSPETTA - Rilevate differenze significative nei parametri tecnici.\n\n`;
+  }
+  
+  // Confronto parametri
+  if (signatureParams.strokeWidth && referenceParams.strokeWidth) {
+    const strokeDiff = Math.abs(signatureParams.strokeWidth.meanMm - referenceParams.strokeWidth.meanMm);
+    analysis += `SPESSORE TRATTO: Differenza media ${strokeDiff.toFixed(3)}mm `;
+    analysis += strokeDiff < 0.05 ? '(compatibile)\n' : strokeDiff < 0.1 ? '(accettabile)\n' : '(significativa)\n';
+  }
+  
+  if (signatureParams.realDimensions && referenceParams.realDimensions) {
+    const widthRatio = signatureParams.realDimensions.widthMm / referenceParams.realDimensions.widthMm;
+    analysis += `PROPORZIONI: Rapporto dimensionale ${widthRatio.toFixed(2)} `;
+    analysis += Math.abs(widthRatio - 1) < 0.2 ? '(compatibile)\n' : '(variazione significativa)\n';
+  }
+  
+  analysis += `\nNOTA: Analisi generata automaticamente dai parametri tecnici estratti.`;
+  
+  return analysis;
+}
+
 // Funzione helper per generare report PDF con i dati già calcolati
 async function generatePDFReportFromExistingData(params: {
   outputPath: string,
@@ -145,16 +178,23 @@ async function generatePDFReportFromExistingData(params: {
   doc.text(`Valutazione: ${verdict}`);
   doc.moveDown(1.5);
   
-  // Genera analisi AI basata sui parametri
+  // Genera analisi AI basata sui parametri (con fallback veloce)
   let aiAnalysis = '';
   if (signature.parameters && referenceSignature.parameters) {
-    console.log(`[PDF REPORT] Generazione analisi AI per firma ${signature.id}`);
-    // Ottieni la chiave API dell'utente
-    const project = await storage.getSignatureProject(signature.projectId);
-    const user = project ? await storage.getUser(project.userId) : null;
-    const userApiKey = user?.openaiApiKey;
-    
-    aiAnalysis = await generateAIAnalysis(signature.parameters, referenceSignature.parameters, similarityScore, userApiKey);
+    console.log(`[PDF REPORT] Generazione analisi AI per firma ${signature.id} - timeout 15s`);
+    try {
+      // Ottieni la chiave API dell'utente
+      const project = await storage.getSignatureProject(signature.projectId);
+      const user = project ? await storage.getUser(project.userId) : null;
+      const userApiKey = user?.openaiApiKey;
+      
+      aiAnalysis = await generateAIAnalysis(signature.parameters, referenceSignature.parameters, similarityScore, userApiKey);
+      console.log(`[PDF REPORT] Analisi AI completata per firma ${signature.id}`);
+    } catch (error) {
+      console.log(`[PDF REPORT] Analisi AI fallita per firma ${signature.id}, uso analisi standard`);
+      // Genera analisi fallback veloce
+      aiAnalysis = generateFallbackAnalysis(signature.parameters, referenceSignature.parameters, similarityScore);
+    }
   }
   
   // Report di analisi AI
