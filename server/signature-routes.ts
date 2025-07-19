@@ -360,8 +360,8 @@ export function registerSignatureRoutes(router: Router) {
         fileSize: req.file.size,
         isReference: true,
         dpi: dpi, // Manteniamo il DPI estratto per compatibilità
-        realWidth: realWidthMm,
-        realHeight: realHeightMm
+        realWidthMm: realWidthMm,
+        realHeightMm: realHeightMm
       });
       
       // Salva la firma nel database
@@ -427,8 +427,8 @@ export function registerSignatureRoutes(router: Router) {
         fileSize: req.file.size,
         isReference: false,
         dpi: dpi, // Manteniamo il DPI estratto per compatibilità
-        realWidth: realWidthMm,
-        realHeight: realHeightMm
+        realWidthMm: realWidthMm,
+        realHeightMm: realHeightMm
       });
       
       // Salva la firma nel database
@@ -489,8 +489,8 @@ export function registerSignatureRoutes(router: Router) {
         createdAt: sig.createdAt,
         updatedAt: sig.updatedAt,
         dpi: sig.dpi, // Aggiungi esplicitamente il campo DPI nella risposta
-        realWidth: sig.realWidth, // Aggiungi le dimensioni reali
-        realHeight: sig.realHeight
+        realWidth: sig.realWidthMm, // Aggiungi le dimensioni reali (mappate correttamente)
+        realHeight: sig.realHeightMm
       }));
       
       res.json(result);
@@ -1756,11 +1756,11 @@ async function processSignature(signatureId: number, filePath: string) {
     }
     
     // Verifica che le dimensioni reali siano disponibili
-    if (!signature.realWidth || !signature.realHeight) {
+    if (!signature.realWidthMm || !signature.realHeightMm) {
       throw new Error('Dimensioni reali della firma non specificate');
     }
     
-    log(`Elaborazione firma ${signatureId} con dimensioni reali: ${signature.realWidth}mm x ${signature.realHeight}mm`, 'signatures');
+    log(`Elaborazione firma ${signatureId} con dimensioni reali: ${signature.realWidthMm}mm x ${signature.realHeightMm}mm`, 'signatures');
     
     // Aggiorna lo stato a 'processing'
     await storage.updateSignatureStatus(signatureId, 'processing');
@@ -1768,8 +1768,8 @@ async function processSignature(signatureId: number, filePath: string) {
     // Usa l'analizzatore JavaScript con le dimensioni reali
     const parameters = await SignatureAnalyzer.extractParameters(
       filePath, 
-      signature.realWidth, 
-      signature.realHeight
+      signature.realWidthMm, 
+      signature.realHeightMm
     );
     
     log(`Parametri estratti per firma ${signatureId}`, 'signatures');
@@ -1796,11 +1796,11 @@ async function processAndCompareSignature(signatureId: number, filePath: string,
     }
     
     // Verifica che le dimensioni reali siano disponibili
-    if (!signature.realWidth || !signature.realHeight) {
+    if (!signature.realWidthMm || !signature.realHeightMm) {
       throw new Error('Dimensioni reali della firma non specificate');
     }
     
-    log(`Elaborazione firma ${signatureId} con dimensioni reali: ${signature.realWidth}mm x ${signature.realHeight}mm`, 'signatures');
+    log(`Elaborazione firma ${signatureId} con dimensioni reali: ${signature.realWidthMm}mm x ${signature.realHeightMm}mm`, 'signatures');
     
     // Aggiorna lo stato a 'processing'
     await storage.updateSignatureStatus(signatureId, 'processing');
@@ -1808,8 +1808,8 @@ async function processAndCompareSignature(signatureId: number, filePath: string,
     // Usa l'analizzatore JavaScript con le dimensioni reali
     const parameters = await SignatureAnalyzer.extractParameters(
       filePath, 
-      signature.realWidth, 
-      signature.realHeight
+      signature.realWidthMm, 
+      signature.realHeightMm
     );
     
     log(`Parametri estratti per firma ${signatureId}`, 'signatures');
