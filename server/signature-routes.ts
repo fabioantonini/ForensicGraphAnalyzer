@@ -831,7 +831,16 @@ export function registerSignatureRoutes(router: Router) {
       }
       
       // Ottieni le firme associate a questo progetto
-      const referenceOnly = req.query.referenceOnly === 'true';
+      // Se referenceOnly non è specificato (undefined), restituisci tutte le firme
+      let referenceOnly: boolean | undefined;
+      if (req.query.referenceOnly === 'true') {
+        referenceOnly = true;
+      } else if (req.query.referenceOnly === 'false') {
+        referenceOnly = false;
+      } else {
+        referenceOnly = undefined; // Nessun filtro, restituisci tutte le firme
+      }
+      
       const signatures = await storage.getProjectSignatures(projectId, referenceOnly);
       
       // Restituisci un array vuoto se non ci sono firme

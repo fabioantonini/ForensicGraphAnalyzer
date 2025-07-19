@@ -1250,11 +1250,13 @@ export class DatabaseStorage implements IStorage {
     // Query diretta per evitare bug di cross-contaminazione
     let whereConditions: any[] = [eq(signatures.projectId, projectId)];
     
+    // Solo se referenceOnly è specificato esplicitamente applichiamo il filtro
     if (referenceOnly === true) {
       whereConditions.push(eq(signatures.isReference, true));
     } else if (referenceOnly === false) {
       whereConditions.push(eq(signatures.isReference, false));
     }
+    // Se referenceOnly è undefined, restituiamo tutte le firme
     
     const results = await db
       .select()
