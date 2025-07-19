@@ -43,15 +43,34 @@ export class SignatureAnalyzer {
       
       console.log(`Calibrazione: ${pixelWidth}x${pixelHeight}px -> ${realWidthMm}x${realHeightMm}mm (${pixelsPerMm.toFixed(2)} px/mm)`);
       
+      // Ridimensiona se l'immagine è troppo grande per evitare overflow dello stack
+      const maxDimension = 2000;
+      let processedImage = image;
+      let scaleFactor = 1;
+      
+      if (pixelWidth > maxDimension || pixelHeight > maxDimension) {
+        scaleFactor = Math.min(maxDimension / pixelWidth, maxDimension / pixelHeight);
+        const newWidth = Math.round(pixelWidth * scaleFactor);
+        const newHeight = Math.round(pixelHeight * scaleFactor);
+        
+        console.log(`Ridimensionamento immagine: ${pixelWidth}x${pixelHeight}px -> ${newWidth}x${newHeight}px (fattore: ${scaleFactor.toFixed(3)})`);
+        processedImage = image.resize(newWidth, newHeight, { fit: 'fill' });
+      }
+      
       // Converte in scala di grigi e applica sogliatura per isolare l'inchiostro
-      const grayBuffer = await image
+      const grayBuffer = await processedImage
         .greyscale()
         .normalise()
         .raw()
         .toBuffer();
       
-      // Analizza l'immagine binaria
-      const analysis = await this.analyzeSignatureImage(grayBuffer, pixelWidth, pixelHeight, pixelsPerMm);
+      // Usa le dimensioni processate per l'analisi
+      const analysisWidth = Math.round(pixelWidth * scaleFactor);
+      const analysisHeight = Math.round(pixelHeight * scaleFactor);
+      const adjustedPixelsPerMm = pixelsPerMm * scaleFactor;
+      
+      // Analizza l'immagine binaria usando le dimensioni processate
+      const analysis = await this.analyzeSignatureImage(grayBuffer, analysisWidth, analysisHeight, adjustedPixelsPerMm);
       
       return {
         // Base metrics (in pixels)
@@ -245,8 +264,11 @@ export class SignatureAnalyzer {
     const width = binaryMatrix[0].length;
     const widths: number[] = [];
     
-    // Semplificata implementazione: misura spessori lungo scan lines
-    for (let y = 0; y < height; y += 5) { // Campiona ogni 5 righe
+    // Limita il numero di campioni per evitare overflow dello stack
+    const maxSamples = 10000;
+    const step = Math.max(1, Math.floor(height / 100)); // Campiona massimo 100 righe
+    
+    for (let y = 0; y < height && widths.length < maxSamples; y += step) {
       let currentWidth = 0;
       for (let x = 0; x < width; x++) {
         if (binaryMatrix[y][x]) {
@@ -255,18 +277,35 @@ export class SignatureAnalyzer {
           if (currentWidth > 0) {
             widths.push(currentWidth);
             currentWidth = 0;
+            if (widths.length >= maxSamples) break;
           }
         }
       }
-      if (currentWidth > 0) widths.push(currentWidth);
+      if (currentWidth > 0 && widths.length < maxSamples) {
+        widths.push(currentWidth);
+      }
     }
     
     if (widths.length === 0) return { min: 1, max: 1, mean: 1, variance: 0 };
     
-    const min = Math.min(...widths);
-    const max = Math.max(...widths);
-    const mean = widths.reduce((a, b) => a + b, 0) / widths.length;
-    const variance = widths.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / widths.length;
+    // Uso iterativo per trovare min/max invece di spread operator per evitare stack overflow
+    let min = widths[0];
+    let max = widths[0];
+    let sum = 0;
+    
+    for (const width of widths) {
+      if (width < min) min = width;
+      if (width > max) max = width;
+      sum += width;
+    }
+    
+    const mean = sum / widths.length;
+    
+    let varianceSum = 0;
+    for (const width of widths) {
+      varianceSum += Math.pow(width - mean, 2);
+    }
+    const variance = varianceSum / widths.length;
     
     return { min, max, mean, variance };
   }
