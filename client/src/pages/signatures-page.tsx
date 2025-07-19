@@ -80,6 +80,8 @@ export default function SignaturesPage() {
   const [selectedProject, setSelectedProject] = useState<number | null>(null);
   const [isUploadReferenceOpen, setIsUploadReferenceOpen] = useState(false);
   const [isUploadVerifyOpen, setIsUploadVerifyOpen] = useState(false);
+  const [comparisonResults, setComparisonResults] = useState<Signature[] | null>(null);
+  const [showResultsDialog, setShowResultsDialog] = useState(false);
   // Rimosso state per modifica DPI globale
   
   // Form for creating new project
@@ -465,7 +467,11 @@ export default function SignaturesPage() {
       
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (data: Signature[]) => {
+      // Salva i risultati e mostra il dialog
+      setComparisonResults(data);
+      setShowResultsDialog(true);
+      
       // Aggiorniamo la query per garantire che i dati siano aggiornati
       queryClient.invalidateQueries({ queryKey: [`/api/signature-projects/${selectedProject}/signatures`] });
       queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures"] });
@@ -1059,6 +1065,72 @@ export default function SignaturesPage() {
         </div>
       )}
       {/* Rimosso dialogo di modifica DPI globale */}
+      
+      {/* Dialog per mostrare i risultati del confronto */}
+      <Dialog open={showResultsDialog} onOpenChange={setShowResultsDialog}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Risultati Confronto Firme</DialogTitle>
+            <DialogDescription>
+              Analisi completata per le firme da verificare
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {comparisonResults && comparisonResults.length > 0 ? (
+              comparisonResults.map((signature, index) => (
+                <div key={signature.id} className="border rounded-lg p-4">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h4 className="font-medium">{signature.originalFilename}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Similarità: {signature.comparisonResult ? (signature.comparisonResult * 100).toFixed(1) : '0'}%
+                      </p>
+                    </div>
+                    <Badge variant={
+                      !signature.comparisonResult ? "secondary" :
+                      signature.comparisonResult >= 0.85 ? "default" :
+                      signature.comparisonResult >= 0.65 ? "secondary" : "destructive"
+                    }>
+                      {!signature.comparisonResult ? "Non elaborata" :
+                       signature.comparisonResult >= 0.85 ? "Autentica" :
+                       signature.comparisonResult >= 0.65 ? "Prob. Autentica" : "Sospetta"}
+                    </Badge>
+                  </div>
+                  
+                  {signature.analysisReport && (
+                    <div className="bg-muted p-3 rounded text-sm">
+                      <h5 className="font-medium mb-2">Analisi Dettagliata:</h5>
+                      <pre className="whitespace-pre-wrap text-xs font-mono">
+                        {signature.analysisReport}
+                      </pre>
+                    </div>
+                  )}
+                  
+                  {signature.comparisonChart && (
+                    <div className="mt-3">
+                      <h5 className="font-medium mb-2">Grafico di Confronto:</h5>
+                      <img 
+                        src={`data:image/png;base64,${signature.comparisonChart}`} 
+                        alt="Grafico confronto" 
+                        className="max-w-full h-auto border rounded"
+                      />
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              <p className="text-center text-muted-foreground py-6">
+                Nessun risultato disponibile
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowResultsDialog(false)}>
+              Chiudi
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       <SignatureMethodologyDialog />
     </div>

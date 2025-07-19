@@ -37,6 +37,19 @@ FIRMA IN VERIFICA:
 - Lunghezza totale tratti: ${signatureParams.totalLength?.toFixed(2)} mm
 - Numero componenti connesse: ${signatureParams.connectedComponents}
 - Curvatura media: ${signatureParams.averageCurvature?.toFixed(3)}
+- PARAMETRI AVANZATI:
+  • Inclinazione: ${signatureParams.advancedInclination || 'N/A'}°
+  • Pressione avanzata: ${signatureParams.advancedPressure?.toFixed(3) || 'N/A'}
+  • Curvatura microscala: ${signatureParams.advancedCurvature?.toFixed(3) || 'N/A'}
+  • Spaziatura: ${signatureParams.advancedSpacing?.toFixed(3) || 'N/A'} mm
+  • Velocità esecuzione: ${signatureParams.advancedVelocity?.toFixed(3) || 'N/A'}
+  • Circolarità: ${signatureParams.advancedCircularity?.toFixed(3) || 'N/A'}
+  • Asole: ${signatureParams.advancedLoops || 'N/A'}
+  • Connessioni: ${signatureParams.advancedConnections || 'N/A'}
+  • Deviazione baseline: ${signatureParams.advancedBaselineDeviation?.toFixed(3) || 'N/A'} mm
+  • Stile scrittura: ${signatureParams.advancedWritingStyle || 'N/A'}
+  • Leggibilità: ${signatureParams.advancedLegibility?.toFixed(2) || 'N/A'}%
+  • Note elaborazione: ${signatureParams.advancedProcessingNotes || 'N/A'}
 
 FIRMA DI RIFERIMENTO:
 - Dimensioni: ${referenceParams.width}x${referenceParams.height} px (${referenceParams.realDimensions?.widthMm?.toFixed(1)}x${referenceParams.realDimensions?.heightMm?.toFixed(1)} mm)
@@ -47,6 +60,19 @@ FIRMA DI RIFERIMENTO:
 - Lunghezza totale tratti: ${referenceParams.totalLength?.toFixed(2)} mm
 - Numero componenti connesse: ${referenceParams.connectedComponents}
 - Curvatura media: ${referenceParams.averageCurvature?.toFixed(3)}
+- PARAMETRI AVANZATI:
+  • Inclinazione: ${referenceParams.advancedInclination || 'N/A'}°
+  • Pressione avanzata: ${referenceParams.advancedPressure?.toFixed(3) || 'N/A'}
+  • Curvatura microscala: ${referenceParams.advancedCurvature?.toFixed(3) || 'N/A'}
+  • Spaziatura: ${referenceParams.advancedSpacing?.toFixed(3) || 'N/A'} mm
+  • Velocità esecuzione: ${referenceParams.advancedVelocity?.toFixed(3) || 'N/A'}
+  • Circolarità: ${referenceParams.advancedCircularity?.toFixed(3) || 'N/A'}
+  • Asole: ${referenceParams.advancedLoops || 'N/A'}
+  • Connessioni: ${referenceParams.advancedConnections || 'N/A'}
+  • Deviazione baseline: ${referenceParams.advancedBaselineDeviation?.toFixed(3) || 'N/A'} mm
+  • Stile scrittura: ${referenceParams.advancedWritingStyle || 'N/A'}
+  • Leggibilità: ${referenceParams.advancedLegibility?.toFixed(2) || 'N/A'}%
+  • Note elaborazione: ${referenceParams.advancedProcessingNotes || 'N/A'}
 
 PUNTEGGIO SIMILARITÀ ALGORITMICO: ${(similarityScore * 100).toFixed(1)}%
 
