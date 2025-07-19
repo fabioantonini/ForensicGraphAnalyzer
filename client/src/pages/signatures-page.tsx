@@ -1141,25 +1141,58 @@ export default function SignaturesPage() {
                         
                         {/* Parametri tecnici chiave */}
                         {signature.parameters && (
-                          <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-muted-foreground">
-                            {signature.parameters.strokeWidth?.meanMm && (
-                              <div><strong>Spessore medio:</strong> {signature.parameters.strokeWidth.meanMm.toFixed(2)}mm</div>
-                            )}
-                            {signature.parameters.inclination !== undefined && (
-                              <div><strong>Inclinazione:</strong> {signature.parameters.inclination.toFixed(1)}°</div>
-                            )}
-                            {signature.parameters.connectivity?.totalStrokeLength && (
-                              <div><strong>Lunghezza tratto:</strong> {signature.parameters.connectivity.totalStrokeLength.toFixed(0)}mm</div>
-                            )}
-                            {signature.parameters.connectivity?.strokeComplexity && (
-                              <div><strong>Complessità:</strong> {(signature.parameters.connectivity.strokeComplexity * 100).toFixed(0)}%</div>
-                            )}
-                            {signature.parameters.velocity !== undefined && (
-                              <div><strong>Velocità:</strong> {signature.parameters.velocity}/5</div>
-                            )}
-                            {signature.parameters.writingStyle && (
-                              <div><strong>Stile:</strong> {signature.parameters.writingStyle}</div>
-                            )}
+                          <div className="space-y-2">
+                            <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-muted-foreground">
+                              {signature.parameters.strokeWidth?.meanMm && (
+                                <div><strong>Spessore medio:</strong> {signature.parameters.strokeWidth.meanMm.toFixed(2)}mm</div>
+                              )}
+                              {signature.parameters.inclination !== undefined && (
+                                <div><strong>Inclinazione:</strong> {signature.parameters.inclination.toFixed(1)}°</div>
+                              )}
+                              {signature.parameters.connectivity?.totalStrokeLength && (
+                                <div><strong>Lunghezza tratto:</strong> {signature.parameters.connectivity.totalStrokeLength.toFixed(0)}mm</div>
+                              )}
+                              {signature.parameters.connectivity?.strokeComplexity && (
+                                <div><strong>Complessità:</strong> {(signature.parameters.connectivity.strokeComplexity * 100).toFixed(0)}%</div>
+                              )}
+                              {signature.parameters.velocity !== undefined && (
+                                <div><strong>Velocità:</strong> {signature.parameters.velocity}/5</div>
+                              )}
+                              {signature.parameters.writingStyle && (
+                                <div><strong>Stile:</strong> {signature.parameters.writingStyle}</div>
+                              )}
+                            </div>
+                            
+                            {/* Parametri avanzati Python */}
+                            <div className="border-t pt-2">
+                              <h6 className="text-xs font-medium text-muted-foreground mb-1">Parametri Avanzati (Python/OpenCV):</h6>
+                              <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-muted-foreground">
+                                {signature.parameters.avgSpacing !== undefined && (
+                                  <div><strong>Spaziatura media:</strong> {signature.parameters.avgSpacing.toFixed(1)}mm</div>
+                                )}
+                                {signature.parameters.pressureStd !== undefined && (
+                                  <div><strong>Dev. pressione:</strong> {signature.parameters.pressureStd.toFixed(1)}</div>
+                                )}
+                                {signature.parameters.pressureMean !== undefined && (
+                                  <div><strong>Pressione media:</strong> {signature.parameters.pressureMean.toFixed(0)}</div>
+                                )}
+                                {signature.parameters.readability && (
+                                  <div><strong>Leggibilità:</strong> {signature.parameters.readability}</div>
+                                )}
+                                {signature.parameters.avgAsolaSize !== undefined && (
+                                  <div><strong>Dim. asole:</strong> {signature.parameters.avgAsolaSize.toFixed(2)}mm</div>
+                                )}
+                                {signature.parameters.baselineStdMm !== undefined && (
+                                  <div><strong>Dev. baseline:</strong> {signature.parameters.baselineStdMm.toFixed(1)}mm</div>
+                                )}
+                                {signature.parameters.contrastLevel !== undefined && (
+                                  <div><strong>Contrasto:</strong> {(signature.parameters.contrastLevel * 100).toFixed(0)}%</div>
+                                )}
+                                {signature.parameters.imageQuality !== undefined && (
+                                  <div><strong>Qualità immagine:</strong> {(signature.parameters.imageQuality * 100).toFixed(0)}%</div>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         )}
                       </div>
