@@ -101,6 +101,14 @@ export class SignatureAnalyzer {
       const finalParameters = {
         ...existingAnalysis,
         
+        // Aggiungi le dimensioni originali dell'immagine
+        width: pixelWidth,
+        height: pixelHeight,
+        realDimensions: {
+          widthMm: realWidthMm,
+          heightMm: realHeightMm
+        },
+        
         // Parametri avanzati integrati se disponibili
         ...(advancedAnalysis.proportion !== undefined && {
           proportion: advancedAnalysis.proportion,
