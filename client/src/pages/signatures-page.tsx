@@ -449,7 +449,8 @@ export default function SignaturesPage() {
     mutationFn: async () => {
       if (!selectedProject) throw new Error("Nessun progetto selezionato");
       
-      console.log(`Avvio confronto multiplo per progetto ${selectedProject} usando l'endpoint compare-all`);
+      console.log(`[FRONTEND] Avvio confronto multiplo per progetto ${selectedProject} usando l'endpoint compare-all`);
+      console.log(`[FRONTEND] URL endpoint: /api/signature-projects/${selectedProject}/compare-all`);
       
       // Utilizziamo il nuovo endpoint che elabora tutte le firme in una singola richiesta
       const res = await fetch(`/api/signature-projects/${selectedProject}/compare-all`, {
@@ -460,14 +461,22 @@ export default function SignaturesPage() {
         credentials: "include"
       });
       
+      console.log(`[FRONTEND] Risposta ricevuta: status=${res.status}, ok=${res.ok}`);
+      
       if (!res.ok) {
         const errorData = await res.json();
+        console.error(`[FRONTEND] Errore dal server:`, errorData);
         throw new Error(errorData.error || "Errore durante il confronto delle firme");
       }
       
-      return res.json();
+      const responseData = await res.json();
+      console.log(`[FRONTEND] Dati ricevuti:`, responseData);
+      return responseData;
     },
     onSuccess: (data: Signature[]) => {
+      console.log(`[FRONTEND] Successo confronto. Dati ricevuti:`, data);
+      console.log(`[FRONTEND] Numero firme ricevute:`, data.length);
+      
       // Salva i risultati e mostra il dialog
       setComparisonResults(data);
       setShowResultsDialog(true);
@@ -481,6 +490,7 @@ export default function SignaturesPage() {
       });
     },
     onError: (error: Error) => {
+      console.error(`[FRONTEND] Errore confronto:`, error);
       toast({
         title: "Errore",
         description: `Errore durante il confronto delle firme: ${error.message}`,
