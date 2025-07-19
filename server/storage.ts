@@ -1294,6 +1294,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateSignatureComparisonResult(id: number, result: number): Promise<Signature> {
+    console.log(`[STORAGE DEBUG] updateSignatureComparisonResult per firma ${id}: result=${result}, isNaN=${isNaN(result)}, type=${typeof result}`);
+    
+    if (isNaN(result) || typeof result !== 'number') {
+      console.error(`[STORAGE ERROR] Tentativo di salvare valore non valido per comparisonResult: ${result}`);
+      throw new Error(`Valore comparison result non valido: ${result}`);
+    }
+    
     const [signature] = await db
       .update(signatures)
       .set({ comparisonResult: result })
