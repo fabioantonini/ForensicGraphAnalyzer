@@ -276,8 +276,24 @@ async function generatePDFReportFromExistingData(params: {
   if (signature.parameters) {
     const params = signature.parameters;
     
+    // Per firme processate prima del fix, leggi le dimensioni dal file
+    let signatureWidth = params.width;
+    let signatureHeight = params.height;
+    
+    if (!signatureWidth || !signatureHeight) {
+      try {
+        const sharp = require('sharp');
+        const signatureImagePath = path.join('./uploads', signature.filename);
+        const metadata = await sharp(signatureImagePath).metadata();
+        signatureWidth = metadata.width;
+        signatureHeight = metadata.height;
+      } catch (err) {
+        console.log(`[PDF REPORT] Impossibile leggere dimensioni da ${signature.filename}: ${err.message}`);
+      }
+    }
+    
     doc.text('FIRMA IN VERIFICA:');
-    doc.text(`• Dimensioni: ${params.width || 'Non disponibile'}x${params.height || 'Non disponibile'} px`);
+    doc.text(`• Dimensioni: ${signatureWidth || 'Non disponibile'}x${signatureHeight || 'Non disponibile'} px`);
     if (params.realDimensions) {
       doc.text(`• Dimensioni reali: ${params.realDimensions.widthMm?.toFixed(1)}x${params.realDimensions.heightMm?.toFixed(1)} mm`);
     }
@@ -341,8 +357,24 @@ async function generatePDFReportFromExistingData(params: {
   if (referenceSignature.parameters) {
     const refParams = referenceSignature.parameters;
     
+    // Per firme processate prima del fix, leggi le dimensioni dal file
+    let refWidth = refParams.width;
+    let refHeight = refParams.height;
+    
+    if (!refWidth || !refHeight) {
+      try {
+        const sharp = require('sharp');
+        const refImagePath = path.join('./uploads', referenceSignature.filename);
+        const metadata = await sharp(refImagePath).metadata();
+        refWidth = metadata.width;
+        refHeight = metadata.height;
+      } catch (err) {
+        console.log(`[PDF REPORT] Impossibile leggere dimensioni da ${referenceSignature.filename}: ${err.message}`);
+      }
+    }
+    
     doc.text('FIRMA DI RIFERIMENTO:');
-    doc.text(`• Dimensioni: ${refParams.width || 'Non disponibile'}x${refParams.height || 'Non disponibile'} px`);
+    doc.text(`• Dimensioni: ${refWidth || 'Non disponibile'}x${refHeight || 'Non disponibile'} px`);
     if (refParams.realDimensions) {
       doc.text(`• Dimensioni reali: ${refParams.realDimensions.widthMm?.toFixed(1)}x${refParams.realDimensions.heightMm?.toFixed(1)} mm`);
     }
