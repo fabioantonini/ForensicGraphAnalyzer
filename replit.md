@@ -155,6 +155,20 @@ Preferred communication style: Simple, everyday language.
   - Complete multilingual support for all guide content and tooltips
   - Color-coded visual system to help users understand when to use each option
 
+### July 19, 2025 - Signature Processing Unification & Bug Fixes
+- **Root Cause Analysis**: Identified inconsistent processing logic between signature types
+  - Reference signatures used simple `processSignature` function (always worked)
+  - Verification signatures used complex `processAndCompareSignature` function (frequently failed)
+  - Reprocessing used simple `processSignature` function (always worked after retry)
+- **Processing Logic Unification**: All signature types now use identical processing workflow
+  - Unified function: All use `processSignature` with real dimensions (realWidthMm, realHeightMm)
+  - Consistent error handling: All have `.catch()` with failed status update
+  - Code cleanup: Removed problematic `processAndCompareSignature` function
+- **User Experience Improvement**: First-time upload success rate significantly improved
+  - Verification signatures should now succeed on first upload without "Retry" button
+  - Consistent behavior across reference and verification signature uploads
+  - Eliminates confusing difference between initial upload failure and reprocess success
+
 ### June 21, 2025 - OCR System Completion & Bug Fixes
 - **PDF OCR Support**: Complete PDF processing with direct text extraction using pdf-parse
   - Hybrid approach: Direct text extraction for PDFs (faster, 95% confidence)
