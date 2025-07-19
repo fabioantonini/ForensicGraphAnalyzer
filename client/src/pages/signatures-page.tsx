@@ -355,8 +355,15 @@ export default function SignaturesPage() {
   
   // Function to handle reference upload
   const onUploadReference = (data: FileFormValues) => {
+    console.log("onUploadReference chiamata con data:", data);
+    console.log("Tipo file:", typeof data.file, "Lunghezza:", data.file?.length);
+    console.log("Dimensioni:", data.realWidthMm, "x", data.realHeightMm);
+    
     if (data.file && data.file.length > 0) {
+      console.log("Validazione passata, avvio uploadReference.mutate");
       uploadReference.mutate(data);
+    } else {
+      console.log("ERRORE: Validazione fallita - file non valido");
     }
   };
   
@@ -673,7 +680,10 @@ export default function SignaturesPage() {
                     </DialogDescription>
                   </DialogHeader>
                   <Form {...referenceForm}>
-                    <form onSubmit={referenceForm.handleSubmit(onUploadReference)} className="space-y-4">
+                    <form onSubmit={referenceForm.handleSubmit(onUploadReference, (errors) => {
+                      console.log("ERRORI VALIDAZIONE RIFERIMENTO:", errors);
+                      console.log("Stato form riferimento:", referenceForm.formState.errors);
+                    })} className="space-y-4">
                       <FormField
                         control={referenceForm.control}
                         name="file"
