@@ -403,15 +403,15 @@ export function SignatureCard({
                       <div className="space-y-2 mt-1 text-sm">
                         <div className="flex justify-between">
                           <span>{t('signatures.parameters.width', 'Larghezza')}:</span>
-                          <span>{signature.parameters.width.toFixed(1)} cm</span>
+                          <span>{((signature.parameters.width || 0) / 10).toFixed(1)} cm</span>
                         </div>
                         <div className="flex justify-between">
                           <span>{t('signatures.parameters.height', 'Altezza')}:</span>
-                          <span>{signature.parameters.height.toFixed(1)} cm</span>
+                          <span>{((signature.parameters.height || 0) / 10).toFixed(1)} cm</span>
                         </div>
                         <div className="flex justify-between">
                           <span>{t('signatures.parameters.aspectRatio', 'Proporzione')}:</span>
-                          <span>{signature.parameters.aspectRatio.toFixed(2)}</span>
+                          <span>{signature.parameters.aspectRatio?.toFixed(2) || 'N/A'}</span>
                         </div>
                       </div>
                     </div>
@@ -422,15 +422,15 @@ export function SignatureCard({
                       <div className="space-y-2 mt-1 text-sm">
                         <div className="flex justify-between">
                           <span>{t('signatures.parameters.minWidth', 'Spessore min')}:</span>
-                          <span>{signature.parameters.strokeWidth.min} px</span>
+                          <span>{signature.parameters.strokeWidth.minMm?.toFixed(2) || 'N/A'} mm</span>
                         </div>
                         <div className="flex justify-between">
                           <span>{t('signatures.parameters.maxWidth', 'Spessore max')}:</span>
-                          <span>{signature.parameters.strokeWidth.max} px</span>
+                          <span>{signature.parameters.strokeWidth.maxMm?.toFixed(2) || 'N/A'} mm</span>
                         </div>
                         <div className="flex justify-between">
                           <span>{t('signatures.parameters.meanWidth', 'Spessore medio')}:</span>
-                          <span>{signature.parameters.strokeWidth.mean.toFixed(2)} px</span>
+                          <span>{signature.parameters.strokeWidth.meanMm?.toFixed(2) || 'N/A'} mm</span>
                         </div>
                       </div>
                     </div>
@@ -441,11 +441,11 @@ export function SignatureCard({
                       <div className="space-y-2 mt-1 text-sm">
                         <div className="flex justify-between">
                           <span>{t('signatures.parameters.components', 'Componenti')}:</span>
-                          <span>{signature.parameters.connectivity.connectedComponents}</span>
+                          <span>{signature.parameters.connectivity?.connectedComponents || 'N/A'}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>{t('signatures.parameters.gaps', 'Interruzioni')}:</span>
-                          <span>{signature.parameters.connectivity.gaps}</span>
+                          <span>{signature.parameters.connectivity?.gaps || 'N/A'}</span>
                         </div>
                       </div>
                     </div>
@@ -456,15 +456,15 @@ export function SignatureCard({
                       <div className="space-y-2 mt-1 text-sm">
                         <div className="flex justify-between">
                           <span>{t('signatures.parameters.sharpCorners', 'Angoli netti')}:</span>
-                          <span>{signature.parameters.curvatureMetrics.sharpCorners}</span>
+                          <span>{signature.parameters.curvatureMetrics?.sharpCorners || 'N/A'}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>{t('signatures.parameters.smoothCurves', 'Curve fluide')}:</span>
-                          <span>{signature.parameters.curvatureMetrics.smoothCurves}</span>
+                          <span>{signature.parameters.curvatureMetrics?.smoothCurves || 'N/A'}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>{t('signatures.parameters.angleChanges', 'Variazioni angolari')}:</span>
-                          <span>{signature.parameters.curvatureMetrics.totalAngleChanges.toFixed(2)}°</span>
+                          <span>{signature.parameters.curvatureMetrics?.totalAngleChanges?.toFixed(2) || 'N/A'}°</span>
                         </div>
                       </div>
                     </div>
@@ -475,15 +475,15 @@ export function SignatureCard({
                       <div className="grid grid-cols-3 gap-2 mt-1 text-sm">
                         <div className="flex justify-between">
                           <span>{t('signatures.parameters.density', 'Densità')}:</span>
-                          <span>{(signature.parameters.spatialDistribution.density * 100).toFixed(0)}%</span>
+                          <span>{(signature.parameters.spatialDistribution?.density ? (signature.parameters.spatialDistribution.density * 100).toFixed(0) : 'N/A')}%</span>
                         </div>
                         <div className="flex justify-between">
                           <span>{t('signatures.parameters.centerX', 'Centro X')}:</span>
-                          <span>{(signature.parameters.spatialDistribution.centerOfMassX * 100).toFixed(0)}%</span>
+                          <span>{(signature.parameters.spatialDistribution?.centerOfMassX ? (signature.parameters.spatialDistribution.centerOfMassX * 100).toFixed(0) : 'N/A')}%</span>
                         </div>
                         <div className="flex justify-between">
                           <span>{t('signatures.parameters.centerY', 'Centro Y')}:</span>
-                          <span>{(signature.parameters.spatialDistribution.centerOfMassY * 100).toFixed(0)}%</span>
+                          <span>{(signature.parameters.spatialDistribution?.centerOfMassY ? (signature.parameters.spatialDistribution.centerOfMassY * 100).toFixed(0) : 'N/A')}%</span>
                         </div>
                       </div>
                     </div>
@@ -494,11 +494,11 @@ export function SignatureCard({
                       <div className="grid grid-cols-2 gap-2 mt-1 text-sm">
                         <div className="flex justify-between">
                           <span>{t('signatures.parameters.loopPoints', 'Asole')}:</span>
-                          <span>{signature.parameters.featurePoints.loopPoints}</span>
+                          <span>{signature.parameters.featurePoints?.loopPoints || 'N/A'}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>{t('signatures.parameters.crossPoints', 'Incroci')}:</span>
-                          <span>{signature.parameters.featurePoints.crossPoints}</span>
+                          <span>{signature.parameters.featurePoints?.crossPoints || 'N/A'}</span>
                         </div>
                       </div>
                     </div>
