@@ -284,6 +284,47 @@ export interface SignatureParameters {
     imageQuality: number; // 0-1, overall image quality score
     contrastLevel: number; // 0-1, contrast between ink and background
   };
+  
+  // === PARAMETRI AVANZATI (opzionali) ===
+  // Parametri calcolati dallo script Python del cliente
+  
+  // Proporzione geometrica
+  proportion?: number; // Rapporto altezza/larghezza
+  
+  // Inclinazione
+  inclination?: number; // Angolo di inclinazione medio in gradi
+  
+  // Analisi pressione avanzata
+  pressureMean?: number; // Pressione media calcolata
+  pressureStd?: number; // Deviazione standard della pressione
+  
+  // Curvatura avanzata
+  avgCurvature?: number; // Curvatura media delle curve
+  
+  // Stile di scrittura
+  writingStyle?: string; // Categoria di stile (es: "Fluida", "Rigida", "Mista")
+  readability?: string; // Livello di leggibilità (es: "Alta", "Media", "Bassa")
+  
+  // Analisi delle asole
+  avgAsolaSize?: number; // Dimensione media delle asole in mm
+  
+  // Spaziatura
+  avgSpacing?: number; // Spaziatura media tra lettere/parole in mm
+  
+  // Velocità di esecuzione
+  velocity?: number; // Velocità stimata di scrittura
+  
+  // Sovrapposizione tratti
+  overlapRatio?: number; // Rapporto di sovrapposizione tra tratti (0-1)
+  
+  // Connessioni tra lettere
+  letterConnections?: number; // Numero di connessioni tra lettere
+  
+  // Deviazione baseline
+  baselineStdMm?: number; // Deviazione standard della baseline in mm
+  
+  // Note di processamento
+  processingNotes?: string; // Note aggiuntive sull'analisi
 }
 
 // Signature Projects schema

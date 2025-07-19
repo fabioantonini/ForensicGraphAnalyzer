@@ -23,7 +23,9 @@ export class SignatureAnalyzer {
     realHeightMm: number
   ): Promise<SignatureParameters> {
     try {
-      console.log(`[ANALYZER] Inizio analisi: ${imagePath}, dimensioni reali: ${realWidthMm}x${realHeightMm}mm`);
+      console.log(`[ANALYZER] Inizio analisi avanzata: ${imagePath}, dimensioni reali: ${realWidthMm}x${realHeightMm}mm`);
+      
+      // === FASE 1: ANALISI ESISTENTE (MANTENIAMO TUTTO) ===
       // Verifica che il file esista
       await fs.access(imagePath);
       
@@ -69,52 +71,56 @@ export class SignatureAnalyzer {
       const analysisHeight = Math.round(pixelHeight * scaleFactor);
       const adjustedPixelsPerMm = pixelsPerMm * scaleFactor;
       
-      // Analizza l'immagine binaria usando le dimensioni processate
-      const analysis = await this.analyzeSignatureImage(grayBuffer, analysisWidth, analysisHeight, adjustedPixelsPerMm);
+      // === ANALISI ESISTENTE (MANTENIAMO) ===
+      const existingAnalysis = await this.analyzeSignatureImage(grayBuffer, analysisWidth, analysisHeight, adjustedPixelsPerMm);
       
-      return {
-        // Base metrics (in pixels)
-        width: pixelWidth,
-        height: pixelHeight,
-        aspectRatio: pixelWidth / pixelHeight,
+      // === FASE 2: ANALISI AVANZATA CON SCRIPT PYTHON ===
+      console.log(`[ANALYZER] Avvio analisi parametri avanzati usando script Python`);
+      let advancedAnalysis: any = {};
+      
+      try {
+        const pythonCommand = `python3 advanced_signature_analyzer.py analyze "${imagePath}" ${realWidthMm} ${realHeightMm}`;
+        const result = execSync(pythonCommand, { 
+          encoding: 'utf-8',
+          timeout: 30000, // 30 secondi timeout
+          cwd: process.cwd()
+        });
         
-        // Real-world dimensions
-        realDimensions: {
-          widthMm: realWidthMm,
-          heightMm: realHeightMm,
-          pixelsPerMm: pixelsPerMm,
-        },
+        advancedAnalysis = JSON.parse(result);
+        console.log(`[ANALYZER] Parametri avanzati estratti con successo`);
         
-        // Stroke characteristics (in real units)
-        strokeWidth: analysis.strokeWidth,
+      } catch (error) {
+        console.warn(`[ANALYZER] Analisi avanzata fallita, uso solo parametri base:`, error);
+        advancedAnalysis = {}; // Fallback: usa solo analisi esistente
+      }
+      
+      // === FASE 3: INTEGRAZIONE DEI RISULTATI ===
+      console.log(`[ANALYZER] Integrazione parametri esistenti + avanzati`);
+      
+      // Combina i parametri esistenti con quelli avanzati
+      const finalParameters = {
+        ...existingAnalysis,
         
-        // Pressure analysis
-        pressurePoints: analysis.pressurePoints,
-        
-        // Curvature metrics
-        curvatureMetrics: analysis.curvatureMetrics,
-        
-        // Spatial distribution
-        spatialDistribution: analysis.spatialDistribution,
-        
-        // Connectivity
-        connectivity: analysis.connectivity,
-        
-        // Feature points (in mm)
-        featurePoints: analysis.featurePoints,
-        
-        // Advanced geometric features
-        geometricFeatures: analysis.geometricFeatures,
-        
-        // Image metadata
-        imageMetadata: {
-          originalDpi: metadata.density || 72,
-          detectedInkColor: '#000000', // Assumiamo inchiostro nero
-          backgroundNoise: analysis.backgroundNoise,
-          imageQuality: analysis.imageQuality,
-          contrastLevel: analysis.contrastLevel,
-        },
+        // Parametri avanzati integrati se disponibili
+        ...(advancedAnalysis.proportion !== undefined && {
+          proportion: advancedAnalysis.proportion,
+          inclination: advancedAnalysis.inclination || 0,
+          pressureMean: advancedAnalysis.pressureMean || 0,
+          pressureStd: advancedAnalysis.pressureStd || 0,
+          avgCurvature: advancedAnalysis.avgCurvature || 0,
+          writingStyle: advancedAnalysis.writingStyle || 'Sconosciuto',
+          readability: advancedAnalysis.readability || 'Media',
+          avgAsolaSize: advancedAnalysis.avgAsolaSize || 0,
+          avgSpacing: advancedAnalysis.avgSpacing || 0,
+          velocity: advancedAnalysis.velocity || 1,
+          overlapRatio: advancedAnalysis.overlapRatio || 0,
+          letterConnections: advancedAnalysis.letterConnections || 1,
+          baselineStdMm: advancedAnalysis.baselineStdMm || 0
+        })
       };
+      
+      console.log(`[ANALYZER] Analisi completata con ${Object.keys(finalParameters).length} parametri`);
+      return finalParameters;
     } catch (error: any) {
       console.error(`[ANALYZER] Errore nell'analisi della firma ${imagePath}:`, error);
       console.error(`[ANALYZER] Stack trace:`, error.stack);
