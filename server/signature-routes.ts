@@ -277,15 +277,64 @@ async function generatePDFReportFromExistingData(params: {
     const params = signature.parameters;
     
     doc.text('FIRMA IN VERIFICA:');
-    doc.text(`• Dimensioni: ${params.width || 'N/A'}x${params.height || 'N/A'} px`);
+    doc.text(`• Dimensioni: ${params.width || 'Non disponibile'}x${params.height || 'Non disponibile'} px`);
     if (params.realDimensions) {
       doc.text(`• Dimensioni reali: ${params.realDimensions.widthMm?.toFixed(1)}x${params.realDimensions.heightMm?.toFixed(1)} mm`);
     }
     if (params.strokeWidth) {
       doc.text(`• Spessore tratto medio: ${params.strokeWidth.meanMm?.toFixed(3)} mm`);
       doc.text(`• Spessore massimo: ${params.strokeWidth.maxMm?.toFixed(3)} mm`);
+      doc.text(`• Spessore minimo: ${params.strokeWidth.minMm?.toFixed(3)} mm`);
       doc.text(`• Varianza spessore: ${params.strokeWidth.variance?.toFixed(2)}`);
     }
+    
+    // PARAMETRI AVANZATI
+    if (params.proportion !== undefined) {
+      doc.text(`• Proporzione: ${params.proportion?.toFixed(3) || 'Non disponibile'}`);
+    }
+    if (params.inclination !== undefined) {
+      doc.text(`• Inclinazione: ${params.inclination?.toFixed(1) || 'Non disponibile'}°`);
+    }
+    if (params.pressureMean !== undefined) {
+      doc.text(`• Pressione media: ${params.pressureMean?.toFixed(1) || 'Non disponibile'}`);
+    }
+    if (params.pressureStd !== undefined) {
+      doc.text(`• Deviazione pressione: ${params.pressureStd?.toFixed(1) || 'Non disponibile'}`);
+    }
+    if (params.avgCurvature !== undefined) {
+      doc.text(`• Curvatura media: ${params.avgCurvature?.toFixed(3) || 'Non disponibile'}`);
+    }
+    if (params.velocity !== undefined) {
+      doc.text(`• Velocità scrittura: ${params.velocity || 'Non disponibile'}/5`);
+    }
+    if (params.writingStyle) {
+      doc.text(`• Stile scrittura: ${params.writingStyle || 'Non disponibile'}`);
+    }
+    if (params.readability) {
+      doc.text(`• Leggibilità: ${params.readability || 'Non disponibile'}`);
+    }
+    if (params.avgAsolaSize !== undefined) {
+      doc.text(`• Dimensione asole medie: ${params.avgAsolaSize?.toFixed(2) || 'Non disponibile'} mm`);
+    }
+    if (params.avgSpacing !== undefined) {
+      doc.text(`• Spaziatura media: ${params.avgSpacing?.toFixed(2) || 'Non disponibile'} mm`);
+    }
+    if (params.overlapRatio !== undefined) {
+      doc.text(`• Rapporto sovrapposizione: ${(params.overlapRatio * 100)?.toFixed(1) || 'Non disponibile'}%`);
+    }
+    if (params.letterConnections !== undefined) {
+      doc.text(`• Connessioni lettere: ${params.letterConnections?.toFixed(2) || 'Non disponibile'}`);
+    }
+    if (params.baselineStdMm !== undefined) {
+      doc.text(`• Deviazione baseline: ${params.baselineStdMm?.toFixed(2) || 'Non disponibile'} mm`);
+    }
+    
+    // Parametri di connettività se disponibili
+    if (params.connectivity) {
+      doc.text(`• Componenti connesse: ${params.connectivity.connectedComponents || 'Non disponibile'}`);
+      doc.text(`• Complessità tratto: ${(params.connectivity.strokeComplexity * 100)?.toFixed(0) || 'Non disponibile'}%`);
+    }
+    
     doc.moveDown(0.5);
   }
   
@@ -293,15 +342,64 @@ async function generatePDFReportFromExistingData(params: {
     const refParams = referenceSignature.parameters;
     
     doc.text('FIRMA DI RIFERIMENTO:');
-    doc.text(`• Dimensioni: ${refParams.width || 'N/A'}x${refParams.height || 'N/A'} px`);
+    doc.text(`• Dimensioni: ${refParams.width || 'Non disponibile'}x${refParams.height || 'Non disponibile'} px`);
     if (refParams.realDimensions) {
       doc.text(`• Dimensioni reali: ${refParams.realDimensions.widthMm?.toFixed(1)}x${refParams.realDimensions.heightMm?.toFixed(1)} mm`);
     }
     if (refParams.strokeWidth) {
       doc.text(`• Spessore tratto medio: ${refParams.strokeWidth.meanMm?.toFixed(3)} mm`);
       doc.text(`• Spessore massimo: ${refParams.strokeWidth.maxMm?.toFixed(3)} mm`);
+      doc.text(`• Spessore minimo: ${refParams.strokeWidth.minMm?.toFixed(3)} mm`);
       doc.text(`• Varianza spessore: ${refParams.strokeWidth.variance?.toFixed(2)}`);
     }
+    
+    // PARAMETRI AVANZATI FIRMA DI RIFERIMENTO
+    if (refParams.proportion !== undefined) {
+      doc.text(`• Proporzione: ${refParams.proportion?.toFixed(3) || 'Non disponibile'}`);
+    }
+    if (refParams.inclination !== undefined) {
+      doc.text(`• Inclinazione: ${refParams.inclination?.toFixed(1) || 'Non disponibile'}°`);
+    }
+    if (refParams.pressureMean !== undefined) {
+      doc.text(`• Pressione media: ${refParams.pressureMean?.toFixed(1) || 'Non disponibile'}`);
+    }
+    if (refParams.pressureStd !== undefined) {
+      doc.text(`• Deviazione pressione: ${refParams.pressureStd?.toFixed(1) || 'Non disponibile'}`);
+    }
+    if (refParams.avgCurvature !== undefined) {
+      doc.text(`• Curvatura media: ${refParams.avgCurvature?.toFixed(3) || 'Non disponibile'}`);
+    }
+    if (refParams.velocity !== undefined) {
+      doc.text(`• Velocità scrittura: ${refParams.velocity || 'Non disponibile'}/5`);
+    }
+    if (refParams.writingStyle) {
+      doc.text(`• Stile scrittura: ${refParams.writingStyle || 'Non disponibile'}`);
+    }
+    if (refParams.readability) {
+      doc.text(`• Leggibilità: ${refParams.readability || 'Non disponibile'}`);
+    }
+    if (refParams.avgAsolaSize !== undefined) {
+      doc.text(`• Dimensione asole medie: ${refParams.avgAsolaSize?.toFixed(2) || 'Non disponibile'} mm`);
+    }
+    if (refParams.avgSpacing !== undefined) {
+      doc.text(`• Spaziatura media: ${refParams.avgSpacing?.toFixed(2) || 'Non disponibile'} mm`);
+    }
+    if (refParams.overlapRatio !== undefined) {
+      doc.text(`• Rapporto sovrapposizione: ${(refParams.overlapRatio * 100)?.toFixed(1) || 'Non disponibile'}%`);
+    }
+    if (refParams.letterConnections !== undefined) {
+      doc.text(`• Connessioni lettere: ${refParams.letterConnections?.toFixed(2) || 'Non disponibile'}`);
+    }
+    if (refParams.baselineStdMm !== undefined) {
+      doc.text(`• Deviazione baseline: ${refParams.baselineStdMm?.toFixed(2) || 'Non disponibile'} mm`);
+    }
+    
+    // Parametri di connettività se disponibili
+    if (refParams.connectivity) {
+      doc.text(`• Componenti connesse: ${refParams.connectivity.connectedComponents || 'Non disponibile'}`);
+      doc.text(`• Complessità tratto: ${(refParams.connectivity.strokeComplexity * 100)?.toFixed(0) || 'Non disponibile'}%`);
+    }
+    
     doc.moveDown(1);
   }
   
