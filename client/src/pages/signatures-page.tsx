@@ -1078,24 +1078,91 @@ export default function SignaturesPage() {
       
       {/* Dialog per mostrare i risultati del confronto */}
       <Dialog open={showResultsDialog} onOpenChange={setShowResultsDialog}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-5xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Risultati Confronto Firme</DialogTitle>
+            <DialogTitle>Risultati Confronto Firme - Analisi Forense</DialogTitle>
             <DialogDescription>
-              Analisi completata per le firme da verificare
+              Analisi completata utilizzando 16+ parametri avanzati per il confronto grafologico
             </DialogDescription>
           </DialogHeader>
+          
+          {/* Statistiche generali */}
+          {comparisonResults && comparisonResults.length > 0 && (
+            <div className="bg-muted/30 rounded-lg p-4 mb-4">
+              <h3 className="font-medium mb-2">Riepilogo Analisi</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div className="text-center">
+                  <div className="text-lg font-semibold text-primary">
+                    {comparisonResults.filter(s => !s.isReference).length}
+                  </div>
+                  <div className="text-muted-foreground">Firme analizzate</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-lg font-semibold text-green-600">
+                    {comparisonResults.filter(s => !s.isReference && s.comparisonResult >= 0.85).length}
+                  </div>
+                  <div className="text-muted-foreground">Autentiche (≥85%)</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-lg font-semibold text-yellow-600">
+                    {comparisonResults.filter(s => !s.isReference && s.comparisonResult >= 0.65 && s.comparisonResult < 0.85).length}
+                  </div>
+                  <div className="text-muted-foreground">Prob. Autentiche (65-84%)</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-lg font-semibold text-red-600">
+                    {comparisonResults.filter(s => !s.isReference && s.comparisonResult < 0.65).length}
+                  </div>
+                  <div className="text-muted-foreground">Sospette (&lt;65%)</div>
+                </div>
+              </div>
+            </div>
+          )}
+          
           <div className="space-y-4">
             {comparisonResults && comparisonResults.length > 0 ? (
               // Mostra solo le firme da verificare (non di riferimento)
               comparisonResults.filter(sig => !sig.isReference).map((signature, index) => (
                 <div key={signature.id} className="border rounded-lg p-4">
                   <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <h4 className="font-medium">{signature.originalFilename}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Similarità: {signature.comparisonResult ? (signature.comparisonResult * 100).toFixed(1) : '0'}%
-                      </p>
+                    <div className="flex-1">
+                      <h4 className="font-medium text-lg">{signature.originalFilename}</h4>
+                      <div className="mt-2 space-y-2">
+                        <div className="flex items-center gap-4">
+                          <p className="text-sm text-muted-foreground">
+                            <strong>Similarità:</strong> {signature.comparisonResult ? (signature.comparisonResult * 100).toFixed(1) : '0'}%
+                          </p>
+                          {signature.parameters?.realDimensions && (
+                            <p className="text-sm text-muted-foreground">
+                              <strong>Dimensioni:</strong> {signature.parameters.realDimensions.widthMm?.toFixed(1)}×{signature.parameters.realDimensions.heightMm?.toFixed(1)}mm
+                            </p>
+                          )}
+                        </div>
+                        
+                        {/* Parametri tecnici chiave */}
+                        {signature.parameters && (
+                          <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-muted-foreground">
+                            {signature.parameters.strokeWidth?.meanMm && (
+                              <div><strong>Spessore medio:</strong> {signature.parameters.strokeWidth.meanMm.toFixed(2)}mm</div>
+                            )}
+                            {signature.parameters.inclination !== undefined && (
+                              <div><strong>Inclinazione:</strong> {signature.parameters.inclination.toFixed(1)}°</div>
+                            )}
+                            {signature.parameters.connectivity?.totalStrokeLength && (
+                              <div><strong>Lunghezza tratto:</strong> {signature.parameters.connectivity.totalStrokeLength.toFixed(0)}mm</div>
+                            )}
+                            {signature.parameters.connectivity?.strokeComplexity && (
+                              <div><strong>Complessità:</strong> {(signature.parameters.connectivity.strokeComplexity * 100).toFixed(0)}%</div>
+                            )}
+                            {signature.parameters.velocity !== undefined && (
+                              <div><strong>Velocità:</strong> {signature.parameters.velocity}/5</div>
+                            )}
+                            {signature.parameters.writingStyle && (
+                              <div><strong>Stile:</strong> {signature.parameters.writingStyle}</div>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <Badge variant={
                       !signature.comparisonResult ? "secondary" :
