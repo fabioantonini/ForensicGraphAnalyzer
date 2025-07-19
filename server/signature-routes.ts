@@ -281,22 +281,15 @@ async function generatePDFReportFromExistingData(params: {
     let signatureWidth = params.width;
     let signatureHeight = params.height;
     
-    console.log(`[PDF REPORT DEBUG] Firma ${signature.id}: width=${signatureWidth}, height=${signatureHeight}`);
-    
     if (!signatureWidth || !signatureHeight) {
-      console.log(`[PDF REPORT DEBUG] Dimensioni mancanti, leggo dal file ${signature.filename}`);
       try {
         const signatureImagePath = path.join('./uploads', signature.filename);
-        console.log(`[PDF REPORT DEBUG] Percorso file: ${signatureImagePath}`);
         const metadata = await sharp(signatureImagePath).metadata();
         signatureWidth = metadata.width;
         signatureHeight = metadata.height;
-        console.log(`[PDF REPORT DEBUG] Dimensioni lette dal file: ${signatureWidth}x${signatureHeight}`);
       } catch (err: any) {
         console.log(`[PDF REPORT] Impossibile leggere dimensioni da ${signature.filename}: ${err.message}`);
       }
-    } else {
-      console.log(`[PDF REPORT DEBUG] Uso dimensioni dai parametri: ${signatureWidth}x${signatureHeight}`);
     }
     
     doc.text('FIRMA IN VERIFICA:');
@@ -368,22 +361,15 @@ async function generatePDFReportFromExistingData(params: {
     let refWidth = refParams.width;
     let refHeight = refParams.height;
     
-    console.log(`[PDF REPORT DEBUG] Firma riferimento ${referenceSignature.id}: width=${refWidth}, height=${refHeight}`);
-    
     if (!refWidth || !refHeight) {
-      console.log(`[PDF REPORT DEBUG] Dimensioni riferimento mancanti, leggo dal file ${referenceSignature.filename}`);
       try {
         const refImagePath = path.join('./uploads', referenceSignature.filename);
-        console.log(`[PDF REPORT DEBUG] Percorso file riferimento: ${refImagePath}`);
         const metadata = await sharp(refImagePath).metadata();
         refWidth = metadata.width;
         refHeight = metadata.height;
-        console.log(`[PDF REPORT DEBUG] Dimensioni riferimento lette dal file: ${refWidth}x${refHeight}`);
       } catch (err: any) {
         console.log(`[PDF REPORT] Impossibile leggere dimensioni da ${referenceSignature.filename}: ${err.message}`);
       }
-    } else {
-      console.log(`[PDF REPORT DEBUG] Uso dimensioni riferimento dai parametri: ${refWidth}x${refHeight}`);
     }
     
     doc.text('FIRMA DI RIFERIMENTO:');

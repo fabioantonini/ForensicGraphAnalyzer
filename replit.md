@@ -227,6 +227,7 @@ Preferred communication style: Simple, everyday language.
   - **Markdown Removal**: Complete filtration system to remove all Markdown tags (**bold**, *italic*, etc.) from AI responses
   - **Undefined Values**: Fixed "undefinedxundefined" dimensions display with proper null-safety checks
   - **Missing Parameters**: Replaced "N/A" with informative "Non disponibile per confronto" messages
+  - **Dimensions Display Fix**: Implemented Sharp-based fallback system to read image dimensions directly from files for signatures processed before parameter saving improvements
   - All 16+ advanced parameters now correctly transmitted and displayed in professional PDF reports
 
 ### June 21, 2025 - OCR System Completion & Bug Fixes
