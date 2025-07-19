@@ -747,9 +747,13 @@ export class SignatureAnalyzer {
 
     // Calcola la similitudine media rispetto a tutte le firme di riferimento
     const similarities = referenceParameters.map(refParams => {
-      // Similitudine del rapporto d'aspetto (con protezione contro valori non validi)
-      const targetAspect = targetParameters.aspectRatio || targetParameters.realDimensions.widthMm / targetParameters.realDimensions.heightMm;
-      const refAspect = refParams.aspectRatio || refParams.realDimensions.widthMm / refParams.realDimensions.heightMm;
+      // Similitudine del rapporto d'aspetto (con protezione completa contro valori non validi)
+      const targetDims = targetParameters.realDimensions;
+      const refDims = refParams.realDimensions;
+      const targetAspect = targetParameters.aspectRatio || 
+        (targetDims?.widthMm && targetDims?.heightMm ? targetDims.widthMm / targetDims.heightMm : 1.0);
+      const refAspect = refParams.aspectRatio || 
+        (refDims?.widthMm && refDims?.heightMm ? refDims.widthMm / refDims.heightMm : 1.0);
       const aspectRatioSim = (!isNaN(targetAspect) && !isNaN(refAspect)) ? 
         1 - Math.min(1, Math.abs(targetAspect - refAspect) / 2) : 0.5;
       
