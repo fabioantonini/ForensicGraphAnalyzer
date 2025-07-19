@@ -1252,8 +1252,8 @@ export class DatabaseStorage implements IStorage {
       .from(signatures)
       .where(eq(signatures.projectId, projectId));
     
-    if (referenceOnly) {
-      query = query.where(eq(signatures.isReference, true));
+    if (referenceOnly !== undefined) {
+      query = query.where(eq(signatures.isReference, referenceOnly));
     }
     
     const results = await query.orderBy(desc(signatures.createdAt));
