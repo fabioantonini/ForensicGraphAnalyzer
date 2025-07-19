@@ -747,42 +747,50 @@ export class SignatureAnalyzer {
 
     // Calcola la similitudine media rispetto a tutte le firme di riferimento
     const similarities = referenceParameters.map(refParams => {
-      // Similitudine del rapporto d'aspetto
-      const aspectRatioSim = 1 - Math.min(1, Math.abs(targetParameters.aspectRatio - refParams.aspectRatio) / 2);
+      // Similitudine del rapporto d'aspetto (con protezione contro valori non validi)
+      const targetAspect = targetParameters.aspectRatio || targetParameters.realDimensions.widthMm / targetParameters.realDimensions.heightMm;
+      const refAspect = refParams.aspectRatio || refParams.realDimensions.widthMm / refParams.realDimensions.heightMm;
+      const aspectRatioSim = (!isNaN(targetAspect) && !isNaN(refAspect)) ? 
+        1 - Math.min(1, Math.abs(targetAspect - refAspect) / 2) : 0.5;
       
-      // Similitudine dello spessore del tratto (in unità reali)
-      const strokeWidthSim = 1 - Math.min(1, Math.abs(
-        targetParameters.strokeWidth.meanMm - refParams.strokeWidth.meanMm
-      ) / 2);
+      // Similitudine dello spessore del tratto (in unità reali) - con protezione contro valori nulli
+      const targetStroke = targetParameters.strokeWidth?.meanMm || 0;
+      const refStroke = refParams.strokeWidth?.meanMm || 0;
+      const strokeWidthSim = (targetStroke > 0 && refStroke > 0) ? 
+        1 - Math.min(1, Math.abs(targetStroke - refStroke) / 2) : 0.5;
       
-      // Similitudine della lunghezza totale del tratto
-      const strokeLengthSim = 1 - Math.min(1, Math.abs(
-        targetParameters.connectivity.totalStrokeLength - refParams.connectivity.totalStrokeLength
-      ) / Math.max(targetParameters.connectivity.totalStrokeLength, refParams.connectivity.totalStrokeLength));
+      // Similitudine della lunghezza totale del tratto - con protezione
+      const targetLength = targetParameters.connectivity?.totalStrokeLength || 0;
+      const refLength = refParams.connectivity?.totalStrokeLength || 0;
+      const maxLength = Math.max(targetLength, refLength);
+      const strokeLengthSim = (maxLength > 0) ? 
+        1 - Math.min(1, Math.abs(targetLength - refLength) / maxLength) : 0.5;
       
-      // Similitudine della distribuzione spaziale
-      const spatialSim = 1 - Math.min(1, 
-        Math.abs(targetParameters.spatialDistribution.centerOfMassX - refParams.spatialDistribution.centerOfMassX) +
-        Math.abs(targetParameters.spatialDistribution.centerOfMassY - refParams.spatialDistribution.centerOfMassY)
-      ) / 2;
+      // Similitudine della distribuzione spaziale - con protezione
+      const targetCenterX = targetParameters.spatialDistribution?.centerOfMassX || 0;
+      const targetCenterY = targetParameters.spatialDistribution?.centerOfMassY || 0;
+      const refCenterX = refParams.spatialDistribution?.centerOfMassX || 0;
+      const refCenterY = refParams.spatialDistribution?.centerOfMassY || 0;
+      const spatialDiff = Math.abs(targetCenterX - refCenterX) + Math.abs(targetCenterY - refCenterY);
+      const spatialSim = 1 - Math.min(1, spatialDiff / 2);
       
-      // Similitudine della complessità
-      const complexitySim = 1 - Math.min(1, Math.abs(
-        targetParameters.connectivity.strokeComplexity - refParams.connectivity.strokeComplexity
-      ));
+      // Similitudine della complessità - con protezione
+      const targetComplexity = targetParameters.connectivity?.strokeComplexity || 0;
+      const refComplexity = refParams.connectivity?.strokeComplexity || 0;
+      const complexitySim = 1 - Math.min(1, Math.abs(targetComplexity - refComplexity));
       
-      // Similitudine dei punti caratteristici
-      const featureSim = 1 - Math.min(1, Math.abs(
-        targetParameters.featurePoints.loopPoints - refParams.featurePoints.loopPoints
-      ) / 5);
+      // Similitudine dei punti caratteristici - con protezione
+      const targetLoops = targetParameters.featurePoints?.loopPoints || 0;
+      const refLoops = refParams.featurePoints?.loopPoints || 0;
+      const featureSim = 1 - Math.min(1, Math.abs(targetLoops - refLoops) / 5);
       
-      // Similitudine geometrica
-      const geometricSim = 1 - Math.min(1, Math.abs(
-        targetParameters.geometricFeatures.slopeVariation - refParams.geometricFeatures.slopeVariation
-      ));
+      // Similitudine geometrica - con protezione  
+      const targetSlope = targetParameters.geometricFeatures?.slopeVariation || 0;
+      const refSlope = refParams.geometricFeatures?.slopeVariation || 0;
+      const geometricSim = 1 - Math.min(1, Math.abs(targetSlope - refSlope));
       
       // Calcola il punteggio totale (media ponderata basata su importanza forense)
-      const similarity = (
+      let similarity = (
         aspectRatioSim * 0.10 +      // Forma generale
         strokeWidthSim * 0.20 +      // Spessore tratto (molto importante)
         strokeLengthSim * 0.15 +     // Lunghezza complessiva
@@ -792,15 +800,23 @@ export class SignatureAnalyzer {
         geometricSim * 0.10          // Variazioni geometriche
       );
       
+      // Protezione finale contro NaN
+      if (isNaN(similarity) || !isFinite(similarity)) {
+        similarity = 0.5; // Valore neutro se c'è un problema nel calcolo
+      }
+      
       console.log(`Similitudine componenti: aspetto=${aspectRatioSim.toFixed(3)}, spessore=${strokeWidthSim.toFixed(3)}, lunghezza=${strokeLengthSim.toFixed(3)}, spaziale=${spatialSim.toFixed(3)}, complessità=${complexitySim.toFixed(3)}, caratteristiche=${featureSim.toFixed(3)}, geometria=${geometricSim.toFixed(3)} -> totale=${similarity.toFixed(3)}`);
       
       return similarity;
     });
     
-    // Restituisci la media delle similitudini
-    const finalSimilarity = similarities.reduce((sum, sim) => sum + sim, 0) / similarities.length;
-    console.log(`Similitudine finale: ${finalSimilarity.toFixed(3)}`);
+    // Restituisci la media delle similitudini con protezione finale
+    const validSimilarities = similarities.filter(sim => !isNaN(sim) && isFinite(sim));
+    const finalSimilarity = validSimilarities.length > 0 ? 
+      validSimilarities.reduce((sum, sim) => sum + sim, 0) / validSimilarities.length : 0.5;
     
-    return finalSimilarity;
+    console.log(`Similitudine finale: ${finalSimilarity.toFixed(3)} (${validSimilarities.length}/${similarities.length} valori validi)`);
+    
+    return Math.max(0, Math.min(1, finalSimilarity)); // Assicura che sia tra 0 e 1
   }
 }
