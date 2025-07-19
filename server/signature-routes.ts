@@ -344,10 +344,10 @@ export function registerSignatureRoutes(router: Router) {
       // Estrai le dimensioni reali dai dati del form
       const realWidthMm = parseFloat(req.body.realWidthMm);
       const realHeightMm = parseFloat(req.body.realHeightMm);
-      log(`RIFERIMENTO - Dimensioni parsate: width=${realWidthMm} (${typeof realWidthMm}), height=${realHeightMm} (${typeof realHeightMm})`, 'signatures');
+
       
       if (!realWidthMm || !realHeightMm || realWidthMm <= 0 || realHeightMm <= 0) {
-        log(`RIFERIMENTO - ERRORE validazione dimensioni: width=${realWidthMm}, height=${realHeightMm}`, 'signatures');
+        log(`ERRORE validazione dimensioni: width=${realWidthMm}, height=${realHeightMm}`, 'signatures');
         return res.status(400).json({ 
           error: 'Le dimensioni reali della firma sono obbligatorie e devono essere positive'
         });

@@ -98,8 +98,7 @@ export function SignatureCard({
     signature.comparisonResult !== null && 
     (signature.comparisonChart || signature.analysisReport || signature.parameters);
     
-  // Debug per il valore DPI
-  console.log(`Firma ${signature.id} - Valore DPI:`, signature.dpi, "Tipo:", typeof signature.dpi);
+
   
   return (
     <>

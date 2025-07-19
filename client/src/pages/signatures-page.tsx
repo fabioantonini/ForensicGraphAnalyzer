@@ -144,6 +144,11 @@ export default function SignaturesPage() {
       // Log dettagliato di ogni firma ricevuta
       console.log(`${new Date().toISOString()} - Ricevute ${data.length} firme per il progetto ${selectedProject}`);
       
+      // Conta firme di riferimento vs da verificare
+      const referenceCount = data.filter((f: any) => f.isReference).length;
+      const verifyCount = data.filter((f: any) => !f.isReference).length;
+      console.log(`CONTEGGIO: ${referenceCount} firme di riferimento, ${verifyCount} firme da verificare`);
+      
       // Controllo se riceviamo progetti invece di firme (errore comune)
       const containsProjects = data.length > 0 && 
         data.some(item => 'name' in item && !('projectId' in item));
@@ -355,15 +360,8 @@ export default function SignaturesPage() {
   
   // Function to handle reference upload
   const onUploadReference = (data: FileFormValues) => {
-    console.log("onUploadReference chiamata con data:", data);
-    console.log("Tipo file:", typeof data.file, "Lunghezza:", data.file?.length);
-    console.log("Dimensioni:", data.realWidthMm, "x", data.realHeightMm);
-    
     if (data.file && data.file.length > 0) {
-      console.log("Validazione passata, avvio uploadReference.mutate");
       uploadReference.mutate(data);
-    } else {
-      console.log("ERRORE: Validazione fallita - file non valido");
     }
   };
   
@@ -680,10 +678,7 @@ export default function SignaturesPage() {
                     </DialogDescription>
                   </DialogHeader>
                   <Form {...referenceForm}>
-                    <form onSubmit={referenceForm.handleSubmit(onUploadReference, (errors) => {
-                      console.log("ERRORI VALIDAZIONE RIFERIMENTO:", errors);
-                      console.log("Stato form riferimento:", referenceForm.formState.errors);
-                    })} className="space-y-4">
+                    <form onSubmit={referenceForm.handleSubmit(onUploadReference)} className="space-y-4">
                       <FormField
                         control={referenceForm.control}
                         name="file"
