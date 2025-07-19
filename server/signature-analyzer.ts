@@ -2,6 +2,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { SignatureParameters } from '../shared/schema';
 import { execSync } from 'child_process';
+import sharp from 'sharp';
 
 /**
  * Classe per l'analisi delle firme
@@ -10,83 +11,676 @@ import { execSync } from 'child_process';
  */
 export class SignatureAnalyzer {
   /**
-   * Estrae i parametri caratteristici da un'immagine di firma
+   * Estrae i parametri caratteristici da un'immagine di firma utilizzando analisi reale
    * @param imagePath Percorso del file dell'immagine
+   * @param realWidthMm Larghezza reale della firma in mm
+   * @param realHeightMm Altezza reale della firma in mm
    * @returns Parametri estratti dalla firma
    */
-  public static async extractParameters(imagePath: string): Promise<SignatureParameters> {
+  public static async extractParameters(
+    imagePath: string, 
+    realWidthMm: number, 
+    realHeightMm: number
+  ): Promise<SignatureParameters> {
     try {
       // Verifica che il file esista
       await fs.access(imagePath);
       
-      // In una implementazione reale, qui si utilizzerebbe una libreria di elaborazione delle immagini
-      // come Sharp, Jimp o OpenCV per analizzare l'immagine
+      // Carica l'immagine con Sharp
+      const image = sharp(imagePath);
+      const metadata = await image.metadata();
+      const { width: pixelWidth, height: pixelHeight } = metadata;
       
-      // Per ora, simuliamo l'estrazione dei parametri con valori casuali ma realistici
-      // In una versione completa, questi sarebbero valori calcolati dall'analisi dell'immagine
+      if (!pixelWidth || !pixelHeight) {
+        throw new Error('Impossibile determinare le dimensioni dell\'immagine');
+      }
+      
+      // Calcola il fattore di calibrazione (pixel per millimetro)
+      const pixelsPerMmX = pixelWidth / realWidthMm;
+      const pixelsPerMmY = pixelHeight / realHeightMm;
+      const pixelsPerMm = (pixelsPerMmX + pixelsPerMmY) / 2; // Media per uniformità
+      
+      console.log(`Calibrazione: ${pixelWidth}x${pixelHeight}px -> ${realWidthMm}x${realHeightMm}mm (${pixelsPerMm.toFixed(2)} px/mm)`);
+      
+      // Converte in scala di grigi e applica sogliatura per isolare l'inchiostro
+      const grayBuffer = await image
+        .greyscale()
+        .normalise()
+        .raw()
+        .toBuffer();
+      
+      // Analizza l'immagine binaria
+      const analysis = await this.analyzeSignatureImage(grayBuffer, pixelWidth, pixelHeight, pixelsPerMm);
       
       return {
-        // Base metrics
-        width: Math.floor(Math.random() * 500) + 300, // 300-800px
-        height: Math.floor(Math.random() * 200) + 100, // 100-300px
-        aspectRatio: parseFloat((Math.random() * 3 + 2).toFixed(2)), // 2-5
+        // Base metrics (in pixels)
+        width: pixelWidth,
+        height: pixelHeight,
+        aspectRatio: pixelWidth / pixelHeight,
         
-        // Stroke characteristics
-        strokeWidth: {
-          min: Math.floor(Math.random() * 2) + 1, // 1-3px
-          max: Math.floor(Math.random() * 5) + 3, // 3-8px
-          mean: parseFloat((Math.random() * 3 + 2).toFixed(2)), // 2-5px
-          variance: parseFloat((Math.random() * 1).toFixed(2)), // 0-1
+        // Real-world dimensions
+        realDimensions: {
+          widthMm: realWidthMm,
+          heightMm: realHeightMm,
+          pixelsPerMm: pixelsPerMm,
         },
         
-        // Pressure points
-        pressurePoints: {
-          count: Math.floor(Math.random() * 15) + 5, // 5-20 punti
-          distribution: Array.from({ length: 10 }, () => parseFloat((Math.random()).toFixed(2))),
-        },
+        // Stroke characteristics (in real units)
+        strokeWidth: analysis.strokeWidth,
+        
+        // Pressure analysis
+        pressurePoints: analysis.pressurePoints,
         
         // Curvature metrics
-        curvatureMetrics: {
-          totalAngleChanges: parseFloat((Math.random() * 20 + 10).toFixed(2)), // 10-30
-          sharpCorners: Math.floor(Math.random() * 5) + 1, // 1-6
-          smoothCurves: Math.floor(Math.random() * 10) + 5, // 5-15
-        },
+        curvatureMetrics: analysis.curvatureMetrics,
         
         // Spatial distribution
-        spatialDistribution: {
-          centerOfMassX: parseFloat((Math.random() * 0.5 + 0.25).toFixed(2)), // 0.25-0.75
-          centerOfMassY: parseFloat((Math.random() * 0.5 + 0.25).toFixed(2)), // 0.25-0.75
-          density: parseFloat((Math.random() * 0.5 + 0.1).toFixed(2)), // 0.1-0.6
-        },
+        spatialDistribution: analysis.spatialDistribution,
         
-        // Connectivity and line breaks
-        connectivity: {
-          connectedComponents: Math.floor(Math.random() * 5) + 1, // 1-6
-          gaps: Math.floor(Math.random() * 4), // 0-4
-        },
+        // Connectivity
+        connectivity: analysis.connectivity,
         
-        // Feature points
-        featurePoints: {
-          startPoint: [
-            Math.floor(Math.random() * 50), 
-            Math.floor(Math.random() * 30) + 50
-          ],
-          endPoint: [
-            Math.floor(Math.random() * 50) + 200, 
-            Math.floor(Math.random() * 30) + 50
-          ],
-          loopPoints: Math.floor(Math.random() * 3), // 0-3
-          crossPoints: Math.floor(Math.random() * 2), // 0-2
-        },
+        // Feature points (in mm)
+        featurePoints: analysis.featurePoints,
         
-        // Vector representation (simulate feature vector)
-        vectorRepresentation: Array.from({ length: 32 }, () => parseFloat((Math.random() * 2 - 1).toFixed(3))),
+        // Advanced geometric features
+        geometricFeatures: analysis.geometricFeatures,
+        
+        // Image metadata
+        imageMetadata: {
+          originalDpi: metadata.density || 72,
+          detectedInkColor: '#000000', // Assumiamo inchiostro nero
+          backgroundNoise: analysis.backgroundNoise,
+          imageQuality: analysis.imageQuality,
+          contrastLevel: analysis.contrastLevel,
+        },
       };
     } catch (error: any) {
       console.error(`Errore nell'analisi della firma: ${error}`);
       throw new Error(`Impossibile analizzare la firma: ${error.message || 'Errore sconosciuto'}`);
     }
   }
+
+  /**
+   * Analizza i dati binari dell'immagine per estrarre caratteristiche della firma
+   */
+  private static async analyzeSignatureImage(
+    buffer: Buffer, 
+    width: number, 
+    height: number, 
+    pixelsPerMm: number
+  ) {
+    console.log(`Analizzando immagine ${width}x${height}px con risoluzione ${pixelsPerMm.toFixed(2)} px/mm`);
+    
+    // Converte il buffer in una matrice 2D per l'analisi
+    const imageMatrix: number[][] = [];
+    for (let y = 0; y < height; y++) {
+      imageMatrix[y] = [];
+      for (let x = 0; x < width; x++) {
+        const index = y * width + x;
+        imageMatrix[y][x] = buffer[index];
+      }
+    }
+    
+    // Applica sogliatura per separare inchiostro da sfondo
+    const threshold = this.calculateOtsuThreshold(buffer);
+    const binaryMatrix = this.applyThreshold(imageMatrix, threshold);
+    
+    console.log(`Soglia Otsu calcolata: ${threshold}`);
+    
+    // Analizza le caratteristiche
+    const strokeAnalysis = this.analyzeStrokeCharacteristics(binaryMatrix, pixelsPerMm);
+    const pressureAnalysis = this.analyzePressurePoints(imageMatrix, binaryMatrix, pixelsPerMm);
+    const curvatureAnalysis = this.analyzeCurvature(binaryMatrix, pixelsPerMm);
+    const spatialAnalysis = this.analyzeSpatialDistribution(binaryMatrix);
+    const connectivityAnalysis = this.analyzeConnectivity(binaryMatrix, pixelsPerMm);
+    const featureAnalysis = this.analyzeFeaturePoints(binaryMatrix, pixelsPerMm);
+    const geometricAnalysis = this.analyzeGeometricFeatures(binaryMatrix, pixelsPerMm);
+    
+    // Calcola qualità immagine e rumore di sfondo
+    const qualityMetrics = this.calculateImageQuality(imageMatrix, binaryMatrix);
+    
+    return {
+      strokeWidth: strokeAnalysis,
+      pressurePoints: pressureAnalysis,
+      curvatureMetrics: curvatureAnalysis,
+      spatialDistribution: spatialAnalysis,
+      connectivity: connectivityAnalysis,
+      featurePoints: featureAnalysis,
+      geometricFeatures: geometricAnalysis,
+      backgroundNoise: qualityMetrics.backgroundNoise,
+      imageQuality: qualityMetrics.imageQuality,
+      contrastLevel: qualityMetrics.contrastLevel,
+    };
+  }
+
+  // ================ METODI DI ANALISI DELL'IMMAGINE ================
+
+  /**
+   * Calcola la soglia ottimale usando l'algoritmo di Otsu
+   */
+  private static calculateOtsuThreshold(buffer: Buffer): number {
+    // Calcola l'istogramma
+    const histogram = new Array(256).fill(0);
+    for (let i = 0; i < buffer.length; i++) {
+      histogram[buffer[i]]++;
+    }
+    
+    const total = buffer.length;
+    let sum = 0;
+    for (let i = 0; i < 256; i++) {
+      sum += i * histogram[i];
+    }
+    
+    let sumB = 0;
+    let wB = 0;
+    let wF = 0;
+    let varMax = 0;
+    let threshold = 0;
+    
+    for (let t = 0; t < 256; t++) {
+      wB += histogram[t];
+      if (wB === 0) continue;
+      
+      wF = total - wB;
+      if (wF === 0) break;
+      
+      sumB += t * histogram[t];
+      const mB = sumB / wB;
+      const mF = (sum - sumB) / wF;
+      
+      const varBetween = wB * wF * (mB - mF) * (mB - mF);
+      
+      if (varBetween > varMax) {
+        varMax = varBetween;
+        threshold = t;
+      }
+    }
+    
+    return threshold;
+  }
+
+  /**
+   * Applica sogliatura binaria alla matrice dell'immagine
+   */
+  private static applyThreshold(matrix: number[][], threshold: number): boolean[][] {
+    return matrix.map(row => row.map(pixel => pixel < threshold));
+  }
+
+  /**
+   * Analizza le caratteristiche del tratto
+   */
+  private static analyzeStrokeCharacteristics(binaryMatrix: boolean[][], pixelsPerMm: number) {
+    const height = binaryMatrix.length;
+    const width = binaryMatrix[0].length;
+    let inkPixels = 0;
+    let totalPixels = width * height;
+    
+    // Conta pixel di inchiostro
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        if (binaryMatrix[y][x]) inkPixels++;
+      }
+    }
+    
+    // Analizza spessori usando morphological operations
+    const strokeWidths = this.measureStrokeWidths(binaryMatrix);
+    
+    return {
+      minMm: (strokeWidths.min || 1) / pixelsPerMm,
+      maxMm: (strokeWidths.max || 1) / pixelsPerMm,
+      meanMm: strokeWidths.mean / pixelsPerMm,
+      variance: strokeWidths.variance,
+      pixelCoverage: inkPixels / totalPixels,
+    };
+  }
+
+  /**
+   * Misura gli spessori del tratto usando distance transform
+   */
+  private static measureStrokeWidths(binaryMatrix: boolean[][]) {
+    const height = binaryMatrix.length;
+    const width = binaryMatrix[0].length;
+    const widths: number[] = [];
+    
+    // Semplificata implementazione: misura spessori lungo scan lines
+    for (let y = 0; y < height; y += 5) { // Campiona ogni 5 righe
+      let currentWidth = 0;
+      for (let x = 0; x < width; x++) {
+        if (binaryMatrix[y][x]) {
+          currentWidth++;
+        } else {
+          if (currentWidth > 0) {
+            widths.push(currentWidth);
+            currentWidth = 0;
+          }
+        }
+      }
+      if (currentWidth > 0) widths.push(currentWidth);
+    }
+    
+    if (widths.length === 0) return { min: 1, max: 1, mean: 1, variance: 0 };
+    
+    const min = Math.min(...widths);
+    const max = Math.max(...widths);
+    const mean = widths.reduce((a, b) => a + b, 0) / widths.length;
+    const variance = widths.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / widths.length;
+    
+    return { min, max, mean, variance };
+  }
+
+  /**
+   * Analizza i punti di pressione basandosi sull'intensità
+   */
+  private static analyzePressurePoints(grayMatrix: number[][], binaryMatrix: boolean[][], pixelsPerMm: number) {
+    const height = binaryMatrix.length;
+    const width = binaryMatrix[0].length;
+    let highPressureAreas = 0;
+    let lightPressureAreas = 0;
+    let pressureValues: number[] = [];
+    
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        if (binaryMatrix[y][x]) {
+          const intensity = 255 - grayMatrix[y][x]; // Inverti per avere valori alti = inchiostro denso
+          pressureValues.push(intensity);
+          
+          if (intensity > 180) highPressureAreas++;
+          else if (intensity < 100) lightPressureAreas++;
+        }
+      }
+    }
+    
+    const avgPressure = pressureValues.length > 0 ? 
+      pressureValues.reduce((a, b) => a + b, 0) / pressureValues.length : 0;
+    const pressureVariation = pressureValues.length > 0 ?
+      Math.sqrt(pressureValues.reduce((acc, val) => acc + Math.pow(val - avgPressure, 2), 0) / pressureValues.length) / 255 : 0;
+    
+    return {
+      count: pressureValues.length,
+      highPressureAreas,
+      lightPressureAreas,
+      pressureVariation,
+    };
+  }
+
+  /**
+   * Analizza la curvatura e la complessità del tratto
+   */
+  private static analyzeCurvature(binaryMatrix: boolean[][], pixelsPerMm: number) {
+    // Estrae il contorno della firma
+    const contours = this.extractContours(binaryMatrix);
+    let totalCurveLength = 0;
+    let sharpCorners = 0;
+    let smoothCurves = 0;
+    let curvatureSum = 0;
+    
+    contours.forEach(contour => {
+      const curvatures = this.calculateCurvature(contour);
+      totalCurveLength += contour.length / pixelsPerMm;
+      
+      curvatures.forEach(curvature => {
+        curvatureSum += Math.abs(curvature);
+        if (Math.abs(curvature) > 0.5) sharpCorners++;
+        else if (Math.abs(curvature) > 0.1) smoothCurves++;
+      });
+    });
+    
+    return {
+      totalCurveLength,
+      sharpCorners,
+      smoothCurves,
+      averageCurvature: curvatureSum / Math.max(1, contours.flat().length),
+    };
+  }
+
+  /**
+   * Estrae i contorni dalla matrice binaria
+   */
+  private static extractContours(binaryMatrix: boolean[][]): Array<Array<{x: number, y: number}>> {
+    const height = binaryMatrix.length;
+    const width = binaryMatrix[0].length;
+    const visited = Array.from({length: height}, () => new Array(width).fill(false));
+    const contours: Array<Array<{x: number, y: number}>> = [];
+    
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        if (binaryMatrix[y][x] && !visited[y][x]) {
+          const contour = this.traceContour(binaryMatrix, visited, x, y);
+          if (contour.length > 10) contours.push(contour);
+        }
+      }
+    }
+    
+    return contours;
+  }
+
+  /**
+   * Traccia un contorno partendo da un punto
+   */
+  private static traceContour(binaryMatrix: boolean[][], visited: boolean[][], startX: number, startY: number): Array<{x: number, y: number}> {
+    const contour: Array<{x: number, y: number}> = [];
+    const stack = [{x: startX, y: startY}];
+    const height = binaryMatrix.length;
+    const width = binaryMatrix[0].length;
+    
+    while (stack.length > 0) {
+      const {x, y} = stack.pop()!;
+      
+      if (x < 0 || x >= width || y < 0 || y >= height || visited[y][x] || !binaryMatrix[y][x]) {
+        continue;
+      }
+      
+      visited[y][x] = true;
+      contour.push({x, y});
+      
+      // Aggiungi vicini (8-connected)
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          if (dx === 0 && dy === 0) continue;
+          stack.push({x: x + dx, y: y + dy});
+        }
+      }
+    }
+    
+    return contour;
+  }
+
+  /**
+   * Calcola la curvatura lungo un contorno
+   */
+  private static calculateCurvature(contour: Array<{x: number, y: number}>): number[] {
+    const curvatures: number[] = [];
+    
+    for (let i = 1; i < contour.length - 1; i++) {
+      const p1 = contour[i - 1];
+      const p2 = contour[i];
+      const p3 = contour[i + 1];
+      
+      // Calcola vettori
+      const v1 = {x: p2.x - p1.x, y: p2.y - p1.y};
+      const v2 = {x: p3.x - p2.x, y: p3.y - p2.y};
+      
+      // Calcola curvatura (cross product normalizzato)
+      const cross = v1.x * v2.y - v1.y * v2.x;
+      const mag1 = Math.sqrt(v1.x * v1.x + v1.y * v1.y);
+      const mag2 = Math.sqrt(v2.x * v2.x + v2.y * v2.y);
+      
+      const curvature = mag1 * mag2 > 0 ? cross / (mag1 * mag2) : 0;
+      curvatures.push(curvature);
+    }
+    
+    return curvatures;
+  }
+
+  /**
+   * Analizza la distribuzione spaziale della firma
+   */
+  private static analyzeSpatialDistribution(binaryMatrix: boolean[][]) {
+    const height = binaryMatrix.length;
+    const width = binaryMatrix[0].length;
+    
+    let sumX = 0, sumY = 0, inkPixels = 0;
+    let minX = width, maxX = 0, minY = height, maxY = 0;
+    
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        if (binaryMatrix[y][x]) {
+          sumX += x;
+          sumY += y;
+          inkPixels++;
+          minX = Math.min(minX, x);
+          maxX = Math.max(maxX, x);
+          minY = Math.min(minY, y);
+          maxY = Math.max(maxY, y);
+        }
+      }
+    }
+    
+    const centerOfMassX = inkPixels > 0 ? (sumX / inkPixels) / width : 0.5;
+    const centerOfMassY = inkPixels > 0 ? (sumY / inkPixels) / height : 0.5;
+    const inkDensity = inkPixels / (width * height);
+    const boundingBoxArea = (maxX - minX) * (maxY - minY);
+    const boundingBoxRatio = boundingBoxArea > 0 ? inkPixels / boundingBoxArea : 0;
+    
+    return {
+      centerOfMassX,
+      centerOfMassY,
+      inkDensity,
+      boundingBoxRatio,
+    };
+  }
+
+  /**
+   * Analizza la connettività e la struttura dei tratti
+   */
+  private static analyzeConnectivity(binaryMatrix: boolean[][], pixelsPerMm: number) {
+    const contours = this.extractContours(binaryMatrix);
+    const connectedComponents = contours.length;
+    
+    // Conta le interruzioni (gaps) nel tratto
+    let gaps = 0;
+    let totalStrokeLength = 0;
+    let strokeComplexity = 0;
+    
+    contours.forEach(contour => {
+      totalStrokeLength += contour.length / pixelsPerMm;
+      
+      // Stima la complessità basata sulla variabilità della direzione
+      if (contour.length > 3) {
+        const directions = [];
+        for (let i = 1; i < contour.length; i++) {
+          const dx = contour[i].x - contour[i-1].x;
+          const dy = contour[i].y - contour[i-1].y;
+          directions.push(Math.atan2(dy, dx));
+        }
+        
+        let directionChanges = 0;
+        for (let i = 1; i < directions.length; i++) {
+          const angleDiff = Math.abs(directions[i] - directions[i-1]);
+          if (angleDiff > Math.PI / 4) directionChanges++;
+        }
+        strokeComplexity += directionChanges / directions.length;
+      }
+    });
+    
+    // Stima gaps basata su componenti disconnessi
+    gaps = Math.max(0, connectedComponents - 1);
+    
+    return {
+      connectedComponents,
+      gaps,
+      totalStrokeLength,
+      strokeComplexity: strokeComplexity / Math.max(1, contours.length),
+    };
+  }
+
+  /**
+   * Analizza i punti caratteristici della firma
+   */
+  private static analyzeFeaturePoints(binaryMatrix: boolean[][], pixelsPerMm: number) {
+    const height = binaryMatrix.length;
+    const width = binaryMatrix[0].length;
+    
+    // Trova punti di inizio e fine (estremi)
+    let startPoint: [number, number] = [0, 0];
+    let endPoint: [number, number] = [0, 0];
+    let foundFirst = false;
+    
+    // Scansiona dall'alto verso il basso, da sinistra a destra
+    for (let y = 0; y < height && !foundFirst; y++) {
+      for (let x = 0; x < width; x++) {
+        if (binaryMatrix[y][x]) {
+          startPoint = [x / pixelsPerMm, y / pixelsPerMm];
+          foundFirst = true;
+          break;
+        }
+      }
+    }
+    
+    // Scansiona dal basso verso l'alto, da destra a sinistra per l'ultimo punto
+    let foundLast = false;
+    for (let y = height - 1; y >= 0 && !foundLast; y--) {
+      for (let x = width - 1; x >= 0; x--) {
+        if (binaryMatrix[y][x]) {
+          endPoint = [x / pixelsPerMm, y / pixelsPerMm];
+          foundLast = true;
+          break;
+        }
+      }
+    }
+    
+    // Conta loop (regioni chiuse) e incroci
+    const contours = this.extractContours(binaryMatrix);
+    let loopPoints = 0;
+    let crossPoints = 0;
+    let ascenders = 0;
+    let descenders = 0;
+    
+    // Analisi semplificata per loop e incroci
+    contours.forEach(contour => {
+      if (contour.length > 10) {
+        const boundingBox = this.getContourBoundingBox(contour);
+        const area = (boundingBox.maxX - boundingBox.minX) * (boundingBox.maxY - boundingBox.minY);
+        const perimeter = contour.length;
+        
+        // Stima se è un loop basandosi sul rapporto area/perimetro
+        const compactness = (4 * Math.PI * area) / (perimeter * perimeter);
+        if (compactness > 0.3) loopPoints++;
+        
+        // Conta ascenders e descenders basandosi sulla posizione relativa
+        const avgY = contour.reduce((sum, p) => sum + p.y, 0) / contour.length;
+        if (boundingBox.minY < avgY - 20) ascenders++;
+        if (boundingBox.maxY > avgY + 20) descenders++;
+      }
+    });
+    
+    return {
+      startPoint,
+      endPoint,
+      loopPoints,
+      crossPoints,
+      ascenders,
+      descenders,
+    };
+  }
+
+  /**
+   * Calcola il bounding box di un contorno
+   */
+  private static getContourBoundingBox(contour: Array<{x: number, y: number}>) {
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    
+    contour.forEach(point => {
+      minX = Math.min(minX, point.x);
+      maxX = Math.max(maxX, point.x);
+      minY = Math.min(minY, point.y);
+      maxY = Math.max(maxY, point.y);
+    });
+    
+    return { minX, maxX, minY, maxY };
+  }
+
+  /**
+   * Analizza caratteristiche geometriche avanzate
+   */
+  private static analyzeGeometricFeatures(binaryMatrix: boolean[][], pixelsPerMm: number) {
+    const contours = this.extractContours(binaryMatrix);
+    let slopeVariation = 0;
+    let baselineConsistency = 0;
+    const letterSpacing: number[] = [];
+    const strokeAngles: number[] = [];
+    
+    contours.forEach(contour => {
+      if (contour.length > 5) {
+        // Calcola angoli di stroke
+        for (let i = 1; i < contour.length - 1; i++) {
+          const p1 = contour[i - 1];
+          const p2 = contour[i + 1];
+          const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x) * (180 / Math.PI);
+          strokeAngles.push(angle);
+        }
+      }
+    });
+    
+    // Calcola variazione dell'angolo
+    if (strokeAngles.length > 0) {
+      const avgAngle = strokeAngles.reduce((a, b) => a + b, 0) / strokeAngles.length;
+      slopeVariation = Math.sqrt(
+        strokeAngles.reduce((acc, angle) => acc + Math.pow(angle - avgAngle, 2), 0) / strokeAngles.length
+      ) / 180; // Normalizza a 0-1
+    }
+    
+    // Stima spaziatura tra lettere basandosi su gap orizzontali
+    const componentCenters = contours
+      .filter(c => c.length > 10)
+      .map(contour => {
+        const avgX = contour.reduce((sum, p) => sum + p.x, 0) / contour.length;
+        return avgX / pixelsPerMm;
+      })
+      .sort((a, b) => a - b);
+    
+    for (let i = 1; i < componentCenters.length; i++) {
+      letterSpacing.push(componentCenters[i] - componentCenters[i - 1]);
+    }
+    
+    // Stima consistenza baseline
+    const yPositions = contours.flat().map(p => p.y);
+    if (yPositions.length > 0) {
+      const avgY = yPositions.reduce((a, b) => a + b, 0) / yPositions.length;
+      const yVariance = yPositions.reduce((acc, y) => acc + Math.pow(y - avgY, 2), 0) / yPositions.length;
+      baselineConsistency = Math.max(0, 1 - Math.sqrt(yVariance) / 50); // Normalizza
+    }
+    
+    return {
+      slopeVariation,
+      baselineConsistency,
+      letterSpacing,
+      strokeAngles,
+    };
+  }
+
+  /**
+   * Calcola metriche di qualità dell'immagine
+   */
+  private static calculateImageQuality(grayMatrix: number[][], binaryMatrix: boolean[][]) {
+    const height = grayMatrix.length;
+    const width = grayMatrix[0].length;
+    let backgroundSum = 0;
+    let inkSum = 0;
+    let backgroundPixels = 0;
+    let inkPixels = 0;
+    
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        if (binaryMatrix[y][x]) {
+          inkSum += grayMatrix[y][x];
+          inkPixels++;
+        } else {
+          backgroundSum += grayMatrix[y][x];
+          backgroundPixels++;
+        }
+      }
+    }
+    
+    const avgBackground = backgroundPixels > 0 ? backgroundSum / backgroundPixels : 255;
+    const avgInk = inkPixels > 0 ? inkSum / inkPixels : 0;
+    
+    const contrastLevel = Math.abs(avgBackground - avgInk) / 255;
+    const backgroundNoise = backgroundPixels > 0 ? 
+      Math.sqrt(grayMatrix.flat().filter((_, i) => !binaryMatrix[Math.floor(i / width)][i % width])
+        .reduce((acc, val) => acc + Math.pow(val - avgBackground, 2), 0) / backgroundPixels) / 255 : 0;
+    
+    const imageQuality = Math.min(1, contrastLevel * (1 - backgroundNoise));
+    
+    return {
+      backgroundNoise,
+      imageQuality,
+      contrastLevel,
+    };
+  }
+
+  // ================ CONFRONTO FIRME ================
 
   /**
    * Confronta i parametri di una firma da verificare con quelli di un insieme di firme di riferimento
@@ -102,42 +696,64 @@ export class SignatureAnalyzer {
       throw new Error('Nessuna firma di riferimento fornita per il confronto');
     }
 
+    console.log(`Confrontando firma con ${referenceParameters.length} firme di riferimento`);
+
     // Calcola la similitudine media rispetto a tutte le firme di riferimento
-    // In una implementazione reale, questo utilizzerebbe algoritmi più sofisticati
     const similarities = referenceParameters.map(refParams => {
-      // Calcola la similitudine su diversi aspetti
-      const aspectRatioSim = 1 - Math.min(1, Math.abs(targetParameters.aspectRatio - refParams.aspectRatio) / 3);
+      // Similitudine del rapporto d'aspetto
+      const aspectRatioSim = 1 - Math.min(1, Math.abs(targetParameters.aspectRatio - refParams.aspectRatio) / 2);
       
-      // Similitudine dello spessore del tratto
-      const strokeWidthSim = 1 - Math.min(1, Math.abs(targetParameters.strokeWidth.mean - refParams.strokeWidth.mean) / 3);
+      // Similitudine dello spessore del tratto (in unità reali)
+      const strokeWidthSim = 1 - Math.min(1, Math.abs(
+        targetParameters.strokeWidth.meanMm - refParams.strokeWidth.meanMm
+      ) / 2);
       
-      // Similitudine della curvatura
-      const curvatureSim = 1 - Math.min(1, Math.abs(
-        targetParameters.curvatureMetrics.sharpCorners - refParams.curvatureMetrics.sharpCorners
-      ) / 5);
+      // Similitudine della lunghezza totale del tratto
+      const strokeLengthSim = 1 - Math.min(1, Math.abs(
+        targetParameters.connectivity.totalStrokeLength - refParams.connectivity.totalStrokeLength
+      ) / Math.max(targetParameters.connectivity.totalStrokeLength, refParams.connectivity.totalStrokeLength));
       
       // Similitudine della distribuzione spaziale
       const spatialSim = 1 - Math.min(1, 
         Math.abs(targetParameters.spatialDistribution.centerOfMassX - refParams.spatialDistribution.centerOfMassX) +
         Math.abs(targetParameters.spatialDistribution.centerOfMassY - refParams.spatialDistribution.centerOfMassY)
-      );
+      ) / 2;
       
-      // Similitudine della connettività
-      const connectivitySim = 1 - Math.min(1, Math.abs(
-        targetParameters.connectivity.connectedComponents - refParams.connectivity.connectedComponents
+      // Similitudine della complessità
+      const complexitySim = 1 - Math.min(1, Math.abs(
+        targetParameters.connectivity.strokeComplexity - refParams.connectivity.strokeComplexity
+      ));
+      
+      // Similitudine dei punti caratteristici
+      const featureSim = 1 - Math.min(1, Math.abs(
+        targetParameters.featurePoints.loopPoints - refParams.featurePoints.loopPoints
       ) / 5);
       
-      // Calcola il punteggio totale (media ponderata)
-      return (
-        aspectRatioSim * 0.15 +
-        strokeWidthSim * 0.25 +
-        curvatureSim * 0.2 +
-        spatialSim * 0.2 +
-        connectivitySim * 0.2
+      // Similitudine geometrica
+      const geometricSim = 1 - Math.min(1, Math.abs(
+        targetParameters.geometricFeatures.slopeVariation - refParams.geometricFeatures.slopeVariation
+      ));
+      
+      // Calcola il punteggio totale (media ponderata basata su importanza forense)
+      const similarity = (
+        aspectRatioSim * 0.10 +      // Forma generale
+        strokeWidthSim * 0.20 +      // Spessore tratto (molto importante)
+        strokeLengthSim * 0.15 +     // Lunghezza complessiva
+        spatialSim * 0.15 +          // Distribuzione spaziale
+        complexitySim * 0.15 +       // Complessità del movimento
+        featureSim * 0.15 +          // Caratteristiche specifiche
+        geometricSim * 0.10          // Variazioni geometriche
       );
+      
+      console.log(`Similitudine componenti: aspetto=${aspectRatioSim.toFixed(3)}, spessore=${strokeWidthSim.toFixed(3)}, lunghezza=${strokeLengthSim.toFixed(3)}, spaziale=${spatialSim.toFixed(3)}, complessità=${complexitySim.toFixed(3)}, caratteristiche=${featureSim.toFixed(3)}, geometria=${geometricSim.toFixed(3)} -> totale=${similarity.toFixed(3)}`);
+      
+      return similarity;
     });
     
     // Restituisci la media delle similitudini
-    return similarities.reduce((sum, sim) => sum + sim, 0) / similarities.length;
+    const finalSimilarity = similarities.reduce((sum, sim) => sum + sim, 0) / similarities.length;
+    console.log(`Similitudine finale: ${finalSimilarity.toFixed(3)}`);
+    
+    return finalSimilarity;
   }
 }

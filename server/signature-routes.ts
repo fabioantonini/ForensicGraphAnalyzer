@@ -335,11 +335,22 @@ export function registerSignatureRoutes(router: Router) {
         return res.status(400).json({ error: 'Nessun file caricato' });
       }
       
+      // Estrai le dimensioni reali dai dati del form
+      const realWidthMm = parseFloat(req.body.realWidthMm);
+      const realHeightMm = parseFloat(req.body.realHeightMm);
+      
+      if (!realWidthMm || !realHeightMm || realWidthMm <= 0 || realHeightMm <= 0) {
+        return res.status(400).json({ 
+          error: 'Le dimensioni reali della firma sono obbligatorie e devono essere positive'
+        });
+      }
+      
       // Estrae il DPI dall'immagine usando Sharp
       log(`Estrazione DPI per la firma di riferimento: ${req.file.filename}`, 'signatures');
       const dpi = await determineBestDPI(req.file.path);
       log(`DPI determinato per la firma di riferimento: ${dpi}`, 'signatures');
       log(`DEBUG - Tipo DPI: ${typeof dpi}, Valore: ${dpi}`, 'signatures');
+      log(`Dimensioni reali ricevute: ${realWidthMm}mm x ${realHeightMm}mm`, 'signatures');
       
       const signatureData = insertSignatureSchema.parse({
         projectId,
@@ -348,7 +359,9 @@ export function registerSignatureRoutes(router: Router) {
         fileType: req.file.mimetype,
         fileSize: req.file.size,
         isReference: true,
-        dpi: dpi // Utilizziamo il DPI estratto
+        dpi: dpi, // Manteniamo il DPI estratto per compatibilità
+        realWidth: realWidthMm,
+        realHeight: realHeightMm
       });
       
       // Salva la firma nel database
@@ -390,10 +403,21 @@ export function registerSignatureRoutes(router: Router) {
         });
       }
       
+      // Estrai le dimensioni reali dai dati del form
+      const realWidthMm = parseFloat(req.body.realWidthMm);
+      const realHeightMm = parseFloat(req.body.realHeightMm);
+      
+      if (!realWidthMm || !realHeightMm || realWidthMm <= 0 || realHeightMm <= 0) {
+        return res.status(400).json({ 
+          error: 'Le dimensioni reali della firma sono obbligatorie e devono essere positive'
+        });
+      }
+      
       // Estrae il DPI dall'immagine usando Sharp
       log(`Estrazione DPI per la firma di verifica: ${req.file.filename}`, 'signatures');
       const dpi = await determineBestDPI(req.file.path);
       log(`DPI determinato per la firma di verifica: ${dpi}`, 'signatures');
+      log(`Dimensioni reali ricevute: ${realWidthMm}mm x ${realHeightMm}mm`, 'signatures');
       
       const signatureData = insertSignatureSchema.parse({
         projectId,
@@ -402,7 +426,9 @@ export function registerSignatureRoutes(router: Router) {
         fileType: req.file.mimetype,
         fileSize: req.file.size,
         isReference: false,
-        dpi: dpi // Utilizziamo il DPI estratto
+        dpi: dpi, // Manteniamo il DPI estratto per compatibilità
+        realWidth: realWidthMm,
+        realHeight: realHeightMm
       });
       
       // Salva la firma nel database
@@ -462,7 +488,9 @@ export function registerSignatureRoutes(router: Router) {
         comparisonResult: sig.comparisonResult,
         createdAt: sig.createdAt,
         updatedAt: sig.updatedAt,
-        dpi: sig.dpi // Aggiungi esplicitamente il campo DPI nella risposta
+        dpi: sig.dpi, // Aggiungi esplicitamente il campo DPI nella risposta
+        realWidth: sig.realWidth, // Aggiungi le dimensioni reali
+        realHeight: sig.realHeight
       }));
       
       res.json(result);
@@ -1727,54 +1755,24 @@ async function processSignature(signatureId: number, filePath: string) {
       throw new Error('Firma non trovata');
     }
     
-    // Ottieni il progetto associato per recuperare il DPI
-    const project = await storage.getSignatureProject(signature.projectId);
-    if (!project) {
-      throw new Error('Progetto non trovato');
+    // Verifica che le dimensioni reali siano disponibili
+    if (!signature.realWidth || !signature.realHeight) {
+      throw new Error('Dimensioni reali della firma non specificate');
     }
     
-    // Prima tenta di determinare il DPI dall'immagine
-    let dpi = project.dpi || 300; // Valore predefinito dal progetto
-    
-    try {
-      // Tenta l'estrazione automatica del DPI dai metadata dell'immagine
-      const extractedDPI = await determineBestDPI(filePath, dpi);
-      
-      // Se il DPI estratto è diverso da quello del progetto, aggiorna il progetto
-      if (extractedDPI !== dpi) {
-        log(`DPI estratto dall'immagine (${extractedDPI}) diverso da quello del progetto (${dpi}), aggiornamento...`, 'image-utils');
-        await storage.updateSignatureProject(project.id, { dpi: extractedDPI });
-        dpi = extractedDPI;
-      }
-      
-      log(`Utilizzo DPI=${dpi} per l'analisi della firma (ID: ${signatureId})`, 'signatures');
-    } catch (error: any) {
-      log(`Impossibile estrarre il DPI dall'immagine: ${error.message || error}. Uso il valore del progetto: ${dpi}`, 'signatures');
-    }
+    log(`Elaborazione firma ${signatureId} con dimensioni reali: ${signature.realWidth}mm x ${signature.realHeight}mm`, 'signatures');
     
     // Aggiorna lo stato a 'processing'
     await storage.updateSignatureStatus(signatureId, 'processing');
     
-    // Verifica la disponibilità dell'analizzatore Python
-    const isPythonAvailable = await SignaturePythonAnalyzer.checkAvailability();
+    // Usa l'analizzatore JavaScript con le dimensioni reali
+    const parameters = await SignatureAnalyzer.extractParameters(
+      filePath, 
+      signature.realWidth, 
+      signature.realHeight
+    );
     
-    let parameters;
-    
-    if (isPythonAvailable) {
-      log(`Usando analizzatore Python avanzato per la firma ${signatureId} con DPI=${dpi}`, 'signatures');
-      try {
-        // Prova a usare l'analizzatore Python avanzato con il DPI specifico del progetto
-        parameters = await SignaturePythonAnalyzer.analyzeSignature(filePath, dpi);
-      } catch (pythonError: any) {
-        log(`Errore con analizzatore Python: ${pythonError.message}. Uso analizzatore JS fallback.`, 'signatures');
-        // Fallback all'analizzatore JavaScript se quello Python fallisce
-        parameters = await SignatureAnalyzer.extractParameters(filePath);
-      }
-    } else {
-      log(`Analizzatore Python non disponibile, uso analizzatore JS.`, 'signatures');
-      // Usa l'analizzatore JavaScript standard
-      parameters = await SignatureAnalyzer.extractParameters(filePath);
-    }
+    log(`Parametri estratti per firma ${signatureId}`, 'signatures');
     
     // Aggiorna la firma con i parametri estratti
     await storage.updateSignatureParameters(signatureId, parameters);
@@ -1791,67 +1789,32 @@ async function processAndCompareSignature(signatureId: number, filePath: string,
   try {
     log(`Inizio elaborazione firma ${signatureId} per progetto ${projectId}`, 'signatures');
     
-    // Ottieni il progetto per recuperare il DPI
-    const project = await storage.getSignatureProject(projectId);
-    if (!project) {
-      throw new Error('Progetto non trovato');
+    // Ottieni i dettagli della firma per le dimensioni reali
+    const signature = await storage.getSignature(signatureId);
+    if (!signature) {
+      throw new Error('Firma non trovata');
     }
     
-    // Prima tenta di determinare il DPI dall'immagine
-    let dpi = project.dpi || 300; // Valore predefinito dal progetto
-    
-    try {
-      // Tenta l'estrazione automatica del DPI dai metadata dell'immagine
-      const extractedDPI = await determineBestDPI(filePath, dpi);
-      
-      // Se è la prima firma caricata per il progetto e il DPI è diverso, aggiorna il progetto
-      if (extractedDPI !== dpi) {
-        // Ottieni il numero di firme già presenti
-        const existingSignatures = await storage.getProjectSignatures(projectId);
-        const isFirstSignature = existingSignatures.length <= 1; // Considerando che questa è già stata aggiunta
-        
-        // Se è la prima firma, usiamo il suo DPI per il progetto
-        if (isFirstSignature) {
-          log(`Prima firma per il progetto ${projectId}, aggiorno il DPI del progetto a ${extractedDPI}`, 'image-utils');
-          await storage.updateSignatureProject(project.id, { dpi: extractedDPI });
-          dpi = extractedDPI;
-        } else {
-          // Altrimenti manteniamo il DPI del progetto per coerenza
-          log(`DPI estratto (${extractedDPI}) diverso dal progetto (${dpi}), ma non è la prima firma. Mantengo il DPI del progetto.`, 'image-utils');
-        }
-      }
-      
-      log(`Utilizzo DPI=${dpi} per l'analisi della firma (ID: ${signatureId})`, 'signatures');
-    } catch (error: any) {
-      log(`Impossibile estrarre il DPI dall'immagine: ${error.message || error}. Uso il valore del progetto: ${dpi}`, 'signatures');
+    // Verifica che le dimensioni reali siano disponibili
+    if (!signature.realWidth || !signature.realHeight) {
+      throw new Error('Dimensioni reali della firma non specificate');
     }
+    
+    log(`Elaborazione firma ${signatureId} con dimensioni reali: ${signature.realWidth}mm x ${signature.realHeight}mm`, 'signatures');
     
     // Aggiorna lo stato a 'processing'
     await storage.updateSignatureStatus(signatureId, 'processing');
     
-    // Verifica la disponibilità dell'analizzatore Python
-    const isPythonAvailable = await SignaturePythonAnalyzer.checkAvailability();
+    // Usa l'analizzatore JavaScript con le dimensioni reali
+    const parameters = await SignatureAnalyzer.extractParameters(
+      filePath, 
+      signature.realWidth, 
+      signature.realHeight
+    );
     
-    let parameters;
-    
-    if (isPythonAvailable) {
-      log(`Usando analizzatore Python avanzato per la firma ${signatureId} con DPI=${dpi}`, 'signatures');
-      try {
-        // Prova a usare l'analizzatore Python avanzato con il DPI specifico del progetto
-        parameters = await SignaturePythonAnalyzer.analyzeSignature(filePath, dpi);
-      } catch (pythonError: any) {
-        log(`Errore con analizzatore Python: ${pythonError.message}. Uso analizzatore JS fallback.`, 'signatures');
-        // Fallback all'analizzatore JavaScript se quello Python fallisce
-        parameters = await SignatureAnalyzer.extractParameters(filePath);
-      }
-    } else {
-      log(`Analizzatore Python non disponibile, uso analizzatore JS.`, 'signatures');
-      // Usa l'analizzatore JavaScript standard
-      parameters = await SignatureAnalyzer.extractParameters(filePath);
-    }
+    log(`Parametri estratti per firma ${signatureId}`, 'signatures');
     
     // Aggiorna la firma con i parametri estratti
-    log(`Aggiornamento parametri firma ${signatureId}`, 'signatures');
     await storage.updateSignatureParameters(signatureId, parameters);
     
     // Aggiorna lo stato come 'completed', ma senza confrontare automaticamente

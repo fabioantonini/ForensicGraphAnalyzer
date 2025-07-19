@@ -55,11 +55,17 @@ const projectSchema = z.object({
 
 type ProjectFormValues = z.infer<typeof projectSchema>;
 
-// File upload schema
+// File upload schema with real dimensions
 const fileSchema = z.object({
   file: z.any()
     .refine(file => file instanceof FileList, "Input non valido")
-    .refine(files => (files instanceof FileList) && files.length === 1, "Seleziona un file")
+    .refine(files => (files instanceof FileList) && files.length === 1, "Seleziona un file"),
+  realWidthMm: z.number()
+    .min(5, "La larghezza deve essere almeno 5mm")
+    .max(200, "La larghezza non può superare 200mm"),
+  realHeightMm: z.number()
+    .min(3, "L'altezza deve essere almeno 3mm")
+    .max(100, "L'altezza non può superare 100mm")
 });
 
 type FileFormValues = z.infer<typeof fileSchema>;
@@ -89,13 +95,19 @@ export default function SignaturesPage() {
   // Form for reference signature upload
   const referenceForm = useForm<FileFormValues>({
     resolver: zodResolver(fileSchema),
-    defaultValues: {},
+    defaultValues: {
+      realWidthMm: 50,
+      realHeightMm: 20,
+    },
   });
   
   // Form for verification signature upload
   const verifyForm = useForm<FileFormValues>({
     resolver: zodResolver(fileSchema),
-    defaultValues: {},
+    defaultValues: {
+      realWidthMm: 50,
+      realHeightMm: 20,
+    },
   });
   
   // Query to get all projects
@@ -187,10 +199,12 @@ export default function SignaturesPage() {
   
   // Mutation to upload reference signature
   const uploadReference = useMutation({
-    mutationFn: async (data: FileList) => {
+    mutationFn: async (data: FileFormValues) => {
       console.log("Caricamento firma di riferimento iniziato");
       const formData = new FormData();
-      formData.append("signature", data[0]);
+      formData.append("signature", data.file[0]);
+      formData.append("realWidthMm", data.realWidthMm.toString());
+      formData.append("realHeightMm", data.realHeightMm.toString());
       
       const res = await fetch(`/api/signature-projects/${selectedProject}/signatures/reference`, {
         method: "POST",
@@ -237,10 +251,12 @@ export default function SignaturesPage() {
   
   // Mutation to upload verification signature
   const uploadVerify = useMutation({
-    mutationFn: async (data: FileList) => {
+    mutationFn: async (data: FileFormValues) => {
       console.log("Caricamento firma da verificare iniziato");
       const formData = new FormData();
-      formData.append("signature", data[0]);
+      formData.append("signature", data.file[0]);
+      formData.append("realWidthMm", data.realWidthMm.toString());
+      formData.append("realHeightMm", data.realHeightMm.toString());
       
       const res = await fetch(`/api/signature-projects/${selectedProject}/signatures/verify`, {
         method: "POST",
@@ -340,14 +356,14 @@ export default function SignaturesPage() {
   // Function to handle reference upload
   const onUploadReference = (data: FileFormValues) => {
     if (data.file && data.file.length > 0) {
-      uploadReference.mutate(data.file);
+      uploadReference.mutate(data);
     }
   };
   
   // Function to handle verification upload
   const onUploadVerify = (data: FileFormValues) => {
     if (data.file && data.file.length > 0) {
-      uploadVerify.mutate(data.file);
+      uploadVerify.mutate(data);
     }
   };
   
@@ -682,6 +698,59 @@ export default function SignaturesPage() {
                           </FormItem>
                         )}
                       />
+                      
+                      <div className="bg-muted/50 p-4 rounded-lg">
+                        <h4 className="text-sm font-medium mb-3">Dimensioni reali della firma</h4>
+                        <p className="text-xs text-muted-foreground mb-3">
+                          Specifica le dimensioni effettive della firma sulla carta per un'analisi accurata.
+                        </p>
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField
+                            control={referenceForm.control}
+                            name="realWidthMm"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Larghezza (mm)</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    min="5"
+                                    max="200"
+                                    step="0.5"
+                                    placeholder="50"
+                                    {...field}
+                                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={referenceForm.control}
+                            name="realHeightMm"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Altezza (mm)</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    min="3"
+                                    max="100"
+                                    step="0.5"
+                                    placeholder="20"
+                                    {...field}
+                                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+                      
                       <DialogFooter>
                         <Button 
                           type="submit" 
@@ -736,6 +805,59 @@ export default function SignaturesPage() {
                           </FormItem>
                         )}
                       />
+                      
+                      <div className="bg-muted/50 p-4 rounded-lg">
+                        <h4 className="text-sm font-medium mb-3">Dimensioni reali della firma</h4>
+                        <p className="text-xs text-muted-foreground mb-3">
+                          Specifica le dimensioni effettive della firma sulla carta per un'analisi accurata.
+                        </p>
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField
+                            control={verifyForm.control}
+                            name="realWidthMm"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Larghezza (mm)</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    min="5"
+                                    max="200"
+                                    step="0.5"
+                                    placeholder="50"
+                                    {...field}
+                                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={verifyForm.control}
+                            name="realHeightMm"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Altezza (mm)</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    min="3"
+                                    max="100"
+                                    step="0.5"
+                                    placeholder="20"
+                                    {...field}
+                                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+                      
                       <DialogFooter>
                         <Button 
                           type="submit" 

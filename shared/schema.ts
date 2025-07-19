@@ -205,58 +205,85 @@ export type InsertReportTemplate = z.infer<typeof insertReportTemplateSchema>;
 
 // Type definition for signature parameters
 export interface SignatureParameters {
-  // Base metrics
+  // Base metrics (in pixels)
   width: number;
   height: number;
   aspectRatio: number;
   
-  // Stroke characteristics
-  strokeWidth: {
-    min: number;
-    max: number;
-    mean: number;
-    variance: number;
+  // Real-world dimensions (in mm)
+  realDimensions: {
+    widthMm: number;
+    heightMm: number;
+    pixelsPerMm: number; // Calibration factor
   };
   
-  // Pressure points (if available from image analysis)
+  // Stroke characteristics (normalized to real dimensions)
+  strokeWidth: {
+    minMm: number; // Minimum stroke width in mm
+    maxMm: number; // Maximum stroke width in mm
+    meanMm: number; // Average stroke width in mm
+    variance: number; // Variance in stroke width
+    pixelCoverage: number; // Percentage of pixels that are ink
+  };
+  
+  // Pressure analysis (derived from stroke intensity)
   pressurePoints: {
     count: number;
-    distribution: number[];
+    highPressureAreas: number; // Areas with thick strokes
+    lightPressureAreas: number; // Areas with thin strokes
+    pressureVariation: number; // 0-1, how much pressure varies
   };
   
-  // Curvature metrics
+  // Curvature metrics (in real coordinates)
   curvatureMetrics: {
-    totalAngleChanges: number;
-    sharpCorners: number;
-    smoothCurves: number;
+    totalCurveLength: number; // Total length of curves in mm
+    sharpCorners: number; // Number of sharp direction changes
+    smoothCurves: number; // Number of smooth curves
+    averageCurvature: number; // Average curvature per mm
   };
   
-  // Spatial distribution
+  // Spatial distribution (normalized 0-1)
   spatialDistribution: {
-    centerOfMassX: number;
-    centerOfMassY: number;
-    density: number;
+    centerOfMassX: number; // 0-1 relative to signature bounds
+    centerOfMassY: number; // 0-1 relative to signature bounds
+    inkDensity: number; // Ink pixels / total pixels
+    boundingBoxRatio: number; // Used area / total signature area
   };
   
-  // Connectivity and line breaks
+  // Connectivity and line structure
   connectivity: {
-    connectedComponents: number;
-    gaps: number;
+    connectedComponents: number; // Number of separate stroke groups
+    gaps: number; // Number of pen lifts
+    totalStrokeLength: number; // Total ink length in mm
+    strokeComplexity: number; // Measure of stroke intricacy
   };
   
-  // Feature points
+  // Feature points (in real coordinates)
   featurePoints: {
-    startPoint: [number, number];
-    endPoint: [number, number];
-    loopPoints: number;
-    crossPoints: number;
+    startPoint: [number, number]; // mm coordinates
+    endPoint: [number, number]; // mm coordinates
+    loopPoints: number; // Number of closed loops
+    crossPoints: number; // Number of self-intersections
+    ascenders: number; // Upward strokes count
+    descenders: number; // Downward strokes count
   };
   
-  // Normalized vector representation
-  vectorRepresentation?: number[];
+  // Advanced geometric features
+  geometricFeatures: {
+    slopeVariation: number; // How much the writing angle changes
+    baselineConsistency: number; // 0-1, how consistent is the baseline
+    letterSpacing: number[]; // Distances between character groups (in mm)
+    strokeAngles: number[]; // Main stroke angles in degrees
+  };
   
-  // Raw image features (optional)
-  rawFeatures?: any;
+  // Image processing metadata
+  imageMetadata: {
+    originalDpi: number;
+    detectedInkColor: string; // Hex color of the ink
+    backgroundNoise: number; // 0-1, amount of background noise
+    imageQuality: number; // 0-1, overall image quality score
+    contrastLevel: number; // 0-1, contrast between ink and background
+  };
 }
 
 // Signature Projects schema
@@ -281,6 +308,9 @@ export const signatures = pgTable("signatures", {
   isReference: boolean("is_reference").default(true).notNull(),
   parameters: jsonb("parameters").$type<SignatureParameters>(),
   dpi: integer("dpi").default(300).notNull(), // Valore DPI individuale per ogni firma (default 300)
+  // Dimensioni reali fornite dall'utente (in mm)
+  realWidthMm: real("real_width_mm"), // Larghezza reale in millimetri
+  realHeightMm: real("real_height_mm"), // Altezza reale in millimetri
   processingStatus: text("processing_status").default("pending").notNull(), // pending, processing, completed, failed
   comparisonResult: real("comparison_result"), // null for reference signatures, 0-1 for verification signatures
   comparisonChart: text("comparison_chart"), // Base64-encoded image of the comparison chart
@@ -320,6 +350,8 @@ export const insertSignatureSchema = createInsertSchema(signatures).pick({
   fileSize: true,
   isReference: true,
   dpi: true,
+  realWidthMm: true,
+  realHeightMm: true,
 });
 
 // Questa relazione è già definita in usersRelations
