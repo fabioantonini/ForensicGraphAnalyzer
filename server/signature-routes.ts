@@ -1995,6 +1995,7 @@ export function registerSignatureRoutes(router: Router) {
             throw new Error(`Impossibile recuperare la firma aggiornata con ID ${signature.id}`);
           }
           
+          console.log(`[DEBUG COMPARE-ALL] Firma ${signature.id}: isReference=${updatedSignature.isReference}, filename=${updatedSignature.filename}`);
           results.push(updatedSignature);
           console.log(`[DEBUG COMPARE-ALL] Firma ${signature.id} elaborata con successo`);
         } catch (signatureError) {
