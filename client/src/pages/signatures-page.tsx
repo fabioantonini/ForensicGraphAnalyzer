@@ -1077,7 +1077,8 @@ export default function SignaturesPage() {
           </DialogHeader>
           <div className="space-y-4">
             {comparisonResults && comparisonResults.length > 0 ? (
-              comparisonResults.map((signature, index) => (
+              // Mostra solo le firme da verificare (non di riferimento)
+              comparisonResults.filter(sig => !sig.isReference).map((signature, index) => (
                 <div key={signature.id} className="border rounded-lg p-4">
                   <div className="flex justify-between items-start mb-3">
                     <div>

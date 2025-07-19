@@ -1507,15 +1507,15 @@ export function registerSignatureRoutes(router: Router) {
               console.log(`[PDF REPORT] Tentativo alternativo con il modulo Python`);
               
               // Se fallisce, tentiamo con il modulo Python come backup
-              console.log(`[PDF REPORT REGEN] CORREZIONE: Invertendo ordine parametri per compensare il bug`);
+              console.log(`[PDF REPORT REGEN] Utilizzo modulo Python con ordine corretto`);
               try {
                 // Otteniamo il progetto per recuperare il DPI
                 const dpiProject = await storage.getSignatureProject(signature.projectId);
                 const dpi = dpiProject?.dpi || 300;
                 
                 const pythonResult = await SignaturePythonAnalyzer.compareSignatures(
-                  referencePath,   // Questo diventerà la firma da verificare nel report
-                  signaturePath,   // Questo diventerà la firma di riferimento nel report
+                  signaturePath,   // Firma da verificare
+                  referencePath,   // Firma di riferimento
                   true,            // Genera il report
                   caseInfo,
                   signature.projectId, // Passiamo l'ID del progetto per assicurare l'isolamento dei dati
@@ -1638,18 +1638,16 @@ export function registerSignatureRoutes(router: Router) {
             notes: project.description || ""
           };
           
-          // Esegui il confronto avanzato
-          // IMPORTANTE: Invertiamo i parametri per compensare il problema di ordinamento
-          console.log(`[CONFRONTO POPUP] CORREZIONE: Invertendo ordine parametri per compensare il bug`);
-          console.log(`[CONFRONTO POPUP] Firma da verificare (diventerà riferimento): ${signaturePath}`);
-          console.log(`[CONFRONTO POPUP] Firma di riferimento (diventerà verifica): ${referencePath}`);
+          // Esegui il confronto avanzato con ordine corretto
+          console.log(`[CONFRONTO POPUP] Confronto firma da verificare: ${signaturePath}`);
+          console.log(`[CONFRONTO POPUP] Contro firma di riferimento: ${referencePath}`);
           
           // Otteniamo il DPI dal progetto
           const dpi = project.dpi || 300;
           
           const comparisonResult = await SignaturePythonAnalyzer.compareSignatures(
-            referencePath,   // Questo diventerà la firma da verificare nel report
-            signaturePath,   // Questo diventerà la firma di riferimento nel report
+            signaturePath,   // Firma da verificare
+            referencePath,   // Firma di riferimento
             false, // Non generare report DOCX automaticamente
             caseInfo,
             project.id, // Passiamo l'ID del progetto per assicurare l'isolamento dei dati
@@ -1915,11 +1913,9 @@ export function registerSignatureRoutes(router: Router) {
               const referencePath = path.join('./uploads', referenceSignature.filename);
               const signaturePath = path.join('./uploads', signature.filename);
               
-              // Esegui il confronto avanzato
-              // IMPORTANTE: Invertiamo i parametri per compensare il problema di ordinamento
-              console.log(`[COMPARE-ALL] CORREZIONE: Invertendo ordine parametri per compensare il bug`);
-              console.log(`[COMPARE-ALL] Firma da verificare (diventerà riferimento): ${signaturePath}`);
-              console.log(`[COMPARE-ALL] Firma di riferimento (diventerà verifica): ${referencePath}`);
+              // Esegui il confronto avanzato con ordine corretto
+              console.log(`[COMPARE-ALL] Confronto firma da verificare: ${signaturePath}`);
+              console.log(`[COMPARE-ALL] Contro firma di riferimento: ${referencePath}`);
               
               // Otteniamo il progetto per il DPI
               const project = await storage.getSignatureProject(projectId);
@@ -1931,8 +1927,8 @@ export function registerSignatureRoutes(router: Router) {
               const dpi = project.dpi || 300;
               
               const comparisonResult = await SignaturePythonAnalyzer.compareSignatures(
-                referencePath,   // Questo diventerà la firma da verificare nel report
-                signaturePath,   // Questo diventerà la firma di riferimento nel report
+                signaturePath,   // Firma da verificare
+                referencePath,   // Firma di riferimento
                 false, // Non generare report DOCX automaticamente
                 caseInfo,
                 projectId, // Passiamo l'ID del progetto per assicurare l'isolamento dei dati
