@@ -19,12 +19,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-// Schema per la modifica del DPI
-const dpiSchema = z.object({
-  dpi: z.number().min(72).max(1200)
-});
-
-type DpiFormValues = z.infer<typeof dpiSchema>;
+// Schema per la modifica del DPI rimosso - ora utilizziamo solo dimensioni reali inserite dall'utente
 
 interface SignatureCardProps {
   signature: any; 
@@ -42,51 +37,9 @@ export function SignatureCard({
   const { t } = useTranslation();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
-  const [isEditDpiOpen, setIsEditDpiOpen] = useState(false);
   const queryClient = useQueryClient();
   
-  // DPI form
-  const dpiForm = useForm<DpiFormValues>({
-    resolver: zodResolver(dpiSchema),
-    defaultValues: {
-      dpi: signature.dpi || 300
-    }
-  });
-  
-  // Update DPI when signature changes
-  useEffect(() => {
-    if (signature) {
-      dpiForm.setValue("dpi", signature.dpi || 300);
-    }
-  }, [signature, dpiForm]);
-  
-  // Mutation to update signature DPI
-  const updateDpi = useMutation({
-    mutationFn: async (data: DpiFormValues) => {
-      const res = await apiRequest("PATCH", `/api/signatures/${signature.id}/dpi`, data);
-      return res.ok;
-    },
-    onSuccess: () => {
-      setIsEditDpiOpen(false);
-      queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", projectId, "signatures"] });
-      toast({
-        title: t('common.success'),
-        description: t('signatures.dpiUpdated'),
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: t('common.error'),
-        description: `${t('signatures.dpiUpdateFailed')}: ${error.message}`,
-        variant: "destructive",
-      });
-    },
-  });
-  
-  // Function to handle DPI update submission
-  const onUpdateDpi = (data: DpiFormValues) => {
-    updateDpi.mutate(data);
-  };
+  // Rimosso tutto il codice per la gestione del DPI - ora utilizziamo solo dimensioni reali
   
   // Function to get status badge color
   const getStatusColor = (status: string) => {
@@ -194,28 +147,13 @@ export function SignatureCard({
             </Badge>
             
             <div className="flex flex-col gap-1 ml-1">
-              <div className="flex items-center gap-1">
-                <span className="text-xs text-gray-600">
-                  <span title={t('signatures.dpiDetected', 'DPI rilevato automaticamente')}>
-                    DPI: {signature.dpi ? signature.dpi : 300}
-                  </span>
-                </span>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-5 w-5 p-0"
-                  onClick={() => setIsEditDpiOpen(true)}
-                  title={t('signatures.editDpi.buttonTitle', 'Modifica valore DPI')}
-                >
-                  <Edit2 className="h-3 w-3" />
-                </Button>
-              </div>
+              {/* Rimosso il controllo DPI - ora utilizziamo solo le dimensioni reali inserite dall'utente */}
               
-              {signature.parameters && signature.parameters.width && signature.parameters.height && (
+              {signature.realWidth && signature.realHeight && (
                 <span className="text-xs text-gray-600">
-                  <span title={t('signatures.dimensionsInfo', 'Dimensioni reali della firma')}>
-                    {/* Le dimensioni sono già calcolate in centimetri */}
-                    {signature.parameters.width.toFixed(1)} × {signature.parameters.height.toFixed(1)} cm
+                  <span title={t('signatures.dimensionsInfo', 'Dimensioni reali della firma (inserite dall\'utente)')}>
+                    {/* Mostra le dimensioni reali inserite dall'utente */}
+                    {(signature.realWidth / 10).toFixed(1)} × {(signature.realHeight / 10).toFixed(1)} cm
                   </span>
                 </span>
               )}
@@ -234,66 +172,7 @@ export function SignatureCard({
         </CardContent>
       </Card>
 
-      {/* Dialog per la modifica del DPI */}
-      <Dialog open={isEditDpiOpen} onOpenChange={setIsEditDpiOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              {t('signatures.editDpi.title', 'Modifica DPI della firma')}
-            </DialogTitle>
-            <DialogDescription>
-              {t('signatures.editDpi.description', 'Il DPI (Dots Per Inch) influisce sul calcolo delle dimensioni reali della firma in millimetri.')}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <Form {...dpiForm}>
-            <form onSubmit={dpiForm.handleSubmit(onUpdateDpi)} className="space-y-4 py-3">
-              <FormField
-                control={dpiForm.control}
-                name="dpi"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('signatures.dpi', 'DPI')}</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        min={72} 
-                        max={1200} 
-                        {...field} 
-                        onChange={(e) => field.onChange(parseInt(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      {t('signatures.dpiDescription', 'I valori comuni sono 72, 96, 150, 300 o 600.')}
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <DialogFooter>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setIsEditDpiOpen(false)}
-                >
-                  {t('common.cancel', 'Annulla')}
-                </Button>
-                <Button 
-                  type="submit"
-                  disabled={updateDpi.isPending}
-                >
-                  {updateDpi.isPending ? (
-                    <>{t('common.saving', 'Salvataggio...')}</>
-                  ) : (
-                    <>{t('common.save', 'Salva')}</>
-                  )}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+      {/* Dialog per la modifica del DPI rimosso - ora utilizziamo solo le dimensioni reali inserite dall'utente */}
 
       {hasAdvancedDetails && (
         <Dialog open={open} onOpenChange={setOpen}>

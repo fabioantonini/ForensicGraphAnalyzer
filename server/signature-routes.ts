@@ -8,7 +8,7 @@ import { SignaturePythonAnalyzer } from "./python-bridge";
 import { insertSignatureProjectSchema, insertSignatureSchema } from "@shared/schema";
 import { log } from "./vite";
 import PDFDocument from "pdfkit";
-import { determineBestDPI } from "./image-utils";
+// Import determineBestDPI rimosso - ora utilizziamo solo dimensioni reali inserite dall'utente
 
 // Per compatibilità retroattiva, inizialmente usiamo solo fs standard
 import { createWriteStream, constants } from "fs";
@@ -345,11 +345,7 @@ export function registerSignatureRoutes(router: Router) {
         });
       }
       
-      // Estrae il DPI dall'immagine usando Sharp
-      log(`Estrazione DPI per la firma di riferimento: ${req.file.filename}`, 'signatures');
-      const dpi = await determineBestDPI(req.file.path);
-      log(`DPI determinato per la firma di riferimento: ${dpi}`, 'signatures');
-      log(`DEBUG - Tipo DPI: ${typeof dpi}, Valore: ${dpi}`, 'signatures');
+      // Rimossa estrazione automatica DPI - ora utilizziamo solo dimensioni reali inserite dall'utente
       log(`Dimensioni reali ricevute: ${realWidthMm}mm x ${realHeightMm}mm`, 'signatures');
       
       const signatureData = insertSignatureSchema.parse({
@@ -359,7 +355,7 @@ export function registerSignatureRoutes(router: Router) {
         fileType: req.file.mimetype,
         fileSize: req.file.size,
         isReference: true,
-        dpi: dpi, // Manteniamo il DPI estratto per compatibilità
+        dpi: 300, // DPI standard per compatibilità (non più utilizzato per calcoli dimensionali)
         realWidthMm: realWidthMm,
         realHeightMm: realHeightMm
       });
@@ -413,10 +409,7 @@ export function registerSignatureRoutes(router: Router) {
         });
       }
       
-      // Estrae il DPI dall'immagine usando Sharp
-      log(`Estrazione DPI per la firma di verifica: ${req.file.filename}`, 'signatures');
-      const dpi = await determineBestDPI(req.file.path);
-      log(`DPI determinato per la firma di verifica: ${dpi}`, 'signatures');
+      // Rimossa estrazione automatica DPI - ora utilizziamo solo dimensioni reali inserite dall'utente
       log(`Dimensioni reali ricevute: ${realWidthMm}mm x ${realHeightMm}mm`, 'signatures');
       
       const signatureData = insertSignatureSchema.parse({
@@ -426,7 +419,7 @@ export function registerSignatureRoutes(router: Router) {
         fileType: req.file.mimetype,
         fileSize: req.file.size,
         isReference: false,
-        dpi: dpi, // Manteniamo il DPI estratto per compatibilità
+        dpi: 300, // DPI standard per compatibilità (non più utilizzato per calcoli dimensionali)
         realWidthMm: realWidthMm,
         realHeightMm: realHeightMm
       });
@@ -1787,46 +1780,58 @@ async function processSignature(signatureId: number, filePath: string) {
 
 async function processAndCompareSignature(signatureId: number, filePath: string, projectId: number) {
   try {
-    log(`Inizio elaborazione firma ${signatureId} per progetto ${projectId}`, 'signatures');
+    log(`[PROCESS-COMPARE] Inizio elaborazione firma ${signatureId} per progetto ${projectId}`, 'signatures');
+    log(`[PROCESS-COMPARE] File path: ${filePath}`, 'signatures');
+    
+    // Verifica che il file esista prima di iniziare
+    if (!fs.existsSync(filePath)) {
+      throw new Error(`File non trovato: ${filePath}`);
+    }
+    log(`[PROCESS-COMPARE] File trovato correttamente`, 'signatures');
     
     // Ottieni i dettagli della firma per le dimensioni reali
     const signature = await storage.getSignature(signatureId);
     if (!signature) {
-      throw new Error('Firma non trovata');
+      throw new Error('Firma non trovata nel database');
     }
+    log(`[PROCESS-COMPARE] Firma trovata nel database: ${signature.filename}`, 'signatures');
     
     // Verifica che le dimensioni reali siano disponibili
     if (!signature.realWidthMm || !signature.realHeightMm) {
-      throw new Error('Dimensioni reali della firma non specificate');
+      throw new Error(`Dimensioni reali della firma non specificate: width=${signature.realWidthMm}, height=${signature.realHeightMm}`);
     }
     
-    log(`Elaborazione firma ${signatureId} con dimensioni reali: ${signature.realWidthMm}mm x ${signature.realHeightMm}mm`, 'signatures');
+    log(`[PROCESS-COMPARE] Elaborazione firma ${signatureId} con dimensioni reali: ${signature.realWidthMm}mm x ${signature.realHeightMm}mm`, 'signatures');
     
     // Aggiorna lo stato a 'processing'
     await storage.updateSignatureStatus(signatureId, 'processing');
+    log(`[PROCESS-COMPARE] Stato aggiornato a 'processing'`, 'signatures');
     
     // Usa l'analizzatore JavaScript con le dimensioni reali
+    log(`[PROCESS-COMPARE] Avvio estrazione parametri...`, 'signatures');
     const parameters = await SignatureAnalyzer.extractParameters(
       filePath, 
       signature.realWidthMm, 
       signature.realHeightMm
     );
     
-    log(`Parametri estratti per firma ${signatureId}`, 'signatures');
+    log(`[PROCESS-COMPARE] Parametri estratti per firma ${signatureId}:`, 'signatures', parameters);
     
     // Aggiorna la firma con i parametri estratti
     await storage.updateSignatureParameters(signatureId, parameters);
+    log(`[PROCESS-COMPARE] Parametri salvati nel database`, 'signatures');
     
     // Aggiorna lo stato come 'completed', ma senza confrontare automaticamente
     // Lo stato 'completed' indica che la firma è pronta per essere confrontata ma non è stata ancora confrontata
     await storage.updateSignatureStatus(signatureId, 'completed');
-    log(`Elaborazione firma ${signatureId} completata con successo - in attesa di confronto manuale`, 'signatures');
+    log(`[PROCESS-COMPARE] Elaborazione firma ${signatureId} completata con successo - in attesa di confronto manuale`, 'signatures');
     
     // Il confronto verrà eseguito solo quando l'utente preme "Confronta Tutte" 
     // e non più automaticamente qui
     
   } catch (error: any) {
-    console.error(`Errore nell'elaborazione della firma ${signatureId}:`, error);
+    console.error(`[PROCESS-COMPARE] Errore nell'elaborazione della firma ${signatureId}:`, error);
+    console.error(`[PROCESS-COMPARE] Stack trace:`, error.stack);
     await storage.updateSignatureStatus(signatureId, 'failed');
   }
 }
