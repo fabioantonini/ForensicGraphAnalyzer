@@ -29,7 +29,7 @@ async function generateAIAnalysis(signatureParams: any, referenceParams: any, si
 Sei un esperto grafologi forense. Analizza oggettivamente questi parametri di confronto tra due firme e fornisci una valutazione professionale.
 
 FIRMA IN VERIFICA:
-- Dimensioni: ${signatureParams.width}x${signatureParams.height} px (${signatureParams.realDimensions?.widthMm?.toFixed(1)}x${signatureParams.realDimensions?.heightMm?.toFixed(1)} mm)
+- Dimensioni: ${signatureParams.width || 'N/A'}x${signatureParams.height || 'N/A'} px${signatureParams.realDimensions?.widthMm && signatureParams.realDimensions?.heightMm ? ` (${signatureParams.realDimensions.widthMm.toFixed(1)}x${signatureParams.realDimensions.heightMm.toFixed(1)} mm)` : ''}
 - Spessore tratto medio: ${signatureParams.strokeWidth?.meanMm?.toFixed(3)} mm
 - Spessore massimo: ${signatureParams.strokeWidth?.maxMm?.toFixed(3)} mm
 - Spessore minimo: ${signatureParams.strokeWidth?.minMm?.toFixed(3)} mm
@@ -101,7 +101,7 @@ IMPORTANTE: Non utilizzare tag Markdown (**, *, #, etc.) nel testo. Usa solo tes
 
     let analysisText = response.choices[0].message.content || "Analisi AI non disponibile";
     
-    // Rimuovi eventuali tag Markdown dal testo (più completo)
+    // Rimuovi TUTTI i tag Markdown dal testo (filtro completo)
     analysisText = analysisText
       .replace(/\*\*(.*?)\*\*/g, '$1')  // Rimuovi **bold**
       .replace(/\*(.*?)\*/g, '$1')      // Rimuovi *italic*
@@ -112,6 +112,8 @@ IMPORTANTE: Non utilizzare tag Markdown (**, *, #, etc.) nel testo. Usa solo tes
       .replace(/_{2,}/g, '')            // Rimuovi __underline__
       .replace(/~~(.*?)~~/g, '$1')      // Rimuovi ~~strikethrough~~
       .replace(/\|/g, ' ')              // Rimuovi separatori tabelle
+      .replace(/\*\*([^*]+)\*\*/g, '$1') // Rimuovi **bold** (duplicato per sicurezza)
+      .replace(/\*([^*]+)\*/g, '$1')    // Rimuovi *italic* (duplicato per sicurezza)
       .replace(/(\r?\n){3,}/g, '\n\n'); // Riduci multiple newlines
     
     return analysisText;
@@ -275,7 +277,7 @@ async function generatePDFReportFromExistingData(params: {
     const params = signature.parameters;
     
     doc.text('FIRMA IN VERIFICA:');
-    doc.text(`• Dimensioni: ${params.width}x${params.height} px`);
+    doc.text(`• Dimensioni: ${params.width || 'N/A'}x${params.height || 'N/A'} px`);
     if (params.realDimensions) {
       doc.text(`• Dimensioni reali: ${params.realDimensions.widthMm?.toFixed(1)}x${params.realDimensions.heightMm?.toFixed(1)} mm`);
     }
@@ -291,7 +293,7 @@ async function generatePDFReportFromExistingData(params: {
     const refParams = referenceSignature.parameters;
     
     doc.text('FIRMA DI RIFERIMENTO:');
-    doc.text(`• Dimensioni: ${refParams.width}x${refParams.height} px`);
+    doc.text(`• Dimensioni: ${refParams.width || 'N/A'}x${refParams.height || 'N/A'} px`);
     if (refParams.realDimensions) {
       doc.text(`• Dimensioni reali: ${refParams.realDimensions.widthMm?.toFixed(1)}x${refParams.realDimensions.heightMm?.toFixed(1)} mm`);
     }

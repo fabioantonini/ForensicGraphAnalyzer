@@ -222,11 +222,12 @@ Preferred communication style: Simple, everyday language.
   - Progress tracking and activity logging
   - Automatic validation of comparison prerequisites
   - Average processing time: ~18 seconds per signature including AI analysis
-- **CRITICAL BUG FIX - Parameter Names**: Fixed incorrect parameter mapping in ChatGPT analysis
-  - Corrected parameter names from advancedInclination/advancedPressure to inclination/pressureStd
-  - All 16+ advanced parameters now correctly transmitted to OpenAI for forensic analysis
-  - Complete integration of Python/OpenCV parameters: avgSpacing, avgAsolaSize, baselineStdMm, etc.
-  - System now generates accurate AI-powered forensic reports with all calculated parameters
+- **CRITICAL BUG FIXES**:
+  - **Parameter Names**: Corrected parameter mapping in ChatGPT analysis (inclination/pressureStd vs advancedInclination/advancedPressure)
+  - **Markdown Removal**: Complete filtration system to remove all Markdown tags (**bold**, *italic*, etc.) from AI responses
+  - **Undefined Values**: Fixed "undefinedxundefined" dimensions display with proper null-safety checks
+  - **Missing Parameters**: Replaced "N/A" with informative "Non disponibile per confronto" messages
+  - All 16+ advanced parameters now correctly transmitted and displayed in professional PDF reports
 
 ### June 21, 2025 - OCR System Completion & Bug Fixes
 - **PDF OCR Support**: Complete PDF processing with direct text extraction using pdf-parse
