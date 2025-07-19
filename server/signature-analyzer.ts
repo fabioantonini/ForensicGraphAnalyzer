@@ -23,6 +23,7 @@ export class SignatureAnalyzer {
     realHeightMm: number
   ): Promise<SignatureParameters> {
     try {
+      console.log(`[ANALYZER] Inizio analisi: ${imagePath}, dimensioni reali: ${realWidthMm}x${realHeightMm}mm`);
       // Verifica che il file esista
       await fs.access(imagePath);
       
@@ -96,7 +97,8 @@ export class SignatureAnalyzer {
         },
       };
     } catch (error: any) {
-      console.error(`Errore nell'analisi della firma: ${error}`);
+      console.error(`[ANALYZER] Errore nell'analisi della firma ${imagePath}:`, error);
+      console.error(`[ANALYZER] Stack trace:`, error.stack);
       throw new Error(`Impossibile analizzare la firma: ${error.message || 'Errore sconosciuto'}`);
     }
   }

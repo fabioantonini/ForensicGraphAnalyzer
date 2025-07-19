@@ -1420,6 +1420,43 @@ export function registerSignatureRoutes(router: Router) {
     }
   });
 
+  // Riprocessa una firma fallita
+  router.post("/signatures/:id/reprocess", isAuthenticated, async (req, res) => {
+    try {
+      const signatureId = parseInt(req.params.id);
+      const signature = await storage.getSignature(signatureId);
+      
+      if (!signature) {
+        return res.status(404).json({ error: 'Firma non trovata' });
+      }
+      
+      // Verifica che la firma appartenga all'utente corrente
+      const project = await storage.getSignatureProject(signature.projectId);
+      if (!project || project.userId !== req.user!.id) {
+        return res.status(403).json({ error: 'Non autorizzato' });
+      }
+      
+      // Aggiorna lo stato a processing
+      await storage.updateSignature(signatureId, {
+        processingStatus: 'processing'
+      });
+      
+      // Avvia il processamento asincrono usando la stessa logica di processSignature
+      const filePath = path.join('./uploads', signature.filename);
+      processSignature(signatureId, filePath)
+        .catch(error => {
+          console.error(`Errore riprocessamento firma ${signatureId}:`, error);
+          storage.updateSignature(signatureId, {
+            processingStatus: 'failed'
+          });
+        });
+      
+      res.json({ message: 'Riprocessamento avviato', signatureId });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Elimina una firma
   router.delete("/signatures/:id", isAuthenticated, async (req, res) => {
     try {

@@ -141,13 +141,7 @@ export default function SignaturesPage() {
         return [];
       }
       
-      // Log dettagliato di ogni firma ricevuta
-      console.log(`${new Date().toISOString()} - Ricevute ${data.length} firme per il progetto ${selectedProject}`);
-      
-      // Conta firme di riferimento vs da verificare
-      const referenceCount = data.filter((f: any) => f.isReference).length;
-      const verifyCount = data.filter((f: any) => !f.isReference).length;
-      console.log(`CONTEGGIO: ${referenceCount} firme di riferimento, ${verifyCount} firme da verificare`);
+
       
       // Controllo se riceviamo progetti invece di firme (errore comune)
       const containsProjects = data.length > 0 && 

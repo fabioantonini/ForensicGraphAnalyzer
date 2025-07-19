@@ -39,6 +39,27 @@ export function SignatureCard({
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
   
+  // Mutation per riprocessare firma fallita
+  const reprocessSignature = useMutation({
+    mutationFn: (signatureId: number) => 
+      apiRequest(`/api/signatures/${signatureId}/reprocess`, { method: 'POST' }),
+    onSuccess: () => {
+      toast({ title: t('signatures.reprocessStarted', 'Riprocessamento avviato') });
+      queryClient.invalidateQueries({ queryKey: ['signatures', projectId] });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: t('signatures.reprocessFailed', 'Riprocessamento fallito'), 
+        description: error.message,
+        variant: 'destructive'
+      });
+    }
+  });
+
+  const handleReprocess = () => {
+    reprocessSignature.mutate(signature.id);
+  };
+  
   // Rimosso tutto il codice per la gestione del DPI - ora utilizziamo solo dimensioni reali
   
   // Function to get status badge color
@@ -144,6 +165,19 @@ export function SignatureCard({
             <Badge className={getStatusColor(signature.processingStatus)}>
               {getStatusTranslation(signature.processingStatus)}
             </Badge>
+            
+            {/* Pulsante per riprocessare firme fallite */}
+            {signature.processingStatus === 'failed' && (
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={handleReprocess}
+                disabled={reprocessSignature.isPending}
+                className="h-6 px-2 text-xs ml-1"
+              >
+                {reprocessSignature.isPending ? t('signatures.reprocessing', 'Riprocessando...') : t('signatures.retry', 'Riprova')}
+              </Button>
+            )}
             
             <div className="flex flex-col gap-1 ml-1">
               {/* Rimosso il controllo DPI - ora utilizziamo solo le dimensioni reali inserite dall'utente */}
