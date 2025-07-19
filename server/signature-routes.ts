@@ -438,8 +438,14 @@ export function registerSignatureRoutes(router: Router) {
       // Salva la firma nel database
       const signature = await storage.createSignature(signatureData);
       
-      // Avvia l'analisi e il confronto della firma in background
-      processAndCompareSignature(signature.id, req.file.path, projectId);
+      // Avvia il processamento asincrono usando la stessa logica semplice del riprocessamento
+      processSignature(signature.id, req.file.path)
+        .catch(error => {
+          console.error(`Errore processamento firma ${signature.id}:`, error);
+          storage.updateSignature(signature.id, {
+            processingStatus: 'failed'
+          });
+        });
       
       res.status(201).json(signature);
     } catch (error: any) {
