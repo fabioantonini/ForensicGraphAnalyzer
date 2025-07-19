@@ -42,7 +42,7 @@ export function SignatureCard({
   // Mutation per riprocessare firma fallita
   const reprocessSignature = useMutation({
     mutationFn: (signatureId: number) => 
-      apiRequest(`/api/signatures/${signatureId}/reprocess`, { method: 'POST' }),
+      apiRequest('POST', `/api/signatures/${signatureId}/reprocess`),
     onSuccess: () => {
       toast({ title: t('signatures.reprocessStarted', 'Riprocessamento avviato') });
       queryClient.invalidateQueries({ queryKey: ['signatures', projectId] });
