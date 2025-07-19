@@ -2012,9 +2012,11 @@ export function registerSignatureRoutes(router: Router) {
         details: `Confrontate ${results.length} firme nel progetto "${project.name}"`
       });
       
-      // Rispondi con tutte le firme aggiornate
-      console.log(`[DEBUG COMPARE-ALL] Invio risposta con ${results.length} firme aggiornate`);
-      res.json(results);
+      // Filtra e restituisci solo le firme da verificare (non di riferimento)
+      const verificationResults = results.filter(signature => !signature.isReference);
+      console.log(`[DEBUG COMPARE-ALL] Firme da verificare nel risultato: ${verificationResults.length}`);
+      console.log(`[DEBUG COMPARE-ALL] Invio risposta con ${verificationResults.length} firme da verificare`);
+      res.json(verificationResults);
     } catch (error: any) {
       console.error(`[DEBUG COMPARE-ALL] Errore generale nel confronto multiplo delle firme:`, error);
       res.status(500).json({ error: error.message });
