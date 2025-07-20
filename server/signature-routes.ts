@@ -792,9 +792,17 @@ export function registerSignatureRoutes(router: Router) {
         });
       }
 
+      // Converti il percorso assoluto in percorso relativo per l'interfaccia web
+      const webAccessibleCropResult = {
+        ...cropResult,
+        croppedPath: cropResult.croppedPath 
+          ? '/uploads/' + path.basename(cropResult.croppedPath)
+          : undefined
+      };
+
       res.json({
         success: true,
-        cropResult,
+        cropResult: webAccessibleCropResult,
         message: applyToOriginal 
           ? 'Ritaglio applicato e parametri ricalcolati'
           : 'Anteprima ritaglio generata'
