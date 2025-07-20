@@ -79,6 +79,26 @@ export function SignatureMethodologyDialog() {
             
             <section>
               <h3 className="text-lg font-semibold mb-2">
+                {t('signatures.methodology.unifiedWorkflowTitle', 'Workflow Unificato di Elaborazione')}
+              </h3>
+              <div className="bg-purple-50 p-4 rounded-lg mb-4">
+                <h4 className="font-semibold text-purple-900 mb-2">Ritaglio Automatico e Calibrazione Integrata</h4>
+                <p className="text-sm mb-2">Il sistema implementa un workflow rivoluzionario che unifica ritaglio e calibrazione in un processo semplificato:</p>
+                <ol className="list-decimal pl-6 space-y-2 text-sm">
+                  <li><span className="font-medium">Upload + Dimensioni Reali</span>: L'utente carica l'immagine e specifica le dimensioni fisiche della firma (es. 80x25mm)</li>
+                  <li><span className="font-medium">Ritaglio Automatico Obbligatorio</span>: Computer vision rileva e ritaglia automaticamente la firma, rimuovendo spazi vuoti</li>
+                  <li><span className="font-medium">Calibrazione Diretta</span>: L'immagine ritagliata corrisponde esattamente alle dimensioni utente (px/mm = pixel_ritagliati / mm_utente)</li>
+                  <li><span className="font-medium">Elaborazione Parametri</span>: Tutti i 16+ parametri vengono estratti con calibrazione in millimetri reali</li>
+                  <li><span className="font-medium">Confronto Multi-Dimensionale</span>: Ogni firma è confrontata usando le proprie dimensioni reali specifiche</li>
+                </ol>
+                <div className="mt-3 p-2 bg-purple-100 rounded text-xs">
+                  <strong>Vantaggi:</strong> Elimina inconsistenze dimensionali, garantisce precisione forensica, semplifica l'esperienza utente
+                </div>
+              </div>
+            </section>
+            
+            <section>
+              <h3 className="text-lg font-semibold mb-2">
                 {t('signatures.methodology.multiReferenceTitle', 'Analisi con multiple firme di riferimento')}
               </h3>
               <p>
