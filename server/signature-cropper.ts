@@ -520,25 +520,26 @@ export class SignatureCropper {
     height: number
   ): Promise<{ left: number; top: number; width: number; height: number }> {
     
-    const gridSize = 50; // Dimensione della griglia di campionamento
-    const threshold = 248; // Soglia molto alta per firme molto chiare
+    const gridSize = 100; // Griglia più grossolana per evitare rumore
+    const threshold = 210; // Soglia più bassa per catturare firme deboli
     
-    let minGridX = Math.floor(width / gridSize);
-    let maxGridX = -1;
-    let minGridY = Math.floor(height / gridSize);
-    let maxGridY = -1;
+    console.log(`[GRID] Analisi densità regioni ${Math.floor(width/gridSize)}x${Math.floor(height/gridSize)} con soglia ${threshold}`);
 
-    console.log(`[GRID] Sampling griglia ${Math.floor(width/gridSize)}x${Math.floor(height/gridSize)} con soglia ${threshold}`);
-
-    // Campiona a griglia per trovare aree con contenuto
-    for (let gridY = 0; gridY < Math.floor(height / gridSize); gridY++) {
-      for (let gridX = 0; gridX < Math.floor(width / gridSize); gridX++) {
+    // Array per memorizzare densità per ogni cella
+    const gridDensities: number[][] = [];
+    const gridRows = Math.floor(height / gridSize);
+    const gridCols = Math.floor(width / gridSize);
+    
+    // Calcola densità per ogni cella
+    for (let gridY = 0; gridY < gridRows; gridY++) {
+      gridDensities[gridY] = [];
+      for (let gridX = 0; gridX < gridCols; gridX++) {
         let darkPixels = 0;
         let totalPixels = 0;
 
-        // Campiona alcuni pixel in questa cella della griglia
-        for (let dy = 0; dy < gridSize && (gridY * gridSize + dy) < height; dy += 10) {
-          for (let dx = 0; dx < gridSize && (gridX * gridSize + dx) < width; dx += 10) {
+        // Campiona tutti i pixel di questa cella
+        for (let dy = 0; dy < gridSize && (gridY * gridSize + dy) < height; dy += 5) {
+          for (let dx = 0; dx < gridSize && (gridX * gridSize + dx) < width; dx += 5) {
             const y = gridY * gridSize + dy;
             const x = gridX * gridSize + dx;
             const pixelIndex = y * width + x;
@@ -551,36 +552,84 @@ export class SignatureCropper {
           }
         }
 
-        // Se più del 5% dei pixel campionati sono scuri, questa cella contiene firma
-        if (totalPixels > 0 && (darkPixels / totalPixels) > 0.05) {
-          minGridX = Math.min(minGridX, gridX);
-          maxGridX = Math.max(maxGridX, gridX);
-          minGridY = Math.min(minGridY, gridY);
-          maxGridY = Math.max(maxGridY, gridY);
+        const density = totalPixels > 0 ? darkPixels / totalPixels : 0;
+        gridDensities[gridY][gridX] = density;
+      }
+    }
+    
+    // Trova la densità media e massima
+    let totalDensity = 0;
+    let maxDensity = 0;
+    let cellCount = 0;
+    
+    for (let gy = 0; gy < gridRows; gy++) {
+      for (let gx = 0; gx < gridCols; gx++) {
+        const density = gridDensities[gy][gx];
+        totalDensity += density;
+        maxDensity = Math.max(maxDensity, density);
+        cellCount++;
+      }
+    }
+    
+    const avgDensity = totalDensity / cellCount;
+    
+    console.log(`[GRID] Densità media: ${(avgDensity*100).toFixed(2)}%, massima: ${(maxDensity*100).toFixed(2)}%`);
+    
+    // Usa una soglia dinamica basata sulla densità media
+    const dynamicThreshold = Math.max(avgDensity * 3, 0.15); // Almeno 3x la media o 15%
+    
+    console.log(`[GRID] Soglia dinamica densità: ${(dynamicThreshold*100).toFixed(2)}%`);
+    
+    let minGridX = gridCols;
+    let maxGridX = -1;
+    let minGridY = gridRows;
+    let maxGridY = -1;
+    let validCells = 0;
+
+    // Trova celle che superano la soglia dinamica
+    for (let gy = 0; gy < gridRows; gy++) {
+      for (let gx = 0; gx < gridCols; gx++) {
+        if (gridDensities[gy][gx] > dynamicThreshold) {
+          minGridX = Math.min(minGridX, gx);
+          maxGridX = Math.max(maxGridX, gx);
+          minGridY = Math.min(minGridY, gy);
+          maxGridY = Math.max(maxGridY, gy);
+          validCells++;
         }
       }
     }
 
-    if (maxGridX !== -1) {
+    if (maxGridX !== -1 && validCells >= 3) { // Almeno 3 celle valide
       // Converti coordinate griglia in pixel con margine
-      const margin = gridSize;
+      const margin = gridSize / 2;
       const left = Math.max(0, minGridX * gridSize - margin);
       const top = Math.max(0, minGridY * gridSize - margin);
       const right = Math.min(width, (maxGridX + 1) * gridSize + margin);
       const bottom = Math.min(height, (maxGridY + 1) * gridSize + margin);
       
-      console.log(`[GRID] ✓ Firma rilevata: ${right-left}x${bottom-top} at (${left},${top})`);
+      const finalWidth = right - left;
+      const finalHeight = bottom - top;
+      const coverageRatio = (finalWidth * finalHeight) / (width * height);
       
-      return {
-        left: left,
-        top: top,
-        width: right - left,
-        height: bottom - top
-      };
+      console.log(`[GRID] ✓ ${validCells} celle dense trovate, bounds: ${finalWidth}x${finalHeight} (copertura ${(coverageRatio*100).toFixed(1)}%)`);
+      
+      // Se la copertura è ragionevole, usa questi bounds
+      if (coverageRatio < 0.8) {
+        return {
+          left: left,
+          top: top,
+          width: finalWidth,
+          height: finalHeight
+        };
+      } else {
+        console.log(`[GRID] Copertura troppo alta (${(coverageRatio*100).toFixed(1)}%), usando fallback`);
+      }
+    } else {
+      console.log(`[GRID] Solo ${validCells} celle valide trovate (minimum: 3)`);
     }
 
     // Ultimo fallback: usa intera immagine
-    console.log('[GRID] Nessuna firma rilevata, uso intera immagine come fallback');
+    console.log('[GRID] Nessuna firma concentrata rilevata, uso intera immagine come fallback');
     return {
       left: 0,
       top: 0,
