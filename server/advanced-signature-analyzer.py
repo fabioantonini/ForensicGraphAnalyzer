@@ -165,7 +165,7 @@ def analyze_signature(image_path, dpi=DEFAULT_DPI):
         
         # Calcola le dimensioni reali dell'intera immagine
         full_width_cm, full_height_cm = get_signature_cm_size(original_width, original_height, dpi)
-        print(f"Dimensioni totali immagine: {original_width}x{original_height} px, {full_width_cm:.2f}x{full_height_cm:.2f} cm @ {dpi} DPI")
+        print(f"Dimensioni totali immagine: {original_width}x{original_height} px, {full_width_cm:.2f}x{full_height_cm:.2f} cm @ {dpi} DPI", file=sys.stderr)
             
         # Crea due versioni: una per l'analisi delle dimensioni reali e una per gli altri parametri
         # Per le dimensioni reali, usa l'immagine originale senza ridimensionamento
@@ -206,7 +206,7 @@ def analyze_signature(image_path, dpi=DEFAULT_DPI):
         # Calcola la percentuale dell'immagine occupata dalla firma
         width_percentage = w / original_width if original_width > 0 else 0
         height_percentage = h / original_height if original_height > 0 else 0
-        print(f"Bounding box firma: {w}x{h} px, {sign_width_cm:.2f}x{sign_height_cm:.2f} cm ({width_percentage*100:.1f}% x {height_percentage*100:.1f}% dell'immagine)")
+        print(f"Bounding box firma: {w}x{h} px, {sign_width_cm:.2f}x{sign_height_cm:.2f} cm ({width_percentage*100:.1f}% x {height_percentage*100:.1f}% dell'immagine)", file=sys.stderr)
         
         # Stima più accurata delle dimensioni in base alle dimensioni dell'immagine intera
         if full_width_cm > 15:  # Se l'immagine è grande (es. foglio A4)
