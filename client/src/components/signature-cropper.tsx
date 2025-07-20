@@ -93,6 +93,37 @@ export function SignatureCropper({ signatureId, imagePath, onCropComplete }: Sig
     }
   };
 
+  const handleApplyCrop = async () => {
+    if (!cropResult) return;
+    
+    setIsProcessing(true);
+    try {
+      const response = await apiRequest("POST", `/api/signatures/${signatureId}/crop`, {
+        autoCrop: true,
+        targetSize: { width: targetWidth[0], height: targetHeight[0] },
+        applyToOriginal: true
+      });
+
+      if (response.success) {
+        setCropResult(response.cropResult);
+        onCropComplete?.(response.cropResult);
+        
+        toast({
+          title: "Ritaglio applicato con successo",
+          description: "L'immagine originale è stata aggiornata",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Errore nell'applicazione",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const getConfidenceColor = (confidence: number) => {
     if (confidence >= 0.8) return "bg-green-500";
     if (confidence >= 0.6) return "bg-yellow-500";
@@ -254,6 +285,18 @@ export function SignatureCropper({ signatureId, imagePath, onCropComplete }: Sig
               </div>
               <p className="text-sm text-blue-700">{cropResult.message}</p>
             </div>
+
+            {/* Pulsante Applica se in modalità anteprima */}
+            {previewMode && (
+              <Button 
+                onClick={() => handleApplyCrop()}
+                disabled={isProcessing}
+                className="w-full bg-green-600 hover:bg-green-700"
+              >
+                <CheckCircle className="mr-2 h-4 w-4" />
+                Applica Ritaglio all'Originale
+              </Button>
+            )}
           </div>
         )}
 
