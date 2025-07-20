@@ -413,4 +413,150 @@ export class SignatureCropper {
       throw new Error(`Errore nella generazione dell'anteprima: ${error.message}`);
     }
   }
+
+  /**
+   * Algoritmo avanzato per rilevare firme piccole su fogli A4
+   */
+  private static async findSignatureBoundsAdvanced(
+    pixels: Buffer,
+    width: number,
+    height: number
+  ): Promise<{ left: number; top: number; width: number; height: number }> {
+    
+    console.log('[ADVANCED] Inizio algoritmo avanzato per firme piccole...');
+    
+    // Multiple soglie per catturare firme molto chiare
+    const thresholds = [245, 240, 235, 230];
+    
+    for (const threshold of thresholds) {
+      console.log(`[ADVANCED] Provo soglia ${threshold}...`);
+      
+      let minX = width;
+      let maxX = -1;
+      let minY = height;
+      let maxY = -1;
+      let pixelCount = 0;
+
+      // Scansiona con soglia più sensibile
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const pixelIndex = y * width + x;
+          const pixelValue = pixels[pixelIndex];
+          
+          if (pixelValue < threshold) {
+            minX = Math.min(minX, x);
+            maxX = Math.max(maxX, x);
+            minY = Math.min(minY, y);
+            maxY = Math.max(maxY, y);
+            pixelCount++;
+          }
+        }
+      }
+
+      // Verifica se i bounds sono ragionevoli per una firma
+      if (maxX !== -1) {
+        const foundWidth = maxX - minX + 1;
+        const foundHeight = maxY - minY + 1;
+        const area = foundWidth * foundHeight;
+        const imageArea = width * height;
+        const areaRatio = area / imageArea;
+        
+        console.log(`[ADVANCED] Soglia ${threshold}: trovati ${pixelCount} pixel, area ratio: ${areaRatio.toFixed(4)}`);
+        console.log(`[ADVANCED] Bounds: ${foundWidth}x${foundHeight} at (${minX},${minY})`);
+        
+        // Se l'area è tra 0.5% e 25% dell'immagine totale, probabilmente è una firma
+        if (areaRatio > 0.005 && areaRatio < 0.25 && pixelCount > 100) {
+          console.log(`[ADVANCED] ✓ Firma rilevata con soglia ${threshold}!`);
+          return {
+            left: minX,
+            top: minY,
+            width: foundWidth,
+            height: foundHeight
+          };
+        }
+      }
+    }
+
+    // Se nemmeno l'algoritmo avanzato trova nulla, prova sampling a griglia
+    console.log('[ADVANCED] Provo sampling a griglia...');
+    return this.findSignatureByGridSampling(pixels, width, height);
+  }
+
+  /**
+   * Algoritmo di sampling a griglia per firme molto chiare
+   */
+  private static async findSignatureByGridSampling(
+    pixels: Buffer,
+    width: number,
+    height: number
+  ): Promise<{ left: number; top: number; width: number; height: number }> {
+    
+    const gridSize = 50; // Dimensione della griglia di campionamento
+    const threshold = 248; // Soglia molto alta per firme molto chiare
+    
+    let minGridX = Math.floor(width / gridSize);
+    let maxGridX = -1;
+    let minGridY = Math.floor(height / gridSize);
+    let maxGridY = -1;
+
+    console.log(`[GRID] Sampling griglia ${Math.floor(width/gridSize)}x${Math.floor(height/gridSize)} con soglia ${threshold}`);
+
+    // Campiona a griglia per trovare aree con contenuto
+    for (let gridY = 0; gridY < Math.floor(height / gridSize); gridY++) {
+      for (let gridX = 0; gridX < Math.floor(width / gridSize); gridX++) {
+        let darkPixels = 0;
+        let totalPixels = 0;
+
+        // Campiona alcuni pixel in questa cella della griglia
+        for (let dy = 0; dy < gridSize && (gridY * gridSize + dy) < height; dy += 10) {
+          for (let dx = 0; dx < gridSize && (gridX * gridSize + dx) < width; dx += 10) {
+            const y = gridY * gridSize + dy;
+            const x = gridX * gridSize + dx;
+            const pixelIndex = y * width + x;
+            const pixelValue = pixels[pixelIndex];
+            
+            if (pixelValue < threshold) {
+              darkPixels++;
+            }
+            totalPixels++;
+          }
+        }
+
+        // Se più del 5% dei pixel campionati sono scuri, questa cella contiene firma
+        if (totalPixels > 0 && (darkPixels / totalPixels) > 0.05) {
+          minGridX = Math.min(minGridX, gridX);
+          maxGridX = Math.max(maxGridX, gridX);
+          minGridY = Math.min(minGridY, gridY);
+          maxGridY = Math.max(maxGridY, gridY);
+        }
+      }
+    }
+
+    if (maxGridX !== -1) {
+      // Converti coordinate griglia in pixel con margine
+      const margin = gridSize;
+      const left = Math.max(0, minGridX * gridSize - margin);
+      const top = Math.max(0, minGridY * gridSize - margin);
+      const right = Math.min(width, (maxGridX + 1) * gridSize + margin);
+      const bottom = Math.min(height, (maxGridY + 1) * gridSize + margin);
+      
+      console.log(`[GRID] ✓ Firma rilevata: ${right-left}x${bottom-top} at (${left},${top})`);
+      
+      return {
+        left: left,
+        top: top,
+        width: right - left,
+        height: bottom - top
+      };
+    }
+
+    // Ultimo fallback: usa intera immagine
+    console.log('[GRID] Nessuna firma rilevata, uso intera immagine come fallback');
+    return {
+      left: 0,
+      top: 0,
+      width: width,
+      height: height
+    };
+  }
 }
