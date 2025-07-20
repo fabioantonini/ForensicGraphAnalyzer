@@ -41,13 +41,14 @@ export function SignatureCropper({ signatureId, imagePath, onCropComplete }: Sig
   const handleAutoCrop = async () => {
     setIsProcessing(true);
     try {
-      const response = await apiRequest("POST", `/api/signatures/${signatureId}/crop`, {
+      const res = await apiRequest("POST", `/api/signatures/${signatureId}/crop`, {
         autoCrop: true,
         targetSize: { width: targetWidth[0], height: targetHeight[0] },
         applyToOriginal: !previewMode
       });
 
-      console.log('API Response:', response);
+      const response = await res.json();
+      console.log('API Response JSON:', response);
       
       if (response.success) {
         console.log('Setting crop result:', response.cropResult);
@@ -80,12 +81,14 @@ export function SignatureCropper({ signatureId, imagePath, onCropComplete }: Sig
   const handleManualCrop = async (cropBox: { left: number; top: number; width: number; height: number }) => {
     setIsProcessing(true);
     try {
-      const response = await apiRequest("POST", `/api/signatures/${signatureId}/crop`, {
+      const res = await apiRequest("POST", `/api/signatures/${signatureId}/crop`, {
         autoCrop: false,
         cropBox,
         targetSize: { width: targetWidth[0], height: targetHeight[0] },
         applyToOriginal: !previewMode
       });
+
+      const response = await res.json();
 
       if (response.success) {
         setCropResult(response.cropResult);
@@ -112,11 +115,13 @@ export function SignatureCropper({ signatureId, imagePath, onCropComplete }: Sig
     
     setIsProcessing(true);
     try {
-      const response = await apiRequest("POST", `/api/signatures/${signatureId}/crop`, {
+      const res = await apiRequest("POST", `/api/signatures/${signatureId}/crop`, {
         autoCrop: true,
         targetSize: { width: targetWidth[0], height: targetHeight[0] },
         applyToOriginal: true
       });
+
+      const response = await res.json();
 
       if (response.success) {
         setCropResult(response.cropResult);
