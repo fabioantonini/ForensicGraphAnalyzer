@@ -520,8 +520,8 @@ export class SignatureCropper {
     height: number
   ): Promise<{ left: number; top: number; width: number; height: number }> {
     
-    const gridSize = 100; // Griglia più grossolana per evitare rumore
-    const threshold = 210; // Soglia più bassa per catturare firme deboli
+    const gridSize = 50; // Griglia più fine per catturare firme piccole
+    const threshold = 220; // Soglia media per equilibrare rumore/segnale
     
     console.log(`[GRID] Analisi densità regioni ${Math.floor(width/gridSize)}x${Math.floor(height/gridSize)} con soglia ${threshold}`);
 
@@ -576,7 +576,7 @@ export class SignatureCropper {
     console.log(`[GRID] Densità media: ${(avgDensity*100).toFixed(2)}%, massima: ${(maxDensity*100).toFixed(2)}%`);
     
     // Usa una soglia dinamica basata sulla densità media
-    const dynamicThreshold = Math.max(avgDensity * 3, 0.15); // Almeno 3x la media o 15%
+    const dynamicThreshold = Math.max(avgDensity * 2, 0.08); // Almeno 2x la media o 8%
     
     console.log(`[GRID] Soglia dinamica densità: ${(dynamicThreshold*100).toFixed(2)}%`);
     
@@ -599,7 +599,7 @@ export class SignatureCropper {
       }
     }
 
-    if (maxGridX !== -1 && validCells >= 3) { // Almeno 3 celle valide
+    if (maxGridX !== -1 && validCells >= 2) { // Almeno 2 celle valide per firme piccole
       // Converti coordinate griglia in pixel con margine
       const margin = gridSize / 2;
       const left = Math.max(0, minGridX * gridSize - margin);
