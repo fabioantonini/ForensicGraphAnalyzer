@@ -771,25 +771,27 @@ export function registerSignatureRoutes(router: Router) {
         await fs.copyFile(cropResult.croppedPath, imagePath);
         await fs.unlink(cropResult.croppedPath);
         
-        // Calcola le nuove dimensioni reali proporzionalmente al ritaglio
+        // Le dimensioni dell'immagine originale inserite dall'utente si riferivano all'intera area
+        // Dopo il ritaglio, dobbiamo calcolare le dimensioni dell'area ritagliata
         const originalWidthPx = cropResult.originalDimensions.width;
         const originalHeightPx = cropResult.originalDimensions.height;
         const croppedWidthPx = cropResult.croppedDimensions.width;
         const croppedHeightPx = cropResult.croppedDimensions.height;
         
-        // Calcola le proporzioni di riduzione
-        const widthRatio = croppedWidthPx / originalWidthPx;
-        const heightRatio = croppedHeightPx / originalHeightPx;
+        // Calcola la densità px/mm originale
+        const originalPxPerMmX = originalWidthPx / signature.realWidthMm;
+        const originalPxPerMmY = originalHeightPx / signature.realHeightMm;
         
-        // Calcola le nuove dimensioni reali
-        const newRealWidthMm = signature.realWidthMm * widthRatio;
-        const newRealHeightMm = signature.realHeightMm * heightRatio;
+        // Calcola le dimensioni reali dell'area ritagliata mantenendo la stessa densità
+        const newRealWidthMm = croppedWidthPx / originalPxPerMmX;
+        const newRealHeightMm = croppedHeightPx / originalPxPerMmY;
         
-        console.log(`[CROP DIMENSIONS] Originale: ${originalWidthPx}x${originalHeightPx}px (${signature.realWidthMm}x${signature.realHeightMm}mm)`);
-        console.log(`[CROP DIMENSIONS] Ritagliata: ${croppedWidthPx}x${croppedHeightPx}px (${newRealWidthMm.toFixed(1)}x${newRealHeightMm.toFixed(1)}mm)`);
-        console.log(`[CROP DIMENSIONS] Rapporti: ${(widthRatio*100).toFixed(1)}% x ${(heightRatio*100).toFixed(1)}%`);
+        console.log(`[CROP DIMENSIONS] Area originale: ${originalWidthPx}x${originalHeightPx}px = ${signature.realWidthMm}x${signature.realHeightMm}mm`);
+        console.log(`[CROP DIMENSIONS] Densità: ${originalPxPerMmX.toFixed(2)}x${originalPxPerMmY.toFixed(2)} px/mm`);
+        console.log(`[CROP DIMENSIONS] Area ritagliata: ${croppedWidthPx}x${croppedHeightPx}px = ${newRealWidthMm.toFixed(1)}x${newRealHeightMm.toFixed(1)}mm`);
+        console.log(`[CROP DIMENSIONS] Riduzione area: ${((1 - (croppedWidthPx*croppedHeightPx)/(originalWidthPx*originalHeightPx))*100).toFixed(1)}%`);
         
-        // Ricalcola i parametri della firma con le nuove dimensioni reali
+        // Ricalcola i parametri della firma con le nuove dimensioni reali dell'area ritagliata
         const newParameters = await SignatureAnalyzer.extractParameters(
           imagePath,
           newRealWidthMm,
@@ -801,7 +803,7 @@ export function registerSignatureRoutes(router: Router) {
           parameters: newParameters,
           realWidthMm: newRealWidthMm,
           realHeightMm: newRealHeightMm,
-          notes: (signature.notes || '') + `\n[RITAGLIO] ${cropResult.message} - Nuove dimensioni: ${newRealWidthMm.toFixed(1)}x${newRealHeightMm.toFixed(1)}mm`
+          notes: (signature.notes || '') + `\n[RITAGLIO] ${cropResult.message} - Area ritagliata: ${newRealWidthMm.toFixed(1)}x${newRealHeightMm.toFixed(1)}mm`
         });
 
         // Registra l'attività

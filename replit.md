@@ -323,11 +323,12 @@ Preferred communication style: Simple, everyday language.
 - **CRITICAL BUG IDENTIFIED**: User discovered logical inconsistency in cropping system
   - **Root Cause**: When signatures were cropped, real dimensions (mm) remained unchanged while pixel dimensions changed
   - **Impact**: Incorrect calibration density (px/mm) after cropping leading to inaccurate measurements
-- **PROPORTIONAL DIMENSION CORRECTION**: Implemented proper dimension scaling after cropping
-  - **Ratio Calculation**: `widthRatio = croppedWidthPx / originalWidthPx` for both axes
-  - **Real Dimension Update**: `newRealWidthMm = originalRealWidthMm * widthRatio`
+- **DENSITY-BASED DIMENSION CORRECTION**: Implemented proper dimension calculation after cropping
+  - **Density Preservation**: `pxPerMm = originalPixels / userDimensionMm` maintained constant
+  - **Real Dimension Update**: `newRealDimensionMm = croppedPixels / pxPerMm`
+  - **Conceptual Clarity**: Original dimensions = total image area, cropped dimensions = actual cropped area
   - **Database Persistence**: Both new parameters AND corrected real dimensions saved to database
-  - **Debug Logging**: Complete before/after dimension tracking for verification
+  - **Debug Logging**: Complete density and dimension tracking for verification
 - **SYSTEM CONSISTENCY**: Cropping now maintains accurate real-world calibration
   - **Example**: 100x50mm signature cropped to 50% becomes 50x25mm with correct px/mm density
   - **Parameter Recalculation**: All 16+ advanced parameters use corrected real dimensions
