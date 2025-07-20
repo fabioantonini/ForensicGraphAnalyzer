@@ -4,3 +4,26 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+
+# User uploaded files and generated content - NEVER commit these
+uploads/
+temp/
+chroma_data/
+*.pid
+*.log
+
+# Configuration files with potential sensitive data
+.email-config.json
+.sendgrid-config.json
+
+# Test files and temporary data
+test_*.txt
+test_*.xml
+test_*.pdf
+cookies.txt
+*.traineddata
+
+# Development and debug files
+chroma-server.log
+chroma.pid
+report-endpoint.txt
