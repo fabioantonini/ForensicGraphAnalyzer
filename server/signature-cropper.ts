@@ -30,9 +30,13 @@ export class SignatureCropper {
     const { inputPath, outputPath, targetSize } = options;
     
     try {
+      console.log(`[CROP] Inizio ritaglio per: ${inputPath}`);
+      
       // Carica l'immagine con Sharp
       const image = sharp(inputPath);
       const metadata = await image.metadata();
+      
+      console.log(`[CROP] Metadata immagine: ${metadata.width}x${metadata.height}, formato: ${metadata.format}`);
       
       if (!metadata.width || !metadata.height) {
         throw new Error('Impossibile leggere le dimensioni dell\'immagine');
@@ -44,10 +48,13 @@ export class SignatureCropper {
       };
 
       // Converti in scala di grigi per analisi
+      console.log(`[CROP] Conversione in scala di grigi...`);
       const grayscaleBuffer = await image
         .greyscale()
         .raw()
         .toBuffer({ resolveWithObject: true });
+
+      console.log(`[CROP] Buffer scala di grigi: ${grayscaleBuffer.info.width}x${grayscaleBuffer.info.height}, canali: ${grayscaleBuffer.info.channels}`);
 
       // Trova i bordi non vuoti
       const bounds = await this.findSignatureBounds(
@@ -55,17 +62,23 @@ export class SignatureCropper {
         grayscaleBuffer.info.width,
         grayscaleBuffer.info.height
       );
+      
+      console.log(`[CROP] Bounds calcolati:`, bounds);
 
       // Calcola la confidenza basata sui bordi trovati
       const confidence = this.calculateConfidence(bounds, originalDimensions);
+      console.log(`[CROP] Confidenza calcolata: ${confidence}`);
       
       // Aggiungi margine per evitare tagli troppo stretti
       const margin = Math.min(bounds.width, bounds.height) * 0.05; // 5% di margine
+      console.log(`[CROP] Margine calcolato: ${margin}`);
       
       const left = Math.max(0, bounds.left - margin);
       const top = Math.max(0, bounds.top - margin);
       const right = Math.min(originalDimensions.width, bounds.left + bounds.width + margin);
       const bottom = Math.min(originalDimensions.height, bounds.top + bounds.height + margin);
+      
+      console.log(`[CROP] Coordinate intermedie: left=${left}, top=${top}, right=${right}, bottom=${bottom}`);
       
       const cropBox = {
         left: left,
@@ -73,6 +86,8 @@ export class SignatureCropper {
         width: right - left,
         height: bottom - top
       };
+      
+      console.log(`[CROP] CropBox finale:`, cropBox);
 
       // Validazione delle dimensioni del crop
       if (cropBox.width <= 0 || cropBox.height <= 0) {

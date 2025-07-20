@@ -795,8 +795,12 @@ export function registerSignatureRoutes(router: Router) {
       });
 
     } catch (error: any) {
+      console.error(`[CROP ERROR] Errore nel ritaglio firma:`, error);
       log(`Errore nel ritaglio firma: ${error.message}`, 'signatures');
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ 
+        error: 'Errore durante il ritaglio',
+        details: error.message 
+      });
     }
   });
 
