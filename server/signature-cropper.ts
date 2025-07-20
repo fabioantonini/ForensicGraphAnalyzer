@@ -599,6 +599,8 @@ export class SignatureCropper {
       }
     }
 
+    console.log(`[GRID DEBUG] Trovate ${denseCells.length} celle dense prima del clustering`);
+
     // Seconda passata: trova il cluster verticale più denso
     if (denseCells.length > 0) {
       // Raggruppa celle per righe e calcola densità totale per riga
