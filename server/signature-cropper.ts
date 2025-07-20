@@ -241,8 +241,10 @@ export class SignatureCropper {
     height: number
   ): Promise<{ left: number; top: number; width: number; height: number }> {
     
-    // Soglia per determinare se un pixel è parte della firma (non bianco)
-    const threshold = 240; // Pixels con valore < 240 sono considerati parte della firma
+    // Soglia dinamica per determinare se un pixel è parte della firma
+    // Per immagini grandi (fogli A4), usa soglia più sensibile per firme piccole
+    const isLargeImage = width > 2000 || height > 2500;
+    const threshold = isLargeImage ? 250 : 240; // Soglia più alta per A4
     
     let minX = width;
     let maxX = -1;
