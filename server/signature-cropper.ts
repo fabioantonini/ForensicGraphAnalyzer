@@ -245,6 +245,8 @@ export class SignatureCropper {
     const isLargeImage = width > 2000 || height > 2500;
     const threshold = isLargeImage ? 250 : 240;
     
+    console.log(`[DEBUG] Immagine ${width}x${height}, isLargeImage=${isLargeImage}, threshold=${threshold}`);
+    
     let minX = width;
     let maxX = -1;
     let minY = height;
@@ -271,9 +273,13 @@ export class SignatureCropper {
       const foundHeight = maxY - minY + 1;
       const coverage = (foundWidth * foundHeight) / (width * height);
       
+      console.log(`[DEBUG] Coverage calcolata: ${(coverage*100).toFixed(1)}% (${foundWidth}x${foundHeight} su ${width}x${height})`);
+      
       if (coverage > 0.8) {
         console.log(`Prima scansione ha coperto ${(coverage*100).toFixed(1)}% dell'immagine, provo algoritmo avanzato per A4...`);
         return this.findSignatureBoundsAdvanced(pixels, width, height);
+      } else {
+        console.log(`[DEBUG] Coverage ${(coverage*100).toFixed(1)}% sotto soglia 80%, uso bounds normali`);
       }
     }
 
