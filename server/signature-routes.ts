@@ -708,9 +708,15 @@ export function registerSignatureRoutes(router: Router) {
 
   // Ritaglio automatico di una firma
   router.post("/signatures/:id/crop", isAuthenticated, async (req, res) => {
+    console.log(`[CROP ENDPOINT] Richiesta ritaglio per firma ${req.params.id}`);
+    console.log(`[CROP ENDPOINT] Body ricevuto:`, req.body);
+    
     try {
       const signatureId = parseInt(req.params.id);
+      console.log(`[CROP ENDPOINT] SignatureId parsato: ${signatureId}`);
+      
       const signature = await storage.getSignature(signatureId);
+      console.log(`[CROP ENDPOINT] Firma trovata:`, signature ? `ID ${signature.id}, file: ${signature.filename}` : 'NULL');
       
       if (!signature) {
         return res.status(404).json({ error: 'Firma non trovata' });
