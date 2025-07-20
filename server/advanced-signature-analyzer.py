@@ -298,11 +298,24 @@ def create_comparison_chart(verifica_data, comp_data):
     Returns:
         Base64-encoded PNG immagine del grafico
     """
+    # Parametri per entrambe le versioni delle funzioni di analisi
     parametri_numerici = [
         'Proportion', 'Inclination', 'PressureMean', 'PressureStd',
-        'Curvature', 'AvgAsolaSize', 'AvgSpacing', 'Velocity',
-        'OverlapRatio', 'LetterConnections', 'BaselineStd'
+        'AvgAsolaSize', 'AvgSpacing', 'Velocity',
+        'OverlapRatio', 'LetterConnections'
     ]
+    
+    # Aggiungi parametri specifici a seconda della versione dei dati
+    if 'AvgCurvature' in verifica_data or 'AvgCurvature' in comp_data:
+        parametri_numerici.append('AvgCurvature')
+    elif 'Curvature' in verifica_data or 'Curvature' in comp_data:
+        parametri_numerici.append('Curvature')
+        
+    # Aggiungi BaselineStd o BaselineStdMm a seconda della versione
+    if 'BaselineStdMm' in verifica_data or 'BaselineStdMm' in comp_data:
+        parametri_numerici.append('BaselineStdMm')
+    elif 'BaselineStd' in verifica_data or 'BaselineStd' in comp_data:
+        parametri_numerici.append('BaselineStd')
 
     differenze = []
     etichette = []
@@ -377,10 +390,13 @@ def create_descriptive_report(verifica_data, comp_data):
     else:
         descrizione += "L'inclinazione dei tratti evidenzia differenze stilistiche.\n"
 
-    if abs(verifica_data['Curvature'] - comp_data['Curvature']) < 15:
-        descrizione += "La curvilineità/angolosità delle firme è coerente.\n"
-    else:
-        descrizione += "La curvilineità/angolosità differisce sensibilmente tra le firme.\n"
+    # Usa AvgCurvature se disponibile, altrimenti Curvature per retrocompatibilità
+    curvature_key = 'AvgCurvature' if 'AvgCurvature' in verifica_data else 'Curvature'
+    if curvature_key in verifica_data and curvature_key in comp_data:
+        if abs(verifica_data[curvature_key] - comp_data[curvature_key]) < 15:
+            descrizione += "La curvilineità/angolosità delle firme è coerente.\n"
+        else:
+            descrizione += "La curvilineità/angolosità differisce sensibilmente tra le firme.\n"
 
     if abs(verifica_data['AvgSpacing'] - comp_data['AvgSpacing']) < 5:
         descrizione += "La spaziatura tra le lettere appare omogenea.\n"
