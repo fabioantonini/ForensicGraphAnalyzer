@@ -602,6 +602,173 @@ def generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, simi
         print(f"Errore nella generazione del PDF: {str(e)}", file=sys.stderr)
         return None
 
+def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, reference_dims, generate_report=False, case_info=None, project_id=None):
+    """
+    Funzione principale per confrontare firme con dimensioni reali specifiche
+    
+    Args:
+        verifica_path: Percorso della firma da verificare
+        comp_path: Percorso della firma di riferimento
+        verifica_dims: Tupla (width_mm, height_mm) per la firma da verificare
+        reference_dims: Tupla (width_mm, height_mm) per la firma di riferimento
+        generate_report: Se True, genera anche un report PDF
+        case_info: Informazioni sul caso per il report
+        project_id: ID del progetto per garantire l'isolamento dei dati
+        
+    Returns:
+        Dizionario con i risultati dell'analisi
+    """
+    try:
+        # Carica e analizza le immagini
+        verifica_img = cv2.imread(verifica_path, cv2.IMREAD_GRAYSCALE)
+        comp_img = cv2.imread(comp_path, cv2.IMREAD_GRAYSCALE)
+        
+        if verifica_img is None or comp_img is None:
+            raise ValueError("Impossibile leggere una o entrambe le immagini")
+        
+        # Preprocessa le immagini
+        processed_verifica = preprocess_image(verifica_img)
+        processed_comp = preprocess_image(comp_img)
+        
+        # Calcola le metriche SSIM
+        similarity, _ = ssim(processed_verifica, processed_comp, full=True)
+        
+        # Analizza le firme con dimensioni reali specifiche
+        verifica_data = analyze_signature_with_dimensions(verifica_path, verifica_dims[0], verifica_dims[1])
+        comp_data = analyze_signature_with_dimensions(comp_path, reference_dims[0], reference_dims[1])
+        
+        if not verifica_data or not comp_data:
+            raise ValueError("Errore nell'analisi di una o entrambe le firme")
+        
+        # Crea il grafico di confronto
+        chart_img = create_comparison_chart(verifica_data, comp_data)
+        
+        # Crea il report descrittivo
+        description = create_descriptive_report(verifica_data, comp_data)
+        
+        # Genera il report se richiesto
+        report_path = None
+        if generate_report:
+            output_dir = tempfile.mkdtemp()
+            report_path_base = os.path.join(output_dir, f"report_firma_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
+            report_pdf_path = f"{report_path_base}.pdf"
+            try:
+                # Genera il report PDF
+                # Se l'ID del progetto è presente, lo includiamo nel nome del file
+                if project_id is not None:
+                    # Aggiorniamo il nome del file per includere l'ID del progetto
+                    output_dir = os.path.dirname(report_pdf_path)
+                    report_filename = f"report_firma_project_{project_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+                    report_pdf_path = os.path.join(output_dir, report_filename)
+                    print(f"Report path aggiornato con project_id={project_id}: {report_pdf_path}", file=sys.stderr)
+                
+                # Passiamo l'ID del progetto alla funzione di generazione del report
+                report_path = generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, similarity, report_pdf_path, case_info, project_id)
+                # Nessun output qui per evitare problemi con JSON
+            except Exception as e:
+                print(f"Errore nella generazione del report: {str(e)}", file=sys.stderr)
+        
+        # Prepara il risultato
+        result = {
+            "similarity": similarity,
+            "verdict": "Alta probabilità di autenticità" if similarity >= 0.8 else 
+                      "Sospetta" if similarity >= 0.6 else 
+                      "Bassa probabilità di autenticità",
+            "verifica_parameters": verifica_data,
+            "reference_parameters": comp_data,
+            "comparison_chart": chart_img,
+            "description": description,
+            "report_path": report_path if report_path else None
+        }
+        
+        return result
+    
+    except Exception as e:
+        print(f"Errore durante il confronto delle firme con dimensioni: {str(e)}", file=sys.stderr)
+        return {"error": str(e)}
+
+def analyze_signature_with_dimensions(image_path, real_width_mm, real_height_mm):
+    """
+    Analizza una firma utilizzando dimensioni reali specifiche invece del DPI
+    
+    Args:
+        image_path: Percorso dell'immagine della firma
+        real_width_mm: Larghezza reale in mm
+        real_height_mm: Altezza reale in mm
+        
+    Returns:
+        Dizionario con i parametri estratti dalla firma
+    """
+    try:
+        # Carica l'immagine
+        image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+        if image is None:
+            raise ValueError(f"Impossibile leggere l'immagine: {image_path}")
+            
+        # Ottieni le dimensioni originali dell'immagine
+        original_height, original_width = image.shape
+        
+        # Calcola la densità di pixel per millimetro usando le dimensioni reali
+        pixels_per_mm_x = original_width / real_width_mm
+        pixels_per_mm_y = original_height / real_height_mm
+        pixels_per_mm = (pixels_per_mm_x + pixels_per_mm_y) / 2  # Media per uniformità
+        
+        print(f"Calibrazione con dimensioni reali: {original_width}x{original_height}px -> {real_width_mm}x{real_height_mm}mm ({pixels_per_mm:.2f}px/mm)", file=sys.stderr)
+            
+        # Crea due versioni: una per l'analisi delle dimensioni reali e una per gli altri parametri
+        # Per le dimensioni reali, usa l'immagine originale senza ridimensionamento
+        processed_original = preprocess_image(image, resize=False)
+        
+        # Per gli altri parametri, usa l'immagine ridimensionata per omogeneità
+        processed = preprocess_image(image, resize=True)
+        
+        # Trova i contorni principali
+        contours, _ = cv2.findContours(processed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        if not contours:
+            return {"error": "Nessun contorno trovato nell'immagine"}
+        
+        # Trova il contorno principale (il più grande)
+        main_contour = max(contours, key=cv2.contourArea)
+        
+        # Calcola il bounding box del contorno principale
+        x, y, w, h = cv2.boundingRect(main_contour)
+        
+        # Usa l'immagine originale per calcolare le dimensioni reali effettive
+        contours_orig, _ = cv2.findContours(processed_original, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        if contours_orig:
+            main_contour_orig = max(contours_orig, key=cv2.contourArea)
+            x_orig, y_orig, w_orig, h_orig = cv2.boundingRect(main_contour_orig)
+            
+            # Calcola le dimensioni reali del bounding box della firma
+            actual_width_mm = w_orig / pixels_per_mm_x
+            actual_height_mm = h_orig / pixels_per_mm_y
+            
+            print(f"Bounding box firma: {w_orig}x{h_orig}px, {actual_width_mm:.2f}x{actual_height_mm:.2f}mm ({(w_orig/original_width)*100:.1f}% x {(h_orig/original_height)*100:.1f}% dell'immagine)", file=sys.stderr)
+        else:
+            # Fallback se non ci sono contorni nell'immagine originale
+            actual_width_mm = real_width_mm
+            actual_height_mm = real_height_mm
+            print(f"Fallback: usando dimensioni totali immagine: {real_width_mm}x{real_height_mm}mm", file=sys.stderr)
+        
+        # Resto dell'analisi utilizzando l'immagine processata
+        result = analyze_signature(image_path, DEFAULT_DPI)  # Usa l'analisi esistente come base
+        
+        # Aggiorna con le dimensioni reali calibrate
+        result['real_width_mm'] = actual_width_mm
+        result['real_height_mm'] = actual_height_mm
+        result['pixels_per_mm'] = pixels_per_mm
+        
+        # Aggiorna la proporzione con dimensioni reali
+        if actual_height_mm > 0 and actual_width_mm > 0:
+            result['proportion'] = actual_height_mm / actual_width_mm
+            
+        return result
+        
+    except Exception as e:
+        print(f"Errore nell'analisi della firma con dimensioni: {str(e)}", file=sys.stderr)
+        return {"error": str(e)}
+
 def compare_signatures(verifica_path, comp_path, generate_report=False, case_info=None, project_id=None, dpi=DEFAULT_DPI):
     """
     Funzione principale per confrontare firme
@@ -744,7 +911,33 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"Errore nel parsing dell'ID del progetto: {e}", file=sys.stderr)
     
-    # Recupera il DPI se presente
+    # Recupera le dimensioni reali se presenti
+    verifica_dimensions = None
+    reference_dimensions = None
+    
+    if "--verifica-dimensions" in sys.argv:
+        try:
+            idx = sys.argv.index("--verifica-dimensions")
+            if idx + 1 < len(sys.argv):
+                dims = sys.argv[idx + 1].split('x')
+                if len(dims) == 2:
+                    verifica_dimensions = (float(dims[0]), float(dims[1]))
+                    print(f"Dimensioni verifica: {verifica_dimensions[0]}x{verifica_dimensions[1]}mm", file=sys.stderr)
+        except Exception as e:
+            print(f"Errore nel parsing delle dimensioni verifica: {e}", file=sys.stderr)
+    
+    if "--reference-dimensions" in sys.argv:
+        try:
+            idx = sys.argv.index("--reference-dimensions")
+            if idx + 1 < len(sys.argv):
+                dims = sys.argv[idx + 1].split('x')
+                if len(dims) == 2:
+                    reference_dimensions = (float(dims[0]), float(dims[1]))
+                    print(f"Dimensioni reference: {reference_dimensions[0]}x{reference_dimensions[1]}mm", file=sys.stderr)
+        except Exception as e:
+            print(f"Errore nel parsing delle dimensioni reference: {e}", file=sys.stderr)
+    
+    # Fallback al DPI se le dimensioni non sono disponibili (compatibilità)
     dpi = DEFAULT_DPI
     if "--dpi" in sys.argv:
         try:
@@ -756,9 +949,12 @@ if __name__ == "__main__":
             print(f"Errore nel parsing del DPI: {e}, usando DPI di default={DEFAULT_DPI}", file=sys.stderr)
     
     # Log per debugging
-    print(f"Confronto tra firme con path1={verifica_path}, path2={comp_path}, generate_report={generate_report}, project_id={project_id}, dpi={dpi}", file=sys.stderr)
-    
-    result = compare_signatures(verifica_path, comp_path, generate_report, case_info, project_id, dpi)
+    if verifica_dimensions and reference_dimensions:
+        print(f"Confronto tra firme con dimensioni reali - verifica={verifica_dimensions[0]}x{verifica_dimensions[1]}mm, reference={reference_dimensions[0]}x{reference_dimensions[1]}mm", file=sys.stderr)
+        result = compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dimensions, reference_dimensions, generate_report, case_info, project_id)
+    else:
+        print(f"Confronto tra firme con DPI fallback - path1={verifica_path}, path2={comp_path}, dpi={dpi}", file=sys.stderr)
+        result = compare_signatures(verifica_path, comp_path, generate_report, case_info, project_id, dpi)
     
     # Adatta i parametri per JSON
     if "verifica_parameters" in result:

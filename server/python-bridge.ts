@@ -103,19 +103,21 @@ export class SignaturePythonAnalyzer {
    * Confronta due firme utilizzando lo script Python avanzato
    * @param verificaPath Percorso della firma da verificare
    * @param referencePath Percorso della firma di riferimento
+   * @param verificaDimensions Dimensioni reali della firma da verificare {widthMm, heightMm}
+   * @param referenceDimensions Dimensioni reali della firma di riferimento {widthMm, heightMm}
    * @param generateReport Se true, genera un report PDF
    * @param caseInfo Informazioni opzionali sul caso per il report
    * @param projectId ID opzionale del progetto per assicurare l'isolamento dei dati
-   * @param dpi Densità di pixel per pollice per calcolare le dimensioni reali (default 300)
    * @returns Promise con i risultati del confronto
    */
   public static async compareSignatures(
     verificaPath: string,
     referencePath: string,
+    verificaDimensions: { widthMm: number; heightMm: number },
+    referenceDimensions: { widthMm: number; heightMm: number },
     generateReport: boolean = false,
     caseInfo?: CaseInfo,
-    projectId?: number,
-    dpi: number = 300
+    projectId?: number
   ): Promise<ComparisonResult> {
     return new Promise((resolve, reject) => {
       const args = [
@@ -141,10 +143,12 @@ export class SignaturePythonAnalyzer {
         console.log(`[PYTHON BRIDGE] Passaggio del project ID ${projectId} allo script Python per isolamento dati`);
       }
       
-      // Passiamo sempre il parametro DPI
-      args.push('--dpi');
-      args.push(dpi.toString());
-      log(`Usando DPI: ${dpi} per il calcolo delle dimensioni reali`, 'python-bridge');
+      // Passiamo le dimensioni reali di ciascuna firma invece del DPI generico
+      args.push('--verifica-dimensions');
+      args.push(`${verificaDimensions.widthMm}x${verificaDimensions.heightMm}`);
+      args.push('--reference-dimensions');
+      args.push(`${referenceDimensions.widthMm}x${referenceDimensions.heightMm}`);
+      log(`Usando dimensioni reali: verifica=${verificaDimensions.widthMm}x${verificaDimensions.heightMm}mm, reference=${referenceDimensions.widthMm}x${referenceDimensions.heightMm}mm`, 'python-bridge');
 
       const process = spawn('python3', args);
 

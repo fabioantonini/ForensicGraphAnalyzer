@@ -1847,10 +1847,11 @@ export function registerSignatureRoutes(router: Router) {
                 const pythonResult = await SignaturePythonAnalyzer.compareSignatures(
                   signaturePath,   // Firma da verificare
                   referencePath,   // Firma di riferimento
+                  { widthMm: signature.realWidthMm || 50, heightMm: signature.realHeightMm || 20 }, // Dimensioni firma da verificare
+                  { widthMm: referenceSignature.realWidthMm || 50, heightMm: referenceSignature.realHeightMm || 20 }, // Dimensioni firma di riferimento
                   true,            // Genera il report
                   caseInfo,
-                  signature.projectId, // Passiamo l'ID del progetto per assicurare l'isolamento dei dati
-                  dpi               // Passiamo il DPI specifico del progetto
+                  signature.projectId // Passiamo l'ID del progetto per assicurare l'isolamento dei dati
                 );
                 console.log(`[PDF REPORT] Utilizzando projectId ${signature.projectId} per garantire l'isolamento dei dati`);
                 
@@ -1979,10 +1980,11 @@ export function registerSignatureRoutes(router: Router) {
           const comparisonResult = await SignaturePythonAnalyzer.compareSignatures(
             signaturePath,   // Firma da verificare
             referencePath,   // Firma di riferimento
+            { widthMm: signature.realWidthMm || 50, heightMm: signature.realHeightMm || 20 }, // Dimensioni firma da verificare
+            { widthMm: referenceSignature.realWidthMm || 50, heightMm: referenceSignature.realHeightMm || 20 }, // Dimensioni firma di riferimento
             false, // Non generare report DOCX automaticamente
             caseInfo,
-            project.id, // Passiamo l'ID del progetto per assicurare l'isolamento dei dati
-            dpi // Passiamo il DPI specifico del progetto
+            project.id // Passiamo l'ID del progetto per assicurare l'isolamento dei dati
           );
           console.log(`[CONFRONTO POPUP] Utilizzando projectId ${project.id} per garantire l'isolamento dei dati`);
           
@@ -2261,10 +2263,11 @@ export function registerSignatureRoutes(router: Router) {
               const comparisonResult = await SignaturePythonAnalyzer.compareSignatures(
                 signaturePath,   // Firma da verificare
                 referencePath,   // Firma di riferimento
+                { widthMm: signature.realWidthMm || 50, heightMm: signature.realHeightMm || 20 }, // Dimensioni firma da verificare
+                { widthMm: referenceSignature.realWidthMm || 50, heightMm: referenceSignature.realHeightMm || 20 }, // Dimensioni firma di riferimento
                 false, // Non generare report DOCX automaticamente
                 caseInfo,
-                projectId, // Passiamo l'ID del progetto per assicurare l'isolamento dei dati
-                dpi // Passiamo il DPI specifico del progetto
+                projectId // Passiamo l'ID del progetto per assicurare l'isolamento dei dati
               );
               console.log(`[COMPARE-ALL] Utilizzando projectId ${projectId} per garantire l'isolamento dei dati`);
               
