@@ -586,17 +586,54 @@ export class SignatureCropper {
     let maxGridY = -1;
     let validCells = 0;
 
-    // Trova celle che superano la soglia dinamica
+    // Prima passata: trova tutte le celle dense
+    const denseCells: Array<{x: number, y: number, density: number}> = [];
     for (let gy = 0; gy < gridRows; gy++) {
       for (let gx = 0; gx < gridCols; gx++) {
         if (gridDensities[gy][gx] > dynamicThreshold) {
+          denseCells.push({x: gx, y: gy, density: gridDensities[gy][gx]});
           minGridX = Math.min(minGridX, gx);
           maxGridX = Math.max(maxGridX, gx);
-          minGridY = Math.min(minGridY, gy);
-          maxGridY = Math.max(maxGridY, gy);
           validCells++;
         }
       }
+    }
+
+    // Seconda passata: trova il cluster verticale più denso
+    if (denseCells.length > 0) {
+      // Raggruppa celle per righe e calcola densità totale per riga
+      const rowDensities: Map<number, number> = new Map();
+      const rowCounts: Map<number, number> = new Map();
+      
+      for (const cell of denseCells) {
+        const currentDensity = rowDensities.get(cell.y) || 0;
+        const currentCount = rowCounts.get(cell.y) || 0;
+        rowDensities.set(cell.y, currentDensity + cell.density);
+        rowCounts.set(cell.y, currentCount + 1);
+      }
+
+      // Trova la finestra di righe consecutive con massima densità
+      const windowSize = Math.min(10, Math.floor(gridRows / 4)); // Finestra adattiva
+      let bestWindowStart = 0;
+      let bestWindowDensity = 0;
+      
+      for (let start = 0; start <= gridRows - windowSize; start++) {
+        let windowDensity = 0;
+        for (let row = start; row < start + windowSize; row++) {
+          windowDensity += rowDensities.get(row) || 0;
+        }
+        
+        if (windowDensity > bestWindowDensity) {
+          bestWindowDensity = windowDensity;
+          bestWindowStart = start;
+        }
+      }
+      
+      // Usa solo le celle nel cluster verticale migliore
+      minGridY = bestWindowStart;
+      maxGridY = Math.min(gridRows - 1, bestWindowStart + windowSize - 1);
+      
+      console.log(`[GRID CLUSTER] Cluster verticale: righe ${minGridY}-${maxGridY} (densità: ${bestWindowDensity.toFixed(3)})`);
     }
 
     if (maxGridX !== -1 && validCells >= 2) { // Almeno 2 celle valide per firme piccole
