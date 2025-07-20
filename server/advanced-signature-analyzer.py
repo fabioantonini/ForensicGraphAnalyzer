@@ -751,17 +751,78 @@ def analyze_signature_with_dimensions(image_path, real_width_mm, real_height_mm)
             actual_height_mm = real_height_mm
             print(f"Fallback: usando dimensioni totali immagine: {real_width_mm}x{real_height_mm}mm", file=sys.stderr)
         
-        # Resto dell'analisi utilizzando l'immagine processata
-        result = analyze_signature(image_path, DEFAULT_DPI)  # Usa l'analisi esistente come base
+        # NUOVO APPROCCIO: Analisi completa con dimensioni reali invece di DPI
+        # Non richiamare analyze_signature che usa DPI - implementa l'analisi diretta
         
-        # Aggiorna con le dimensioni reali calibrate
-        result['real_width_mm'] = actual_width_mm
-        result['real_height_mm'] = actual_height_mm
-        result['pixels_per_mm'] = pixels_per_mm
+        # Calcola tutti i parametri usando le dimensioni reali calibrate
+        proportion = actual_width_mm / actual_height_mm if actual_height_mm > 0 else 1
         
-        # Aggiorna la proporzione con dimensioni reali
-        if actual_height_mm > 0 and actual_width_mm > 0:
-            result['proportion'] = actual_height_mm / actual_width_mm
+        # Calcola l'inclinazione
+        if len(main_contour) >= 5:
+            ellipse = cv2.fitEllipse(main_contour)
+            inclination = ellipse[2]
+        else:
+            inclination = 0
+        
+        # Calcola la pressione media e deviazione standard
+        pressure_mean = float(np.mean(image.flatten()))
+        pressure_std = float(np.std(image.flatten()))
+        
+        # Calcola la curvatura
+        curvature = calculate_curvature(main_contour) if len(main_contour) >= 3 else 0
+        
+        # Determina la leggibilità e lo stile
+        readability = "Alta" if pressure_mean > 90 else "Media" if pressure_mean > 60 else "Bassa"
+        style = "Corsivo" if proportion > 2 else "Stampatello" if proportion < 1.2 else "Misto"
+        
+        # Trova le asole (loops)
+        internal_contours, _ = cv2.findContours(processed, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        asole = [cnt for cnt in internal_contours if 20 < cv2.contourArea(cnt) < 500 and calculate_circularity(cnt) > 0.5]
+        avg_asola_size_mm = (np.mean([cv2.contourArea(a) for a in asole]) / (pixels_per_mm * pixels_per_mm)) if asole else 0
+        
+        # Calcola la spaziatura in mm
+        x_positions = [cv2.boundingRect(cnt)[0] for cnt in contours]
+        x_positions.sort()
+        spacings = [x_positions[i+1] - x_positions[i] for i in range(len(x_positions)-1)] if len(x_positions) > 1 else [0]
+        avg_spacing_mm = (np.mean(spacings) / pixels_per_mm_x) if spacings else 0
+        
+        # Calcola la velocità stimata
+        total_length = sum([cv2.arcLength(cnt, False) for cnt in contours])
+        if contours_orig:
+            straight_distance = math.hypot(w_orig, h_orig)
+        else:
+            straight_distance = math.hypot(w, h)
+        velocity = total_length / (straight_distance + 1e-5)
+        
+        # Calcola il rapporto di sovrapposizione
+        overlap_ratio = np.sum(processed > 0) / (w * h) if w * h > 0 else 0
+        
+        # Calcola le connessioni tra lettere e la deviazione della linea di base in mm
+        letter_connections = len(contours)
+        baseline_y_positions = [pt[0][1] for cnt in contours for pt in cnt]
+        baseline_std_px = np.std(baseline_y_positions) if baseline_y_positions else 0
+        baseline_std_mm = baseline_std_px / pixels_per_mm_y if pixels_per_mm_y > 0 else 0
+        
+        # Costruisci il risultato con i parametri calibrati alle dimensioni reali
+        result = {
+            'real_width_mm': actual_width_mm,
+            'real_height_mm': actual_height_mm,
+            'pixels_per_mm': pixels_per_mm,
+            'Proportion': proportion,
+            'Inclination': inclination,
+            'PressureMean': pressure_mean,
+            'PressureStd': pressure_std,
+            'AvgCurvature': curvature,
+            'Readability': readability,
+            'WritingStyle': style,
+            'AvgAsolaSize': avg_asola_size_mm,  # In mm²
+            'AvgSpacing': avg_spacing_mm,      # In mm
+            'Velocity': velocity,
+            'OverlapRatio': overlap_ratio,
+            'LetterConnections': letter_connections,
+            'BaselineStdMm': baseline_std_mm,  # In mm
+            'Dimensions': (actual_width_mm, actual_height_mm)
+        }
             
         return result
         
@@ -881,8 +942,24 @@ def adapt_parameters_for_json(params):
 
 # Funzione principale per l'esecuzione come script
 if __name__ == "__main__":
+    # Supporto per test di analisi singola con dimensioni
+    if len(sys.argv) >= 4 and sys.argv[1] == "--analyze-dimensions":
+        try:
+            image_path = sys.argv[2]
+            width_mm = float(sys.argv[3])
+            height_mm = float(sys.argv[4])
+            
+            print(f"Test analisi singola: {image_path} con dimensioni {width_mm}x{height_mm}mm", file=sys.stderr)
+            result = analyze_signature_with_dimensions(image_path, width_mm, height_mm)
+            print(json.dumps(result, indent=2))
+            sys.exit(0)
+        except Exception as e:
+            print(f"Errore nell'analisi singola: {str(e)}", file=sys.stderr)
+            sys.exit(1)
+    
     if len(sys.argv) < 3:
         print("Uso: python advanced-signature-analyzer.py <firma_verifica> <firma_comp> [--report] [--case-info <json>] [--project-id <id>]", file=sys.stderr)
+        print("      python advanced-signature-analyzer.py --analyze-dimensions <immagine> <larghezza_mm> <altezza_mm>", file=sys.stderr)
         sys.exit(1)
     
     verifica_path = sys.argv[1]
