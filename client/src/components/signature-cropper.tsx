@@ -30,7 +30,7 @@ interface SignatureCropperProps {
 export function SignatureCropper({ signatureId, imagePath, onCropComplete }: SignatureCropperProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [cropResult, setCropResult] = useState<CropResult | null>(null);
-  const [previewMode, setPreviewMode] = useState(true);
+  const [previewMode, setPreviewMode] = useState(false); // Modalità diretta di default
   const [targetWidth, setTargetWidth] = useState([800]);
   const [targetHeight, setTargetHeight] = useState([400]);
   const { toast } = useToast();
@@ -47,13 +47,23 @@ export function SignatureCropper({ signatureId, imagePath, onCropComplete }: Sig
         applyToOriginal: !previewMode
       });
 
+      console.log('API Response:', response);
+      
       if (response.success) {
+        console.log('Setting crop result:', response.cropResult);
         setCropResult(response.cropResult);
         onCropComplete?.(response.cropResult);
         
         toast({
           title: "Ritaglio completato",
-          description: response.message,
+          description: response.message || "Ritaglio automatico completato con successo",
+        });
+      } else {
+        console.error('API returned success: false', response);
+        toast({
+          title: "Errore nel ritaglio",
+          description: response.error || "Errore sconosciuto",
+          variant: "destructive",
         });
       }
     } catch (error: any) {
