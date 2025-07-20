@@ -2122,18 +2122,14 @@ export function registerSignatureRoutes(router: Router) {
       }
       
       // Aggiorna lo stato a processing
-      await storage.updateSignature(signatureId, {
-        processingStatus: 'processing'
-      });
+      await storage.updateSignatureStatus(signatureId, 'processing');
       
       // Avvia il processamento asincrono usando la stessa logica di processSignature
       const filePath = path.join('./uploads', signature.filename);
       processSignature(signatureId, filePath)
         .catch(error => {
           console.error(`Errore riprocessamento firma ${signatureId}:`, error);
-          storage.updateSignature(signatureId, {
-            processingStatus: 'failed'
-          });
+          storage.updateSignatureStatus(signatureId, 'failed');
         });
       
       res.json({ message: 'Riprocessamento avviato', signatureId });
