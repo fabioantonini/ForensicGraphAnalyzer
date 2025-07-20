@@ -241,11 +241,16 @@ export class SignatureCropper {
     height: number
   ): Promise<{ left: number; top: number; width: number; height: number }> {
     
-    // Soglia dinamica per determinare se un pixel è parte della firma
+    // Per fogli A4 grandi, usa sempre l'algoritmo avanzato
     const isLargeImage = width > 2000 || height > 2500;
-    const threshold = isLargeImage ? 250 : 240;
     
-    console.log(`[DEBUG] Immagine ${width}x${height}, isLargeImage=${isLargeImage}, threshold=${threshold}`);
+    if (isLargeImage) {
+      console.log(`[FORCE] Immagine A4 rilevata ${width}x${height}, forzando algoritmo avanzato...`);
+      return this.findSignatureBoundsAdvanced(pixels, width, height);
+    }
+    
+    const threshold = 240;
+    console.log(`[DEBUG] Immagine normale ${width}x${height}, threshold=${threshold}`);
     
     let minX = width;
     let maxX = -1;
