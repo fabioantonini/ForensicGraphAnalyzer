@@ -61,22 +61,39 @@ export class SignatureCropper {
       
       // Aggiungi margine per evitare tagli troppo stretti
       const margin = Math.min(bounds.width, bounds.height) * 0.05; // 5% di margine
+      
+      const left = Math.max(0, bounds.left - margin);
+      const top = Math.max(0, bounds.top - margin);
+      const right = Math.min(originalDimensions.width, bounds.left + bounds.width + margin);
+      const bottom = Math.min(originalDimensions.height, bounds.top + bounds.height + margin);
+      
       const cropBox = {
-        left: Math.max(0, bounds.left - margin),
-        top: Math.max(0, bounds.top - margin),
-        width: Math.min(originalDimensions.width - bounds.left + margin, bounds.width + 2 * margin),
-        height: Math.min(originalDimensions.height - bounds.top + margin, bounds.height + 2 * margin)
+        left: left,
+        top: top,
+        width: right - left,
+        height: bottom - top
       };
+
+      // Validazione delle dimensioni del crop
+      if (cropBox.width <= 0 || cropBox.height <= 0) {
+        throw new Error(`Dimensioni crop invalide: ${cropBox.width}x${cropBox.height}`);
+      }
+
+      if (cropBox.left < 0 || cropBox.top < 0 || 
+          cropBox.left + cropBox.width > originalDimensions.width ||
+          cropBox.top + cropBox.height > originalDimensions.height) {
+        throw new Error(`Coordinate crop fuori dai limiti dell'immagine`);
+      }
 
       // Determina il path di output
       const finalOutputPath = outputPath || this.generateCroppedPath(inputPath);
       
       // Esegui il ritaglio
       let croppedImage = image.extract({
-        left: Math.round(cropBox.left),
-        top: Math.round(cropBox.top),
-        width: Math.round(cropBox.width),
-        height: Math.round(cropBox.height)
+        left: Math.round(Math.max(0, cropBox.left)),
+        top: Math.round(Math.max(0, cropBox.top)),
+        width: Math.round(Math.min(cropBox.width, originalDimensions.width - cropBox.left)),
+        height: Math.round(Math.min(cropBox.height, originalDimensions.height - cropBox.top))
       });
 
       // Ridimensiona se richiesto
@@ -235,6 +252,7 @@ export class SignatureCropper {
 
     // Se non sono stati trovati pixel della firma, usa l'intera immagine
     if (maxX === -1) {
+      console.log('Nessun pixel della firma rilevato, usando intera immagine');
       return {
         left: 0,
         top: 0,
@@ -243,12 +261,15 @@ export class SignatureCropper {
       };
     }
 
-    return {
+    const bounds = {
       left: minX,
       top: minY,
       width: maxX - minX + 1,
       height: maxY - minY + 1
     };
+
+    console.log(`Bounds rilevati: left=${bounds.left}, top=${bounds.top}, width=${bounds.width}, height=${bounds.height}`);
+    return bounds;
   }
 
   /**
