@@ -487,9 +487,15 @@ export class SignatureCropper {
         console.log(`[ADVANCED] Soglia ${threshold}: trovati ${pixelCount} pixel, area ratio: ${areaRatio.toFixed(4)}`);
         console.log(`[ADVANCED] Bounds: ${foundWidth}x${foundHeight} at (${minX},${minY})`);
         
-        // Se l'area è tra 0.5% e 25% dell'immagine totale, probabilmente è una firma
-        if (areaRatio > 0.005 && areaRatio < 0.25 && pixelCount > 100) {
-          console.log(`[ADVANCED] ✓ Firma rilevata con soglia ${threshold}!`);
+        // Per fogli A4, cerca firme che occupano una percentuale ragionevole dell'area
+        // Ma non troppo poco (rumore) e non troppo tanto (intera pagina)
+        const pixelDensity = pixelCount / (foundWidth * foundHeight);
+        
+        console.log(`[ADVANCED] Densità pixel: ${(pixelDensity*100).toFixed(2)}% nell'area trovata`);
+        
+        // Se l'area copre meno del 90% dell'immagine e ha una densità ragionevole
+        if (areaRatio < 0.9 && pixelDensity > 0.02 && pixelCount > 500) {
+          console.log(`[ADVANCED] ✓ Firma rilevata con soglia ${threshold}! Area=${(areaRatio*100).toFixed(1)}%, densità=${(pixelDensity*100).toFixed(2)}%`);
           return {
             left: minX,
             top: minY,
