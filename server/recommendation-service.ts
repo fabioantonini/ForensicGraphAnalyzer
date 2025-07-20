@@ -89,11 +89,11 @@ async function generateFallbackRecommendations(userId: number, count: number = 3
 
   // Definisci i suggerimenti predefiniti in base alla lingua
   const fallbackRecs = isItalian ? [
-    // Suggerimenti in italiano
+    // Suggerimenti in italiano - solo funzionalità implementate
     {
       userId,
-      title: "Analizza le firme contestate con confronto avanzato",
-      content: "Utilizza il tool di confronto firme per analizzare differenze tra firme contestate e campioni di riferimento.",
+      title: "Analizza firme con confronto avanzato 16+ parametri",
+      content: "Utilizza il sistema di verifica firme con 16+ parametri OpenCV per analisi forensi accurate al 92%. Carica firme di riferimento e da verificare per confronti dettagliati.",
       category: "signature",
       relevanceScore: 0.9,
       viewed: false,
@@ -105,8 +105,8 @@ async function generateFallbackRecommendations(userId: number, count: number = 3
     },
     {
       userId,
-      title: "Ottimizza l'estrazione del testo dai documenti",
-      content: "Migliora la qualità dell'estrazione testuale configurando le opzioni avanzate OCR per documenti poco leggibili.",
+      title: "Estrai testo con OCR avanzato multilingue",
+      content: "Utilizza il sistema OCR con Tesseract.js e 4 modalità di preprocessing (Auto, Enhance, Sharpen, Denoise) per documenti in italiano, inglese, francese, tedesco e spagnolo.",
       category: "document",
       relevanceScore: 0.85,
       viewed: false,
@@ -118,8 +118,8 @@ async function generateFallbackRecommendations(userId: number, count: number = 3
     },
     {
       userId,
-      title: "Esplora l'analisi approfondita dei documenti",
-      content: "Utilizza la ricerca semantica per trovare informazioni nascoste nei tuoi documenti analizzati.",
+      title: "Ricerca semantica nei documenti con RAG",
+      content: "Carica documenti nella base di conoscenza e usa la ricerca semantica con embedding OpenAI per trovare informazioni specifiche nei tuoi testi analizzati.",
       category: "learning",
       relevanceScore: 0.8,
       viewed: false,
@@ -131,8 +131,8 @@ async function generateFallbackRecommendations(userId: number, count: number = 3
     },
     {
       userId,
-      title: "Crea report personalizzati per casi forensi",
-      content: "Utilizza i modelli di report avanzati per creare documentazione professionale delle tue analisi.",
+      title: "Genera report PDF forensi con analisi AI",
+      content: "Crea report PDF professionali con parametri tecnici, analisi grafologica AI via ChatGPT e immagini delle firme per documentazione forense completa.",
       category: "workflow",
       relevanceScore: 0.75,
       viewed: false,
@@ -144,10 +144,23 @@ async function generateFallbackRecommendations(userId: number, count: number = 3
     },
     {
       userId,
-      title: "Migliora l'accuratezza con il training AI",
-      content: "Allena l'AI con i tuoi dati specifici per ottenere analisi più accurate per il tuo tipo di documenti.",
+      title: "Anonimizza documenti con 13 tipi di entità",
+      content: "Utilizza il sistema di anonimizzazione AI per rimuovere nomi, indirizzi, telefoni, email, codici fiscali e altri dati sensibili da documenti PDF, DOCX e TXT.",
       category: "tool",
       relevanceScore: 0.7,
+      viewed: false,
+      dismissed: false,
+      relatedDocumentIds: [],
+      relatedSignatureIds: [],
+      relatedQueryIds: [],
+      metadata: { generatedBy: 'fallback', locale: 'it' }
+    },
+    {
+      userId,
+      title: "Valuta qualità firme con confidence meter",
+      content: "Usa il sistema di valutazione qualità firme per analizzare risoluzione, contrasto, nitidezza e completezza delle immagini caricate prima dell'analisi.",
+      category: "signature",
+      relevanceScore: 0.65,
       viewed: false,
       dismissed: false,
       relatedDocumentIds: [],
@@ -156,11 +169,11 @@ async function generateFallbackRecommendations(userId: number, count: number = 3
       metadata: { generatedBy: 'fallback', locale: 'it' }
     }
   ] : [
-    // Suggerimenti in inglese
+    // English suggestions - only implemented features
     {
       userId,
-      title: "Analyze contested signatures with advanced comparison",
-      content: "Use the signature comparison tool to analyze differences between contested signatures and reference samples.",
+      title: "Analyze signatures with advanced 16+ parameters comparison",
+      content: "Use the signature verification system with 16+ OpenCV parameters for 92% accurate forensic analysis. Upload reference and verification signatures for detailed comparisons.",
       category: "signature",
       relevanceScore: 0.9,
       viewed: false,
@@ -172,8 +185,8 @@ async function generateFallbackRecommendations(userId: number, count: number = 3
     },
     {
       userId,
-      title: "Optimize text extraction from documents",
-      content: "Improve the quality of text extraction by configuring advanced OCR options for poorly readable documents.",
+      title: "Extract text with advanced multilingual OCR",
+      content: "Use the OCR system with Tesseract.js and 4 preprocessing modes (Auto, Enhance, Sharpen, Denoise) for documents in Italian, English, French, German, and Spanish.",
       category: "document",
       relevanceScore: 0.85,
       viewed: false,
@@ -185,8 +198,8 @@ async function generateFallbackRecommendations(userId: number, count: number = 3
     },
     {
       userId,
-      title: "Explore in-depth document analysis",
-      content: "Use semantic search to find hidden information in your analyzed documents.",
+      title: "Semantic search in documents with RAG",
+      content: "Upload documents to the knowledge base and use semantic search with OpenAI embeddings to find specific information in your analyzed texts.",
       category: "learning",
       relevanceScore: 0.8,
       viewed: false,
@@ -198,8 +211,8 @@ async function generateFallbackRecommendations(userId: number, count: number = 3
     },
     {
       userId,
-      title: "Create personalized reports for forensic cases",
-      content: "Use advanced report templates to create professional documentation of your analyses.",
+      title: "Generate forensic PDF reports with AI analysis",
+      content: "Create professional PDF reports with technical parameters, AI graphology analysis via ChatGPT, and signature images for complete forensic documentation.",
       category: "workflow",
       relevanceScore: 0.75,
       viewed: false,
@@ -211,10 +224,23 @@ async function generateFallbackRecommendations(userId: number, count: number = 3
     },
     {
       userId,
-      title: "Improve accuracy with AI training",
-      content: "Train the AI with your specific data to get more accurate analyses for your document types.",
+      title: "Anonymize documents with 13 entity types",
+      content: "Use the AI anonymization system to remove names, addresses, phones, emails, fiscal codes, and other sensitive data from PDF, DOCX, and TXT documents.",
       category: "tool",
       relevanceScore: 0.7,
+      viewed: false,
+      dismissed: false,
+      relatedDocumentIds: [],
+      relatedSignatureIds: [],
+      relatedQueryIds: [],
+      metadata: { generatedBy: 'fallback', locale: 'en' }
+    },
+    {
+      userId,
+      title: "Evaluate signature quality with confidence meter",
+      content: "Use the signature quality assessment system to analyze resolution, contrast, sharpness, and completeness of uploaded images before analysis.",
+      category: "signature",
+      relevanceScore: 0.65,
       viewed: false,
       dismissed: false,
       relatedDocumentIds: [],
@@ -483,35 +509,41 @@ async function createAIRecommendations(userData: UserData, count: number, apiKey
 
     // Preparazione del prompt per l'AI con i dati dell'utente
     const prompt = `
-Sei un assistente esperto di grafologia forense che fornisce consigli personalizzati agli utenti di Grapholex Insight.
+Sei un assistente esperto di grafologia forense che fornisce consigli personalizzati agli utenti di GrapholexInsight.
 In base ai dati dell'utente, genera ${count} raccomandazioni personalizzate che possano migliorare la sua esperienza e produttività.
+
+FUNZIONALITÀ IMPLEMENTATE NELL'APPLICAZIONE (suggerisci SOLO queste):
+1. Sistema verifica firme con 16+ parametri OpenCV (accuratezza 92%)
+2. OCR avanzato con Tesseract.js e 4 modalità preprocessing (Auto, Enhance, Sharpen, Denoise)
+3. Supporto lingue: italiano, inglese, francese, tedesco, spagnolo
+4. Ricerca semantica documenti con RAG e embedding OpenAI
+5. Generazione report PDF forensi con analisi AI ChatGPT
+6. Sistema anonimizzazione documenti con 13 tipi entità
+7. Confidence meter per valutazione qualità firme
+8. Database vettoriale pgvector per knowledge base
+9. Upload documenti PDF, DOCX, TXT per analisi testuale
+10. Confronto firme con calibrazione dimensioni reali (mm)
 
 Dati dell'utente:
 ${JSON.stringify(existingData, null, 2)}
 
-Ogni raccomandazione deve essere strutturata come segue:
-1. Un titolo breve e incisivo (massimo 60 caratteri)
-2. Un contenuto dettagliato (massimo 200 caratteri) che spiega il consiglio
-3. Una categoria tra: 'document', 'signature', 'workflow', 'learning' o 'tool'
-4. Un punteggio di rilevanza da 0.1 a 1.0 basato sulla probabilità che la raccomandazione sia utile per l'utente
+Genera raccomandazioni che:
+- Suggeriscono come usare meglio le funzionalità già implementate
+- Sono specifiche e actionable
+- Si basano sull'attività dell'utente
+- Non menzionano funzionalità non esistenti
 
-Rispondi con un array JSON in questo formato:
+Formato richiesto:
 [
   {
-    "title": "Titolo della raccomandazione 1",
-    "content": "Contenuto dettagliato della raccomandazione 1",
-    "category": "signature",
-    "relevanceScore": 0.85
-  },
-  {
-    "title": "Titolo della raccomandazione 2",
-    "content": "Contenuto dettagliato della raccomandazione 2",
-    "category": "document",
-    "relevanceScore": 0.75
+    "title": "Titolo breve (max 60 caratteri)",
+    "content": "Contenuto specifico e pratico (max 200 caratteri)",
+    "category": "signature|document|workflow|learning|tool",
+    "relevanceScore": 0.1-1.0
   }
 ]
 
-IMPORTANTE: Rispondi SOLO con un array JSON. Non aggiungere testo prima o dopo l'array.
+IMPORTANTE: Rispondi SOLO con JSON array. Nessun testo aggiuntivo.
 `;
 
     log(`Richiesta raccomandazioni AI per utente ${user.id}`, "recommendations");
