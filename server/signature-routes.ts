@@ -2489,22 +2489,55 @@ async function processSignature(signatureId: number, filePath: string) {
       throw new Error('Dimensioni reali della firma non specificate');
     }
     
-    log(`Elaborazione firma ${signatureId} con dimensioni reali: ${signature.realWidthMm}mm x ${signature.realHeightMm}mm`, 'signatures');
+    log(`NUOVO APPROCCIO - Elaborazione firma ${signatureId} con dimensioni firma target: ${signature.realWidthMm}mm x ${signature.realHeightMm}mm`, 'signatures');
     
     // Aggiorna lo stato a 'processing'
     await storage.updateSignatureStatus(signatureId, 'processing');
     
-    // Usa l'analizzatore JavaScript con le dimensioni reali
+    // PASSO 1: Ritaglio automatico obbligatorio per rimuovere spazio vuoto
+    log(`PASSO 1 - Ritaglio automatico dell'immagine per rimuovere spazio vuoto`, 'signatures');
+    const cropResult = await SignatureCropper.cropSignature({
+      inputPath: filePath,
+      targetSize: { width: 800, height: 400 } // Dimensioni target conservative per il ritaglio
+    });
+    
+    if (!cropResult.success || !cropResult.croppedPath) {
+      throw new Error(`Ritaglio automatico fallito: ${cropResult.message}`);
+    }
+    
+    // PASSO 2: Sostituisci l'immagine originale con quella ritagliata
+    log(`PASSO 2 - Applicazione ritaglio all'immagine originale`, 'signatures');
+    await fs.copyFile(cropResult.croppedPath, filePath);
+    await fs.unlink(cropResult.croppedPath);
+    
+    // PASSO 3: Calibrazione basata sul nuovo approccio
+    // Le dimensioni reali inserite dall'utente corrispondono all'immagine ritagliata
+    log(`PASSO 3 - Calibrazione: immagine ritagliata ${cropResult.croppedDimensions.width}x${cropResult.croppedDimensions.height}px = ${signature.realWidthMm}x${signature.realHeightMm}mm`, 'signatures');
+    
+    const pixelsPerMmX = cropResult.croppedDimensions.width / signature.realWidthMm;
+    const pixelsPerMmY = cropResult.croppedDimensions.height / signature.realHeightMm;
+    const avgPixelsPerMm = (pixelsPerMmX + pixelsPerMmY) / 2; // Densità media unificata
+    
+    log(`DENSITÀ CALCOLATA: ${pixelsPerMmX.toFixed(2)}x${pixelsPerMmY.toFixed(2)} px/mm (media: ${avgPixelsPerMm.toFixed(2)} px/mm)`, 'signatures');
+    
+    // PASSO 4: Estrazione parametri con le dimensioni reali della firma
     const parameters = await SignatureAnalyzer.extractParameters(
       filePath, 
       signature.realWidthMm, 
       signature.realHeightMm
     );
     
-    log(`Parametri estratti per firma ${signatureId}`, 'signatures');
+    // PASSO 5: Aggiorna la firma con i parametri estratti e note del processo
+    const processNotes = `[NUOVO APPROCCIO] Ritaglio automatico applicato. ${cropResult.message}\n` +
+      `Riduzione area: ${((1 - (cropResult.croppedDimensions.width * cropResult.croppedDimensions.height) / (cropResult.originalDimensions.width * cropResult.originalDimensions.height)) * 100).toFixed(1)}%\n` +
+      `Densità finale: ${avgPixelsPerMm.toFixed(2)} px/mm`;
     
-    // Aggiorna la firma con i parametri estratti
     await storage.updateSignatureParameters(signatureId, parameters);
+    await storage.updateSignature(signatureId, {
+      notes: (signature.notes || '') + '\n' + processNotes
+    });
+    
+    log(`COMPLETATO - Firma ${signatureId} elaborata con nuovo approccio`, 'signatures');
     
     // Aggiorna lo stato a 'completed'
     await storage.updateSignatureStatus(signatureId, 'completed');
