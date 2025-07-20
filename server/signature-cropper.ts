@@ -612,6 +612,8 @@ export class SignatureCropper {
       const coverageRatio = (finalWidth * finalHeight) / (width * height);
       
       console.log(`[GRID] ✓ ${validCells} celle dense trovate, bounds: ${finalWidth}x${finalHeight} (copertura ${(coverageRatio*100).toFixed(1)}%)`);
+      console.log(`[GRID DEBUG] Griglia X: ${minGridX}-${maxGridX}, Y: ${minGridY}-${maxGridY}`);
+      console.log(`[GRID DEBUG] Pixel coords: left=${left}, top=${top}, right=${right}, bottom=${bottom}`);
       
       // Se la copertura è ragionevole, usa questi bounds
       if (coverageRatio < 0.8) {
