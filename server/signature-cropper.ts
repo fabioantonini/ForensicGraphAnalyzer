@@ -265,7 +265,19 @@ export class SignatureCropper {
       }
     }
 
-    // Se non trovato con soglia normale, prova algoritmo avanzato per fogli A4
+    // Per fogli A4, prova sempre l'algoritmo avanzato se i bounds coprono >80% dell'immagine
+    if (isLargeImage && maxX !== -1) {
+      const foundWidth = maxX - minX + 1;
+      const foundHeight = maxY - minY + 1;
+      const coverage = (foundWidth * foundHeight) / (width * height);
+      
+      if (coverage > 0.8) {
+        console.log(`Prima scansione ha coperto ${(coverage*100).toFixed(1)}% dell'immagine, provo algoritmo avanzato per A4...`);
+        return this.findSignatureBoundsAdvanced(pixels, width, height);
+      }
+    }
+
+    // Se non trovato nulla, prova algoritmo avanzato per fogli A4
     if (maxX === -1 && isLargeImage) {
       console.log('Prima scansione fallita, provo algoritmo avanzato per A4...');
       return this.findSignatureBoundsAdvanced(pixels, width, height);
