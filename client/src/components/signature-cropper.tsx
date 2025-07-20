@@ -26,6 +26,7 @@ interface SignatureCropperProps {
   onCropComplete?: (result: CropResult) => void;
 }
 
+// Aggiornamento forzato per HMR - versione con pulsante Applica
 export function SignatureCropper({ signatureId, imagePath, onCropComplete }: SignatureCropperProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [cropResult, setCropResult] = useState<CropResult | null>(null);
@@ -33,6 +34,9 @@ export function SignatureCropper({ signatureId, imagePath, onCropComplete }: Sig
   const [targetWidth, setTargetWidth] = useState([800]);
   const [targetHeight, setTargetHeight] = useState([400]);
   const { toast } = useToast();
+  
+  // Debug log per stato
+  console.log('SignatureCropper Debug:', { cropResult, previewMode, signatureId });
 
   const handleAutoCrop = async () => {
     setIsProcessing(true);
@@ -287,7 +291,7 @@ export function SignatureCropper({ signatureId, imagePath, onCropComplete }: Sig
             </div>
 
             {/* Pulsante Applica se in modalità anteprima */}
-            {previewMode && (
+            {previewMode && cropResult && (
               <Button 
                 onClick={() => handleApplyCrop()}
                 disabled={isProcessing}
