@@ -242,22 +242,20 @@ export class SignatureCropper {
   ): Promise<{ left: number; top: number; width: number; height: number }> {
     
     // Soglia dinamica per determinare se un pixel è parte della firma
-    // Per immagini grandi (fogli A4), usa soglia più sensibile per firme piccole
     const isLargeImage = width > 2000 || height > 2500;
-    const threshold = isLargeImage ? 250 : 240; // Soglia più alta per A4
+    const threshold = isLargeImage ? 250 : 240;
     
     let minX = width;
     let maxX = -1;
     let minY = height;
     let maxY = -1;
 
-    // Scansiona tutti i pixel per trovare i bounds
+    // Prima passata: scansiona tutti i pixel per trovare i bounds
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         const pixelIndex = y * width + x;
         const pixelValue = pixels[pixelIndex];
         
-        // Se il pixel è scuro (parte della firma)
         if (pixelValue < threshold) {
           minX = Math.min(minX, x);
           maxX = Math.max(maxX, x);
@@ -265,6 +263,12 @@ export class SignatureCropper {
           maxY = Math.max(maxY, y);
         }
       }
+    }
+
+    // Se non trovato con soglia normale, prova algoritmo avanzato per fogli A4
+    if (maxX === -1 && isLargeImage) {
+      console.log('Prima scansione fallita, provo algoritmo avanzato per A4...');
+      return this.findSignatureBoundsAdvanced(pixels, width, height);
     }
 
     // Se non sono stati trovati pixel della firma, usa l'intera immagine
