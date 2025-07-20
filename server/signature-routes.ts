@@ -9,6 +9,7 @@ import { insertSignatureProjectSchema, insertSignatureSchema } from "@shared/sch
 import { log } from "./vite";
 import PDFDocument from "pdfkit";
 import OpenAI from "openai";
+import { SignatureCropper } from "./signature-cropper";
 // Import determineBestDPI rimosso - ora utilizziamo solo dimensioni reali inserite dall'utente
 
 // Per compatibilità retroattiva, inizialmente usiamo solo fs standard
@@ -701,6 +702,153 @@ export function registerSignatureRoutes(router: Router) {
         results: results
       });
     } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Ritaglio automatico di una firma
+  router.post("/signatures/:id/crop", isAuthenticated, async (req, res) => {
+    try {
+      const signatureId = parseInt(req.params.id);
+      const signature = await storage.getSignature(signatureId);
+      
+      if (!signature) {
+        return res.status(404).json({ error: 'Firma non trovata' });
+      }
+
+      // Verifica che la firma appartenga a un progetto dell'utente
+      const project = await storage.getSignatureProject(signature.projectId);
+      if (!project || project.userId !== req.user!.id) {
+        return res.status(403).json({ error: 'Non autorizzato' });
+      }
+
+      const { 
+        autoCrop = true, 
+        cropBox, 
+        targetSize,
+        applyToOriginal = false 
+      } = req.body;
+
+      const imagePath = path.join(process.cwd(), 'uploads', signature.filename);
+
+      let cropResult;
+      
+      if (autoCrop) {
+        // Ritaglio automatico
+        cropResult = await SignatureCropper.cropSignature({
+          inputPath: imagePath,
+          targetSize: targetSize || { width: 800, height: 400 }
+        });
+      } else if (cropBox) {
+        // Ritaglio manuale con coordinate specifiche
+        cropResult = await SignatureCropper.cropManual(
+          imagePath,
+          cropBox,
+          undefined,
+          targetSize || { width: 800, height: 400 }
+        );
+      } else {
+        return res.status(400).json({ 
+          error: 'Specificare autoCrop=true o fornire cropBox per ritaglio manuale' 
+        });
+      }
+
+      if (!cropResult.success) {
+        return res.status(400).json({ 
+          error: 'Errore durante il ritaglio',
+          details: cropResult.message 
+        });
+      }
+
+      // Se richiesto, sostituisci l'immagine originale
+      if (applyToOriginal && cropResult.croppedPath) {
+        await fs.copyFile(cropResult.croppedPath, imagePath);
+        await fs.unlink(cropResult.croppedPath);
+        
+        // Ricalcola i parametri della firma con l'immagine ritagliata
+        const newParameters = await SignatureAnalyzer.extractParameters(
+          imagePath,
+          signature.realWidthMm,
+          signature.realHeightMm
+        );
+
+        // Aggiorna i parametri nel database
+        await storage.updateSignature(signatureId, {
+          parameters: newParameters,
+          notes: (signature.notes || '') + `\n[RITAGLIO] ${cropResult.message}`
+        });
+
+        // Registra l'attività
+        await storage.createActivity({
+          userId: req.user!.id,
+          type: 'signature_edit',
+          details: `Ritaglio automatico applicato alla firma ${signature.id}`
+        });
+      }
+
+      res.json({
+        success: true,
+        cropResult,
+        message: applyToOriginal 
+          ? 'Ritaglio applicato e parametri ricalcolati'
+          : 'Anteprima ritaglio generata'
+      });
+
+    } catch (error: any) {
+      log(`Errore nel ritaglio firma: ${error.message}`, 'signatures');
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Normalizzazione automatica per confronto
+  router.post("/signatures/:id/normalize", isAuthenticated, async (req, res) => {
+    try {
+      const signatureId = parseInt(req.params.id);
+      const signature = await storage.getSignature(signatureId);
+      
+      if (!signature) {
+        return res.status(404).json({ error: 'Firma non trovata' });
+      }
+
+      const project = await storage.getSignatureProject(signature.projectId);
+      if (!project || project.userId !== req.user!.id) {
+        return res.status(403).json({ error: 'Non autorizzato' });
+      }
+
+      const { referenceSignatureId } = req.body;
+      
+      if (!referenceSignatureId) {
+        return res.status(400).json({ 
+          error: 'ID firma di riferimento richiesto' 
+        });
+      }
+
+      const referenceSignature = await storage.getSignature(referenceSignatureId);
+      if (!referenceSignature) {
+        return res.status(404).json({ error: 'Firma di riferimento non trovata' });
+      }
+
+      // Ottieni le dimensioni della firma di riferimento
+      const referenceDimensions = referenceSignature.parameters?.realDimensions || 
+                                  { widthMm: 50, heightMm: 25 }; // Fallback
+
+      const imagePath = path.join(process.cwd(), 'uploads', signature.imagePath);
+      
+      // Normalizza le dimensioni rispetto al riferimento
+      const normalizedPath = await SignatureCropper.normalizeForComparison(
+        imagePath,
+        Math.round(referenceDimensions.widthMm * 10), // Converti in pixel usando 10px/mm
+        Math.round(referenceDimensions.heightMm * 10),
+      );
+
+      res.json({
+        success: true,
+        normalizedPath: normalizedPath.replace(process.cwd(), ''),
+        message: 'Firma normalizzata per il confronto'
+      });
+
+    } catch (error: any) {
+      log(`Errore nella normalizzazione firma: ${error.message}`, 'signatures');
       res.status(500).json({ error: error.message });
     }
   });

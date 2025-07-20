@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Trash2, Edit2, ZoomIn, ZoomOut, RotateCw, Search } from "lucide-react";
+import { Eye, Trash2, Edit2, ZoomIn, ZoomOut, RotateCw, Search, Crop } from "lucide-react";
 import { SignatureImage } from "./signature-image";
 import { Progress } from "@/components/ui/progress";
 import { useTranslation } from "react-i18next";
@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { SignatureCropper } from "./signature-cropper";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
@@ -37,6 +38,7 @@ export function SignatureCard({
   const { t } = useTranslation();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const queryClient = useQueryClient();
   
   // Mutation per riprocessare firma fallita
@@ -145,6 +147,17 @@ export function SignatureCard({
                 onClick={() => setOpen(true)}
               >
                 <Eye className="h-4 w-4" />
+              </Button>
+            )}
+            {signature.processingStatus === 'completed' && (
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-7 w-7 opacity-80 hover:opacity-100 bg-white"
+                onClick={() => setCropDialogOpen(true)}
+                title="Ritaglio automatico"
+              >
+                <Crop className="h-4 w-4" />
               </Button>
             )}
             <Button
@@ -595,6 +608,35 @@ export function SignatureCard({
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Dialog per il ritaglio automatico */}
+      <Dialog open={cropDialogOpen} onOpenChange={setCropDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Ritaglio Automatico Firma</DialogTitle>
+            <DialogDescription>
+              Ottimizza la firma rimuovendo spazi vuoti e normalizzando le dimensioni per confronti più accurati.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <SignatureCropper 
+            signatureId={signature.id}
+            imagePath={signature.filename}
+            onCropComplete={(result) => {
+              if (result.success) {
+                // Ricarica le firme per mostrare la versione ritagliata
+                queryClient.invalidateQueries({ queryKey: ['signatures', projectId] });
+                setCropDialogOpen(false);
+                
+                toast({
+                  title: "Ritaglio completato",
+                  description: `Firma ottimizzata con confidenza ${(result.confidence * 100).toFixed(1)}%`,
+                });
+              }
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
