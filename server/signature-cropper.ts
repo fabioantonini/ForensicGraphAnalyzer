@@ -633,7 +633,9 @@ export class SignatureCropper {
       minGridY = bestWindowStart;
       maxGridY = Math.min(gridRows - 1, bestWindowStart + windowSize - 1);
       
-      console.log(`[GRID CLUSTER] Cluster verticale: righe ${minGridY}-${maxGridY} (densità: ${bestWindowDensity.toFixed(3)})`);
+      console.log(`[GRID CLUSTER] Cluster verticale: righe ${minGridY}-${maxGridY} (dimensioni: ${windowSize}, densità: ${bestWindowDensity.toFixed(3)})`);
+    } else {
+      console.log(`[GRID CLUSTER] Nessuna cella densa trovata per clustering verticale!`);
     }
 
     if (maxGridX !== -1 && validCells >= 2) { // Almeno 2 celle valide per firme piccole
