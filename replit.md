@@ -319,6 +319,20 @@ Preferred communication style: Simple, everyday language.
   - **Measurement Independence**: No dependency on image DPI metadata or camera settings
   - **Forensic Standards**: All measurements in real millimeters for professional analysis
 
+### July 20, 2025 - Cropping Dimension Consistency Fix ✅ RESOLVED
+- **CRITICAL BUG IDENTIFIED**: User discovered logical inconsistency in cropping system
+  - **Root Cause**: When signatures were cropped, real dimensions (mm) remained unchanged while pixel dimensions changed
+  - **Impact**: Incorrect calibration density (px/mm) after cropping leading to inaccurate measurements
+- **PROPORTIONAL DIMENSION CORRECTION**: Implemented proper dimension scaling after cropping
+  - **Ratio Calculation**: `widthRatio = croppedWidthPx / originalWidthPx` for both axes
+  - **Real Dimension Update**: `newRealWidthMm = originalRealWidthMm * widthRatio`
+  - **Database Persistence**: Both new parameters AND corrected real dimensions saved to database
+  - **Debug Logging**: Complete before/after dimension tracking for verification
+- **SYSTEM CONSISTENCY**: Cropping now maintains accurate real-world calibration
+  - **Example**: 100x50mm signature cropped to 50% becomes 50x25mm with correct px/mm density
+  - **Parameter Recalculation**: All 16+ advanced parameters use corrected real dimensions
+  - **Forensic Accuracy**: Maintains measurement precision throughout cropping operations
+
 ### June 21, 2025 - OCR System Completion & Bug Fixes
 - **PDF OCR Support**: Complete PDF processing with direct text extraction using pdf-parse
   - Hybrid approach: Direct text extraction for PDFs (faster, 95% confidence)

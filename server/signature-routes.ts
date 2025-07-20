@@ -771,17 +771,37 @@ export function registerSignatureRoutes(router: Router) {
         await fs.copyFile(cropResult.croppedPath, imagePath);
         await fs.unlink(cropResult.croppedPath);
         
-        // Ricalcola i parametri della firma con l'immagine ritagliata
+        // Calcola le nuove dimensioni reali proporzionalmente al ritaglio
+        const originalWidthPx = cropResult.originalDimensions.width;
+        const originalHeightPx = cropResult.originalDimensions.height;
+        const croppedWidthPx = cropResult.croppedDimensions.width;
+        const croppedHeightPx = cropResult.croppedDimensions.height;
+        
+        // Calcola le proporzioni di riduzione
+        const widthRatio = croppedWidthPx / originalWidthPx;
+        const heightRatio = croppedHeightPx / originalHeightPx;
+        
+        // Calcola le nuove dimensioni reali
+        const newRealWidthMm = signature.realWidthMm * widthRatio;
+        const newRealHeightMm = signature.realHeightMm * heightRatio;
+        
+        console.log(`[CROP DIMENSIONS] Originale: ${originalWidthPx}x${originalHeightPx}px (${signature.realWidthMm}x${signature.realHeightMm}mm)`);
+        console.log(`[CROP DIMENSIONS] Ritagliata: ${croppedWidthPx}x${croppedHeightPx}px (${newRealWidthMm.toFixed(1)}x${newRealHeightMm.toFixed(1)}mm)`);
+        console.log(`[CROP DIMENSIONS] Rapporti: ${(widthRatio*100).toFixed(1)}% x ${(heightRatio*100).toFixed(1)}%`);
+        
+        // Ricalcola i parametri della firma con le nuove dimensioni reali
         const newParameters = await SignatureAnalyzer.extractParameters(
           imagePath,
-          signature.realWidthMm,
-          signature.realHeightMm
+          newRealWidthMm,
+          newRealHeightMm
         );
 
-        // Aggiorna i parametri nel database
+        // Aggiorna i parametri E le dimensioni reali nel database
         await storage.updateSignature(signatureId, {
           parameters: newParameters,
-          notes: (signature.notes || '') + `\n[RITAGLIO] ${cropResult.message}`
+          realWidthMm: newRealWidthMm,
+          realHeightMm: newRealHeightMm,
+          notes: (signature.notes || '') + `\n[RITAGLIO] ${cropResult.message} - Nuove dimensioni: ${newRealWidthMm.toFixed(1)}x${newRealHeightMm.toFixed(1)}mm`
         });
 
         // Registra l'attività
