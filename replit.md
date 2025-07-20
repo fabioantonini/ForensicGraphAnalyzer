@@ -230,6 +230,21 @@ Preferred communication style: Simple, everyday language.
   - **Dimensions Display Fix**: Implemented Sharp-based fallback system to read image dimensions directly from files for signatures processed before parameter saving improvements
   - All 16+ advanced parameters now correctly transmitted and displayed in professional PDF reports
 
+### July 20, 2025 - Dashboard Recommendations System Optimization
+- **Implemented Features Only**: Updated recommendation system to suggest only implemented functionalities
+  - Removed suggestions for non-existent features (AI training, advanced report templates)
+  - Added specific suggestions for: signature verification with 16+ parameters, multilingual OCR with 4 preprocessing modes, semantic search with RAG, AI-powered PDF reports, document anonymization with 13 entity types, signature quality confidence meter
+- **AI Prompt Enhancement**: Updated OpenAI prompt to generate recommendations based only on real system capabilities
+  - Detailed list of 10 implemented features in prompt context
+  - Specific guidance to avoid mentioning non-existent functionalities
+  - Focus on actionable suggestions for better usage of existing features
+- **Multilingual Support**: Complete Italian/English support for all recommendation content
+  - Fallback recommendations updated with detailed, specific descriptions
+  - AI-generated suggestions properly localized based on user language preference
+- **User Experience Improvement**: Recommendations now provide clear, actionable guidance
+  - Specific technical details (16+ OpenCV parameters, 92% accuracy, 4 OCR modes)
+  - Direct correlation with user activity and implemented system capabilities
+
 ### June 21, 2025 - OCR System Completion & Bug Fixes
 - **PDF OCR Support**: Complete PDF processing with direct text extraction using pdf-parse
   - Hybrid approach: Direct text extraction for PDFs (faster, 95% confidence)
