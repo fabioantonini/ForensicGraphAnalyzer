@@ -1,8 +1,0 @@
-{
-  "smtpHost": "smtp.gmail.com",
-  "smtpPort": 587,
-  "smtpSecure": false,
-  "smtpUser": "fabio.antonini.1969@gmail.com",
-  "smtpPassword": "C0Lab-GL-Sch-TSE",
-  "isConfigured": true
-}
