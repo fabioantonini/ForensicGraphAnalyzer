@@ -888,16 +888,22 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
         # Calcola le metriche SSIM
         similarity, _ = ssim(processed_verifica, processed_comp, full=True)
         
-        # Analizza le firme con dimensioni reali specifiche
+        # Analizza le firme con dimensioni reali specifiche - SEMPRE ricalcola per avere parametri freschi
+        print(f"DEBUG - Ricalcolo parametri da immagini per garantire consistenza", file=sys.stderr)
         verifica_data = analyze_signature_with_dimensions(verifica_path, verifica_dims[0], verifica_dims[1])
         comp_data = analyze_signature_with_dimensions(comp_path, reference_dims[0], reference_dims[1])
         
         if not verifica_data or not comp_data:
             raise ValueError("Errore nell'analisi di una o entrambe le firme")
+        
+        print(f"DEBUG - Parametri verifica calcolati: {list(verifica_data.keys())}", file=sys.stderr)
+        print(f"DEBUG - Parametri comp calcolati: {list(comp_data.keys())}", file=sys.stderr)
+        print(f"DEBUG - Inclination verifica: {verifica_data.get('Inclination', 'MISSING')}", file=sys.stderr)
+        print(f"DEBUG - Inclination comp: {comp_data.get('Inclination', 'MISSING')}", file=sys.stderr)
             
-        # Normalizza le chiavi dei parametri per compatibilità tra database e Python
-        verifica_data = normalize_parameter_keys(verifica_data)
-        comp_data = normalize_parameter_keys(comp_data)
+        # NON normalizzare - usa direttamente i parametri appena calcolati con chiavi Python corrette
+        # verifica_data = normalize_parameter_keys(verifica_data)
+        # comp_data = normalize_parameter_keys(comp_data)
         
         # Crea il grafico di confronto
         chart_img = create_comparison_chart(verifica_data, comp_data)
