@@ -2254,8 +2254,14 @@ export function registerSignatureRoutes(router: Router) {
       
       // Utilizziamo un ciclo for standard invece di Promise.all per garantire migliore gestione degli errori
       const results = [];
+      console.error(`\n===== INIZIO CICLO FIRME =====`);
+      console.error(`FIRME DA ELABORARE: ${completedVerifications.length}`);
+      console.error(`FORCED PYTHON: ${forcedPythonAvailable}`);
+      console.error(`==============================\n`);
+      
       for (const signature of completedVerifications) {
         try {
+          console.error(`\n===== ELABORAZIONE FIRMA ${signature.id} =====`);
           console.log(`[DEBUG COMPARE-ALL] Elaborazione firma ${signature.id}`);
           
           let similarityScore = 0;
