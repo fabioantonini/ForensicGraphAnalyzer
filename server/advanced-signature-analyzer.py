@@ -452,6 +452,9 @@ def create_comparison_chart(verifica_data, comp_data):
     Returns:
         Base64-encoded PNG immagine del grafico
     """
+    # Normalizza le chiavi per compatibilità
+    verifica_data = normalize_parameter_keys(verifica_data)
+    comp_data = normalize_parameter_keys(comp_data)
     # Parametri per entrambe le versioni delle funzioni di analisi
     parametri_numerici = [
         'Proportion', 'Inclination', 'PressureMean', 'PressureStd',
@@ -509,6 +512,74 @@ def create_comparison_chart(verifica_data, comp_data):
     
     return img_base64
 
+def normalize_parameter_keys(data):
+    """
+    Normalizza le chiavi dei parametri per garantire compatibilità tra versioni database/Python
+    
+    Args:
+        data: Dizionario con parametri della firma
+        
+    Returns:
+        Dizionario con chiavi normalizzate
+    """
+    if not isinstance(data, dict):
+        return data
+        
+    normalized = {}
+    
+    # Mapping delle chiavi per compatibilità
+    key_mapping = {
+        'inclination': 'Inclination',
+        'Inclination': 'Inclination',
+        'pressureMean': 'PressureMean', 
+        'pressure_mean': 'PressureMean',
+        'PressureMean': 'PressureMean',
+        'pressureStd': 'PressureStd',
+        'pressure_std': 'PressureStd', 
+        'PressureStd': 'PressureStd',
+        'proportion': 'Proportion',
+        'Proportion': 'Proportion',
+        'avgSpacing': 'AvgSpacing',
+        'avg_spacing': 'AvgSpacing',
+        'AvgSpacing': 'AvgSpacing',
+        'velocity': 'Velocity',
+        'Velocity': 'Velocity',
+        'avgCurvature': 'AvgCurvature',
+        'avg_curvature': 'AvgCurvature',
+        'AvgCurvature': 'AvgCurvature',
+        'curvature': 'Curvature',
+        'Curvature': 'Curvature',
+        'avgAsolaSize': 'AvgAsolaSize',
+        'avg_asola_size': 'AvgAsolaSize',
+        'AvgAsolaSize': 'AvgAsolaSize',
+        'overlapRatio': 'OverlapRatio',
+        'overlap_ratio': 'OverlapRatio',
+        'OverlapRatio': 'OverlapRatio',
+        'letterConnections': 'LetterConnections',
+        'letter_connections': 'LetterConnections',
+        'LetterConnections': 'LetterConnections',
+        'baselineStd': 'BaselineStd',
+        'baseline_std': 'BaselineStd',
+        'BaselineStd': 'BaselineStd',
+        'baselineStdMm': 'BaselineStdMm',
+        'baseline_std_mm': 'BaselineStdMm',
+        'BaselineStdMm': 'BaselineStdMm'
+    }
+    
+    # Applica il mapping
+    for key, value in data.items():
+        normalized_key = key_mapping.get(key, key)
+        normalized[normalized_key] = value
+        
+        # Assicura che abbiamo anche la versione alternativa per retrocompatibilità
+        if normalized_key in key_mapping.values():
+            # Cerca tutte le chiavi che mappano a questo valore
+            for orig_key, norm_key in key_mapping.items():
+                if norm_key == normalized_key and orig_key != key:
+                    normalized[orig_key] = value
+    
+    return normalized
+
 def create_descriptive_report(verifica_data, comp_data):
     """
     Crea un report descrittivo basato sul confronto tra due firme
@@ -520,6 +591,10 @@ def create_descriptive_report(verifica_data, comp_data):
     Returns:
         Testo del report descrittivo
     """
+    # Normalizza le chiavi per compatibilità
+    verifica_data = normalize_parameter_keys(verifica_data)
+    comp_data = normalize_parameter_keys(comp_data)
+    
     descrizione = ""
 
     if verifica_data['Velocity'] > comp_data['Velocity'] + 0.2:
@@ -809,6 +884,10 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
         
         if not verifica_data or not comp_data:
             raise ValueError("Errore nell'analisi di una o entrambe le firme")
+            
+        # Normalizza le chiavi dei parametri per compatibilità tra database e Python
+        verifica_data = normalize_parameter_keys(verifica_data)
+        comp_data = normalize_parameter_keys(comp_data)
         
         # Crea il grafico di confronto
         chart_img = create_comparison_chart(verifica_data, comp_data)
@@ -927,12 +1006,8 @@ def analyze_signature_with_dimensions(image_path, real_width_mm, real_height_mm)
         # Calcola tutti i parametri usando le dimensioni reali calibrate
         proportion = actual_width_mm / actual_height_mm if actual_height_mm > 0 else 1
         
-        # Calcola l'inclinazione
-        if len(main_contour) >= 5:
-            ellipse = cv2.fitEllipse(main_contour)
-            inclination = ellipse[2]
-        else:
-            inclination = 0
+        # Calcola l'inclinazione usando l'algoritmo robusto
+        inclination = calculate_signature_inclination([main_contour])
         
         # Calcola la pressione media e deviazione standard
         pressure_mean = float(np.mean(image.flatten()))
