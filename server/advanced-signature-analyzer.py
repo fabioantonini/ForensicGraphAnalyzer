@@ -452,17 +452,9 @@ def create_comparison_chart(verifica_data, comp_data):
     Returns:
         Base64-encoded PNG immagine del grafico
     """
-    # DEBUG: Prima di normalizzare
-    print(f"DEBUG CHART FUNCTION - Verifica data ricevuta: {list(verifica_data.keys())}", file=sys.stderr)
-    print(f"DEBUG CHART FUNCTION - Inclination ricevuta: {verifica_data.get('Inclination', verifica_data.get('inclination', 'MISSING'))}", file=sys.stderr)
-    
     # Normalizza le chiavi per compatibilità
     verifica_data = normalize_parameter_keys(verifica_data)
     comp_data = normalize_parameter_keys(comp_data)
-    
-    # DEBUG: Dopo normalizzazione
-    print(f"DEBUG CHART FUNCTION - Dopo normalizzazione: {list(verifica_data.keys())}", file=sys.stderr)
-    print(f"DEBUG CHART FUNCTION - Inclination dopo norm: {verifica_data.get('Inclination', 'STILL MISSING')}", file=sys.stderr)
     # Parametri per entrambe le versioni delle funzioni di analisi
     parametri_numerici = [
         'Proportion', 'Inclination', 'PressureMean', 'PressureStd',
@@ -491,9 +483,7 @@ def create_comparison_chart(verifica_data, comp_data):
         differenza = abs(valore_v - valore_c)
         differenze.append(differenza)
         
-        # Debug per inclinazione
-        if parametro == 'Inclination':
-            print(f"DEBUG CHART - Parametro: {parametro}, valore_v: {valore_v}, valore_c: {valore_c}, diff: {differenza}", file=sys.stderr)
+
         
         # Crea etichetta che mostra il valore per la firma da verificare
         if valore_v != 0:
@@ -522,9 +512,7 @@ def create_comparison_chart(verifica_data, comp_data):
             diff_percentuale = (diff / valore_max) * 100
             compatibilita = max(0, 100 - diff_percentuale)
             
-            # Debug per inclinazione
-            if parametri_numerici[i] == 'Inclination':
-                print(f"DEBUG COMPAT - Inclination: diff={diff}, valore_max={valore_max}, diff_perc={diff_percentuale:.2f}, compat={compatibilita:.2f}", file=sys.stderr)
+
             
             compatibilita_percentuale.append(compatibilita)
 
