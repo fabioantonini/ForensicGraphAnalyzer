@@ -490,7 +490,16 @@ def create_comparison_chart(verifica_data, comp_data):
         valore_c = comp_data.get(parametro, 0)
         differenza = abs(valore_v - valore_c)
         differenze.append(differenza)
-        etichette.append(parametro)
+        
+        # Debug per inclinazione
+        if parametro == 'Inclination':
+            print(f"DEBUG CHART - Parametro: {parametro}, valore_v: {valore_v}, valore_c: {valore_c}", file=sys.stderr)
+        
+        # Crea etichetta che mostra il valore per la firma da verificare
+        if valore_v != 0:
+            etichette.append(f"{parametro} {valore_v:.1f}")
+        else:
+            etichette.append(f"{parametro} 0.0")
 
     max_diff = max(differenze) if differenze else 1
     compatibilita_percentuale = [(1 - (diff / max_diff)) * 100 for diff in differenze]
