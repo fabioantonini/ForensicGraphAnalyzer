@@ -493,7 +493,7 @@ def create_comparison_chart(verifica_data, comp_data):
         
         # Debug per inclinazione
         if parametro == 'Inclination':
-            print(f"DEBUG CHART - Parametro: {parametro}, valore_v: {valore_v}, valore_c: {valore_c}", file=sys.stderr)
+            print(f"DEBUG CHART - Parametro: {parametro}, valore_v: {valore_v}, valore_c: {valore_c}, diff: {differenza}", file=sys.stderr)
         
         # Crea etichetta che mostra il valore per la firma da verificare
         if valore_v != 0:
@@ -501,8 +501,32 @@ def create_comparison_chart(verifica_data, comp_data):
         else:
             etichette.append(f"{parametro} 0.0")
 
-    max_diff = max(differenze) if differenze else 1
-    compatibilita_percentuale = [(1 - (diff / max_diff)) * 100 for diff in differenze]
+    # Calcola la compatibilità percentuale per ogni parametro
+    compatibilita_percentuale = []
+    
+    for i, diff in enumerate(differenze):
+        valore_v = verifica_data.get(parametri_numerici[i], 0)
+        valore_c = comp_data.get(parametri_numerici[i], 0)
+        
+        # Se entrambi i valori sono 0, ignora il parametro
+        if valore_v == 0 and valore_c == 0:
+            compatibilita_percentuale.append(0)
+            continue
+            
+        # Calcola la compatibilità come percentuale basata sulla differenza relativa
+        valore_max = max(abs(valore_v), abs(valore_c))
+        if valore_max == 0:
+            compatibilita_percentuale.append(100)  # Identici
+        else:
+            # Compatibilità = 100% - (differenza_percentuale)
+            diff_percentuale = (diff / valore_max) * 100
+            compatibilita = max(0, 100 - diff_percentuale)
+            
+            # Debug per inclinazione
+            if parametri_numerici[i] == 'Inclination':
+                print(f"DEBUG COMPAT - Inclination: diff={diff}, valore_max={valore_max}, diff_perc={diff_percentuale:.2f}, compat={compatibilita:.2f}", file=sys.stderr)
+            
+            compatibilita_percentuale.append(compatibilita)
 
     # Crea l'immagine del grafico
     fig = Figure(figsize=(10, 6))
