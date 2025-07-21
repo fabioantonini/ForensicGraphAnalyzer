@@ -2314,15 +2314,32 @@ export function registerSignatureRoutes(router: Router) {
               console.error(`RIFERIMENTO: ${referenceDimensions.widthMm}x${referenceDimensions.heightMm}mm`);
               console.error(`===================================\n`);
               
-              const comparisonResult = await SignaturePythonAnalyzer.compareSignatures(
-                signaturePath,   // Firma da verificare
-                referencePath,   // Firma di riferimento
-                verificaDimensions, // Dimensioni firma da verificare
-                referenceDimensions, // Dimensioni firma di riferimento
-                false, // Non generare report DOCX automaticamente
-                caseInfo,
-                projectId // Passiamo l'ID del progetto per assicurare l'isolamento dei dati
-              );
+              let comparisonResult;
+              try {
+                console.error(`\n===== CHIAMATA PYTHON ANALYZER =====`);
+                console.error(`INIZIO: ${new Date().toISOString()}`);
+                console.error(`====================================\n`);
+                
+                comparisonResult = await SignaturePythonAnalyzer.compareSignatures(
+                  signaturePath,   // Firma da verificare
+                  referencePath,   // Firma di riferimento
+                  verificaDimensions, // Dimensioni firma da verificare
+                  referenceDimensions, // Dimensioni firma di riferimento
+                  false, // Non generare report DOCX automaticamente
+                  caseInfo,
+                  projectId // Passiamo l'ID del progetto per assicurare l'isolamento dei dati
+                );
+                
+                console.error(`\n===== PYTHON ANALYZER COMPLETATO =====`);
+                console.error(`FINE: ${new Date().toISOString()}`);
+                console.error(`======================================\n`);
+              } catch (pythonError) {
+                console.error(`\n===== ERRORE PYTHON ANALYZER =====`);
+                console.error(`ERRORE: ${pythonError.message}`);
+                console.error(`STACK: ${pythonError.stack}`);
+                console.error(`==================================\n`);
+                throw pythonError;
+              }
               console.log(`[COMPARE-ALL] Utilizzando projectId ${projectId} per garantire l'isolamento dei dati`);
               
               similarityScore = comparisonResult.similarity;
