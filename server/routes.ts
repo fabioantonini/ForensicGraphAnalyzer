@@ -127,6 +127,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register signature routes
   const router = Router();
+  
+  // DEBUG MIDDLEWARE PER CATTURARE TUTTE LE CHIAMATE POST
+  router.use((req, res, next) => {
+    if (req.method === 'POST' && req.url.includes('compare-all')) {
+      console.error(`\n===== POST COMPARE-ALL INTERCETTATO =====`);
+      console.error(`URL: ${req.url}`);
+      console.error(`METHOD: ${req.method}`);
+      console.error(`TIMESTAMP: ${new Date().toISOString()}`);
+      console.error(`========================================\n`);
+    }
+    next();
+  });
+  
   registerSignatureRoutes(router);
 
   // Register anonymization routes
