@@ -59,8 +59,16 @@ type ProjectFormValues = z.infer<typeof projectSchema>;
 // File upload schema with real dimensions
 const fileSchema = z.object({
   file: z.any()
-    .refine(file => file instanceof FileList, "Input non valido")
-    .refine(files => (files instanceof FileList) && files.length === 1, "Seleziona un file"),
+    .refine(file => {
+      // Supporta sia FileList che il nostro FileList-like object
+      return (file instanceof FileList) || (Array.isArray(file) && file.length === 1);
+    }, "Input non valido")
+    .refine(files => {
+      if (files instanceof FileList) {
+        return files.length === 1;
+      }
+      return Array.isArray(files) && files.length === 1;
+    }, "Seleziona un file"),
   realWidthMm: z.number()
     .min(5, "La larghezza deve essere almeno 5mm")
     .max(200, "La larghezza non può superare 200mm"),
@@ -204,7 +212,9 @@ export default function SignaturesPage() {
     mutationFn: async (data: FileFormValues) => {
       console.log("Caricamento firma di riferimento iniziato");
       const formData = new FormData();
-      formData.append("signature", data.file[0]);
+      // Gestisce sia FileList che array
+      const file = data.file instanceof FileList ? data.file[0] : data.file[0];
+      formData.append("signature", file);
       formData.append("realWidthMm", data.realWidthMm.toString());
       formData.append("realHeightMm", data.realHeightMm.toString());
       
@@ -256,7 +266,9 @@ export default function SignaturesPage() {
     mutationFn: async (data: FileFormValues) => {
       console.log("Caricamento firma da verificare iniziato");
       const formData = new FormData();
-      formData.append("signature", data.file[0]);
+      // Gestisce sia FileList che array
+      const file = data.file instanceof FileList ? data.file[0] : data.file[0];
+      formData.append("signature", file);
       formData.append("realWidthMm", data.realWidthMm.toString());
       formData.append("realHeightMm", data.realHeightMm.toString());
       
