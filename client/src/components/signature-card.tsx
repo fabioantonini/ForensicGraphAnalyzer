@@ -431,12 +431,10 @@ export function SignatureCard({
                           <span>{t('signatures.parameters.aspectRatio', 'Proporzione')}:</span>
                           <span>{signature.parameters.proportion?.toFixed(2) || signature.parameters.aspectRatio?.toFixed(2) || 'N/A'}</span>
                         </div>
-                        {signature.parameters.inclination !== undefined && (
-                          <div className="flex justify-between">
-                            <span>Inclinazione:</span>
-                            <span>{signature.parameters.inclination.toFixed(1)}°</span>
-                          </div>
-                        )}
+                        <div className="flex justify-between">
+                          <span>Inclinazione:</span>
+                          <span>{signature.parameters.inclination ? signature.parameters.inclination.toFixed(1) + '°' : 'N/A'}</span>
+                        </div>
                       </div>
                     </div>
                     
