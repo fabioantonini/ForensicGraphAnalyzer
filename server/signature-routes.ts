@@ -2297,10 +2297,13 @@ export function registerSignatureRoutes(router: Router) {
               
               console.log(`[DEBUG COMPARE-ALL] Confronto Python completato per firma ${signature.id} con score ${similarityScore}`);
             } catch (pythonError: any) {
-              console.log(`[DEBUG COMPARE-ALL] Errore con analizzatore Python: ${pythonError.message}. Fallback a JS.`);
+              console.log(`[DEBUG COMPARE-ALL] ❌ ERRORE PYTHON ANALYZER: ${pythonError.message}`);
+              console.log(`[DEBUG COMPARE-ALL] Stack trace:`, pythonError.stack);
+              console.log(`[DEBUG COMPARE-ALL] 🔄 FALLBACK ALL'ANALIZZATORE JAVASCRIPT`);
               // Fallback all'analizzatore JavaScript se quello Python fallisce
               const referenceParameters = completedReferences.map(ref => ref.parameters!);
               similarityScore = SignatureAnalyzer.compareSignatures(signature.parameters!, referenceParameters);
+              console.log(`[DEBUG COMPARE-ALL] ✓ JavaScript analyzer result: ${similarityScore}`);
             }
           } else {
             console.log(`[DEBUG COMPARE-ALL] Usando analizzatore JS per firma ${signature.id}`);
