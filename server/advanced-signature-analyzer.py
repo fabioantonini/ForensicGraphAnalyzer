@@ -143,6 +143,70 @@ def calculate_circularity(cnt):
         return 0
     return 4 * math.pi * area / (perimeter ** 2)
 
+def count_letter_connections(binary: np.ndarray) -> int:
+    """Conta le connessioni tra lettere usando algoritmi alternativi"""
+    try:
+        # Usa morphological operations per analizzare la struttura
+        kernel = cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3))
+        
+        # Applica erosione per ridurre i tratti
+        eroded = cv2.erode(binary, kernel, iterations=1)
+        
+        # Trova i contorni per analizzare la struttura
+        contours, _ = cv2.findContours(eroded, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        connections = 0
+        
+        # Analizza ogni contorno per trovare punti di giunzione complessi
+        for contour in contours:
+            if len(contour) < 10:  # Salta contorni troppo piccoli
+                continue
+                
+            # Calcola il perimetro e l'area per identificare forme complesse
+            perimeter = cv2.arcLength(contour, True)
+            area = cv2.contourArea(contour)
+            
+            if area > 0:
+                # Se il rapporto perimetro/area è alto, indica una forma complessa con possibili connessioni
+                complexity_ratio = perimeter * perimeter / (4 * np.pi * area)
+                
+                # Soglia per identificare forme complesse che suggeriscono connessioni tra lettere
+                if complexity_ratio > 4.0:  # Valore empirico
+                    connections += int(complexity_ratio / 4.0)
+        
+        # Conta anche i punti di curvatura estrema come indicatori di connessioni
+        h, w = binary.shape
+        junction_points = 0
+        
+        for y in range(2, h-2, 3):  # Campiona ogni 3 pixel per efficienza
+            for x in range(2, w-2, 3):
+                if binary[y,x] > 0:
+                    # Analizza il vicinato 5x5 per trovare pattern di connessione
+                    neighborhood = binary[y-2:y+3, x-2:x+3]
+                    
+                    # Conta i pixel attivi nel vicinato
+                    active_pixels = np.sum(neighborhood > 0)
+                    
+                    # Se ci sono molti pixel attivi in un'area piccola, potrebbe essere una connessione
+                    if active_pixels > 12:  # Soglia per area densa
+                        # Verifica che non sia solo una linea dritta
+                        horizontal_line = np.sum(binary[y, x-2:x+3] > 0)
+                        vertical_line = np.sum(binary[y-2:y+3, x] > 0)
+                        
+                        # Se non è una linea dritta, potrebbe essere una connessione complessa
+                        if horizontal_line < 4 and vertical_line < 4:
+                            junction_points += 1
+        
+        # Combina i due metodi per un risultato più accurato
+        total_connections = connections + min(junction_points // 3, 10)  # Normalizza i junction points
+        
+        # Limita il numero massimo per evitare valori irrealistici
+        return min(max(total_connections, 1), 25)  # Almeno 1, massimo 25
+        
+    except Exception as e:
+        print(f"Errore nel conteggio connessioni lettere: {str(e)}", file=sys.stderr)
+        return 1  # Valore di fallback ragionevole
+
 def analyze_signature(image_path, dpi=DEFAULT_DPI):
     """
     Analizza un'immagine di firma ed estrae parametri caratteristici
@@ -261,8 +325,8 @@ def analyze_signature(image_path, dpi=DEFAULT_DPI):
         # Calcola il rapporto di sovrapposizione
         overlap_ratio = np.sum(processed > 0) / (w * h) if w * h > 0 else 0
 
-        # Calcola le connessioni tra lettere e la deviazione della linea di base
-        letter_connections = len(contours)
+        # Calcola le connessioni tra lettere usando l'analisi dello scheletro
+        letter_connections = count_letter_connections(processed)
         baseline_y_positions = [pt[0][1] for cnt in contours for pt in cnt]
         baseline_std = np.std(baseline_y_positions) if baseline_y_positions else 0
         baseline_mm_std = pixels_to_mm(baseline_std, dpi)
@@ -813,8 +877,8 @@ def analyze_signature_with_dimensions(image_path, real_width_mm, real_height_mm)
         # Calcola il rapporto di sovrapposizione
         overlap_ratio = np.sum(processed > 0) / (w * h) if w * h > 0 else 0
         
-        # Calcola le connessioni tra lettere e la deviazione della linea di base in mm
-        letter_connections = len(contours)
+        # Calcola le connessioni tra lettere usando l'analisi dello scheletro e la deviazione della linea di base in mm
+        letter_connections = count_letter_connections(processed)
         baseline_y_positions = [pt[0][1] for cnt in contours for pt in cnt]
         baseline_std_px = np.std(baseline_y_positions) if baseline_y_positions else 0
         baseline_std_mm = baseline_std_px / pixels_per_mm_y if pixels_per_mm_y > 0 else 0
