@@ -183,6 +183,14 @@ export class SignaturePythonAnalyzer {
           console.log(`[PYTHON BRIDGE] Output ricevuto:`, outputData);
           const result = JSON.parse(outputData) as ComparisonResult;
           
+          // DEBUG INCLINAZIONE: Controlla valori dal Python
+          if (result.verifica_data && result.verifica_data.Inclination !== undefined) {
+            console.error(`\n===== DEBUG INCLINAZIONE PYTHON =====`);
+            console.error(`PYTHON VERIFICA INCLINATION: ${result.verifica_data.Inclination}`);
+            console.error(`PYTHON COMP INCLINATION: ${result.comp_data?.Inclination || 'N/A'}`);
+            console.error(`=====================================\n`);
+          }
+          
           // Verifica che report_path sia una stringa
           if (result.report_path && typeof result.report_path !== 'string') {
             console.log(`[PYTHON BRIDGE] Correzione report_path da ${result.report_path} a stringa`);
