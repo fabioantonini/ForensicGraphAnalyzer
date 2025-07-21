@@ -13,6 +13,8 @@ interface ComparisonResult {
   verdict: string;
   verifica_parameters: any;
   reference_parameters: any;
+  verifica_data?: any;  // Parametri Python della firma da verificare
+  comp_data?: any;      // Parametri Python della firma di riferimento
   comparison_chart: string;  // Base64-encoded image
   description: string;
   report_path?: string;

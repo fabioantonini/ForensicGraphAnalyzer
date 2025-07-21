@@ -2376,8 +2376,8 @@ export function registerSignatureRoutes(router: Router) {
                   readability: comparisonResult.verifica_data.Readability || signature.parameters?.readability
                 };
                 
-                // Aggiorna i parametri nel database
-                await storage.updateSignature(signature.id, { parameters: pythonParameters });
+                // Aggiorna i parametri nel database usando il metodo corretto
+                await storage.updateSignatureParameters(signature.id, pythonParameters);
                 console.error(`PARAMETRI AGGIORNATI CON DATI PYTHON per firma ${signature.id}`);
               }
               
