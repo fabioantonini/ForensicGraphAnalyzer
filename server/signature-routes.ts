@@ -2280,11 +2280,27 @@ export function registerSignatureRoutes(router: Router) {
               // Estrai il DPI dal progetto (default 300)
               const dpi = project.dpi || 300;
               
+              // DEBUG: Verifica che abbiamo le dimensioni reali dal database
+              console.log(`[DEBUG DIMENSIONS] Firma da verificare ${signature.id}: realWidthMm=${signature.realWidthMm}, realHeightMm=${signature.realHeightMm}`);
+              console.log(`[DEBUG DIMENSIONS] Firma riferimento ${referenceSignature.id}: realWidthMm=${referenceSignature.realWidthMm}, realHeightMm=${referenceSignature.realHeightMm}`);
+              
+              const verificaDimensions = { 
+                widthMm: signature.realWidthMm || 50, 
+                heightMm: signature.realHeightMm || 20 
+              };
+              const referenceDimensions = { 
+                widthMm: referenceSignature.realWidthMm || 50, 
+                heightMm: referenceSignature.realHeightMm || 20 
+              };
+              
+              console.log(`[DEBUG DIMENSIONS] Dimensioni passate al Python - verifica: ${verificaDimensions.widthMm}x${verificaDimensions.heightMm}mm`);
+              console.log(`[DEBUG DIMENSIONS] Dimensioni passate al Python - riferimento: ${referenceDimensions.widthMm}x${referenceDimensions.heightMm}mm`);
+              
               const comparisonResult = await SignaturePythonAnalyzer.compareSignatures(
                 signaturePath,   // Firma da verificare
                 referencePath,   // Firma di riferimento
-                { widthMm: signature.realWidthMm || 50, heightMm: signature.realHeightMm || 20 }, // Dimensioni firma da verificare
-                { widthMm: referenceSignature.realWidthMm || 50, heightMm: referenceSignature.realHeightMm || 20 }, // Dimensioni firma di riferimento
+                verificaDimensions, // Dimensioni firma da verificare
+                referenceDimensions, // Dimensioni firma di riferimento
                 false, // Non generare report DOCX automaticamente
                 caseInfo,
                 projectId // Passiamo l'ID del progetto per assicurare l'isolamento dei dati
