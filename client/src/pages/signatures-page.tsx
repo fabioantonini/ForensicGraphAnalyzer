@@ -91,6 +91,8 @@ export default function SignaturesPage() {
   const [isUploadVerifyOpen, setIsUploadVerifyOpen] = useState(false);
   const [comparisonResults, setComparisonResults] = useState<Signature[] | null>(null);
   const [showResultsDialog, setShowResultsDialog] = useState(false);
+  const [selectedReferenceFile, setSelectedReferenceFile] = useState<File | null>(null);
+  const [selectedVerifyFile, setSelectedVerifyFile] = useState<File | null>(null);
   // Rimosso state per modifica DPI globale
   
   // Form for creating new project
@@ -240,6 +242,7 @@ export default function SignaturesPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures"] });
       
       referenceForm.reset();
+      setSelectedReferenceFile(null);
       setIsUploadReferenceOpen(false);
       toast({
         title: "Successo",
@@ -294,6 +297,7 @@ export default function SignaturesPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures"] });
       
       verifyForm.reset();
+      setSelectedVerifyFile(null);
       setIsUploadVerifyOpen(false);
       toast({
         title: "Successo",
@@ -686,7 +690,13 @@ export default function SignaturesPage() {
               {/* Rimosso visualizzazione e controllo DPI globale */}
             </div>
             <div className="flex space-x-2">
-              <Dialog open={isUploadReferenceOpen} onOpenChange={setIsUploadReferenceOpen}>
+              <Dialog open={isUploadReferenceOpen} onOpenChange={(open) => {
+                setIsUploadReferenceOpen(open);
+                if (!open) {
+                  setSelectedReferenceFile(null);
+                  referenceForm.reset();
+                }
+              }}>
                 <DialogTrigger asChild>
                   <Button variant="outline" data-tour="reference-signatures">
                     <Upload className="h-4 w-4 mr-2" />
@@ -717,8 +727,10 @@ export default function SignaturesPage() {
                                     length: 1
                                   });
                                   field.onChange(fileListLike);
+                                  setSelectedReferenceFile(file);
                                 }}
                                 isUploading={uploadReference.isPending}
+                                selectedFile={selectedReferenceFile}
                                 title={t('signatures.upload.dragDropReference', 'Trascina qui la firma di riferimento')}
                                 subtitle={t('signatures.upload.referenceHelp', 'Carica una firma autentica da usare come riferimento per il confronto')}
                               />
@@ -794,7 +806,13 @@ export default function SignaturesPage() {
                 </DialogContent>
               </Dialog>
               
-              <Dialog open={isUploadVerifyOpen} onOpenChange={setIsUploadVerifyOpen}>
+              <Dialog open={isUploadVerifyOpen} onOpenChange={(open) => {
+                setIsUploadVerifyOpen(open);
+                if (!open) {
+                  setSelectedVerifyFile(null);
+                  verifyForm.reset();
+                }
+              }}>
                 <DialogTrigger asChild>
                   <Button variant="outline" data-tour="verify-signatures">
                     <Upload className="h-4 w-4 mr-2" />
@@ -825,8 +843,10 @@ export default function SignaturesPage() {
                                     length: 1
                                   });
                                   field.onChange(fileListLike);
+                                  setSelectedVerifyFile(file);
                                 }}
                                 isUploading={uploadVerify.isPending}
+                                selectedFile={selectedVerifyFile}
                                 title={t('signatures.upload.dragDropVerify', 'Trascina qui la firma da verificare')}
                                 subtitle={t('signatures.upload.verifyHelp', 'Carica la firma di cui vuoi verificare l\'autenticità')}
                               />

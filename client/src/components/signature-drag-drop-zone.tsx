@@ -14,6 +14,7 @@ interface SignatureDragDropZoneProps {
   className?: string;
   title?: string;
   subtitle?: string;
+  selectedFile?: File | null;
 }
 
 export function SignatureDragDropZone({
@@ -26,7 +27,8 @@ export function SignatureDragDropZone({
   disabled = false,
   className = '',
   title,
-  subtitle
+  subtitle,
+  selectedFile = null
 }: SignatureDragDropZoneProps) {
   const { t } = useTranslation();
 
@@ -59,6 +61,7 @@ export function SignatureDragDropZone({
   const getStatusColor = () => {
     if (isDragReject || fileRejections.length > 0) return 'border-destructive bg-destructive/5';
     if (isDragActive) return 'border-primary bg-primary/5';
+    if (selectedFile) return 'border-green-500 bg-green-50';
     if (disabled || isUploading) return 'border-muted bg-muted/20';
     return 'border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/20';
   };
@@ -66,6 +69,7 @@ export function SignatureDragDropZone({
   const getIcon = () => {
     if (isDragReject) return <AlertTriangle className="h-8 w-8 text-destructive" />;
     if (isDragActive) return <FileImage className="h-8 w-8 text-primary" />;
+    if (selectedFile) return <FileImage className="h-8 w-8 text-green-600" />;
     return <Upload className="h-8 w-8 text-muted-foreground" />;
   };
 
@@ -91,6 +95,10 @@ export function SignatureDragDropZone({
 
     if (isUploading) {
       return t('signatures.upload.uploading', 'Caricamento in corso...');
+    }
+
+    if (selectedFile) {
+      return `✓ ${selectedFile.name}`;
     }
 
     return title || t('signatures.upload.dragDropTitle', 'Trascina qui la firma o clicca per selezionare');
