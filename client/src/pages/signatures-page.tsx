@@ -13,6 +13,7 @@ import { SignatureImage } from "@/components/signature-image";
 import { SignatureCard } from "@/components/signature-card";
 import { SignatureMethodologyDialog } from "@/components/signature-methodology-dialog";
 import { HelpTooltip } from "@/components/help-tooltip";
+import { SignatureDragDropZone } from "@/components/signature-drag-drop-zone";
 import { Button } from "@/components/ui/button";
 import { 
   Dialog, 
@@ -694,19 +695,24 @@ export default function SignaturesPage() {
                         name="file"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>{t('signatures.selectFile')}</FormLabel>
+                            <FormLabel>{t('signatures.selectFile', 'Firma di riferimento')}</FormLabel>
                             <FormControl>
-                              <Input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => {
-                                  if (e.target.files) {
-                                    field.onChange(e.target.files);
-                                  }
+                              <SignatureDragDropZone
+                                onFileSelect={(file) => {
+                                  const fileList = new FileList();
+                                  Object.defineProperty(fileList, '0', {
+                                    value: file,
+                                    writable: false
+                                  });
+                                  Object.defineProperty(fileList, 'length', {
+                                    value: 1,
+                                    writable: false
+                                  });
+                                  field.onChange(fileList);
                                 }}
-                                onBlur={field.onBlur}
-                                name={field.name}
-                                ref={field.ref}
+                                isUploading={uploadReference.isPending}
+                                title={t('signatures.upload.dragDropReference', 'Trascina qui la firma di riferimento')}
+                                subtitle={t('signatures.upload.referenceHelp', 'Carica una firma autentica da usare come riferimento per il confronto')}
                               />
                             </FormControl>
                             <FormMessage />
@@ -801,19 +807,24 @@ export default function SignaturesPage() {
                         name="file"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>{t('signatures.selectFile')}</FormLabel>
+                            <FormLabel>{t('signatures.selectFile', 'Firma da verificare')}</FormLabel>
                             <FormControl>
-                              <Input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => {
-                                  if (e.target.files) {
-                                    field.onChange(e.target.files);
-                                  }
+                              <SignatureDragDropZone
+                                onFileSelect={(file) => {
+                                  const fileList = new FileList();
+                                  Object.defineProperty(fileList, '0', {
+                                    value: file,
+                                    writable: false
+                                  });
+                                  Object.defineProperty(fileList, 'length', {
+                                    value: 1,
+                                    writable: false
+                                  });
+                                  field.onChange(fileList);
                                 }}
-                                onBlur={field.onBlur}
-                                name={field.name}
-                                ref={field.ref}
+                                isUploading={uploadVerify.isPending}
+                                title={t('signatures.upload.dragDropVerify', 'Trascina qui la firma da verificare')}
+                                subtitle={t('signatures.upload.verifyHelp', 'Carica la firma di cui vuoi verificare l\'autenticità')}
                               />
                             </FormControl>
                             <FormMessage />
