@@ -429,8 +429,14 @@ export function SignatureCard({
                         </div>
                         <div className="flex justify-between">
                           <span>{t('signatures.parameters.aspectRatio', 'Proporzione')}:</span>
-                          <span>{signature.parameters.aspectRatio?.toFixed(2) || 'N/A'}</span>
+                          <span>{signature.parameters.proportion?.toFixed(2) || signature.parameters.aspectRatio?.toFixed(2) || 'N/A'}</span>
                         </div>
+                        {signature.parameters.inclination !== undefined && (
+                          <div className="flex justify-between">
+                            <span>Inclinazione:</span>
+                            <span>{signature.parameters.inclination.toFixed(1)}°</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     
@@ -463,7 +469,7 @@ export function SignatureCard({
                         </div>
                         <div className="flex justify-between">
                           <span>{t('signatures.parameters.gaps', 'Interruzioni')}:</span>
-                          <span>{signature.parameters.connectivity?.gaps || 'N/A'}</span>
+                          <span>{signature.parameters.connectivity?.gaps ?? signature.parameters.letterConnections ?? 'N/A'}</span>
                         </div>
                       </div>
                     </div>
@@ -478,11 +484,11 @@ export function SignatureCard({
                         </div>
                         <div className="flex justify-between">
                           <span>{t('signatures.parameters.smoothCurves', 'Curve fluide')}:</span>
-                          <span>{signature.parameters.curvatureMetrics?.smoothCurves || 'N/A'}</span>
+                          <span>{signature.parameters.curvatureMetrics?.smoothCurves || signature.parameters.avgCurvature?.toFixed(2) || 'N/A'}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>{t('signatures.parameters.angleChanges', 'Variazioni angolari')}:</span>
-                          <span>{signature.parameters.curvatureMetrics?.totalAngleChanges?.toFixed(2) || 'N/A'}°</span>
+                          <span>{signature.parameters.curvatureMetrics?.totalAngleChanges?.toFixed(2) || signature.parameters.baselineStdMm?.toFixed(2) || 'N/A'}°</span>
                         </div>
                       </div>
                     </div>
@@ -493,7 +499,7 @@ export function SignatureCard({
                       <div className="grid grid-cols-3 gap-2 mt-1 text-sm">
                         <div className="flex justify-between">
                           <span>{t('signatures.parameters.density', 'Densità')}:</span>
-                          <span>{(signature.parameters.spatialDistribution?.density ? (signature.parameters.spatialDistribution.density * 100).toFixed(0) : 'N/A')}%</span>
+                          <span>{(signature.parameters.spatialDistribution?.density ? (signature.parameters.spatialDistribution.density * 100).toFixed(0) : signature.parameters.strokeWidth?.pixelCoverage ? (signature.parameters.strokeWidth.pixelCoverage * 100).toFixed(1) : 'N/A')}%</span>
                         </div>
                         <div className="flex justify-between">
                           <span>{t('signatures.parameters.centerX', 'Centro X')}:</span>
@@ -512,14 +518,60 @@ export function SignatureCard({
                       <div className="grid grid-cols-2 gap-2 mt-1 text-sm">
                         <div className="flex justify-between">
                           <span>{t('signatures.parameters.loopPoints', 'Asole')}:</span>
-                          <span>{signature.parameters.featurePoints?.loopPoints || 'N/A'}</span>
+                          <span>{signature.parameters.featurePoints?.loopPoints || signature.parameters.avgAsolaSize?.toFixed(2) + 'mm' || 'N/A'}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>{t('signatures.parameters.crossPoints', 'Incroci')}:</span>
-                          <span>{signature.parameters.featurePoints?.crossPoints || 'N/A'}</span>
+                          <span>{signature.parameters.featurePoints?.crossPoints || signature.parameters.overlapRatio?.toFixed(2) || 'N/A'}</span>
                         </div>
                       </div>
                     </div>
+                    
+                    {/* Parametri avanzati aggiuntivi dal Python analyzer */}
+                    {(signature.parameters.avgSpacing || signature.parameters.pressureStd || signature.parameters.pressureMean || 
+                      signature.parameters.velocity || signature.parameters.writingStyle || signature.parameters.readability) && (
+                      <div className="col-span-2 border-t pt-3">
+                        <h4 className="font-medium text-green-700">Parametri Avanzati (Python/OpenCV)</h4>
+                        <div className="grid grid-cols-2 gap-2 mt-1 text-sm">
+                          {signature.parameters.avgSpacing && (
+                            <div className="flex justify-between">
+                              <span>Spaziatura media:</span>
+                              <span>{signature.parameters.avgSpacing.toFixed(1)}mm</span>
+                            </div>
+                          )}
+                          {signature.parameters.pressureStd && (
+                            <div className="flex justify-between">
+                              <span>Dev. pressione:</span>
+                              <span>{signature.parameters.pressureStd.toFixed(1)}</span>
+                            </div>
+                          )}
+                          {signature.parameters.pressureMean && (
+                            <div className="flex justify-between">
+                              <span>Pressione media:</span>
+                              <span>{signature.parameters.pressureMean.toFixed(0)}</span>
+                            </div>
+                          )}
+                          {signature.parameters.velocity && (
+                            <div className="flex justify-between">
+                              <span>Velocità:</span>
+                              <span>{signature.parameters.velocity.toFixed(1)}/5</span>
+                            </div>
+                          )}
+                          {signature.parameters.writingStyle && (
+                            <div className="flex justify-between">
+                              <span>Stile scrittura:</span>
+                              <span>{signature.parameters.writingStyle}</span>
+                            </div>
+                          )}
+                          {signature.parameters.readability && (
+                            <div className="flex justify-between">
+                              <span>Leggibilità:</span>
+                              <span>{signature.parameters.readability}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

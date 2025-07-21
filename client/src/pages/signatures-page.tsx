@@ -1182,10 +1182,7 @@ export default function SignaturesPage() {
                                 <div><strong>Spessore medio:</strong> {signature.parameters.strokeWidth.meanMm.toFixed(2)}mm</div>
                               )}
                               {signature.parameters.inclination !== undefined && (
-                                <div>
-                                  <strong>Inclinazione:</strong> {signature.parameters.inclination.toFixed(1)}°
-                                  {console.log(`[DEBUG UI] Firma ${signature.id} inclinazione:`, signature.parameters.inclination)}
-                                </div>
+                                <div><strong>Inclinazione:</strong> {signature.parameters.inclination.toFixed(1)}°</div>
                               )}
                               {signature.parameters.connectivity?.totalStrokeLength && (
                                 <div><strong>Lunghezza tratto:</strong> {signature.parameters.connectivity.totalStrokeLength.toFixed(0)}mm</div>
