@@ -452,9 +452,19 @@ def create_comparison_chart(verifica_data, comp_data):
     Returns:
         Base64-encoded PNG immagine del grafico
     """
+    # DEBUG: Prima di normalizzare
+    print(f"DEBUG - Verifica data prima normalizzazione: {list(verifica_data.keys())}", file=sys.stderr)
+    print(f"DEBUG - Comp data prima normalizzazione: {list(comp_data.keys())}", file=sys.stderr)
+    
     # Normalizza le chiavi per compatibilità
     verifica_data = normalize_parameter_keys(verifica_data)
     comp_data = normalize_parameter_keys(comp_data)
+    
+    # DEBUG: Dopo normalizzazione
+    print(f"DEBUG - Verifica data dopo normalizzazione: {list(verifica_data.keys())}", file=sys.stderr)
+    print(f"DEBUG - Comp data dopo normalizzazione: {list(comp_data.keys())}", file=sys.stderr)
+    print(f"DEBUG - Inclination in verifica_data: {verifica_data.get('Inclination', 'MISSING')}", file=sys.stderr)
+    print(f"DEBUG - Inclination in comp_data: {comp_data.get('Inclination', 'MISSING')}", file=sys.stderr)
     # Parametri per entrambe le versioni delle funzioni di analisi
     parametri_numerici = [
         'Proportion', 'Inclination', 'PressureMean', 'PressureStd',
