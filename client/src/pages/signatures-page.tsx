@@ -699,16 +699,12 @@ export default function SignaturesPage() {
                             <FormControl>
                               <SignatureDragDropZone
                                 onFileSelect={(file) => {
-                                  const fileList = new FileList();
-                                  Object.defineProperty(fileList, '0', {
-                                    value: file,
-                                    writable: false
+                                  // Crea un oggetto FileList-like compatibile
+                                  const fileListLike = Object.assign([file], {
+                                    item: (index: number) => index === 0 ? file : null,
+                                    length: 1
                                   });
-                                  Object.defineProperty(fileList, 'length', {
-                                    value: 1,
-                                    writable: false
-                                  });
-                                  field.onChange(fileList);
+                                  field.onChange(fileListLike);
                                 }}
                                 isUploading={uploadReference.isPending}
                                 title={t('signatures.upload.dragDropReference', 'Trascina qui la firma di riferimento')}
@@ -811,16 +807,12 @@ export default function SignaturesPage() {
                             <FormControl>
                               <SignatureDragDropZone
                                 onFileSelect={(file) => {
-                                  const fileList = new FileList();
-                                  Object.defineProperty(fileList, '0', {
-                                    value: file,
-                                    writable: false
+                                  // Crea un oggetto FileList-like compatibile
+                                  const fileListLike = Object.assign([file], {
+                                    item: (index: number) => index === 0 ? file : null,
+                                    length: 1
                                   });
-                                  Object.defineProperty(fileList, 'length', {
-                                    value: 1,
-                                    writable: false
-                                  });
-                                  field.onChange(fileList);
+                                  field.onChange(fileListLike);
                                 }}
                                 isUploading={uploadVerify.isPending}
                                 title={t('signatures.upload.dragDropVerify', 'Trascina qui la firma da verificare')}
