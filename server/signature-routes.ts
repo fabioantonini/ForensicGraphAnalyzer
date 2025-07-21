@@ -2317,6 +2317,10 @@ export function registerSignatureRoutes(router: Router) {
               comparisonChart = comparisonResult.comparison_chart;
               analysisReport = comparisonResult.description;
               
+              console.log(`[DEBUG CHART] Nuovo grafico generato: ${comparisonChart ? 'SI' : 'NO'}`);
+              console.log(`[DEBUG CHART] Percorso grafico: ${comparisonChart}`);
+              console.log(`[DEBUG CHART] Analisi report generato: ${analysisReport ? 'SI' : 'NO'}`);
+              
               console.log(`[DEBUG COMPARE-ALL] Confronto Python completato per firma ${signature.id} con score ${similarityScore}`);
             } catch (pythonError: any) {
               console.log(`[DEBUG COMPARE-ALL] ❌ ERRORE PYTHON ANALYZER: ${pythonError.message}`);
