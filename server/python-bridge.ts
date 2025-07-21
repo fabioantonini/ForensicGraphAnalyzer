@@ -39,9 +39,12 @@ export class SignaturePythonAnalyzer {
    */
   public static async checkAvailability(): Promise<boolean> {
     try {
+      console.log(`[PYTHON BRIDGE] Verifico script Python: ${this.pythonScript}`);
       await fs.access(this.pythonScript);
+      console.log(`[PYTHON BRIDGE] Script Python trovato con successo`);
       return true;
     } catch (error) {
+      console.log(`[PYTHON BRIDGE] Errore checkAvailability: ${error}`);
       log(`Script Python non trovato: ${this.pythonScript}`, 'python-bridge');
       return false;
     }

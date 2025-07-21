@@ -2232,8 +2232,10 @@ export function registerSignatureRoutes(router: Router) {
       }
       
       // Verifica la disponibilità dell'analizzatore Python avanzato
+      console.log(`[DEBUG COMPARE-ALL] Controllo disponibilità Python analyzer...`);
       const isPythonAvailable = await SignaturePythonAnalyzer.checkAvailability();
       console.log(`[DEBUG COMPARE-ALL] Analizzatore Python ${isPythonAvailable ? 'disponibile' : 'non disponibile'}`);
+      console.log(`[DEBUG COMPARE-ALL] Risultato checkAvailability: ${isPythonAvailable}`);
       
       // Crea le informazioni sul caso
       const caseInfo = {
