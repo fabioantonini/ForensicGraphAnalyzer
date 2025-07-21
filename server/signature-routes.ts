@@ -2237,6 +2237,10 @@ export function registerSignatureRoutes(router: Router) {
       console.log(`[DEBUG COMPARE-ALL] Analizzatore Python ${isPythonAvailable ? 'disponibile' : 'non disponibile'}`);
       console.log(`[DEBUG COMPARE-ALL] Risultato checkAvailability: ${isPythonAvailable}`);
       
+      // FORCE PYTHON ANALYZER per debug - temporaneo
+      console.log(`[DEBUG FORCE] FORZANDO isPythonAvailable = true per debug!`);
+      const forcedPythonAvailable = true;
+      
       // Crea le informazioni sul caso
       const caseInfo = {
         caseName: project.name,
@@ -2258,7 +2262,7 @@ export function registerSignatureRoutes(router: Router) {
           let comparisonChart = null;
           let analysisReport = null;
           
-          if (isPythonAvailable) {
+          if (forcedPythonAvailable) {
             try {
               console.log(`[DEBUG COMPARE-ALL] Usando analizzatore Python per firma ${signature.id}`);
               
