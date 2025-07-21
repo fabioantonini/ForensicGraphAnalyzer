@@ -2231,14 +2231,8 @@ export function registerSignatureRoutes(router: Router) {
         });
       }
       
-      // Verifica la disponibilità dell'analizzatore Python avanzato
-      console.log(`[DEBUG COMPARE-ALL] Controllo disponibilità Python analyzer...`);
-      const isPythonAvailable = await SignaturePythonAnalyzer.checkAvailability();
-      console.log(`[DEBUG COMPARE-ALL] Analizzatore Python ${isPythonAvailable ? 'disponibile' : 'non disponibile'}`);
-      console.log(`[DEBUG COMPARE-ALL] Risultato checkAvailability: ${isPythonAvailable}`);
-      
-      // FORCE PYTHON ANALYZER per debug - temporaneo
-      console.log(`[DEBUG FORCE] FORZANDO isPythonAvailable = true per debug!`);
+      // FORZA PYTHON ANALYZER - bypass completo del check
+      console.log(`[DEBUG FORCE] BYPASS COMPLETO - FORZA PYTHON ANALYZER!`);
       const forcedPythonAvailable = true;
       
       // Crea le informazioni sul caso
