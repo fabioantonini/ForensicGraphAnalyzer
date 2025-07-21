@@ -453,18 +453,16 @@ def create_comparison_chart(verifica_data, comp_data):
         Base64-encoded PNG immagine del grafico
     """
     # DEBUG: Prima di normalizzare
-    print(f"DEBUG - Verifica data prima normalizzazione: {list(verifica_data.keys())}", file=sys.stderr)
-    print(f"DEBUG - Comp data prima normalizzazione: {list(comp_data.keys())}", file=sys.stderr)
+    print(f"DEBUG CHART FUNCTION - Verifica data ricevuta: {list(verifica_data.keys())}", file=sys.stderr)
+    print(f"DEBUG CHART FUNCTION - Inclination ricevuta: {verifica_data.get('Inclination', verifica_data.get('inclination', 'MISSING'))}", file=sys.stderr)
     
     # Normalizza le chiavi per compatibilità
     verifica_data = normalize_parameter_keys(verifica_data)
     comp_data = normalize_parameter_keys(comp_data)
     
     # DEBUG: Dopo normalizzazione
-    print(f"DEBUG - Verifica data dopo normalizzazione: {list(verifica_data.keys())}", file=sys.stderr)
-    print(f"DEBUG - Comp data dopo normalizzazione: {list(comp_data.keys())}", file=sys.stderr)
-    print(f"DEBUG - Inclination in verifica_data: {verifica_data.get('Inclination', 'MISSING')}", file=sys.stderr)
-    print(f"DEBUG - Inclination in comp_data: {comp_data.get('Inclination', 'MISSING')}", file=sys.stderr)
+    print(f"DEBUG CHART FUNCTION - Dopo normalizzazione: {list(verifica_data.keys())}", file=sys.stderr)
+    print(f"DEBUG CHART FUNCTION - Inclination dopo norm: {verifica_data.get('Inclination', 'STILL MISSING')}", file=sys.stderr)
     # Parametri per entrambe le versioni delle funzioni di analisi
     parametri_numerici = [
         'Proportion', 'Inclination', 'PressureMean', 'PressureStd',
@@ -907,6 +905,10 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
         # NORMALIZZA per il grafico - garantisce che le chiavi siano nella forma corretta (maiuscole)
         verifica_data_normalized = normalize_parameter_keys(verifica_data)
         comp_data_normalized = normalize_parameter_keys(comp_data)
+        
+        print(f"DEBUG CHART - Prima normalizzazione: inclination={verifica_data.get('inclination', 'MISSING')}", file=sys.stderr)
+        print(f"DEBUG CHART - Dopo normalizzazione: Inclination={verifica_data_normalized.get('Inclination', 'MISSING')}", file=sys.stderr)
+        print(f"DEBUG CHART - Chiavi normalizzate: {list(verifica_data_normalized.keys())}", file=sys.stderr)
         
         # Crea il grafico di confronto con parametri normalizzati
         chart_img = create_comparison_chart(verifica_data_normalized, comp_data_normalized)
