@@ -838,6 +838,11 @@ def generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, simi
     
     # Grafici di confronto
     # Crea una figura temporanea per il grafico e includila nel report
+    # CRITICAL: Usa sempre parametri RICALCOLATI (non dal database) per garantire consistenza
+    print(f"[CRITICAL] Generazione grafico PDF con parametri ricalcolati", file=sys.stderr)
+    print(f"[DEBUG PDF] Verifica avgAsolaSize: {verifica_data.get('avgAsolaSize', 'MISSING')}", file=sys.stderr)
+    print(f"[DEBUG PDF] Comp avgAsolaSize: {comp_data.get('avgAsolaSize', 'MISSING')}", file=sys.stderr)
+    
     # Normalizza i parametri per garantire chiavi corrette nel grafico
     verifica_data_normalized = normalize_parameter_keys(verifica_data)
     comp_data_normalized = normalize_parameter_keys(comp_data)
