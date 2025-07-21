@@ -2352,6 +2352,35 @@ export function registerSignatureRoutes(router: Router) {
               console.log(`[DEBUG CHART] Percorso grafico: ${comparisonChart}`);
               console.log(`[DEBUG CHART] Analisi report generato: ${analysisReport ? 'SI' : 'NO'}`);
               
+              // CRITICAL FIX: Aggiorna i parametri con i dati Python corretti
+              if (comparisonResult.verifica_data) {
+                console.error(`\n===== AGGIORNAMENTO PARAMETRI PYTHON =====`);
+                console.error(`VECCHIA INCLINAZIONE DB: ${signature.parameters?.inclination || 'N/A'}`);
+                console.error(`NUOVA INCLINAZIONE PYTHON: ${comparisonResult.verifica_data.Inclination || 'N/A'}`);
+                console.error(`==========================================\n`);
+                
+                // Costruisci i nuovi parametri dal Python script
+                const pythonParameters = {
+                  ...signature.parameters,
+                  inclination: comparisonResult.verifica_data.Inclination,
+                  proportion: comparisonResult.verifica_data.Proportion,
+                  pressureMean: comparisonResult.verifica_data.PressureMean,
+                  pressureStd: comparisonResult.verifica_data.PressureStd,
+                  avgCurvature: comparisonResult.verifica_data.AvgCurvature,
+                  avgSpacing: comparisonResult.verifica_data.AvgSpacing,
+                  avgAsolaSize: comparisonResult.verifica_data.AvgAsolaSize,
+                  velocity: comparisonResult.verifica_data.Velocity,
+                  overlapRatio: comparisonResult.verifica_data.OverlapRatio,
+                  baselineStdMm: comparisonResult.verifica_data.BaselineStdMm,
+                  writingStyle: comparisonResult.verifica_data.WritingStyle || signature.parameters?.writingStyle,
+                  readability: comparisonResult.verifica_data.Readability || signature.parameters?.readability
+                };
+                
+                // Aggiorna i parametri nel database
+                await storage.updateSignature(signature.id, { parameters: pythonParameters });
+                console.error(`PARAMETRI AGGIORNATI CON DATI PYTHON per firma ${signature.id}`);
+              }
+              
               console.log(`[DEBUG COMPARE-ALL] Confronto Python completato per firma ${signature.id} con score ${similarityScore}`);
             } catch (pythonError: any) {
               console.log(`[DEBUG COMPARE-ALL] ❌ ERRORE PYTHON ANALYZER: ${pythonError.message}`);
