@@ -470,13 +470,8 @@ export default function SignaturesPage() {
       console.log(`[FRONTEND] URL endpoint: /api/signature-projects/${selectedProject}/compare-all`);
       
       // Utilizziamo apiRequest per gestire correttamente la richiesta POST
-      const responseData = await apiRequest(`/api/signature-projects/${selectedProject}/compare-all`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({}),
-      });
+      const response = await apiRequest("POST", `/api/signature-projects/${selectedProject}/compare-all`, {});
+      const responseData = await response.json();
       
       console.log(`[FRONTEND] Dati ricevuti tramite apiRequest:`, responseData);
       return responseData;
