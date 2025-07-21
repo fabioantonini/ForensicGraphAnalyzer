@@ -153,6 +153,11 @@ export class SignaturePythonAnalyzer {
       args.push(`${referenceDimensions.widthMm}x${referenceDimensions.heightMm}`);
       log(`Usando dimensioni reali: verifica=${verificaDimensions.widthMm}x${verificaDimensions.heightMm}mm, reference=${referenceDimensions.widthMm}x${referenceDimensions.heightMm}mm`, 'python-bridge');
 
+      // Debug comando completo
+      console.error(`\n===== COMANDO PYTHON COMPLETO =====`);
+      console.error(`python3 ${args.join(' ')}`);
+      console.error(`===================================\n`);
+
       const process = spawn('python3', args);
 
       let outputData = '';
