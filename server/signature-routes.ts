@@ -2275,6 +2275,14 @@ export function registerSignatureRoutes(router: Router) {
               console.log(`[COMPARE-ALL] Confronto firma da verificare: ${signaturePath}`);
               console.log(`[COMPARE-ALL] Contro firma di riferimento: ${referencePath}`);
               
+              // Debug percorsi assoluti per Python
+              const absoluteSignaturePath = path.resolve(signaturePath);
+              const absoluteReferencePath = path.resolve(referencePath);
+              console.error(`\n===== PERCORSI PYTHON SCRIPT =====`);
+              console.error(`VERIFICA ASSOLUTO: ${absoluteSignaturePath}`);
+              console.error(`RIFERIMENTO ASSOLUTO: ${absoluteReferencePath}`);
+              console.error(`===================================\n`);
+              
               // Otteniamo il progetto per il DPI
               const project = await storage.getSignatureProject(projectId);
               if (!project) {
