@@ -2348,21 +2348,13 @@ export function registerSignatureRoutes(router: Router) {
               }
               console.log(`[COMPARE-ALL] Utilizzando projectId ${projectId} per garantire l'isolamento dei dati`);
               
-              similarityScore = comparisonResult.similarity;
-              
-              // Salva il grafico e il report
-              comparisonChart = comparisonResult.comparison_chart;
-              analysisReport = comparisonResult.description;
-              
-              console.log(`[DEBUG CHART] Nuovo grafico generato: ${comparisonChart ? 'SI' : 'NO'}`);
-              console.log(`[DEBUG CHART] Percorso grafico: ${comparisonChart}`);
-              console.log(`[DEBUG CHART] Analisi report generato: ${analysisReport ? 'SI' : 'NO'}`);
-              
-              // CRITICAL FIX: Aggiorna i parametri con i dati Python corretti
+              // CRITICAL FIX: Aggiorna i parametri con i dati Python corretti PRIMA del grafico
               if (comparisonResult.verifica_data) {
                 console.error(`\n===== AGGIORNAMENTO PARAMETRI PYTHON =====`);
                 console.error(`VECCHIA INCLINAZIONE DB: ${signature.parameters?.inclination || 'N/A'}`);
                 console.error(`NUOVA INCLINAZIONE PYTHON: ${comparisonResult.verifica_data.Inclination || 'N/A'}`);
+                console.error(`VECCHIA AVGASOLASIZE DB: ${signature.parameters?.avgAsolaSize || 'N/A'}`);
+                console.error(`NUOVA AVGASOLASIZE PYTHON: ${comparisonResult.verifica_data.AvgAsolaSize || 'N/A'}`);
                 console.error(`==========================================\n`);
                 
                 // Costruisci i nuovi parametri dal Python script
@@ -2386,6 +2378,17 @@ export function registerSignatureRoutes(router: Router) {
                 await storage.updateSignatureParameters(signature.id, pythonParameters);
                 console.error(`PARAMETRI AGGIORNATI CON DATI PYTHON per firma ${signature.id}`);
               }
+              
+              similarityScore = comparisonResult.similarity;
+              
+              // Salva il grafico e il report (DOPO l'aggiornamento parametri)
+              comparisonChart = comparisonResult.comparison_chart;
+              analysisReport = comparisonResult.description;
+              
+              console.log(`[DEBUG CHART] Nuovo grafico generato: ${comparisonChart ? 'SI' : 'NO'}`);
+              console.log(`[DEBUG CHART] Percorso grafico: ${comparisonChart}`);
+              console.log(`[DEBUG CHART] Analisi report generato: ${analysisReport ? 'SI' : 'NO'}`);
+              console.error(`[CRITICAL FIX] ✅ PARAMETRI AGGIORNATI PRIMA DEL GRAFICO!`);              
               
               console.log(`[DEBUG COMPARE-ALL] Confronto Python completato per firma ${signature.id} con score ${similarityScore}`);
             } catch (pythonError: any) {

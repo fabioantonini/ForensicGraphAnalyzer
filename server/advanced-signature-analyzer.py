@@ -481,11 +481,7 @@ def create_comparison_chart(verifica_data, comp_data):
         valore_v = verifica_data.get(parametro, 0)
         valore_c = comp_data.get(parametro, 0)
         
-        # Debug specifico per AvgAsolaSize
-        if parametro == 'AvgAsolaSize':
-            print(f"DEBUG ASOLA - parametro: {parametro}, valore_v: {valore_v}, valore_c: {valore_c}", file=sys.stderr)
-            print(f"DEBUG ASOLA - chiavi verifica: {list(verifica_data.keys())}", file=sys.stderr)
-            print(f"DEBUG ASOLA - chiavi comp: {list(comp_data.keys())}", file=sys.stderr)
+
         
         differenza = abs(valore_v - valore_c)
         differenze.append(differenza)
