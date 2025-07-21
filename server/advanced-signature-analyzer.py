@@ -818,7 +818,10 @@ def generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, simi
     
     # Grafici di confronto
     # Crea una figura temporanea per il grafico e includila nel report
-    chart_img_base64 = create_comparison_chart(verifica_data, comp_data)
+    # Normalizza i parametri per garantire chiavi corrette nel grafico
+    verifica_data_normalized = normalize_parameter_keys(verifica_data)
+    comp_data_normalized = normalize_parameter_keys(comp_data)
+    chart_img_base64 = create_comparison_chart(verifica_data_normalized, comp_data_normalized)
     chart_data = base64.b64decode(chart_img_base64)
     
     # Salva temporaneamente l'immagine del grafico
@@ -901,12 +904,12 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
         print(f"DEBUG - Inclination verifica: {verifica_data.get('Inclination', 'MISSING')}", file=sys.stderr)
         print(f"DEBUG - Inclination comp: {comp_data.get('Inclination', 'MISSING')}", file=sys.stderr)
             
-        # NON normalizzare - usa direttamente i parametri appena calcolati con chiavi Python corrette
-        # verifica_data = normalize_parameter_keys(verifica_data)
-        # comp_data = normalize_parameter_keys(comp_data)
+        # NORMALIZZA per il grafico - garantisce che le chiavi siano nella forma corretta (maiuscole)
+        verifica_data_normalized = normalize_parameter_keys(verifica_data)
+        comp_data_normalized = normalize_parameter_keys(comp_data)
         
-        # Crea il grafico di confronto
-        chart_img = create_comparison_chart(verifica_data, comp_data)
+        # Crea il grafico di confronto con parametri normalizzati
+        chart_img = create_comparison_chart(verifica_data_normalized, comp_data_normalized)
         
         # Crea il report descrittivo
         description = create_descriptive_report(verifica_data, comp_data)
