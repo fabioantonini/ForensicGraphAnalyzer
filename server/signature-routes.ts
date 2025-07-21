@@ -2172,6 +2172,7 @@ export function registerSignatureRoutes(router: Router) {
   
   // Esegui confronto automatico di tutte le firme da verificare in un progetto
   router.post("/signature-projects/:id/compare-all", isAuthenticated, async (req, res) => {
+    console.error(`\n🚨 [COMPARE-ALL ENTRY] RICEVUTA RICHIESTA COMPARE-ALL PER PROGETTO ${req.params.id} 🚨\n`);
     console.log(`[COMPARE-ALL ENTRY] Ricevuta richiesta compare-all`);
     try {
       const projectId = parseInt(req.params.id);
