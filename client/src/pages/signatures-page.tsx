@@ -1110,19 +1110,19 @@ export default function SignaturesPage() {
                 </div>
                 <div className="text-center">
                   <div className="text-lg font-semibold text-green-600">
-                    {comparisonResults.filter(s => !s.isReference && s.comparisonResult >= 0.85).length}
+                    {comparisonResults.filter(s => !s.isReference && (s.comparisonResult ?? 0) >= 0.85).length}
                   </div>
                   <div className="text-muted-foreground">Autentiche (≥85%)</div>
                 </div>
                 <div className="text-center">
                   <div className="text-lg font-semibold text-yellow-600">
-                    {comparisonResults.filter(s => !s.isReference && s.comparisonResult >= 0.65 && s.comparisonResult < 0.85).length}
+                    {comparisonResults.filter(s => !s.isReference && (s.comparisonResult ?? 0) >= 0.65 && (s.comparisonResult ?? 0) < 0.85).length}
                   </div>
                   <div className="text-muted-foreground">Prob. Autentiche (65-84%)</div>
                 </div>
                 <div className="text-center">
                   <div className="text-lg font-semibold text-red-600">
-                    {comparisonResults.filter(s => !s.isReference && s.comparisonResult < 0.65).length}
+                    {comparisonResults.filter(s => !s.isReference && (s.comparisonResult ?? 0) < 0.65).length}
                   </div>
                   <div className="text-muted-foreground">Sospette (&lt;65%)</div>
                 </div>
@@ -1195,12 +1195,6 @@ export default function SignaturesPage() {
                                 )}
                                 {signature.parameters.baselineStdMm !== undefined && (
                                   <div><strong>Dev. baseline:</strong> {signature.parameters.baselineStdMm.toFixed(1)}mm</div>
-                                )}
-                                {signature.parameters.contrastLevel !== undefined && (
-                                  <div><strong>Contrasto:</strong> {(signature.parameters.contrastLevel * 100).toFixed(0)}%</div>
-                                )}
-                                {signature.parameters.imageQuality !== undefined && (
-                                  <div><strong>Qualità immagine:</strong> {(signature.parameters.imageQuality * 100).toFixed(0)}%</div>
                                 )}
                               </div>
                             </div>
