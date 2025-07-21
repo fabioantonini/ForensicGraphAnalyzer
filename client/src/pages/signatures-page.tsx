@@ -469,25 +469,16 @@ export default function SignaturesPage() {
       console.log(`[FRONTEND] Avvio confronto multiplo per progetto ${selectedProject} usando l'endpoint compare-all`);
       console.log(`[FRONTEND] URL endpoint: /api/signature-projects/${selectedProject}/compare-all`);
       
-      // Utilizziamo il nuovo endpoint che elabora tutte le firme in una singola richiesta
-      const res = await fetch(`/api/signature-projects/${selectedProject}/compare-all`, {
+      // Utilizziamo apiRequest per gestire correttamente la richiesta POST
+      const responseData = await apiRequest(`/api/signature-projects/${selectedProject}/compare-all`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include"
+        body: JSON.stringify({}),
       });
       
-      console.log(`[FRONTEND] Risposta ricevuta: status=${res.status}, ok=${res.ok}`);
-      
-      if (!res.ok) {
-        const errorData = await res.json();
-        console.error(`[FRONTEND] Errore dal server:`, errorData);
-        throw new Error(errorData.error || "Errore durante il confronto delle firme");
-      }
-      
-      const responseData = await res.json();
-      console.log(`[FRONTEND] Dati ricevuti:`, responseData);
+      console.log(`[FRONTEND] Dati ricevuti tramite apiRequest:`, responseData);
       return responseData;
     },
     onSuccess: (data: Signature[]) => {
