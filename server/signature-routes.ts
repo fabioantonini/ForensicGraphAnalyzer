@@ -2300,6 +2300,12 @@ export function registerSignatureRoutes(router: Router) {
               console.log(`[DEBUG DIMENSIONS] Dimensioni passate al Python - verifica: ${verificaDimensions.widthMm}x${verificaDimensions.heightMm}mm`);
               console.log(`[DEBUG DIMENSIONS] Dimensioni passate al Python - riferimento: ${referenceDimensions.widthMm}x${referenceDimensions.heightMm}mm`);
               
+              // Debug visibile anche con log troncato
+              console.error(`\n===== DIMENSIONI PYTHON SCRIPT =====`);
+              console.error(`VERIFICA: ${verificaDimensions.widthMm}x${verificaDimensions.heightMm}mm`);
+              console.error(`RIFERIMENTO: ${referenceDimensions.widthMm}x${referenceDimensions.heightMm}mm`);
+              console.error(`===================================\n`);
+              
               const comparisonResult = await SignaturePythonAnalyzer.compareSignatures(
                 signaturePath,   // Firma da verificare
                 referencePath,   // Firma di riferimento
