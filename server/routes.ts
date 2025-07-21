@@ -58,17 +58,7 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // DEBUG APP-LEVEL per catturare tutte le chiamate compare-all
-  app.use((req, res, next) => {
-    if (req.url.includes('compare-all')) {
-      console.error(`\n===== APP-LEVEL COMPARE-ALL INTERCETTATO =====`);
-      console.error(`URL: ${req.url}`);
-      console.error(`METHOD: ${req.method}`);
-      console.error(`TIMESTAMP: ${new Date().toISOString()}`);
-      console.error(`============================================\n`);
-    }
-    next();
-  });
+
 
   // Inizializzazione del sistema di persistenza vettoriale
   // Non blocchiamo l'app se fallisce per consentire al sistema di autenticazione di funzionare comunque
@@ -140,18 +130,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register signature routes
   const router = Router();
   
-  // DEBUG MIDDLEWARE PER CATTURARE QUALSIASI CHIAMATA COMPARE-ALL
-  router.use((req, res, next) => {
-    if (req.url.includes('compare-all')) {
-      console.error(`\n===== QUALSIASI COMPARE-ALL INTERCETTATO =====`);
-      console.error(`URL: ${req.url}`);
-      console.error(`METHOD: ${req.method}`);
-      console.error(`TIMESTAMP: ${new Date().toISOString()}`);
-      console.error(`HEADERS: ${JSON.stringify(req.headers)}`);
-      console.error(`=============================================\n`);
-    }
-    next();
-  });
+
   
   registerSignatureRoutes(router);
 
