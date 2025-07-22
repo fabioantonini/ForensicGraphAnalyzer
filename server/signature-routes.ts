@@ -2463,11 +2463,11 @@ export function registerSignatureRoutes(router: Router) {
 
   // Esegui confronto automatico di tutte le firme da verificare in un progetto
   router.post("/signature-projects/:id/compare-all", isAuthenticated, async (req, res) => {
-    console.error(`\n===== COMPARE-ALL ENTRY =====`);
+    console.error(`\n🔥🔥🔥 COMPARE-ALL ENTRY REACHED! 🔥🔥🔥`);
     console.error(`TIMESTAMP: ${new Date().toISOString()}`);
     console.error(`PROJECT ID: ${req.params.id}`);
     console.error(`USER: ${req.user?.username}`);
-    console.error(`============================\n`);
+    console.error(`🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥\n`);
     console.log(`[COMPARE-ALL ENTRY] Ricevuta richiesta compare-all`);
     try {
       const projectId = parseInt(req.params.id);
