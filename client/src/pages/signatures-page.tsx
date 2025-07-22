@@ -478,9 +478,9 @@ export default function SignaturesPage() {
         queryClient.invalidateQueries({ queryKey: [`/api/signature-projects/${selectedProject}/signatures`] });
         queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures"] });
         
-        // Utilizziamo endpoint rigenerazione analisi per bypass completo cache
-        console.log(`[FRONTEND] CHIAMATA REGENERATE-ANALYSIS - timestamp: ${new Date().toISOString()}`);
-        const response = await fetch(`/api/signature-projects/${selectedProject}/regenerate-analysis`, {
+        // Utilizziamo endpoint compare-all che funzionava sempre
+        console.log(`[FRONTEND] CHIAMATA COMPARE-ALL - timestamp: ${new Date().toISOString()}`);
+        const response = await fetch(`/api/signature-projects/${selectedProject}/compare-all`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
