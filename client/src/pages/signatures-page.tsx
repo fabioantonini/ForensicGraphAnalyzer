@@ -463,6 +463,8 @@ export default function SignaturesPage() {
   
   // Mutation to compare all signatures using the new endpoint
   const compareAllSignatures = useMutation({
+    // DISABILITA CACHE per garantire richiesta reale al server
+    gcTime: 0,
     mutationFn: async () => {
       if (!selectedProject) throw new Error("Nessun progetto selezionato");
       
@@ -471,17 +473,36 @@ export default function SignaturesPage() {
       console.log(`[FRONTEND] PRIMA della chiamata apiRequest - timestamp: ${new Date().toISOString()}`);
       
       try {
-        // Utilizziamo apiRequest per gestire correttamente la richiesta POST
+        // FORZA INVALIDAZIONE CACHE prima della richiesta
+        console.log(`[FRONTEND] INVALIDAZIONE CACHE per progetto ${selectedProject}`);
+        queryClient.invalidateQueries({ queryKey: [`/api/signature-projects/${selectedProject}/signatures`] });
+        queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures"] });
+        
+        // Utilizziamo fetch diretto per bypassare completamente qualsiasi cache
         console.log(`[FRONTEND] CHIAMATA INIZIO - timestamp: ${new Date().toISOString()}`);
-        const response = await apiRequest("POST", `/api/signature-projects/${selectedProject}/compare-all`, {});
+        const response = await fetch(`/api/signature-projects/${selectedProject}/compare-all`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          },
+          body: JSON.stringify({}),
+          credentials: 'include'
+        });
         console.log(`[FRONTEND] RISPOSTA RICEVUTA - status: ${response.status}, timestamp: ${new Date().toISOString()}`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         
         const responseData = await response.json();
         console.log(`[FRONTEND] DATI PARSED - timestamp: ${new Date().toISOString()}`);
-        console.log(`[FRONTEND] Dati ricevuti tramite apiRequest:`, responseData);
+        console.log(`[FRONTEND] Dati ricevuti tramite fetch diretto:`, responseData);
         return responseData;
       } catch (error) {
-        console.error(`[FRONTEND] ERRORE apiRequest:`, error);
+        console.error(`[FRONTEND] ERRORE fetch diretto:`, error);
         throw error;
       }
     },
