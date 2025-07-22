@@ -233,6 +233,13 @@ export function registerSignatureRoutes(appRouter: Router) {
             comparisonChart = pythonResult.chart;
             analysisReport = pythonResult.report;
             
+            console.log(`[COMPARE-ALL] Python result per firma ${signature.id}:`, {
+              similarity: pythonResult.similarity,
+              hasChart: !!pythonResult.chart,
+              chartLength: pythonResult.chart?.length,
+              hasReport: !!pythonResult.report
+            });
+            
           } catch (pythonError) {
             console.error(`[COMPARE-ALL] Errore Python analyzer per firma ${signature.id}:`, pythonError);
             
@@ -259,6 +266,13 @@ export function registerSignatureRoutes(appRouter: Router) {
           if (comparisonChart) {
             updateData.comparisonChart = comparisonChart;
           }
+          
+          console.log(`[COMPARE-ALL] Dati da aggiornare per firma ${signature.id}:`, {
+            hasChart: !!updateData.comparisonChart,
+            chartLength: updateData.comparisonChart?.length,
+            hasReport: !!updateData.analysisReport,
+            comparisonResult: updateData.comparisonResult
+          });
           
           await storage.updateSignature(signature.id, updateData);
           
