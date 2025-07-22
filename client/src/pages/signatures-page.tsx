@@ -1100,20 +1100,19 @@ export default function SignaturesPage() {
       
       {/* Dialog per mostrare i risultati del confronto */}
       <Dialog open={showResultsDialog} onOpenChange={setShowResultsDialog}>
-        <DialogContent className="max-w-5xl max-h-[90vh] flex flex-col">
-          <DialogHeader>
+        <DialogContent className="max-w-6xl max-h-[95vh] flex flex-col p-0">
+          <DialogHeader className="px-6 pt-6 pb-2">
             <DialogTitle>Risultati Confronto Firme - Analisi Forense</DialogTitle>
             <DialogDescription>
               Analisi completata utilizzando 16+ parametri avanzati per il confronto grafologico
             </DialogDescription>
           </DialogHeader>
           
-          
-          <ScrollArea className="flex-1 pr-4">
-            <div className="space-y-4">
+          <ScrollArea className="flex-1 px-6 pb-2" style={{ maxHeight: 'calc(95vh - 160px)' }}>
+            <div className="space-y-3">
               {/* Statistiche generali */}
               {comparisonResults && comparisonResults.length > 0 && (
-                <div className="bg-muted/30 rounded-lg p-4 mb-4">
+                <div className="bg-muted/30 rounded-lg p-3 mb-3">
                   <h3 className="font-medium mb-2">Riepilogo Analisi</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div className="text-center">
@@ -1144,12 +1143,12 @@ export default function SignaturesPage() {
                 </div>
               )}
               
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {comparisonResults && comparisonResults.length > 0 ? (
                   // Mostra solo le firme da verificare (non di riferimento)
                   comparisonResults.filter(sig => !sig.isReference).map((signature, index) => (
-                    <div key={signature.id} className="border rounded-lg p-4">
-                      <div className="flex justify-between items-start mb-3">
+                    <div key={signature.id} className="border rounded-lg p-3">
+                      <div className="flex justify-between items-start mb-2">
                         <div className="flex-1">
                           <h4 className="font-medium text-lg">{signature.originalFilename}</h4>
                           <div className="mt-2 space-y-2">
@@ -1228,8 +1227,8 @@ export default function SignaturesPage() {
                   </div>
                   
                   {signature.analysisReport && (
-                    <div className="bg-muted p-3 rounded text-sm">
-                      <h5 className="font-medium mb-2">Analisi Dettagliata:</h5>
+                    <div className="bg-muted p-2 rounded text-sm mt-2">
+                      <h5 className="font-medium mb-1">Analisi Dettagliata:</h5>
                       <pre className="whitespace-pre-wrap text-xs font-mono">
                         {signature.analysisReport}
                       </pre>
@@ -1237,8 +1236,8 @@ export default function SignaturesPage() {
                   )}
                   
                   {signature.comparisonChart && (
-                    <div className="mt-3">
-                      <h5 className="font-medium mb-2">Grafico di Confronto:</h5>
+                    <div className="mt-2">
+                      <h5 className="font-medium mb-1">Grafico di Confronto:</h5>
                       <img 
                         src={`data:image/png;base64,${signature.comparisonChart}`} 
                         alt="Grafico confronto" 
@@ -1257,7 +1256,7 @@ export default function SignaturesPage() {
             </div>
           </ScrollArea>
           
-          <DialogFooter>
+          <DialogFooter className="px-6 py-4 border-t">
             <Button onClick={() => setShowResultsDialog(false)}>
               Chiudi
             </Button>
