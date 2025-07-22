@@ -19,6 +19,33 @@ import sharp from "sharp";
 // Inizializza OpenAI client
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+// Configure multer for signature uploads
+const signatureUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      const uploadDir = path.join(process.cwd(), 'uploads', 'signatures');
+      cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+      const timestamp = Date.now();
+      const randomString = Math.random().toString(36).substring(2, 15);
+      const ext = path.extname(file.originalname);
+      cb(null, `signature_${timestamp}_${randomString}${ext}`);
+    }
+  }),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/bmp', 'image/tiff'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Tipo di file non supportato. Usa JPG, PNG, BMP o TIFF.'));
+    }
+  }
+});
+
 // Export function to register all signature routes
 export function registerSignatureRoutes(appRouter: Router) {
   console.log("🔥🔥🔥 REGISTERING SIGNATURE ROUTES 🔥🔥🔥");
@@ -38,6 +65,90 @@ export function registerSignatureRoutes(appRouter: Router) {
     }
     res.status(403).json({ message: "Account disattivato o scaduto" });
   };
+
+  // Crea un nuovo progetto firma
+  appRouter.post("/signature-projects", isAuthenticated, isActiveUser, async (req, res) => {
+    try {
+      const projectData = insertSignatureProjectSchema.parse({
+        ...req.body,
+        userId: req.user!.id
+      });
+      
+      const project = await storage.createSignatureProject(projectData);
+      
+      // Crea una attività per il nuovo progetto
+      await storage.createActivity({
+        userId: req.user!.id,
+        type: 'project_create',
+        details: `Creato progetto di verifica firma: ${project.name}`
+      });
+      
+      res.status(201).json(project);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Ottieni tutti i progetti firma dell'utente
+  appRouter.get("/signature-projects", isAuthenticated, isActiveUser, async (req, res) => {
+    try {
+      const projects = await storage.getUserSignatureProjects(req.user!.id);
+      res.json(projects);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Ottieni un progetto firma specifico
+  appRouter.get("/signature-projects/:id", isAuthenticated, isActiveUser, async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const project = await storage.getSignatureProject(projectId);
+      
+      if (!project) {
+        return res.status(404).json({ error: 'Progetto non trovato' });
+      }
+      
+      // Verifica che il progetto appartenga all'utente corrente
+      if (project.userId !== req.user!.id) {
+        return res.status(403).json({ error: 'Non autorizzato' });
+      }
+      
+      res.json(project);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Elimina un progetto firma
+  appRouter.delete("/signature-projects/:id", isAuthenticated, isActiveUser, async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const project = await storage.getSignatureProject(projectId);
+      
+      if (!project) {
+        return res.status(404).json({ error: 'Progetto non trovato' });
+      }
+      
+      // Verifica che il progetto appartenga all'utente corrente
+      if (project.userId !== req.user!.id) {
+        return res.status(403).json({ error: 'Non autorizzato' });
+      }
+      
+      await storage.deleteSignatureProject(projectId);
+      
+      // Crea una attività per l'eliminazione del progetto
+      await storage.createActivity({
+        userId: req.user!.id,
+        type: 'project_delete',
+        details: `Eliminato progetto di verifica firma: ${project.name}`
+      });
+      
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
   
   // Esegui confronto automatico di tutte le firme da verificare in un progetto
   appRouter.post("/signature-projects/:id/compare-all", isAuthenticated, isActiveUser, async (req, res) => {
