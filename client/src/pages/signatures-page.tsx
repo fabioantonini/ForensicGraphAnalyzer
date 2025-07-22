@@ -480,10 +480,11 @@ export default function SignaturesPage() {
         
         // Utilizziamo apiRequest con autenticazione corretta
         console.log(`[FRONTEND] CHIAMATA COMPARE-ALL VIA APIREQUEST - timestamp: ${new Date().toISOString()}`);
-        const responseData = await apiRequest("POST", `/api/signature-projects/${selectedProject}/compare-all`, { 
+        const response = await apiRequest("POST", `/api/signature-projects/${selectedProject}/compare-all`, { 
           timestamp: Date.now(), 
           force: true 
         });
+        const responseData = await response.json();
         console.log(`[FRONTEND] DATI RICEVUTI VIA APIREQUEST - timestamp: ${new Date().toISOString()}`);
         console.log(`[FRONTEND] Dati ricevuti:`, responseData);
         return responseData;
