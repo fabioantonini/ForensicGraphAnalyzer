@@ -864,11 +864,20 @@ export class MemStorage implements IStorage {
     analysisReport?: string;
     reportPath?: string;
     dpi?: number;
+    comparisonResult?: number;
+    updatedAt?: Date;
   }): Promise<Signature> {
     const signature = await this.getSignature(id);
     if (!signature) {
       throw new Error(`Signature with ID ${id} not found`);
     }
+    
+    console.log(`[STORAGE] Aggiornamento firma ${id} con dati:`, {
+      hasChart: !!data.comparisonChart,
+      chartLength: data.comparisonChart?.length,
+      hasReport: !!data.analysisReport,
+      comparisonResult: data.comparisonResult
+    });
     
     const updatedSignature: Signature = {
       ...signature,
@@ -876,8 +885,11 @@ export class MemStorage implements IStorage {
       ...(data.analysisReport !== undefined && { analysisReport: data.analysisReport }),
       ...(data.reportPath !== undefined && { reportPath: data.reportPath }),
       ...(data.dpi !== undefined && { dpi: data.dpi }),
-      updatedAt: new Date(),
+      ...(data.comparisonResult !== undefined && { comparisonResult: data.comparisonResult }),
+      updatedAt: data.updatedAt || new Date(),
     };
+    
+    console.log(`[STORAGE] Firma ${id} aggiornata. ComparisonChart presente:`, !!updatedSignature.comparisonChart);
     
     this.signatures.set(id, updatedSignature);
     return updatedSignature;
