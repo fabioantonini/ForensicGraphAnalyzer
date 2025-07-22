@@ -353,6 +353,18 @@ Preferred communication style: Simple, everyday language.
   - Robust error handling with JavaScript analyzer fallback
   - Real-world dimension calibration system working correctly
 
+### July 22, 2025 - Complete Cache Bypass Resolution ✅ FULLY OPERATIONAL
+- **BREAKTHROUGH: React Query Cache Issue Resolved**: Complete fix for endpoint not being reached
+  - **Root Cause**: React Query `staleTime: Infinity` prevented real HTTP requests to compare-all endpoint
+  - **Solution**: Implemented direct fetch() bypass with anti-cache headers and `credentials: "include"`
+  - **Result**: Endpoint now receives requests successfully (3.6s processing time, HTTP 200)
+  - **Evidence**: Backend logs show `POST /api/signature-projects/20/compare-all 200 in 3594ms`
+- **System Validation Complete**: End-to-end workflow now fully operational
+  - Cache clearing and graph regeneration working correctly
+  - Fresh data with current timestamps (`updatedAt: 2025-07-22T06:01:47.261Z`)
+  - Real parameter values displayed instead of cached obsolete data
+  - Python analyzer integration functioning with proper backend communication
+
 ### July 22, 2025 - Router Registration Fix ✅ CRITICAL BUG RESOLVED
 - **CRITICAL ROUTE REGISTRATION BUG**: Fixed signature routes not being accessible via HTTP
   - **Root Cause**: Router created and routes registered, but router never mounted on Express app
