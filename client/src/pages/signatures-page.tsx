@@ -46,6 +46,7 @@ import { Loader2, Trash2, Upload, FileCheck, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Project schema
 const projectSchema = z.object({
@@ -1099,7 +1100,7 @@ export default function SignaturesPage() {
       
       {/* Dialog per mostrare i risultati del confronto */}
       <Dialog open={showResultsDialog} onOpenChange={setShowResultsDialog}>
-        <DialogContent className="max-w-5xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-5xl max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Risultati Confronto Firme - Analisi Forense</DialogTitle>
             <DialogDescription>
@@ -1107,58 +1108,61 @@ export default function SignaturesPage() {
             </DialogDescription>
           </DialogHeader>
           
-          {/* Statistiche generali */}
-          {comparisonResults && comparisonResults.length > 0 && (
-            <div className="bg-muted/30 rounded-lg p-4 mb-4">
-              <h3 className="font-medium mb-2">Riepilogo Analisi</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div className="text-center">
-                  <div className="text-lg font-semibold text-primary">
-                    {comparisonResults.filter(s => !s.isReference).length}
-                  </div>
-                  <div className="text-muted-foreground">Firme analizzate</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-lg font-semibold text-green-600">
-                    {comparisonResults.filter(s => !s.isReference && (s.comparisonResult ?? 0) >= 0.85).length}
-                  </div>
-                  <div className="text-muted-foreground">Autentiche (≥85%)</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-lg font-semibold text-yellow-600">
-                    {comparisonResults.filter(s => !s.isReference && (s.comparisonResult ?? 0) >= 0.65 && (s.comparisonResult ?? 0) < 0.85).length}
-                  </div>
-                  <div className="text-muted-foreground">Prob. Autentiche (65-84%)</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-lg font-semibold text-red-600">
-                    {comparisonResults.filter(s => !s.isReference && (s.comparisonResult ?? 0) < 0.65).length}
-                  </div>
-                  <div className="text-muted-foreground">Sospette (&lt;65%)</div>
-                </div>
-              </div>
-            </div>
-          )}
           
-          <div className="space-y-4">
-            {comparisonResults && comparisonResults.length > 0 ? (
-              // Mostra solo le firme da verificare (non di riferimento)
-              comparisonResults.filter(sig => !sig.isReference).map((signature, index) => (
-                <div key={signature.id} className="border rounded-lg p-4">
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex-1">
-                      <h4 className="font-medium text-lg">{signature.originalFilename}</h4>
-                      <div className="mt-2 space-y-2">
-                        <div className="flex items-center gap-4">
-                          <p className="text-sm text-muted-foreground">
-                            <strong>Similarità:</strong> {signature.comparisonResult ? (signature.comparisonResult * 100).toFixed(1) : '0'}%
-                          </p>
-                          {signature.parameters?.realDimensions && (
-                            <p className="text-sm text-muted-foreground">
-                              <strong>Dimensioni:</strong> {signature.parameters.realDimensions.widthMm?.toFixed(1)}×{signature.parameters.realDimensions.heightMm?.toFixed(1)}mm
-                            </p>
-                          )}
-                        </div>
+          <ScrollArea className="flex-1 pr-4">
+            <div className="space-y-4">
+              {/* Statistiche generali */}
+              {comparisonResults && comparisonResults.length > 0 && (
+                <div className="bg-muted/30 rounded-lg p-4 mb-4">
+                  <h3 className="font-medium mb-2">Riepilogo Analisi</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div className="text-center">
+                      <div className="text-lg font-semibold text-primary">
+                        {comparisonResults.filter(s => !s.isReference).length}
+                      </div>
+                      <div className="text-muted-foreground">Firme analizzate</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-semibold text-green-600">
+                        {comparisonResults.filter(s => !s.isReference && (s.comparisonResult ?? 0) >= 0.85).length}
+                      </div>
+                      <div className="text-muted-foreground">Autentiche (≥85%)</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-semibold text-yellow-600">
+                        {comparisonResults.filter(s => !s.isReference && (s.comparisonResult ?? 0) >= 0.65 && (s.comparisonResult ?? 0) < 0.85).length}
+                      </div>
+                      <div className="text-muted-foreground">Prob. Autentiche (65-84%)</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-semibold text-red-600">
+                        {comparisonResults.filter(s => !s.isReference && (s.comparisonResult ?? 0) < 0.65).length}
+                      </div>
+                      <div className="text-muted-foreground">Sospette (&lt;65%)</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="space-y-4">
+                {comparisonResults && comparisonResults.length > 0 ? (
+                  // Mostra solo le firme da verificare (non di riferimento)
+                  comparisonResults.filter(sig => !sig.isReference).map((signature, index) => (
+                    <div key={signature.id} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1">
+                          <h4 className="font-medium text-lg">{signature.originalFilename}</h4>
+                          <div className="mt-2 space-y-2">
+                            <div className="flex items-center gap-4">
+                              <p className="text-sm text-muted-foreground">
+                                <strong>Similarità:</strong> {signature.comparisonResult ? (signature.comparisonResult * 100).toFixed(1) : '0'}%
+                              </p>
+                              {signature.parameters?.realDimensions && (
+                                <p className="text-sm text-muted-foreground">
+                                  <strong>Dimensioni:</strong> {signature.parameters.realDimensions.widthMm?.toFixed(1)}×{signature.parameters.realDimensions.heightMm?.toFixed(1)}mm
+                                </p>
+                              )}
+                            </div>
                         
                         {/* Parametri tecnici chiave */}
                         {signature.parameters && (
@@ -1249,7 +1253,10 @@ export default function SignaturesPage() {
                 Nessun risultato disponibile
               </p>
             )}
-          </div>
+              </div>
+            </div>
+          </ScrollArea>
+          
           <DialogFooter>
             <Button onClick={() => setShowResultsDialog(false)}>
               Chiudi
