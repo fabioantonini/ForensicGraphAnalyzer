@@ -478,14 +478,31 @@ export default function SignaturesPage() {
         queryClient.invalidateQueries({ queryKey: [`/api/signature-projects/${selectedProject}/signatures`] });
         queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures"] });
         
-        // Utilizziamo apiRequest con autenticazione corretta
-        console.log(`[FRONTEND] CHIAMATA COMPARE-ALL VIA APIREQUEST - timestamp: ${new Date().toISOString()}`);
-        const response = await apiRequest("POST", `/api/signature-projects/${selectedProject}/compare-all`, { 
-          timestamp: Date.now(), 
-          force: true 
+        // BYPASS REACT QUERY CACHE - Usa fetch diretto con cache disabled
+        console.log(`[FRONTEND] CHIAMATA COMPARE-ALL VIA FETCH DIRETTO - timestamp: ${new Date().toISOString()}`);
+        const response = await fetch(`/api/signature-projects/${selectedProject}/compare-all`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0"
+          },
+          credentials: "include",
+          cache: "no-store",
+          body: JSON.stringify({ 
+            timestamp: Date.now(), 
+            force: true,
+            bypass_cache: true
+          })
         });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
         const responseData = await response.json();
-        console.log(`[FRONTEND] DATI RICEVUTI VIA APIREQUEST - timestamp: ${new Date().toISOString()}`);
+        console.log(`[FRONTEND] DATI RICEVUTI VIA FETCH DIRETTO - timestamp: ${new Date().toISOString()}`);
         console.log(`[FRONTEND] Dati ricevuti:`, responseData);
         return responseData;
       } catch (error) {
