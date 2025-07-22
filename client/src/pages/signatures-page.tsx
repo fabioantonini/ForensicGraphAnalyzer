@@ -1100,15 +1100,27 @@ export default function SignaturesPage() {
       
       {/* Dialog per mostrare i risultati del confronto */}
       <Dialog open={showResultsDialog} onOpenChange={setShowResultsDialog}>
-        <DialogContent className="max-w-6xl max-h-[95vh] flex flex-col p-0">
-          <DialogHeader className="px-6 pt-6 pb-2">
-            <DialogTitle>Risultati Confronto Firme - Analisi Forense</DialogTitle>
-            <DialogDescription>
-              Analisi completata utilizzando 16+ parametri avanzati per il confronto grafologico
-            </DialogDescription>
+        <DialogContent className="max-w-full max-h-full w-screen h-screen flex flex-col p-0 m-0">
+          <DialogHeader className="px-6 pt-4 pb-2 border-b bg-background">
+            <div className="flex items-center justify-between">
+              <div>
+                <DialogTitle>Risultati Confronto Firme - Analisi Forense</DialogTitle>
+                <DialogDescription>
+                  Analisi completata utilizzando 16+ parametri avanzati per il confronto grafologico
+                </DialogDescription>
+              </div>
+              <Button
+                variant="ghost" 
+                size="sm"
+                onClick={() => setShowResultsDialog(false)}
+                className="h-8 w-8 p-0"
+              >
+                ✕
+              </Button>
+            </div>
           </DialogHeader>
           
-          <ScrollArea className="flex-1 px-6 pb-2" style={{ maxHeight: 'calc(95vh - 160px)' }}>
+          <ScrollArea className="flex-1 px-6 py-4">
             <div className="space-y-3">
               {/* Statistiche generali */}
               {comparisonResults && comparisonResults.length > 0 && (
@@ -1255,12 +1267,6 @@ export default function SignaturesPage() {
               </div>
             </div>
           </ScrollArea>
-          
-          <DialogFooter className="px-6 py-4 border-t">
-            <Button onClick={() => setShowResultsDialog(false)}>
-              Chiudi
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
       
