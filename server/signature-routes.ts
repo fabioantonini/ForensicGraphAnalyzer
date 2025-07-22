@@ -219,9 +219,12 @@ export function registerSignatureRoutes(appRouter: Router) {
           
           // Confronta con Python analyzer
           try {
+            const verificaPath = path.join('uploads', signature.filename);
+            const referencePath = path.join('uploads', referenceSignature.filename);
+            
             const pythonResult = await SignaturePythonAnalyzer.compareSignatures(
-              signature,
-              referenceSignature,
+              verificaPath,
+              referencePath,
               signature.parameters?.realDimensions || { widthMm: signature.realWidthMm, heightMm: signature.realHeightMm },
               referenceSignature.parameters?.realDimensions || { widthMm: referenceSignature.realWidthMm, heightMm: referenceSignature.realHeightMm }
             );
