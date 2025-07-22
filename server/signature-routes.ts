@@ -2556,6 +2556,11 @@ const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
           console.error(`\n===== ELABORAZIONE FIRMA ${signature.id} =====`);
           console.log(`[DEBUG COMPARE-ALL] Elaborazione firma ${signature.id}`);
           
+          // FORZA RIGENERAZIONE: Cancella comparisonChart esistente per forzare nuovo grafico
+          console.log(`[DEBUG COMPARE-ALL] 🔄 CANCELLAZIONE grafico cached per firma ${signature.id}`);
+          await storage.updateSignature(signature.id, { comparisonChart: null });
+          console.log(`[DEBUG COMPARE-ALL] ✅ Grafico cached cancellato - verrà rigenerato`);
+          
           let similarityScore = 0;
           let comparisonChart = null;
           let analysisReport = null;
