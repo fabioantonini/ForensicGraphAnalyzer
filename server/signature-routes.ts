@@ -561,6 +561,9 @@ const upload = multer({
   }
 });
 
+// Crea il router per le signature routes
+const router = Router();
+
 // Middleware per verificare l'autenticazione
 const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
   console.log('Session ID:', req.sessionID);  
@@ -573,8 +576,7 @@ const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
   res.status(401).json({ error: 'Autenticazione richiesta' });
 };
 
-export function registerSignatureRoutes(router: Router) {
-  // Genera report PDF per tutte le firme da verificare in un progetto
+// Genera report PDF per tutte le firme da verificare in un progetto
   router.post("/signature-projects/:id/generate-all-reports", isAuthenticated, async (req, res) => {
     try {
       const projectId = parseInt(req.params.id);
@@ -2856,7 +2858,6 @@ export function registerSignatureRoutes(router: Router) {
       res.status(500).json({ error: error.message });
     }
   });
-}
 
 // Funzioni ausiliarie per elaborazione asincrona
 
@@ -2929,5 +2930,12 @@ async function processSignature(signatureId: number, filePath: string) {
     console.error(`Errore nell'elaborazione della firma ${signatureId}:`, error);
     await storage.updateSignatureStatus(signatureId, 'failed');
   }
+}
+
+// Export function to register all signature routes
+export function registerSignatureRoutes(appRouter: Router) {
+  console.log("🔥🔥🔥 REGISTERING SIGNATURE ROUTES 🔥🔥🔥");
+  // Mount all the signature routes defined above onto the provided router
+  appRouter.use(router);
 }
 
