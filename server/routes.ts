@@ -138,16 +138,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   setupAnonymizationRoutes(app);
   
   // Risposta API per indicare quale versione di codice sta eseguendo
-  router.get("/api/version", (req, res) => {
+  router.get("/version", (req, res) => {
     res.json({
       version: "1.1.0",
       updated: "2025-05-11",
       features: ["Project isolation", "Full PDF report generation", "Reference signatures validation", "Demo mode"]
     });
   });
-  
-  // Applica il middleware solo alle API che lo richiedono
-  app.use("/api", router);
 
   // Get user stats
   app.get("/api/stats", isAuthenticated, isActiveUser, async (req, res, next) => {
