@@ -513,6 +513,17 @@ export default function SignaturesPage() {
       console.log(`[FRONTEND] Successo confronto. Dati ricevuti:`, data);
       console.log(`[FRONTEND] Numero firme ricevute:`, data.length);
       
+      // Debug: verifica se ci sono grafici nei dati
+      data?.forEach((sig, index) => {
+        console.log(`[FRONTEND] Firma ${index + 1}:`, {
+          filename: sig.originalFilename,
+          hasChart: !!sig.comparisonChart,
+          chartLength: sig.comparisonChart?.length,
+          hasReport: !!sig.analysisReport,
+          chartPreview: sig.comparisonChart?.substring(0, 50)
+        });
+      });
+      
       // Salva i risultati e mostra il dialog
       setComparisonResults(data);
       setShowResultsDialog(true);
@@ -1250,11 +1261,21 @@ export default function SignaturesPage() {
                   {signature.comparisonChart && (
                     <div className="mt-2">
                       <h5 className="font-medium mb-1">Grafico di Confronto:</h5>
-                      <img 
-                        src={`data:image/png;base64,${signature.comparisonChart}`} 
-                        alt="Grafico confronto" 
-                        className="max-w-full h-auto border rounded"
-                      />
+                      <div className="border rounded p-2 bg-white">
+                        <img 
+                          src={`data:image/png;base64,${signature.comparisonChart}`} 
+                          alt="Grafico confronto parametri" 
+                          className="max-w-full h-auto mx-auto block"
+                          style={{ maxHeight: '400px' }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Debug: mostra se il grafico esiste */}
+                  {!signature.comparisonChart && (
+                    <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm">
+                      <strong>Debug:</strong> Grafico di confronto non disponibile per questa firma
                     </div>
                   )}
                 </div>
