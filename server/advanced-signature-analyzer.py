@@ -596,10 +596,17 @@ def normalize_parameter_keys(data):
         'BaselineStdMm': 'BaselineStdMm'
     }
     
+    # DEBUG: Stampa i dati in ingresso
+    print(f"NORMALIZE INPUT: {data}", file=sys.stderr)
+    
     # Applica il mapping
     for key, value in data.items():
         normalized_key = key_mapping.get(key, key)
         normalized[normalized_key] = value
+        
+        # DEBUG: Verifica specifica per avgAsolaSize
+        if key == 'avgAsolaSize':
+            print(f"DEBUG avgAsolaSize MAPPING: {key} -> {normalized_key} = {value}", file=sys.stderr)
         
         # Assicura che abbiamo anche la versione alternativa per retrocompatibilità
         if normalized_key in key_mapping.values():
@@ -607,6 +614,13 @@ def normalize_parameter_keys(data):
             for orig_key, norm_key in key_mapping.items():
                 if norm_key == normalized_key and orig_key != key:
                     normalized[orig_key] = value
+    
+    # DEBUG: Verifica che AvgAsolaSize sia presente
+    if 'AvgAsolaSize' in normalized:
+        print(f"DEBUG NORMALIZED AvgAsolaSize: {normalized['AvgAsolaSize']}", file=sys.stderr)
+    else:
+        print(f"DEBUG MISSING AvgAsolaSize in normalized data!", file=sys.stderr)
+        print(f"DEBUG NORMALIZED KEYS: {list(normalized.keys())}", file=sys.stderr)
     
     return normalized
 
