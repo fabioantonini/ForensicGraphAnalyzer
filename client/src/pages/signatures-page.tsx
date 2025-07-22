@@ -50,8 +50,7 @@ import { Progress } from "@/components/ui/progress";
 // Project schema
 const projectSchema = z.object({
   name: z.string().min(3, "Il nome deve avere almeno 3 caratteri"),
-  description: z.string().optional(),
-  dpi: z.number().min(72).max(1200).default(300)
+  description: z.string().optional()
 });
 
 type ProjectFormValues = z.infer<typeof projectSchema>;
@@ -101,7 +100,6 @@ export default function SignaturesPage() {
     defaultValues: {
       name: "",
       description: "",
-      dpi: 300,
     },
   });
   
@@ -590,39 +588,7 @@ export default function SignaturesPage() {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={projectForm.control}
-                  name="dpi"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        {t('signatures.dpi')}
-                        <HelpTooltip
-                          content=""
-                          translationKey="signatures.help.dpiDesc"
-                          defaultContent="Densità di pixel per pollice (DPI) delle immagini di firma. Utilizzato per calcolare le dimensioni reali. I valori comuni sono 300 per scansioni standard, 600 per scansioni ad alta risoluzione."
-                          iconSize={16}
-                          className="ml-1"
-                        />
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          min={72}
-                          max={1200}
-                          placeholder="300"
-                          {...field}
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 300)}
-                          value={field.value || 300}
-                        />
-                      </FormControl>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {t('signatures.dpiAutomaticExtraction')}
-                      </p>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+
                 <DialogFooter>
                   <Button 
                     type="submit" 

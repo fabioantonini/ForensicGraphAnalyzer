@@ -288,4 +288,126 @@ export function registerSignatureRoutes(appRouter: Router) {
       res.status(500).json({ error: error.message });
     }
   });
+
+  // Upload di una firma di riferimento
+  appRouter.post("/signature-projects/:id/signatures/reference", isAuthenticated, isActiveUser, signatureUpload.single('signature'), async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const project = await storage.getSignatureProject(projectId);
+      
+      if (!project) {
+        return res.status(404).json({ error: 'Progetto non trovato' });
+      }
+      
+      // Verifica che il progetto appartenga all'utente corrente
+      if (project.userId !== req.user!.id) {
+        return res.status(403).json({ error: 'Non autorizzato' });
+      }
+      
+      if (!req.file) {
+        return res.status(400).json({ error: 'Nessun file caricato' });
+      }
+      
+      // Estrai le dimensioni reali dai dati del form
+      const realWidthMm = parseFloat(req.body.realWidthMm);
+      const realHeightMm = parseFloat(req.body.realHeightMm);
+      
+      if (!realWidthMm || !realHeightMm || realWidthMm <= 0 || realHeightMm <= 0) {
+        return res.status(400).json({ 
+          error: 'Le dimensioni reali della firma sono obbligatorie e devono essere positive'
+        });
+      }
+      
+      const signatureData = insertSignatureSchema.parse({
+        projectId,
+        filename: req.file.filename,
+        originalFilename: req.file.originalname,
+        fileType: req.file.mimetype,
+        fileSize: req.file.size,
+        isReference: true,
+        dpi: 300, // DPI standard per compatibilità
+        realWidthMm: realWidthMm,
+        realHeightMm: realHeightMm
+      });
+      
+      // Salva la firma nel database
+      const signature = await storage.createSignature(signatureData);
+      
+      res.status(201).json(signature);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Upload di una firma da verificare
+  appRouter.post("/signature-projects/:id/signatures/verify", isAuthenticated, isActiveUser, signatureUpload.single('signature'), async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const project = await storage.getSignatureProject(projectId);
+      
+      if (!project) {
+        return res.status(404).json({ error: 'Progetto non trovato' });
+      }
+      
+      // Verifica che il progetto appartenga all'utente corrente
+      if (project.userId !== req.user!.id) {
+        return res.status(403).json({ error: 'Non autorizzato' });
+      }
+      
+      if (!req.file) {
+        return res.status(400).json({ error: 'Nessun file caricato' });
+      }
+      
+      // Estrai le dimensioni reali dai dati del form
+      const realWidthMm = parseFloat(req.body.realWidthMm);
+      const realHeightMm = parseFloat(req.body.realHeightMm);
+      
+      if (!realWidthMm || !realHeightMm || realWidthMm <= 0 || realHeightMm <= 0) {
+        return res.status(400).json({ 
+          error: 'Le dimensioni reali della firma sono obbligatorie e devono essere positive'
+        });
+      }
+      
+      const signatureData = insertSignatureSchema.parse({
+        projectId,
+        filename: req.file.filename,
+        originalFilename: req.file.originalname,
+        fileType: req.file.mimetype,
+        fileSize: req.file.size,
+        isReference: false,
+        dpi: 300, // DPI standard per compatibilità
+        realWidthMm: realWidthMm,
+        realHeightMm: realHeightMm
+      });
+      
+      // Salva la firma nel database
+      const signature = await storage.createSignature(signatureData);
+      
+      res.status(201).json(signature);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Ottieni tutte le firme di un progetto
+  appRouter.get("/signature-projects/:id/signatures", isAuthenticated, isActiveUser, async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const project = await storage.getSignatureProject(projectId);
+      
+      if (!project) {
+        return res.status(404).json({ error: 'Progetto non trovato' });
+      }
+      
+      // Verifica che il progetto appartenga all'utente corrente
+      if (project.userId !== req.user!.id) {
+        return res.status(403).json({ error: 'Non autorizzato' });
+      }
+      
+      const signatures = await storage.getProjectSignatures(projectId);
+      res.json(signatures);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
 }
