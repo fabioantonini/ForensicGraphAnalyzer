@@ -230,14 +230,14 @@ export function registerSignatureRoutes(appRouter: Router) {
             );
             
             similarityScore = pythonResult.similarity / 100; // Converti in decimale
-            comparisonChart = pythonResult.chart;
-            analysisReport = pythonResult.report;
+            comparisonChart = pythonResult.comparison_chart; // CORRETTO: field name è comparison_chart
+            analysisReport = pythonResult.description; // CORRETTO: field name è description
             
             console.log(`[COMPARE-ALL] Python result per firma ${signature.id}:`, {
               similarity: pythonResult.similarity,
-              hasChart: !!pythonResult.chart,
-              chartLength: pythonResult.chart?.length,
-              hasReport: !!pythonResult.report
+              hasChart: !!pythonResult.comparison_chart,
+              chartLength: pythonResult.comparison_chart?.length,
+              hasReport: !!pythonResult.description
             });
             
           } catch (pythonError) {
