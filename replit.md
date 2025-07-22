@@ -353,6 +353,17 @@ Preferred communication style: Simple, everyday language.
   - Robust error handling with JavaScript analyzer fallback
   - Real-world dimension calibration system working correctly
 
+### July 22, 2025 - Router Registration Fix ✅ CRITICAL BUG RESOLVED
+- **CRITICAL ROUTE REGISTRATION BUG**: Fixed signature routes not being accessible via HTTP
+  - **Root Cause**: Router created and routes registered, but router never mounted on Express app
+  - **Solution**: Added `app.use('/api', router)` to mount signature router on Express app
+  - **Impact**: All signature endpoints including `/api/signature-projects/:id/compare-all` now accessible
+  - **Confirmation**: Server restart shows `🔥🔥🔥 REGISTERING SIGNATURE ROUTES 🔥🔥🔥` message
+- **Graph Cache Resolution**: Combined with forced cache clearing for complete fix
+  - Endpoint now cancels cached `comparisonChart` before regeneration
+  - Python script generates new graphs with correct parameters from database
+  - No more stale graph data with incorrect inclination values
+
 ### July 22, 2025 - Complete System Integration Resolution ✅ FULLY OPERATIONAL
 - **BREAKTHROUGH: End-to-End System Working**: Complete resolution of all routing, authentication, and data flow issues
   - **Routing Fix**: Signature routes properly registered with Router declaration and registerSignatureRoutes function export
