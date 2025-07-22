@@ -478,30 +478,14 @@ export default function SignaturesPage() {
         queryClient.invalidateQueries({ queryKey: [`/api/signature-projects/${selectedProject}/signatures`] });
         queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures"] });
         
-        // Utilizziamo endpoint compare-all che funzionava sempre
-        console.log(`[FRONTEND] CHIAMATA COMPARE-ALL - timestamp: ${new Date().toISOString()}`);
-        const response = await fetch(`/api/signature-projects/${selectedProject}/compare-all`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0',
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-Force-Real-Request': 'true'
-          },
-          body: JSON.stringify({ timestamp: Date.now(), force: true }),
-          credentials: 'include'
+        // Utilizziamo apiRequest con autenticazione corretta
+        console.log(`[FRONTEND] CHIAMATA COMPARE-ALL VIA APIREQUEST - timestamp: ${new Date().toISOString()}`);
+        const responseData = await apiRequest("POST", `/api/signature-projects/${selectedProject}/compare-all`, { 
+          timestamp: Date.now(), 
+          force: true 
         });
-        console.log(`[FRONTEND] RISPOSTA RICEVUTA - status: ${response.status}, timestamp: ${new Date().toISOString()}`);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const responseData = await response.json();
-        console.log(`[FRONTEND] DATI PARSED - timestamp: ${new Date().toISOString()}`);
-        console.log(`[FRONTEND] Dati ricevuti tramite fetch diretto:`, responseData);
+        console.log(`[FRONTEND] DATI RICEVUTI VIA APIREQUEST - timestamp: ${new Date().toISOString()}`);
+        console.log(`[FRONTEND] Dati ricevuti:`, responseData);
         return responseData;
       } catch (error) {
         console.error(`[FRONTEND] ERRORE fetch diretto:`, error);
