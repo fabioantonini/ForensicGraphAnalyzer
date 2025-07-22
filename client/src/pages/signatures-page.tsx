@@ -480,15 +480,18 @@ export default function SignaturesPage() {
         
         // Utilizziamo fetch diretto per bypassare completamente qualsiasi cache
         console.log(`[FRONTEND] CHIAMATA INIZIO - timestamp: ${new Date().toISOString()}`);
-        const response = await fetch(`/api/signature-projects/${selectedProject}/compare-all`, {
+        const randomParam = `_bust=${Date.now()}_${Math.random()}`;
+        const response = await fetch(`/api/signature-projects/${selectedProject}/compare-all?${randomParam}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Cache-Control': 'no-cache, no-store, must-revalidate',
             'Pragma': 'no-cache',
-            'Expires': '0'
+            'Expires': '0',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-Force-Real-Request': 'true'
           },
-          body: JSON.stringify({}),
+          body: JSON.stringify({ timestamp: Date.now(), force: true }),
           credentials: 'include'
         });
         console.log(`[FRONTEND] RISPOSTA RICEVUTA - status: ${response.status}, timestamp: ${new Date().toISOString()}`);
