@@ -2464,12 +2464,21 @@ const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
   
 
   // Esegui confronto automatico di tutte le firme da verificare in un progetto
-  router.post("/signature-projects/:id/compare-all", isAuthenticated, async (req, res) => {
+  router.post("/signature-projects/:id/compare-all", async (req, res) => {
     console.error(`\n🔥🔥🔥 COMPARE-ALL ENTRY REACHED! 🔥🔥🔥`);
     console.error(`TIMESTAMP: ${new Date().toISOString()}`);
     console.error(`PROJECT ID: ${req.params.id}`);
-    console.error(`USER: ${req.user?.username}`);
+    console.error(`SESSION ID: ${req.sessionID || 'NO SESSION'}`);
+    console.error(`IS AUTHENTICATED: ${req.isAuthenticated()}`);
+    console.error(`USER: ${req.user?.username || 'NO USER'}`);
+    console.error(`COOKIES: ${JSON.stringify(req.cookies)}`);
     console.error(`🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥\n`);
+    
+    // Verifica autenticazione manualmente
+    if (!req.isAuthenticated()) {
+      console.error(`❌ UTENTE NON AUTENTICATO`);
+      return res.status(401).json({ error: "Autenticazione richiesta" });
+    }
     console.log(`[COMPARE-ALL ENTRY] Ricevuta richiesta compare-all`);
     try {
       const projectId = parseInt(req.params.id);
