@@ -478,10 +478,9 @@ export default function SignaturesPage() {
         queryClient.invalidateQueries({ queryKey: [`/api/signature-projects/${selectedProject}/signatures`] });
         queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures"] });
         
-        // Utilizziamo fetch diretto per bypassare completamente qualsiasi cache
-        console.log(`[FRONTEND] CHIAMATA INIZIO - timestamp: ${new Date().toISOString()}`);
-        const randomParam = `_bust=${Date.now()}_${Math.random()}`;
-        const response = await fetch(`/api/signature-projects/${selectedProject}/compare-all?${randomParam}`, {
+        // Utilizziamo il nuovo endpoint anti-cache
+        console.log(`[FRONTEND] CHIAMATA INIZIO NUOVO ENDPOINT - timestamp: ${new Date().toISOString()}`);
+        const response = await fetch(`/api/signature-projects/${selectedProject}/force-compare-signatures`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
