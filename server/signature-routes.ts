@@ -2533,7 +2533,8 @@ export function registerSignatureRoutes(router: Router) {
           
           // Aggiorna i parametri se sono stati rigenerati
           if (comparisonResult.verifica_parameters) {
-            await storage.updateSignatureParameters(signature.id, comparisonResult.verifica_parameters);
+            // Usa updateSignature invece di updateSignatureParameters che non esiste
+            await storage.updateSignature(signature.id, { parameters: comparisonResult.verifica_parameters });
             console.error(`[REGENERATE] ✅ Parametri aggiornati per firma ${signature.id}`);
           }
           
