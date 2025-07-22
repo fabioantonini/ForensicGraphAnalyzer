@@ -2170,6 +2170,296 @@ export function registerSignatureRoutes(router: Router) {
     }
   });
   
+  // NUOVO ENDPOINT ANTI-CACHE per confronto firme
+  router.post("/signature-projects/:id/force-compare-signatures", isAuthenticated, async (req, res) => {
+    console.error(`\n===== FORCE COMPARE ENTRY =====`);
+    console.error(`TIMESTAMP: ${new Date().toISOString()}`);
+    console.error(`PROJECT ID: ${req.params.id}`);
+    console.error(`USER: ${req.user?.username}`);
+    console.error(`BODY: ${JSON.stringify(req.body)}`);
+    console.error(`==============================\n`);
+    console.log(`[FORCE-COMPARE ENTRY] Ricevuta richiesta force-compare-signatures`);
+    try {
+      const projectId = parseInt(req.params.id);
+      
+      console.log(`[DEBUG FORCE-COMPARE] Avvio confronto multiplo per progetto ${projectId}`);
+      
+      const project = await storage.getSignatureProject(projectId);
+      
+      if (!project) {
+        console.log(`[DEBUG FORCE-COMPARE] Progetto ${projectId} non trovato`);
+        return res.status(404).json({ error: 'Progetto non trovato' });
+      }
+      
+      // Verifica che il progetto appartenga all'utente corrente
+      if (project.userId !== req.user!.id) {
+        console.log(`[DEBUG FORCE-COMPARE] Utente ${req.user!.id} non autorizzato per progetto ${projectId} (proprietario: ${project.userId})`);
+        return res.status(403).json({ error: 'Non autorizzato' });
+      }
+      
+      console.log(`[DEBUG FORCE-COMPARE] Recupero firme di riferimento per progetto ${projectId}`);
+      
+      // Ottieni tutte le firme di riferimento
+      const referenceSignatures = await storage.getProjectSignatures(projectId, true);
+      console.log(`[DEBUG FORCE-COMPARE] Trovate ${referenceSignatures.length} firme di riferimento totali`);
+      
+      // Filtra le firme di riferimento complete (con parametri)
+      const completedReferences = referenceSignatures.filter(
+        ref => ref.processingStatus === 'completed' && ref.parameters
+      );
+      
+      console.log(`[DEBUG FORCE-COMPARE] Firme di riferimento completate: ${completedReferences.length}`);
+      
+      if (completedReferences.length === 0) {
+        console.log(`[DEBUG FORCE-COMPARE] Nessuna firma di riferimento elaborata disponibile per il progetto ${projectId}`);
+        return res.status(400).json({
+          error: 'Nessuna firma di riferimento elaborata disponibile'
+        });
+      }
+      
+      console.log(`[DEBUG FORCE-COMPARE] Recupero firme da verificare per progetto ${projectId}`);
+      
+      // Ottieni tutte le firme da verificare
+      const verificationSignatures = await storage.getProjectSignatures(projectId, false);
+      console.log(`[DEBUG FORCE-COMPARE] Trovate ${verificationSignatures.length} firme da verificare totali`);
+      
+      // Filtra le firme da verificare complete (con parametri)
+      const completedVerifications = verificationSignatures.filter(
+        sig => sig.processingStatus === 'completed' && sig.parameters
+      );
+      
+      console.log(`[DEBUG FORCE-COMPARE] Firme da verificare completate: ${completedVerifications.length}`);
+      
+      if (completedVerifications.length === 0) {
+        console.log(`[DEBUG FORCE-COMPARE] Nessuna firma da verificare elaborata disponibile per il progetto ${projectId}`);
+        return res.status(400).json({
+          error: 'Nessuna firma da verificare elaborata disponibile'
+        });
+      }
+      
+      // FORZA PYTHON ANALYZER - bypass completo del check
+      console.log(`[DEBUG FORCE] BYPASS COMPLETO - FORZA PYTHON ANALYZER!`);
+      const forcedPythonAvailable = true;
+      
+      // Crea le informazioni sul caso
+      const caseInfo = {
+        caseName: project.name,
+        subject: `Verifica multiple di firme`,
+        date: new Date().toLocaleDateString('it-IT'),
+        documentType: 'Verifiche multiple',
+        notes: project.description || ""
+      };
+      
+      console.log(`[DEBUG FORCE-COMPARE] Inizio elaborazione di ${completedVerifications.length} firme da verificare`);
+      
+      // Utilizziamo un ciclo for standard invece di Promise.all per garantire migliore gestione degli errori
+      const results = [];
+      console.error(`\n===== INIZIO CICLO FIRME =====`);
+      console.error(`FIRME DA ELABORARE: ${completedVerifications.length}`);
+      console.error(`FORCED PYTHON: ${forcedPythonAvailable}`);
+      console.error(`==============================\n`);
+      
+      for (const signature of completedVerifications) {
+        try {
+          console.error(`\n===== ELABORAZIONE FIRMA ${signature.id} =====`);
+          console.log(`[DEBUG FORCE-COMPARE] Elaborazione firma ${signature.id}`);
+          
+          let similarityScore = 0;
+          let comparisonChart = null;
+          let analysisReport = null;
+          
+          if (forcedPythonAvailable) {
+            try {
+              console.log(`[DEBUG FORCE-COMPARE] Usando analizzatore Python per firma ${signature.id}`);
+              
+              // Usiamo la prima firma di riferimento per il confronto avanzato
+              const referenceSignature = completedReferences[0];
+              const referencePath = path.join('./uploads', referenceSignature.filename);
+              const signaturePath = path.join('./uploads', signature.filename);
+              
+              // Esegui il confronto avanzato con ordine corretto
+              console.log(`[FORCE-COMPARE] Confronto firma da verificare: ${signaturePath}`);
+              console.log(`[FORCE-COMPARE] Contro firma di riferimento: ${referencePath}`);
+              
+              // Debug percorsi assoluti per Python
+              const absoluteSignaturePath = path.resolve(signaturePath);
+              const absoluteReferencePath = path.resolve(referencePath);
+              console.error(`\n===== PERCORSI PYTHON SCRIPT =====`);
+              console.error(`VERIFICA ASSOLUTO: ${absoluteSignaturePath}`);
+              console.error(`RIFERIMENTO ASSOLUTO: ${absoluteReferencePath}`);
+              console.error(`===================================\n`);
+              
+              // DEBUG: Verifica che abbiamo le dimensioni reali dal database
+              console.log(`[DEBUG DIMENSIONS] Firma da verificare ${signature.id}: realWidthMm=${signature.realWidthMm}, realHeightMm=${signature.realHeightMm}`);
+              console.log(`[DEBUG DIMENSIONS] Firma riferimento ${referenceSignature.id}: realWidthMm=${referenceSignature.realWidthMm}, realHeightMm=${referenceSignature.realHeightMm}`);
+              
+              const verificaDimensions = { 
+                widthMm: signature.realWidthMm || 50, 
+                heightMm: signature.realHeightMm || 20 
+              };
+              const referenceDimensions = { 
+                widthMm: referenceSignature.realWidthMm || 50, 
+                heightMm: referenceSignature.realHeightMm || 20 
+              };
+              
+              console.log(`[DEBUG DIMENSIONS] Dimensioni passate al Python - verifica: ${verificaDimensions.widthMm}x${verificaDimensions.heightMm}mm`);
+              console.log(`[DEBUG DIMENSIONS] Dimensioni passate al Python - riferimento: ${referenceDimensions.widthMm}x${referenceDimensions.heightMm}mm`);
+              
+              // Debug visibile anche con log troncato
+              console.error(`\n===== DIMENSIONI PYTHON SCRIPT =====`);
+              console.error(`VERIFICA: ${verificaDimensions.widthMm}x${verificaDimensions.heightMm}mm`);
+              console.error(`RIFERIMENTO: ${referenceDimensions.widthMm}x${referenceDimensions.heightMm}mm`);
+              console.error(`===================================\n`);
+              
+              let comparisonResult;
+              try {
+                console.error(`\n===== CHIAMATA PYTHON ANALYZER =====`);
+                console.error(`INIZIO: ${new Date().toISOString()}`);
+                console.error(`====================================\n`);
+                
+                comparisonResult = await SignaturePythonAnalyzer.compareSignatures(
+                  signaturePath,   // Firma da verificare
+                  referencePath,   // Firma di riferimento
+                  verificaDimensions, // Dimensioni firma da verificare
+                  referenceDimensions, // Dimensioni firma di riferimento
+                  false, // Non generare report DOCX automaticamente
+                  caseInfo,
+                  projectId // Passiamo l'ID del progetto per assicurare l'isolamento dei dati
+                );
+                
+                console.error(`\n===== PYTHON ANALYZER COMPLETATO =====`);
+                console.error(`FINE: ${new Date().toISOString()}`);
+                console.error(`======================================\n`);
+              } catch (pythonError) {
+                console.error(`\n===== ERRORE PYTHON ANALYZER =====`);
+                console.error(`ERRORE: ${pythonError.message}`);
+                console.error(`STACK: ${pythonError.stack}`);
+                console.error(`==================================\n`);
+                throw pythonError;
+              }
+              
+              // Estrai i parametri dalle firme Python se disponibili
+              if (comparisonResult.verifica_data && Object.keys(comparisonResult.verifica_data).length > 0) {
+                console.log(`[DEBUG PYTHON] Parametri Python disponibili per firma da verificare ${signature.id}`);
+                
+                // Mappa i parametri Python ai parametri del database
+                const pythonParameters = {
+                  // Parametri di base (sempre disponibili)
+                  velocity: comparisonResult.verifica_data.Velocity || signature.parameters?.velocity || 0,
+                  avgSpacing: comparisonResult.verifica_data.AvgSpacing || signature.parameters?.avgSpacing || 0,
+                  proportion: comparisonResult.verifica_data.Proportion || signature.parameters?.proportion || 0,
+                  
+                  // Parametri avanzati (potrebbero non essere disponibili)
+                  inclination: comparisonResult.verifica_data.Inclination || signature.parameters?.inclination || 0,
+                  pressureStd: comparisonResult.verifica_data.PressureStd || signature.parameters?.pressureStd || 0,
+                  avgAsolaSize: comparisonResult.verifica_data.AvgAsolaSize || signature.parameters?.avgAsolaSize || 0,
+                  avgCurvature: comparisonResult.verifica_data.AvgCurvature || comparisonResult.verifica_data.Curvature || signature.parameters?.avgCurvature || 0,
+                  
+                  // Mantieni gli altri parametri esistenti
+                  ...signature.parameters
+                };
+                
+                // Aggiorna i parametri nel database usando il metodo corretto
+                await storage.updateSignatureParameters(signature.id, pythonParameters);
+                console.error(`PARAMETRI AGGIORNATI CON DATI PYTHON per firma ${signature.id}`);
+              }
+              
+              similarityScore = comparisonResult.similarity;
+              
+              // Salva il grafico e il report (DOPO l'aggiornamento parametri)
+              comparisonChart = comparisonResult.comparison_chart;
+              analysisReport = comparisonResult.description;
+              
+              console.log(`[DEBUG CHART] Nuovo grafico generato: ${comparisonChart ? 'SI' : 'NO'}`);
+              console.log(`[DEBUG CHART] Percorso grafico: ${comparisonChart}`);
+              console.log(`[DEBUG CHART] Analisi report generato: ${analysisReport ? 'SI' : 'NO'}`);
+              console.error(`[CRITICAL FIX] ✅ PARAMETRI AGGIORNATI PRIMA DEL GRAFICO!`);              
+              
+              console.log(`[DEBUG FORCE-COMPARE] Confronto Python completato per firma ${signature.id} con score ${similarityScore}`);
+            } catch (pythonError: any) {
+              console.log(`[DEBUG FORCE-COMPARE] ❌ ERRORE PYTHON ANALYZER: ${pythonError.message}`);
+              console.log(`[DEBUG FORCE-COMPARE] Stack trace:`, pythonError.stack);
+              console.log(`[DEBUG FORCE-COMPARE] 🔄 FALLBACK ALL'ANALIZZATORE JAVASCRIPT`);
+              // Fallback all'analizzatore JavaScript se quello Python fallisce
+              const referenceParameters = completedReferences.map(ref => ref.parameters!);
+              similarityScore = SignatureAnalyzer.compareSignatures(signature.parameters!, referenceParameters);
+              console.log(`[DEBUG FORCE-COMPARE] ✓ JavaScript analyzer result: ${similarityScore}`);
+            }
+          } else {
+            console.log(`[DEBUG FORCE-COMPARE] Usando analizzatore JS per firma ${signature.id}`);
+            // Usa l'analizzatore JavaScript standard
+            const referenceParameters = completedReferences.map(ref => ref.parameters!);
+            similarityScore = SignatureAnalyzer.compareSignatures(signature.parameters!, referenceParameters);
+          }
+          
+          console.log(`[DEBUG FORCE-COMPARE] Risultato confronto per firma ${signature.id}: ${similarityScore}`);
+          
+          // Primo step: aggiornamento del risultato numerico
+          console.log(`[DEBUG FORCE-COMPARE] Aggiornamento punteggio di confronto per firma ${signature.id}`);
+          await storage.updateSignatureComparisonResult(signature.id, similarityScore);
+          
+          // Secondo step: aggiornamento dei dati aggiuntivi solo se necessario
+          if (comparisonChart || analysisReport) {
+            console.log(`[DEBUG FORCE-COMPARE] Aggiornamento dati avanzati per firma ${signature.id}`);
+            
+            // Creiamo un nuovo oggetto con solo i campi effettivamente presenti
+            const updateData: Record<string, any> = {};
+            
+            if (comparisonChart) {
+              console.log(`[DEBUG FORCE-COMPARE] Firma ${signature.id} ha un grafico di confronto`);
+              updateData.comparisonChart = comparisonChart;
+            }
+            
+            if (analysisReport) {
+              console.log(`[DEBUG FORCE-COMPARE] Firma ${signature.id} ha un report di analisi`);
+              updateData.analysisReport = analysisReport;
+            }
+            
+            // Aggiorniamo solo se abbiamo effettivamente dei dati da aggiornare
+            if (Object.keys(updateData).length > 0) {
+              console.log(`[DEBUG FORCE-COMPARE] Aggiornamento firma ${signature.id} con dati avanzati`);
+              await storage.updateSignature(signature.id, updateData);
+            }
+          }
+          
+          // Recupera la firma aggiornata
+          console.log(`[DEBUG FORCE-COMPARE] Recupero firma aggiornata ${signature.id}`);
+          const updatedSignature = await storage.getSignature(signature.id);
+          
+          if (!updatedSignature) {
+            console.error(`[DEBUG FORCE-COMPARE] Impossibile recuperare la firma aggiornata ${signature.id}`);
+            throw new Error(`Impossibile recuperare la firma aggiornata con ID ${signature.id}`);
+          }
+          
+          console.log(`[DEBUG FORCE-COMPARE] Firma ${signature.id}: isReference=${updatedSignature.isReference}, filename=${updatedSignature.filename}`);
+          results.push(updatedSignature);
+          console.log(`[DEBUG FORCE-COMPARE] Firma ${signature.id} elaborata con successo`);
+        } catch (signatureError) {
+          console.error(`[DEBUG FORCE-COMPARE] Errore nell'elaborazione della firma ${signature.id}:`, signatureError);
+          // Continuiamo con le altre firme anche se una fallisce
+        }
+      }
+      
+      console.log(`[DEBUG FORCE-COMPARE] Confronto multiplo completato per ${results.length} firme`);
+      
+      // Aggiorna il registro attività
+      await storage.createActivity({
+        userId: req.user!.id,
+        type: 'signature_compare',
+        details: `Confrontate ${results.length} firme nel progetto "${project.name}"`
+      });
+      
+      // Filtra e restituisci solo le firme da verificare (non di riferimento)
+      const verificationResults = results.filter(signature => !signature.isReference);
+      console.log(`[DEBUG FORCE-COMPARE] Firme da verificare nel risultato: ${verificationResults.length}`);
+      console.log(`[DEBUG FORCE-COMPARE] Invio risposta con ${verificationResults.length} firme da verificare`);
+      res.json(verificationResults);
+    } catch (error: any) {
+      console.error(`[DEBUG FORCE-COMPARE] Errore generale nel confronto multiplo delle firme:`, error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
   // Esegui confronto automatico di tutte le firme da verificare in un progetto
   router.post("/signature-projects/:id/compare-all", isAuthenticated, async (req, res) => {
     console.error(`\n===== COMPARE-ALL ENTRY =====`);
