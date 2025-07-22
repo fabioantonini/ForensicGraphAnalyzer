@@ -2759,7 +2759,9 @@ const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
       // Filtra e restituisci solo le firme da verificare (non di riferimento)
       const verificationResults = results.filter(signature => !signature.isReference);
       console.log(`[DEBUG COMPARE-ALL] Firme da verificare nel risultato: ${verificationResults.length}`);
+      console.log(`[DEBUG COMPARE-ALL] IDs delle firme da verificare: ${verificationResults.map(s => s.id).join(', ')}`);
       console.log(`[DEBUG COMPARE-ALL] Invio risposta con ${verificationResults.length} firme da verificare`);
+      console.log(`[DEBUG COMPARE-ALL] ✅ RISPOSTA FINALE:`, JSON.stringify(verificationResults, null, 2));
       res.json(verificationResults);
     } catch (error: any) {
       console.error(`[DEBUG COMPARE-ALL] Errore generale nel confronto multiplo delle firme:`, error);
