@@ -129,10 +129,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register signature routes
   const router = Router();
-  
-
-  
   registerSignatureRoutes(router);
+  
+  // CRITICAL: Mount router on app with /api prefix
+  app.use('/api', router);
 
   // Register anonymization routes
   setupAnonymizationRoutes(app);
