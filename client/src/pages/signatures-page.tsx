@@ -478,9 +478,9 @@ export default function SignaturesPage() {
         queryClient.invalidateQueries({ queryKey: [`/api/signature-projects/${selectedProject}/signatures`] });
         queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures"] });
         
-        // Utilizziamo il nuovo endpoint anti-cache
-        console.log(`[FRONTEND] CHIAMATA INIZIO NUOVO ENDPOINT - timestamp: ${new Date().toISOString()}`);
-        const response = await fetch(`/api/signature-projects/${selectedProject}/force-compare-signatures`, {
+        // Utilizziamo endpoint rigenerazione analisi per bypass completo cache
+        console.log(`[FRONTEND] CHIAMATA REGENERATE-ANALYSIS - timestamp: ${new Date().toISOString()}`);
+        const response = await fetch(`/api/signature-projects/${selectedProject}/regenerate-analysis`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

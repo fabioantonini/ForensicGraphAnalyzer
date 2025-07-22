@@ -2170,8 +2170,8 @@ export function registerSignatureRoutes(router: Router) {
     }
   });
   
-  // NUOVO ENDPOINT ANTI-CACHE per confronto firme
-  router.post("/signature-projects/:id/force-compare-signatures", isAuthenticated, async (req, res) => {
+  // ENDPOINT COMPLETAMENTE NUOVO per rigenerare parametri
+  router.post("/signature-projects/:id/regenerate-analysis", isAuthenticated, async (req, res) => {
     console.error(`\n===== FORCE COMPARE ENTRY =====`);
     console.error(`TIMESTAMP: ${new Date().toISOString()}`);
     console.error(`PROJECT ID: ${req.params.id}`);
