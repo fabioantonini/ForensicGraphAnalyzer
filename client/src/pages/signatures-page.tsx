@@ -468,13 +468,22 @@ export default function SignaturesPage() {
       
       console.log(`[FRONTEND] Avvio confronto multiplo per progetto ${selectedProject} usando l'endpoint compare-all`);
       console.log(`[FRONTEND] URL endpoint: /api/signature-projects/${selectedProject}/compare-all`);
+      console.log(`[FRONTEND] PRIMA della chiamata apiRequest - timestamp: ${new Date().toISOString()}`);
       
-      // Utilizziamo apiRequest per gestire correttamente la richiesta POST
-      const response = await apiRequest("POST", `/api/signature-projects/${selectedProject}/compare-all`, {});
-      const responseData = await response.json();
-      
-      console.log(`[FRONTEND] Dati ricevuti tramite apiRequest:`, responseData);
-      return responseData;
+      try {
+        // Utilizziamo apiRequest per gestire correttamente la richiesta POST
+        console.log(`[FRONTEND] CHIAMATA INIZIO - timestamp: ${new Date().toISOString()}`);
+        const response = await apiRequest("POST", `/api/signature-projects/${selectedProject}/compare-all`, {});
+        console.log(`[FRONTEND] RISPOSTA RICEVUTA - status: ${response.status}, timestamp: ${new Date().toISOString()}`);
+        
+        const responseData = await response.json();
+        console.log(`[FRONTEND] DATI PARSED - timestamp: ${new Date().toISOString()}`);
+        console.log(`[FRONTEND] Dati ricevuti tramite apiRequest:`, responseData);
+        return responseData;
+      } catch (error) {
+        console.error(`[FRONTEND] ERRORE apiRequest:`, error);
+        throw error;
+      }
     },
     onSuccess: (data: Signature[]) => {
       console.log(`[FRONTEND] Successo confronto. Dati ricevuti:`, data);
