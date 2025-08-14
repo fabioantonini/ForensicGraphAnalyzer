@@ -231,7 +231,7 @@ export function registerSignatureRoutes(appRouter: Router) {
               referenceSignature.parameters?.realDimensions || { widthMm: referenceSignature.realWidthMm, heightMm: referenceSignature.realHeightMm }
             );
             
-            similarityScore = pythonResult.similarity / 100; // Converti in decimale
+            similarityScore = pythonResult.similarity; // Mantieni come percentuale diretta
             comparisonChart = pythonResult.comparison_chart; // CORRETTO: field name è comparison_chart
             analysisReport = pythonResult.description; // CORRETTO: field name è description
             

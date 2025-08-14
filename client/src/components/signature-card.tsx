@@ -107,9 +107,9 @@ export function SignatureCard({
     return (
       <div className="mt-2">
         <p className="text-sm font-medium">
-          {t('signatures.verification.similarityScore', 'Punteggio di somiglianza')}: {(score * 100).toFixed(1)}%
+          {t('signatures.verification.similarityScore', 'Punteggio di somiglianza')}: {score.toFixed(1)}%
         </p>
-        <Progress value={score * 100} className="h-2 mt-1" />
+        <Progress value={score} className="h-2 mt-1" />
         <Badge className={`mt-2 ${color}`}>{t(textKey, defaultText)}</Badge>
       </div>
     );
