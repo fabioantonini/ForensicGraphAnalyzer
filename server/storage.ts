@@ -2041,6 +2041,17 @@ export class DatabaseStorage implements IStorage {
     return question;
   }
 
+  async getQuizQuestionBySessionAndNumber(sessionId: number, questionNumber: number): Promise<QuizQuestion | undefined> {
+    const [question] = await db
+      .select()
+      .from(quizQuestions)
+      .where(and(
+        eq(quizQuestions.sessionId, sessionId),
+        eq(quizQuestions.questionNumber, questionNumber)
+      ));
+    return question;
+  }
+
   async createQuizAnswer(answerData: InsertQuizAnswer): Promise<QuizAnswer> {
     const [answer] = await db
       .insert(quizAnswers)

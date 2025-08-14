@@ -309,9 +309,40 @@ router.post("/session/:sessionId/next", async (req, res) => {
     // Avanza alla domanda successiva
     const nextQuestionNumber = session.currentQuestion + 1;
     
+    // Verifica che non stiamo andando oltre il numero totale di domande
+    if (nextQuestionNumber > session.totalQuestions) {
+      return res.status(400).json({ error: "Quiz già completato" });
+    }
+    
     await storage.updateQuizSession(sessionId, {
       currentQuestion: nextQuestionNumber
     });
+
+    // Verifica se esiste già una domanda per questo numero
+    const existingQuestion = await storage.getQuizQuestionBySessionAndNumber(sessionId, nextQuestionNumber);
+    
+    if (!existingQuestion) {
+      // Crea una nuova domanda usando il servizio Wake Up
+      const { generateQuizQuestion } = await import('./wake-up-service');
+      const newQuestion = await generateQuizQuestion(session.category);
+      
+      // Salva la domanda nel database
+      const savedQuestion = await storage.createQuizQuestion({
+        sessionId: sessionId,
+        questionNumber: nextQuestionNumber,
+        question: newQuestion.question,
+        options: newQuestion.options,
+        correctAnswer: newQuestion.correctAnswer,
+        explanation: newQuestion.explanation
+      });
+
+      // Crea anche una risposta vuota per questa domanda
+      await storage.createQuizAnswer({
+        questionId: savedQuestion.id,
+        userAnswer: null,
+        answeredAt: null
+      });
+    }
 
     res.json({ success: true, currentQuestion: nextQuestionNumber });
 
