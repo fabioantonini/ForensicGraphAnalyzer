@@ -506,9 +506,15 @@ export default function SignaturesPage() {
       setComparisonResults(data);
       setShowResultsDialog(true);
       
-      // Aggiorniamo la query per garantire che i dati siano aggiornati
+      // Forza l'aggiornamento completo dei dati
       queryClient.invalidateQueries({ queryKey: [`/api/signature-projects/${selectedProject}/signatures`] });
       queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures"] });
+      
+      // Forza un refetch immediato per garantire i dati aggiornati
+      setTimeout(() => {
+        refetchSignatures();
+      }, 100);
+      
       toast({
         title: "Successo",
         description: "Confronto delle firme completato",
