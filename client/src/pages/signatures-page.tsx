@@ -441,10 +441,11 @@ export default function SignaturesPage() {
         description: `Generati ${data.successful} report di ${data.total} firme`,
       });
       
-      // Se abbiamo generato almeno un report, offriamo un link per scaricare il primo
-      if (data.successful > 0 && data.results.some((r: any) => r.success && r.reportPath)) {
-        const firstSuccessfulReport = data.results.find((r: any) => r.success && r.reportPath);
+      // Se abbiamo generato almeno un report, scarichiamo automaticamente il PDF
+      if (data.successful > 0 && data.results.some((r: any) => r.success)) {
+        const firstSuccessfulReport = data.results.find((r: any) => r.success);
         if (firstSuccessfulReport) {
+          console.log('[FRONTEND] Avvio download PDF per firma:', firstSuccessfulReport.id);
           setTimeout(() => {
             window.location.href = `/api/signatures/${firstSuccessfulReport.id}/report`;
           }, 1500);
