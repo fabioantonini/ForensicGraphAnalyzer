@@ -587,7 +587,7 @@ export default function WakeUpPage() {
                       key={index}
                       variant={selectedAnswers[currentQuestion.id] === index ? "default" : "outline"}
                       className="w-full justify-start text-left h-auto py-3 px-4"
-                      disabled={isAnswering || currentQuestion.answer?.answeredAt !== undefined}
+                      disabled={isAnswering}
                       onClick={() => handleAnswerQuestion(currentQuestion.id, index)}
                     >
                       <div className="flex items-center space-x-3">
@@ -600,8 +600,8 @@ export default function WakeUpPage() {
                   ))}
                 </div>
 
-                {/* Force show navigation if stuck */}
-                {!currentQuestion.answer?.answeredAt && (
+                {/* Force show navigation if stuck - only show if not answered */}
+                {(!currentQuestion.answer?.answeredAt || currentQuestion.answer?.answeredAt === null) && (
                   <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <p className="text-sm text-yellow-800 mb-2">Questa domanda non ha una risposta registrata. Puoi:</p>
                     <div className="flex gap-2 mt-2">
@@ -627,6 +627,7 @@ export default function WakeUpPage() {
                 <div className="mt-4 p-2 bg-red-50 border border-red-200 rounded text-xs">
                   <p>Debug: questionId={currentQuestion.id}, hasAnswer={!!currentQuestion.answer}, answeredAt={currentQuestion.answer?.answeredAt || 'none'}</p>
                   <p>Answer object: {JSON.stringify(currentQuestion.answer)}</p>
+                  <p>Buttons enabled: {!isAnswering}</p>
                 </div>
 
                 {/* Show result after answering */}
