@@ -3,7 +3,8 @@ import {
   InsertActivity, Query, InsertQuery, users, documents, activities, queries,
   SignatureProject, InsertSignatureProject, Signature, InsertSignature,
   signatureProjects, signatures, SignatureParameters, ReportTemplate, InsertReportTemplate,
-  reportTemplates, settings
+  reportTemplates, settings, QuizSession, InsertQuizSession, QuizQuestion, InsertQuizQuestion,
+  QuizAnswer, InsertQuizAnswer, quizSessions, quizQuestions, quizAnswers
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -120,6 +121,43 @@ export interface IStorage {
     thumbnailUrl?: string;
   }): Promise<ReportTemplate>;
   deleteReportTemplate(id: number): Promise<void>;
+
+  // Wake Up Quiz methods
+  createQuizSession(session: InsertQuizSession): Promise<QuizSession>;
+  getQuizSession(id: number): Promise<QuizSession | undefined>;
+  getUserActiveQuizSessions(userId: number): Promise<QuizSession[]>;
+  updateQuizSession(id: number, data: {
+    currentQuestion?: number;
+    score?: number;
+    status?: string;
+    completedAt?: Date;
+  }): Promise<QuizSession>;
+  
+  createQuizQuestion(question: InsertQuizQuestion): Promise<QuizQuestion>;
+  getSessionQuestions(sessionId: number): Promise<QuizQuestion[]>;
+  getQuizQuestion(id: number): Promise<QuizQuestion | undefined>;
+  
+  createQuizAnswer(answer: InsertQuizAnswer): Promise<QuizAnswer>;
+  getQuestionAnswer(questionId: number): Promise<QuizAnswer | undefined>;
+  updateQuizAnswer(id: number, data: {
+    userAnswer?: number;
+    isCorrect?: boolean;
+    answerTimeMs?: number;
+    points?: number;
+    answeredAt?: Date;
+    revealedAt?: Date;
+  }): Promise<QuizAnswer>;
+  
+  getUserQuizStats(userId: number): Promise<{
+    totalSessions: number;
+    completedSessions: number;
+    totalScore: number;
+    averageScore: number;
+    bestScore: number;
+    totalQuestions: number;
+    correctAnswers: number;
+    accuracy: number;
+  }>;
 
   // Session store
   sessionStore: any;
@@ -1925,6 +1963,199 @@ export class DatabaseStorage implements IStorage {
   async getSettings(key: string): Promise<string | null> {
     const [result] = await db.select().from(settings).where(eq(settings.key, key));
     return result ? result.value : null;
+  }
+
+  // Wake Up Quiz methods
+  async createQuizSession(sessionData: InsertQuizSession): Promise<QuizSession> {
+    const [session] = await db
+      .insert(quizSessions)
+      .values(sessionData)
+      .returning();
+    return session;
+  }
+
+  async getQuizSession(id: number): Promise<QuizSession | undefined> {
+    const [session] = await db
+      .select()
+      .from(quizSessions)
+      .where(eq(quizSessions.id, id));
+    return session;
+  }
+
+  async getUserActiveQuizSessions(userId: number): Promise<QuizSession[]> {
+    return await db
+      .select()
+      .from(quizSessions)
+      .where(and(
+        eq(quizSessions.userId, userId),
+        eq(quizSessions.status, 'active')
+      ))
+      .orderBy(desc(quizSessions.startedAt));
+  }
+
+  async updateQuizSession(id: number, data: {
+    currentQuestion?: number;
+    score?: number;
+    status?: string;
+    completedAt?: Date;
+  }): Promise<QuizSession> {
+    const [session] = await db
+      .update(quizSessions)
+      .set({
+        ...(data.currentQuestion !== undefined && { currentQuestion: data.currentQuestion }),
+        ...(data.score !== undefined && { score: data.score }),
+        ...(data.status !== undefined && { status: data.status }),
+        ...(data.completedAt !== undefined && { completedAt: data.completedAt })
+      })
+      .where(eq(quizSessions.id, id))
+      .returning();
+    
+    if (!session) {
+      throw new Error(`Quiz session with ID ${id} not found`);
+    }
+    
+    return session;
+  }
+
+  async createQuizQuestion(questionData: InsertQuizQuestion): Promise<QuizQuestion> {
+    const [question] = await db
+      .insert(quizQuestions)
+      .values(questionData)
+      .returning();
+    return question;
+  }
+
+  async getSessionQuestions(sessionId: number): Promise<QuizQuestion[]> {
+    return await db
+      .select()
+      .from(quizQuestions)
+      .where(eq(quizQuestions.sessionId, sessionId))
+      .orderBy(quizQuestions.questionNumber);
+  }
+
+  async getQuizQuestion(id: number): Promise<QuizQuestion | undefined> {
+    const [question] = await db
+      .select()
+      .from(quizQuestions)
+      .where(eq(quizQuestions.id, id));
+    return question;
+  }
+
+  async createQuizAnswer(answerData: InsertQuizAnswer): Promise<QuizAnswer> {
+    const [answer] = await db
+      .insert(quizAnswers)
+      .values(answerData)
+      .returning();
+    return answer;
+  }
+
+  async getQuestionAnswer(questionId: number): Promise<QuizAnswer | undefined> {
+    const [answer] = await db
+      .select()
+      .from(quizAnswers)
+      .where(eq(quizAnswers.questionId, questionId));
+    return answer;
+  }
+
+  async updateQuizAnswer(id: number, data: {
+    userAnswer?: number;
+    isCorrect?: boolean;
+    answerTimeMs?: number;
+    points?: number;
+    answeredAt?: Date;
+    revealedAt?: Date;
+  }): Promise<QuizAnswer> {
+    const [answer] = await db
+      .update(quizAnswers)
+      .set({
+        ...(data.userAnswer !== undefined && { userAnswer: data.userAnswer }),
+        ...(data.isCorrect !== undefined && { isCorrect: data.isCorrect }),
+        ...(data.answerTimeMs !== undefined && { answerTimeMs: data.answerTimeMs }),
+        ...(data.points !== undefined && { points: data.points }),
+        ...(data.answeredAt !== undefined && { answeredAt: data.answeredAt }),
+        ...(data.revealedAt !== undefined && { revealedAt: data.revealedAt })
+      })
+      .where(eq(quizAnswers.id, id))
+      .returning();
+    
+    if (!answer) {
+      throw new Error(`Quiz answer with ID ${id} not found`);
+    }
+    
+    return answer;
+  }
+
+  async getUserQuizStats(userId: number): Promise<{
+    totalSessions: number;
+    completedSessions: number;
+    totalScore: number;
+    averageScore: number;
+    bestScore: number;
+    totalQuestions: number;
+    correctAnswers: number;
+    accuracy: number;
+  }> {
+    // Total sessions
+    const [totalSessionsResult] = await db
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(quizSessions)
+      .where(eq(quizSessions.userId, userId));
+    
+    // Completed sessions
+    const [completedSessionsResult] = await db
+      .select({ count: sql<number>`COUNT(*)` })
+      .from(quizSessions)
+      .where(and(
+        eq(quizSessions.userId, userId),
+        eq(quizSessions.status, 'completed')
+      ));
+    
+    // Score stats
+    const [scoreStatsResult] = await db
+      .select({ 
+        totalScore: sql<number>`SUM(score)`,
+        bestScore: sql<number>`MAX(score)`
+      })
+      .from(quizSessions)
+      .where(and(
+        eq(quizSessions.userId, userId),
+        eq(quizSessions.status, 'completed')
+      ));
+    
+    // Question stats - join sessions with questions and answers
+    const [questionStatsResult] = await db
+      .select({ 
+        totalQuestions: sql<number>`COUNT(qa.id)`,
+        correctAnswers: sql<number>`SUM(CASE WHEN qa.is_correct = true THEN 1 ELSE 0 END)`
+      })
+      .from(quizSessions)
+      .innerJoin(quizQuestions, eq(quizSessions.id, quizQuestions.sessionId))
+      .innerJoin(quizAnswers, eq(quizQuestions.id, quizAnswers.questionId))
+      .where(and(
+        eq(quizSessions.userId, userId),
+        eq(quizSessions.status, 'completed')
+      ));
+    
+    const totalSessions = totalSessionsResult?.count || 0;
+    const completedSessions = completedSessionsResult?.count || 0;
+    const totalScore = scoreStatsResult?.totalScore || 0;
+    const bestScore = scoreStatsResult?.bestScore || 0;
+    const totalQuestions = questionStatsResult?.totalQuestions || 0;
+    const correctAnswers = questionStatsResult?.correctAnswers || 0;
+    
+    const averageScore = completedSessions > 0 ? totalScore / completedSessions : 0;
+    const accuracy = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
+    
+    return {
+      totalSessions,
+      completedSessions,
+      totalScore,
+      averageScore,
+      bestScore,
+      totalQuestions,
+      correctAnswers,
+      accuracy
+    };
   }
 }
 

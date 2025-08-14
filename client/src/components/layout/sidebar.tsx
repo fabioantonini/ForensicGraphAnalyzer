@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Home, FileText, MessageSquare, Settings, ChevronRight, ChevronLeft, Pen, ShieldCheck, FileImage, Shield } from "lucide-react";
+import { Home, FileText, MessageSquare, Settings, ChevronRight, ChevronLeft, Pen, ShieldCheck, FileImage, Shield, Brain } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/use-auth";
 import React from "react";
@@ -79,6 +79,12 @@ export function Sidebar({ className }: SidebarProps) {
       label: "Document Anonymization",
       translationKey: "layout.anonymize",
       icon: <Shield className="h-5 w-5 mr-3" />,
+    },
+    {
+      href: "/wake-up",
+      label: "Wake Up Quiz",
+      translationKey: "layout.wakeUp",
+      icon: <Brain className="h-5 w-5 mr-3" />,
     },
     {
       href: "/settings",

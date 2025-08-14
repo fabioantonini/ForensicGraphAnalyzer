@@ -30,6 +30,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   queries: many(queries),
   signatureProjects: many(signatureProjects),
   anonymizations: many(anonymizations),
+  quizSessions: many(quizSessions),
 }));
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -784,3 +785,114 @@ export const anonymizationRequestSchema = z.object({
 export type Anonymization = typeof anonymizations.$inferSelect;
 export type InsertAnonymization = z.infer<typeof insertAnonymizationSchema>;
 export type AnonymizationRequest = z.infer<typeof anonymizationRequestSchema>;
+
+// Wake Up Quiz System
+export const quizSessions = pgTable("quiz_sessions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  category: text("category").notNull(), // 'grafologia', 'cultura', 'mista'
+  totalQuestions: integer("total_questions").default(5).notNull(),
+  currentQuestion: integer("current_question").default(0).notNull(),
+  score: integer("score").default(0).notNull(),
+  status: text("status").default("active").notNull(), // 'active', 'completed', 'abandoned'
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  completedAt: timestamp("completed_at"),
+});
+
+export const quizQuestions = pgTable("quiz_questions", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").references(() => quizSessions.id, { onDelete: "cascade" }).notNull(),
+  questionNumber: integer("question_number").notNull(),
+  question: text("question").notNull(),
+  options: jsonb("options").notNull(), // Array di opzioni ["A", "B", "C", "D"]
+  correctAnswer: integer("correct_answer").notNull(), // Indice della risposta corretta (0-3)
+  explanation: text("explanation").notNull(),
+  category: text("category").notNull(),
+  difficulty: text("difficulty").default("medium").notNull(), // 'easy', 'medium', 'hard'
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const quizAnswers = pgTable("quiz_answers", {
+  id: serial("id").primaryKey(),
+  questionId: integer("question_id").references(() => quizQuestions.id, { onDelete: "cascade" }).notNull(),
+  userAnswer: integer("user_answer"), // Risposta dell'utente (0-3), null se non risposto
+  isCorrect: boolean("is_correct"),
+  answerTimeMs: integer("answer_time_ms"), // Tempo per rispondere in millisecondi
+  points: integer("points").default(0).notNull(),
+  answeredAt: timestamp("answered_at"),
+  revealedAt: timestamp("revealed_at"), // Quando l'utente ha rivelato la risposta
+});
+
+// Relations per Wake Up
+export const quizSessionsRelations = relations(quizSessions, ({ one, many }) => ({
+  user: one(users, {
+    fields: [quizSessions.userId],
+    references: [users.id],
+  }),
+  questions: many(quizQuestions),
+}));
+
+export const quizQuestionsRelations = relations(quizQuestions, ({ one, many }) => ({
+  session: one(quizSessions, {
+    fields: [quizQuestions.sessionId],
+    references: [quizSessions.id],
+  }),
+  answers: many(quizAnswers),
+}));
+
+export const quizAnswersRelations = relations(quizAnswers, ({ one }) => ({
+  question: one(quizQuestions, {
+    fields: [quizAnswers.questionId],
+    references: [quizQuestions.id],
+  }),
+}));
+
+// Schemas per Wake Up
+export const insertQuizSessionSchema = createInsertSchema(quizSessions).omit({
+  id: true,
+  currentQuestion: true,
+  score: true,
+  status: true,
+  startedAt: true,
+  completedAt: true,
+});
+
+export const insertQuizQuestionSchema = createInsertSchema(quizQuestions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertQuizAnswerSchema = createInsertSchema(quizAnswers).omit({
+  id: true,
+  isCorrect: true,
+  points: true,
+  answeredAt: true,
+});
+
+// Schemas per API requests
+export const createQuizRequestSchema = z.object({
+  category: z.enum(['grafologia', 'cultura', 'mista']),
+  totalQuestions: z.number().min(3).max(20).default(5),
+});
+
+export const submitAnswerSchema = z.object({
+  questionId: z.number().positive(),
+  userAnswer: z.number().min(0).max(3).optional(),
+  answerTimeMs: z.number().positive().optional(),
+});
+
+export const revealAnswerSchema = z.object({
+  questionId: z.number().positive(),
+});
+
+// Types per Wake Up
+export type QuizSession = typeof quizSessions.$inferSelect;
+export type InsertQuizSession = z.infer<typeof insertQuizSessionSchema>;
+export type QuizQuestion = typeof quizQuestions.$inferSelect;
+export type InsertQuizQuestion = z.infer<typeof insertQuizQuestionSchema>;
+export type QuizAnswer = typeof quizAnswers.$inferSelect;
+export type InsertQuizAnswer = z.infer<typeof insertQuizAnswerSchema>;
+
+export type CreateQuizRequest = z.infer<typeof createQuizRequestSchema>;
+export type SubmitAnswerRequest = z.infer<typeof submitAnswerSchema>;
+export type RevealAnswerRequest = z.infer<typeof revealAnswerSchema>;

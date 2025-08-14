@@ -26,6 +26,7 @@ import { chatWithRAG, validateAPIKey } from "./openai";
 import { log } from "./vite";
 import { registerSignatureRoutes } from "./signature-routes";
 import { setupAnonymizationRoutes } from "./anonymization-routes";
+import wakeUpRoutes from "./wake-up-routes";
 import { processOCR, saveOCRDocument, ocrUpload, processOCRWithProgress, getOCRProcessStatus } from "./ocr-service";
 import { eq, desc, sql } from "drizzle-orm";
 import { db, pool } from "./db";
@@ -1458,6 +1459,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // Register Wake Up quiz routes
+  app.use("/api/wake-up", wakeUpRoutes);
 
   const httpServer = createServer(app);
   return httpServer;

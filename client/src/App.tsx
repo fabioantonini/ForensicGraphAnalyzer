@@ -24,6 +24,7 @@ import AnonymizationPage from "@/pages/anonymization-page";
 import AdminPage from "@/pages/admin-page";
 import ForgotPasswordPage from "@/pages/forgot-password-page";
 import ResetPasswordPage from "@/pages/reset-password-page";
+import WakeUpPage from "@/pages/wake-up-page";
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -91,6 +92,12 @@ function Router() {
       <ProtectedRoute path="/anonymize" component={() => (
         <AppLayout>
           <AnonymizationPage />
+        </AppLayout>
+      )} />
+
+      <ProtectedRoute path="/wake-up" component={() => (
+        <AppLayout>
+          <WakeUpPage />
         </AppLayout>
       )} />
       
