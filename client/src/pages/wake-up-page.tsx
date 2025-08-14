@@ -503,6 +503,9 @@ export default function WakeUpPage() {
     const currentQuestion = getCurrentQuestion();
     const answeredQuestions = getAnsweredQuestions();
     const progress = ((activeSession.currentQuestion) / activeSession.totalQuestions) * 100;
+    
+    // Check if quiz is completed
+    const isCompleted = activeSession.status === 'completed' || activeSession.currentQuestion >= activeSession.totalQuestions;
 
     return (
       <div className="container mx-auto p-6">
@@ -566,8 +569,44 @@ export default function WakeUpPage() {
             </Card>
           )}
 
+          {/* Quiz Completed State */}
+          {isCompleted && (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle className="h-8 w-8 text-green-600" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Quiz Completato! 🎉</h2>
+                  <p className="text-gray-600 mb-4">
+                    Hai risposto a tutte le domande. Punteggio finale: {activeSession.score || 0} punti
+                  </p>
+                  <div className="flex gap-3 justify-center">
+                    <Button 
+                      onClick={() => {
+                        setActiveSession(null);
+                        setCurrentQuestions([]);
+                        setSelectedAnswers({});
+                        setRevealedQuestions(new Set());
+                      }}
+                      variant="default"
+                    >
+                      Torna alla Dashboard
+                    </Button>
+                    <Button 
+                      onClick={() => setShowStats(true)}
+                      variant="outline"
+                    >
+                      Vedi Statistiche
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Current Question */}
-          {currentQuestion && activeSession.status === 'active' && (
+          {!isCompleted && currentQuestion && activeSession.status === 'active' && (
             <Card className="mb-6">
               <CardHeader>
                 <div className="flex items-center justify-between">
