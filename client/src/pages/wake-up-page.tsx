@@ -477,6 +477,14 @@ export default function WakeUpPage() {
               <div className="text-right">
                 <div className="text-2xl font-bold text-blue-600">{activeSession.score}</div>
                 <div className="text-sm text-gray-600">punti</div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setActiveSession(null)}
+                  className="mt-2"
+                >
+                  Abbandona quiz
+                </Button>
               </div>
             </div>
             
@@ -522,6 +530,13 @@ export default function WakeUpPage() {
                     </Button>
                   ))}
                 </div>
+
+                {/* Force show navigation if stuck */}
+                {!currentQuestion.answer?.answeredAt && (
+                  <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p className="text-sm text-yellow-800 mb-2">Seleziona una risposta per procedere al prossimo step del quiz.</p>
+                  </div>
+                )}
 
                 {/* Show result after answering */}
                 {currentQuestion.answer?.answeredAt && (
