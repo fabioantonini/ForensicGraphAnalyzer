@@ -639,6 +639,21 @@ export default function WakeUpPage() {
                   ))}
                 </div>
 
+                {/* Skip navigation for unanswered questions */}
+                {(!currentQuestion.answer?.answeredAt || currentQuestion.answer?.answeredAt === null) && currentQuestion.questionNumber < activeSession.totalQuestions && (
+                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-800 mb-2">Non hai ancora risposto a questa domanda.</p>
+                    <Button 
+                      onClick={handleNextQuestion}
+                      variant="outline" 
+                      size="sm"
+                    >
+                      <ChevronRight className="h-4 w-4 mr-2" />
+                      Salta alla prossima domanda
+                    </Button>
+                  </div>
+                )}
+
                 {/* Debug current question state */}
                 <div className="mt-4 p-2 bg-red-50 border border-red-200 rounded text-xs">
                   <p>Debug: questionId={currentQuestion.id}, hasAnswer={!!currentQuestion.answer}, answeredAt={currentQuestion.answer?.answeredAt || 'none'}</p>
