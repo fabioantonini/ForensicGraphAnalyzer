@@ -70,3 +70,10 @@ Preferred communication style: Simple, everyday language.
 - **Sharp**: Image processing for preprocessing and quality assessment.
 - **pdf-parse**: PDF text extraction.
 - **mammoth**: DOCX text extraction.
+
+## Recent Changes (Gennaio 2025)
+- **RISOLTO BUG VISUALIZZAZIONE PERCENTUALI**: Corretto problema conversione che mostrava 0.8% invece di 84.3% di similarità
+- **Sincronizzazione Database-Frontend**: Database salva valori come frazione decimale, frontend ora moltiplica per 100 per visualizzazione corretta  
+- **Cache HTTP Disabilitato**: Eliminato caching per endpoint signatures per garantire dati sempre aggiornati dal PostgreSQL
+- **DatabaseStorage Completo**: Aggiornato updateSignature per includere tutti i campi necessari (comparisonResult, referenceSignatureFilename, etc.)
+- **Sistema Production-Ready**: Completata pulizia messaggi debug, visualizzazione corretta firma di riferimento nel dialog confronto
