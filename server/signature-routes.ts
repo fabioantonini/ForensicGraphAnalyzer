@@ -260,6 +260,9 @@ export function registerSignatureRoutes(appRouter: Router) {
           const updateData: any = {
             comparisonResult: similarityScore,
             analysisReport,
+            referenceSignatureFilename: referenceSignature.filename,
+            referenceSignatureOriginalFilename: referenceSignature.originalFilename,
+            referenceDpi: referenceSignature.dpi || 300,
             updatedAt: new Date()
           };
           

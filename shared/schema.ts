@@ -357,6 +357,10 @@ export const signatures = pgTable("signatures", {
   comparisonChart: text("comparison_chart"), // Base64-encoded image of the comparison chart
   analysisReport: text("analysis_report"), // Testo del report descrittivo
   reportPath: text("report_path"), // Percorso al file DOCX del report (se generato)
+  // Riferimenti alla firma di confronto usata
+  referenceSignatureFilename: text("reference_signature_filename"), // Nome file della firma di riferimento usata
+  referenceSignatureOriginalFilename: text("reference_signature_original_filename"), // Nome originale della firma di riferimento
+  referenceDpi: integer("reference_dpi"), // DPI della firma di riferimento
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
