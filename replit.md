@@ -76,4 +76,5 @@ Preferred communication style: Simple, everyday language.
 - **Sincronizzazione Database-Frontend**: Database salva valori come frazione decimale, frontend ora moltiplica per 100 per visualizzazione corretta  
 - **Cache HTTP Disabilitato**: Eliminato caching per endpoint signatures per garantire dati sempre aggiornati dal PostgreSQL
 - **DatabaseStorage Completo**: Aggiornato updateSignature per includere tutti i campi necessari (comparisonResult, referenceSignatureFilename, etc.)
+- **Soglie Autenticità Uniformate**: Standardizzate tutte le soglie del sistema (≥85% autentica, 65-84% probabilmente autentica, <65% sospetta)
 - **Sistema Production-Ready**: Completata pulizia messaggi debug, visualizzazione corretta firma di riferimento nel dialog confronto
