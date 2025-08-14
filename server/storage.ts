@@ -2125,8 +2125,8 @@ export class DatabaseStorage implements IStorage {
     // Question stats - join sessions with questions and answers
     const [questionStatsResult] = await db
       .select({ 
-        totalQuestions: sql<number>`COUNT(qa.id)`,
-        correctAnswers: sql<number>`SUM(CASE WHEN qa.is_correct = true THEN 1 ELSE 0 END)`
+        totalQuestions: sql<number>`COUNT(${quizAnswers.id})`,
+        correctAnswers: sql<number>`SUM(CASE WHEN ${quizAnswers.isCorrect} = true THEN 1 ELSE 0 END)`
       })
       .from(quizSessions)
       .innerJoin(quizQuestions, eq(quizSessions.id, quizQuestions.sessionId))

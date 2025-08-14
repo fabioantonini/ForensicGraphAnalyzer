@@ -26,8 +26,8 @@ router.post("/start", async (req, res) => {
 
     const { category, totalQuestions } = validation.data;
 
-    // Genera domande usando OpenAI
-    const generatedQuestions = await generateQuizQuestions(category, totalQuestions);
+    // Genera domande usando OpenAI (usa la chiave API dell'utente se disponibile)
+    const generatedQuestions = await generateQuizQuestions(category, totalQuestions, req.user.openaiApiKey);
 
     // Crea sessione quiz
     const session = await storage.createQuizSession({

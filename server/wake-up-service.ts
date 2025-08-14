@@ -1,7 +1,5 @@
-import OpenAI from "openai";
 import { QuizSession, QuizQuestion, CreateQuizRequest, InsertQuizQuestion, InsertQuizSession } from "@shared/schema";
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+import { createOpenAIClient } from "./openai";
 
 export interface GeneratedQuizQuestion {
   question: string;
@@ -17,7 +15,8 @@ export interface GeneratedQuizQuestion {
  */
 export async function generateQuizQuestions(
   category: "grafologia" | "cultura" | "mista",
-  totalQuestions: number
+  totalQuestions: number,
+  userApiKey?: string
 ): Promise<GeneratedQuizQuestion[]> {
   const categoryPrompts = {
     grafologia: `domande di grafologia forense, analisi delle firme, autenticazione di documenti, perizia calligrafica, e tecniche di verifica della scrittura`,
@@ -53,6 +52,7 @@ Rispondi SOLO con un oggetto JSON valido in questo formato:
 NON aggiungere altro testo oltre al JSON.`;
 
   try {
+    const openai = createOpenAIClient(userApiKey);
     const response = await openai.chat.completions.create({
       model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
       messages: [
@@ -92,7 +92,7 @@ NON aggiungere altro testo oltre al JSON.`;
 
   } catch (error) {
     console.error("Error generating quiz questions:", error);
-    throw new Error(`Failed to generate quiz questions: ${error.message}`);
+    throw new Error(`Failed to generate quiz questions: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -108,7 +108,7 @@ export function calculateScore(isCorrect: boolean, answerTimeMs: number, difficu
     hard: 15
   };
   
-  const points = basePoints[difficulty] || 10;
+  const points = basePoints[difficulty as keyof typeof basePoints] || 10;
   
   // Bonus velocità: se risponde in meno di 10 secondi
   const speedBonusThreshold = 10000; // 10 secondi
