@@ -569,6 +569,14 @@ export function registerSignatureRoutes(appRouter: Router) {
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="report_${signature.originalFilename}_${Date.now()}.pdf"`);
       
+      // Helper function per formattare numeri
+      const formatNumber = (value: any, decimals: number = 2): string => {
+        if (typeof value === 'number' && !isNaN(value)) {
+          return value.toFixed(decimals);
+        }
+        return '0.00';
+      };
+      
       // Pipe il PDF direttamente alla risposta
       doc.pipe(res);
       
@@ -594,7 +602,7 @@ export function registerSignatureRoutes(appRouter: Router) {
       doc.moveDown(0.5);
       doc.fontSize(12);
       
-      const percentageScore = (signature.comparisonResult * 100).toFixed(1);
+      const percentageScore = formatNumber(signature.comparisonResult * 100, 1);
       let verdict = '';
       
       if (signature.comparisonResult >= 0.85) {
@@ -646,31 +654,31 @@ export function registerSignatureRoutes(appRouter: Router) {
           // Lista completa parametri firma in verifica
           doc.text(`• Dimensioni: 800x400 px`);
           if (signature.parameters.realDimensions) {
-            doc.text(`• Dimensioni reali: ${signature.parameters.realDimensions.widthMm?.toFixed(1)}x${signature.parameters.realDimensions.heightMm?.toFixed(1)} mm`);
+            doc.text(`• Dimensioni reali: ${formatNumber(signature.parameters.realDimensions.widthMm, 1)}x${formatNumber(signature.parameters.realDimensions.heightMm, 1)} mm`);
           }
           if (signature.parameters.strokeWidth?.meanMm) {
-            doc.text(`• Spessore tratto medio: ${signature.parameters.strokeWidth.meanMm.toFixed(3)} mm`);
+            doc.text(`• Spessore tratto medio: ${formatNumber(signature.parameters.strokeWidth.meanMm, 3)} mm`);
           }
           if (signature.parameters.strokeWidth?.maxMm) {
-            doc.text(`• Spessore massimo: ${signature.parameters.strokeWidth.maxMm.toFixed(3)} mm`);
+            doc.text(`• Spessore massimo: ${formatNumber(signature.parameters.strokeWidth.maxMm, 3)} mm`);
           }
           if (signature.parameters.strokeWidth?.minMm) {
-            doc.text(`• Spessore minimo: ${signature.parameters.strokeWidth.minMm.toFixed(3)} mm`);
+            doc.text(`• Spessore minimo: ${formatNumber(signature.parameters.strokeWidth.minMm, 3)} mm`);
           }
           if (signature.parameters.strokeWidth?.varianceMm) {
-            doc.text(`• Varianza spessore: ${signature.parameters.strokeWidth.varianceMm.toFixed(2)}`);
+            doc.text(`• Varianza spessore: ${formatNumber(signature.parameters.strokeWidth.varianceMm, 2)}`);
           }
           if (signature.parameters.proportionRatio !== undefined) {
-            doc.text(`• Proporzione: ${signature.parameters.proportionRatio.toFixed(3)}`);
+            doc.text(`• Proporzione: ${formatNumber(signature.parameters.proportionRatio, 3)}`);
           }
           if (signature.parameters.inclination !== undefined) {
-            doc.text(`• Inclinazione: ${signature.parameters.inclination.toFixed(1)}°`);
+            doc.text(`• Inclinazione: ${formatNumber(signature.parameters.inclination, 1)}°`);
           }
           if (signature.parameters.pressure !== undefined) {
-            doc.text(`• Pressione media: ${signature.parameters.pressure.toFixed(1)}`);
+            doc.text(`• Pressione media: ${formatNumber(signature.parameters.pressure, 1)}`);
           }
           if (signature.parameters.curvature !== undefined) {
-            doc.text(`• Curvatura media: ${signature.parameters.curvature.toFixed(3)}`);
+            doc.text(`• Curvatura media: ${formatNumber(signature.parameters.curvature, 3)}`);
           }
           if (signature.parameters.velocity !== undefined) {
             doc.text(`• Velocità scrittura: ${signature.parameters.velocity}/5`);
@@ -680,17 +688,17 @@ export function registerSignatureRoutes(appRouter: Router) {
           }
           doc.text(`• Leggibilità: Bassa`); // Default per ora
           if (signature.parameters.loopAnalysis !== undefined) {
-            doc.text(`• Dimensione asole medie: ${signature.parameters.loopAnalysis.toFixed(2)} mm`);
+            doc.text(`• Dimensione asole medie: ${formatNumber(signature.parameters.loopAnalysis, 2)} mm`);
           }
           if (signature.parameters.calibratedSpacing !== undefined) {
-            doc.text(`• Spaziatura media: ${signature.parameters.calibratedSpacing.toFixed(2)} mm`);
+            doc.text(`• Spaziatura media: ${formatNumber(signature.parameters.calibratedSpacing, 2)} mm`);
           }
           doc.text(`• Rapporto sovrapposizione: 0.0%`); // Default
           if (signature.parameters.connectivity !== undefined) {
-            doc.text(`• Connessioni lettere: ${signature.parameters.connectivity.toFixed(2)}`);
+            doc.text(`• Connessioni lettere: ${formatNumber(signature.parameters.connectivity, 2)}`);
           }
           if (signature.parameters.spacingVariance !== undefined) {
-            doc.text(`• Deviazione baseline: ${signature.parameters.spacingVariance.toFixed(2)} mm`);
+            doc.text(`• Deviazione baseline: ${formatNumber(signature.parameters.spacingVariance, 2)} mm`);
           }
           doc.text(`• Componenti connesse: 1`); // Simplified
           doc.text(`• Complessità tratto: 1%`); // Simplified
@@ -704,31 +712,31 @@ export function registerSignatureRoutes(appRouter: Router) {
           
           doc.text(`• Dimensioni: 800x400 px`);
           if (referenceSignature.parameters.realDimensions) {
-            doc.text(`• Dimensioni reali: ${referenceSignature.parameters.realDimensions.widthMm?.toFixed(1)}x${referenceSignature.parameters.realDimensions.heightMm?.toFixed(1)} mm`);
+            doc.text(`• Dimensioni reali: ${formatNumber(referenceSignature.parameters.realDimensions.widthMm, 1)}x${formatNumber(referenceSignature.parameters.realDimensions.heightMm, 1)} mm`);
           }
           if (referenceSignature.parameters.strokeWidth?.meanMm) {
-            doc.text(`• Spessore tratto medio: ${referenceSignature.parameters.strokeWidth.meanMm.toFixed(3)} mm`);
+            doc.text(`• Spessore tratto medio: ${formatNumber(referenceSignature.parameters.strokeWidth.meanMm, 3)} mm`);
           }
           if (referenceSignature.parameters.strokeWidth?.maxMm) {
-            doc.text(`• Spessore massimo: ${referenceSignature.parameters.strokeWidth.maxMm.toFixed(3)} mm`);
+            doc.text(`• Spessore massimo: ${formatNumber(referenceSignature.parameters.strokeWidth.maxMm, 3)} mm`);
           }
           if (referenceSignature.parameters.strokeWidth?.minMm) {
-            doc.text(`• Spessore minimo: ${referenceSignature.parameters.strokeWidth.minMm.toFixed(3)} mm`);
+            doc.text(`• Spessore minimo: ${formatNumber(referenceSignature.parameters.strokeWidth.minMm, 3)} mm`);
           }
           if (referenceSignature.parameters.strokeWidth?.varianceMm) {
-            doc.text(`• Varianza spessore: ${referenceSignature.parameters.strokeWidth.varianceMm.toFixed(2)}`);
+            doc.text(`• Varianza spessore: ${formatNumber(referenceSignature.parameters.strokeWidth.varianceMm, 2)}`);
           }
           if (referenceSignature.parameters.proportionRatio !== undefined) {
-            doc.text(`• Proporzione: ${referenceSignature.parameters.proportionRatio.toFixed(3)}`);
+            doc.text(`• Proporzione: ${formatNumber(referenceSignature.parameters.proportionRatio, 3)}`);
           }
           if (referenceSignature.parameters.inclination !== undefined) {
-            doc.text(`• Inclinazione: ${referenceSignature.parameters.inclination.toFixed(1)}°`);
+            doc.text(`• Inclinazione: ${formatNumber(referenceSignature.parameters.inclination, 1)}°`);
           }
           if (referenceSignature.parameters.pressure !== undefined) {
-            doc.text(`• Pressione media: ${referenceSignature.parameters.pressure.toFixed(1)}`);
+            doc.text(`• Pressione media: ${formatNumber(referenceSignature.parameters.pressure, 1)}`);
           }
           if (referenceSignature.parameters.curvature !== undefined) {
-            doc.text(`• Curvatura media: ${referenceSignature.parameters.curvature.toFixed(3)}`);
+            doc.text(`• Curvatura media: ${formatNumber(referenceSignature.parameters.curvature, 3)}`);
           }
           if (referenceSignature.parameters.velocity !== undefined) {
             doc.text(`• Velocità scrittura: ${referenceSignature.parameters.velocity}/5`);
@@ -738,29 +746,29 @@ export function registerSignatureRoutes(appRouter: Router) {
           }
           doc.text(`• Leggibilità: Bassa`);
           if (referenceSignature.parameters.loopAnalysis !== undefined) {
-            doc.text(`• Dimensione asole medie: ${referenceSignature.parameters.loopAnalysis.toFixed(2)} mm`);
+            doc.text(`• Dimensione asole medie: ${formatNumber(referenceSignature.parameters.loopAnalysis, 2)} mm`);
           }
           if (referenceSignature.parameters.calibratedSpacing !== undefined) {
-            doc.text(`• Spaziatura media: ${referenceSignature.parameters.calibratedSpacing.toFixed(2)} mm`);
+            doc.text(`• Spaziatura media: ${formatNumber(referenceSignature.parameters.calibratedSpacing, 2)} mm`);
           }
           doc.text(`• Rapporto sovrapposizione: 0.0%`);
           if (referenceSignature.parameters.connectivity !== undefined) {
-            doc.text(`• Connessioni lettere: ${referenceSignature.parameters.connectivity.toFixed(2)}`);
+            doc.text(`• Connessioni lettere: ${formatNumber(referenceSignature.parameters.connectivity, 2)}`);
           }
           if (referenceSignature.parameters.spacingVariance !== undefined) {
-            doc.text(`• Deviazione baseline: ${referenceSignature.parameters.spacingVariance.toFixed(2)} mm`);
+            doc.text(`• Deviazione baseline: ${formatNumber(referenceSignature.parameters.spacingVariance, 2)} mm`);
           }
           doc.text(`• Componenti connesse: 11`); // Simplified from original
           doc.text(`• Complessità tratto: 29%`); // Simplified from original
         } else {
           // Solo firma in verifica
           doc.fontSize(10);
-          doc.text(`• Dimensioni reali: ${signature.parameters.realDimensions?.widthMm?.toFixed(1)}×${signature.parameters.realDimensions?.heightMm?.toFixed(1)} mm`);
+          doc.text(`• Dimensioni reali: ${formatNumber(signature.parameters.realDimensions?.widthMm, 1)}×${formatNumber(signature.parameters.realDimensions?.heightMm, 1)} mm`);
           if (signature.parameters.strokeWidth?.meanMm) {
-            doc.text(`• Spessore medio tratto: ${signature.parameters.strokeWidth.meanMm.toFixed(2)}mm`);
+            doc.text(`• Spessore medio tratto: ${formatNumber(signature.parameters.strokeWidth.meanMm, 2)}mm`);
           }
           if (signature.parameters.inclination !== undefined) {
-            doc.text(`• Inclinazione: ${signature.parameters.inclination.toFixed(1)}°`);
+            doc.text(`• Inclinazione: ${formatNumber(signature.parameters.inclination, 1)}°`);
           }
           if (signature.parameters.velocity !== undefined) {
             doc.text(`• Velocità di scrittura: ${signature.parameters.velocity}/5`);
@@ -852,7 +860,9 @@ export function registerSignatureRoutes(appRouter: Router) {
       
     } catch (error: any) {
       console.error('[REPORT DOWNLOAD] Errore:', error);
-      res.status(500).json({ error: error.message });
+      if (!res.headersSent) {
+        res.status(500).json({ error: error.message });
+      }
     }
   });
 }
