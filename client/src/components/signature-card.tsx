@@ -94,14 +94,14 @@ export function SignatureCard({
     let textKey = 'signatures.verification.notAuthentic';
     let defaultText = 'Firma non autentica';
     
-    if (score >= 0.8) {
+    if (score >= 0.85) {
       color = 'bg-green-500';
       textKey = 'signatures.verification.authentic';
       defaultText = 'Firma autentica';
-    } else if (score >= 0.6) {
+    } else if (score >= 0.65) {
       color = 'bg-yellow-500';
-      textKey = 'signatures.verification.suspicious';
-      defaultText = 'Firma sospetta';
+      textKey = 'signatures.verification.probablyAuthentic';
+      defaultText = 'Probabilmente autentica';
     }
     
     return (
