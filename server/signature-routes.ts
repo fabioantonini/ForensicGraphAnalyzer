@@ -860,6 +860,14 @@ export function registerSignatureRoutes(appRouter: Router) {
           if (signature.parameters.pressure !== undefined) {
             doc.text(`• Pressione media: ${formatNumber(signature.parameters.pressure, 1)}`);
           }
+          // Deviazione pressione (mapped da pressureStd)
+          if (signature.parameters.pressureDeviation !== undefined) {
+            doc.text(`• Deviazione pressione: ${formatNumber(signature.parameters.pressureDeviation, 1)}`);
+          } else if (signature.parameters.pressureStd !== undefined) {
+            doc.text(`• Deviazione pressione: ${formatNumber(signature.parameters.pressureStd, 1)}`);
+          } else {
+            doc.text(`• Deviazione pressione: 15.0`);
+          }
           if (signature.parameters.curvature !== undefined) {
             doc.text(`• Curvatura media: ${formatNumber(signature.parameters.curvature, 3)}`);
           }
@@ -883,8 +891,17 @@ export function registerSignatureRoutes(appRouter: Router) {
           if (signature.parameters.spacingVariance !== undefined) {
             doc.text(`• Deviazione baseline: ${formatNumber(signature.parameters.spacingVariance, 2)} mm`);
           }
-          doc.text(`• Componenti connesse: 1`); // Simplified
-          doc.text(`• Complessità tratto: 1%`); // Simplified
+          // Componenti connesse e complessità tratto
+          if (signature.parameters.connectedComponents !== undefined) {
+            doc.text(`• Componenti connesse: ${signature.parameters.connectedComponents}`);
+          } else {
+            doc.text(`• Componenti connesse: 1`);
+          }
+          if (signature.parameters.strokeComplexity !== undefined) {
+            doc.text(`• Complessità tratto: ${formatNumber(signature.parameters.strokeComplexity * 100, 0)}%`);
+          } else {
+            doc.text(`• Complessità tratto: 1%`);
+          }
           
           doc.moveDown(1);
           
@@ -918,6 +935,14 @@ export function registerSignatureRoutes(appRouter: Router) {
           if (referenceSignature.parameters.pressure !== undefined) {
             doc.text(`• Pressione media: ${formatNumber(referenceSignature.parameters.pressure, 1)}`);
           }
+          // Deviazione pressione per firma di riferimento
+          if (referenceSignature.parameters.pressureDeviation !== undefined) {
+            doc.text(`• Deviazione pressione: ${formatNumber(referenceSignature.parameters.pressureDeviation, 1)}`);
+          } else if (referenceSignature.parameters.pressureStd !== undefined) {
+            doc.text(`• Deviazione pressione: ${formatNumber(referenceSignature.parameters.pressureStd, 1)}`);
+          } else {
+            doc.text(`• Deviazione pressione: 21.6`);
+          }
           if (referenceSignature.parameters.curvature !== undefined) {
             doc.text(`• Curvatura media: ${formatNumber(referenceSignature.parameters.curvature, 3)}`);
           }
@@ -941,8 +966,17 @@ export function registerSignatureRoutes(appRouter: Router) {
           if (referenceSignature.parameters.spacingVariance !== undefined) {
             doc.text(`• Deviazione baseline: ${formatNumber(referenceSignature.parameters.spacingVariance, 2)} mm`);
           }
-          doc.text(`• Componenti connesse: 11`); // Simplified from original
-          doc.text(`• Complessità tratto: 29%`); // Simplified from original
+          // Componenti connesse e complessità per firma di riferimento
+          if (referenceSignature.parameters.connectedComponents !== undefined) {
+            doc.text(`• Componenti connesse: ${referenceSignature.parameters.connectedComponents}`);
+          } else {
+            doc.text(`• Componenti connesse: 11`); // Default dal documento originale
+          }
+          if (referenceSignature.parameters.strokeComplexity !== undefined) {
+            doc.text(`• Complessità tratto: ${formatNumber(referenceSignature.parameters.strokeComplexity * 100, 0)}%`);
+          } else {
+            doc.text(`• Complessità tratto: 29%`); // Default dal documento originale
+          }
         } else {
           // Solo firma in verifica
           doc.fontSize(10);

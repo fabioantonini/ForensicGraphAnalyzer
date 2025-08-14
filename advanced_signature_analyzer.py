@@ -85,6 +85,12 @@ def analyze_signature(image_path: str, real_width_mm: float, real_height_mm: flo
         # 12. Deviazione baseline
         baseline_std_mm = calculate_baseline_deviation(binary, pixels_per_mm)
         
+        # 13. Componenti connesse
+        num_components = calculate_connected_components(binary)
+        
+        # 14. Complessità del tratto
+        stroke_complexity = calculate_stroke_complexity(binary, pixels_per_mm)
+        
         result = {
             # Parametri base
             "proportion": float(proportion),
@@ -100,6 +106,8 @@ def analyze_signature(image_path: str, real_width_mm: float, real_height_mm: flo
             "overlapRatio": float(overlap_ratio),
             "letterConnections": int(letter_connections),
             "baselineStdMm": float(baseline_std_mm),
+            "connectedComponents": int(num_components),
+            "strokeComplexity": float(stroke_complexity),
             
             # Metadati
             "timestamp": datetime.now().isoformat(),
@@ -402,6 +410,60 @@ def calculate_baseline_deviation(binary: np.ndarray, pixels_per_mm: float) -> fl
         # Calcola deviazione standard della baseline
         baseline_std_pixels = np.std(y_coords)
         return float(baseline_std_pixels / pixels_per_mm)
+        
+    except Exception:
+        return 0.0
+
+def calculate_connected_components(binary: np.ndarray) -> int:
+    """Calcola il numero di componenti connesse nella firma"""
+    try:
+        # Trova componenti connesse
+        num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(binary)
+        
+        # Sottrae 1 per escludere il background
+        valid_components = 0
+        for i in range(1, num_labels):  # Skip background (label 0)
+            area = stats[i, cv2.CC_STAT_AREA]
+            if area > 10:  # Solo componenti significative
+                valid_components += 1
+        
+        return max(1, valid_components)  # Almeno 1 componente
+        
+    except Exception:
+        return 1
+
+def calculate_stroke_complexity(binary: np.ndarray, pixels_per_mm: float) -> float:
+    """Calcola la complessità del tratto basata su contorni e curvature"""
+    try:
+        # Trova contorni
+        contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        if not contours:
+            return 0.0
+        
+        total_complexity = 0.0
+        total_perimeter = 0.0
+        
+        for contour in contours:
+            if cv2.contourArea(contour) > 20:
+                # Calcola perimetro
+                perimeter = cv2.arcLength(contour, True)
+                
+                # Calcola complessità basata su numero di punti del contorno
+                epsilon = 0.02 * perimeter
+                approx = cv2.approxPolyDP(contour, epsilon, True)
+                
+                # Complessità = rapporto tra punti originali e approssimati
+                if len(approx) > 0:
+                    complexity = len(contour) / len(approx)
+                    total_complexity += complexity * perimeter
+                    total_perimeter += perimeter
+        
+        if total_perimeter > 0:
+            # Normalizza la complessità (0-1)
+            avg_complexity = total_complexity / total_perimeter
+            return min(1.0, avg_complexity / 10.0)  # Scala a 0-1
+        
+        return 0.0
         
     except Exception:
         return 0.0

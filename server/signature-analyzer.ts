@@ -123,7 +123,11 @@ export class SignatureAnalyzer {
           velocity: advancedAnalysis.velocity || 1,
           overlapRatio: advancedAnalysis.overlapRatio || 0,
           letterConnections: advancedAnalysis.letterConnections || 1,
-          baselineStdMm: advancedAnalysis.baselineStdMm || 0
+          baselineStdMm: advancedAnalysis.baselineStdMm || 0,
+          // Parametri mancanti aggiunti
+          pressureDeviation: advancedAnalysis.pressureStd || 0, // map pressureStd to pressureDeviation  
+          connectedComponents: advancedAnalysis.connectedComponents || 1,
+          strokeComplexity: advancedAnalysis.strokeComplexity || 0
         })
       };
       
