@@ -47,6 +47,7 @@
     "signatures": "Signature Verification",
     "signatureQuality": "Signature Quality Check",
     "anonymize": "Document Anonymization",
+    "wakeUp": "Wake Up Quiz",
     "settings": "Settings",
     "admin": "Administration"
   }
