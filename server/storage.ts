@@ -865,6 +865,9 @@ export class MemStorage implements IStorage {
     reportPath?: string;
     dpi?: number;
     comparisonResult?: number;
+    referenceSignatureFilename?: string;
+    referenceSignatureOriginalFilename?: string;
+    referenceDpi?: number;
     updatedAt?: Date;
   }): Promise<Signature> {
     const signature = await this.getSignature(id);
@@ -876,7 +879,10 @@ export class MemStorage implements IStorage {
       hasChart: !!data.comparisonChart,
       chartLength: data.comparisonChart?.length,
       hasReport: !!data.analysisReport,
-      comparisonResult: data.comparisonResult
+      comparisonResult: data.comparisonResult,
+      referenceFilename: data.referenceSignatureFilename,
+      referenceOriginalFilename: data.referenceSignatureOriginalFilename,
+      referenceDpi: data.referenceDpi
     });
     
     const updatedSignature: Signature = {
@@ -886,6 +892,9 @@ export class MemStorage implements IStorage {
       ...(data.reportPath !== undefined && { reportPath: data.reportPath }),
       ...(data.dpi !== undefined && { dpi: data.dpi }),
       ...(data.comparisonResult !== undefined && { comparisonResult: data.comparisonResult }),
+      ...(data.referenceSignatureFilename !== undefined && { referenceSignatureFilename: data.referenceSignatureFilename }),
+      ...(data.referenceSignatureOriginalFilename !== undefined && { referenceSignatureOriginalFilename: data.referenceSignatureOriginalFilename }),
+      ...(data.referenceDpi !== undefined && { referenceDpi: data.referenceDpi }),
       updatedAt: data.updatedAt || new Date(),
     };
     
