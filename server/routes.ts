@@ -1404,6 +1404,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid file type. Please upload JPEG, PNG, TIFF, or BMP images." });
       }
 
+      // Log file details for debugging
+      console.log(`[IMAGE_QUALITY] Analyzing file: ${req.file.filename}, path: ${req.file.path}, size: ${req.file.size} bytes, mimetype: ${req.file.mimetype}`);
+      
       // Analyze image quality
       const qualityResult = await analyzeImageQuality(req.file.path);
 
@@ -1416,6 +1419,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json(qualityResult);
     } catch (err) {
+      console.error('Error analyzing image quality:', err);
+      
       // Clean up file on error
       if (req.file?.path) {
         try {
@@ -1424,7 +1429,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error('Error cleaning up file after error:', cleanupError);
         }
       }
-      next(err);
+      
+      res.status(500).json({ 
+        message: "Failed to analyze image quality",
+        error: err.message || "Unknown error"
+      });
     }
   });
 

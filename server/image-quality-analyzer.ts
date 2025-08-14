@@ -50,15 +50,39 @@ interface ImageQualityResult {
  */
 export async function analyzeImageQuality(imagePath: string): Promise<ImageQualityResult> {
   try {
+    // Check if file exists
+    const fs = require('fs').promises;
+    try {
+      await fs.access(imagePath);
+    } catch (error) {
+      throw new Error(`Image file not found: ${imagePath}`);
+    }
+
+    // Check file size
+    const stats = await fs.stat(imagePath);
+    if (stats.size === 0) {
+      throw new Error('Image file is empty');
+    }
+
     const image = sharp(imagePath);
     const metadata = await image.metadata();
     
+    // Validate metadata
+    if (!metadata.width || !metadata.height) {
+      throw new Error('Invalid image: missing dimensions');
+    }
+    
     // Get image statistics
-    const stats = await image.stats();
+    const imageStats = await image.stats();
     const { data, info } = await image
       .greyscale()
       .raw()
       .toBuffer({ resolveWithObject: true });
+    
+    // Validate buffer data
+    if (!data || data.length === 0) {
+      throw new Error('Failed to extract image data');
+    }
 
     const width = info.width;
     const height = info.height;
@@ -68,7 +92,7 @@ export async function analyzeImageQuality(imagePath: string): Promise<ImageQuali
     const resolution = analyzeResolution(width, height, metadata.density || 72);
     
     // Calculate contrast score
-    const contrast = analyzeContrast(stats.channels[0]);
+    const contrast = analyzeContrast(imageStats.channels[0]);
     
     // Calculate sharpness score
     const sharpness = analyzeSharpness(data, width, height);
