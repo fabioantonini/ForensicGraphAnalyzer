@@ -555,7 +555,6 @@ export function registerSignatureRoutes(appRouter: Router) {
       }
       
       // Genera un PDF semplice al volo
-      const PDFDocument = require('pdfkit');
       const doc = new PDFDocument({
         size: 'A4',
         info: {
