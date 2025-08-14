@@ -430,6 +430,13 @@ export function registerSignatureRoutes(appRouter: Router) {
         return res.status(403).json({ error: 'Non autorizzato' });
       }
       
+      // Disabilita cache per garantire dati sempre aggiornati
+      res.set({
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      });
+      
       const signatures = await storage.getProjectSignatures(projectId);
       res.json(signatures);
     } catch (error: any) {
