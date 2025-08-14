@@ -279,6 +279,29 @@ export default function WakeUpPage() {
     });
   };
 
+  const handleContinueSession = async (sessionId: number) => {
+    try {
+      const response = await fetch(`/api/wake-up/session/${sessionId}`);
+      if (!response.ok) throw new Error("Failed to load session");
+      const data = await response.json();
+      
+      console.log("Loading session data:", data); // Debug
+      
+      setActiveSession(data.session);
+      setCurrentQuestions(data.questions || []);
+      setSelectedAnswers({});
+      setRevealedQuestions(new Set());
+      setHasAbandonedSession(false); // Reset abandoned flag
+    } catch (error) {
+      console.error("Error loading session:", error);
+      toast({
+        title: "Errore",
+        description: "Impossibile caricare la sessione.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleNextQuestion = () => {
     if (!activeSession || !currentQuestions.length) return;
     
@@ -504,6 +527,20 @@ export default function WakeUpPage() {
               <Progress value={progress} className="h-2" />
             </div>
           </div>
+
+          {/* Debug info */}
+          {(!currentQuestion || currentQuestions.length === 0) && (
+            <Card className="mb-6">
+              <CardContent className="p-4">
+                <div className="text-center text-gray-600">
+                  <p>Caricamento domande...</p>
+                  <p className="text-sm">Domande caricate: {currentQuestions.length}</p>
+                  <p className="text-sm">Status sessione: {activeSession.status}</p>
+                  <p className="text-sm">Domanda corrente: {activeSession.currentQuestion}</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Current Question */}
           {currentQuestion && activeSession.status === 'active' && (
@@ -878,7 +915,7 @@ export default function WakeUpPage() {
                         </div>
                       </div>
                     </div>
-                    <Button size="sm" onClick={() => setActiveSession(session)}>
+                    <Button size="sm" onClick={() => handleContinueSession(session.id)}>
                       Continua
                     </Button>
                   </div>
