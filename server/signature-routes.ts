@@ -216,6 +216,12 @@ export function registerSignatureRoutes(appRouter: Router) {
           
           // Usa la prima firma di riferimento disponibile per il confronto
           const referenceSignature = completedReferences[0];
+          console.log(`[COMPARE-ALL] Using reference signature:`, {
+            id: referenceSignature.id,
+            filename: referenceSignature.filename,
+            originalFilename: referenceSignature.originalFilename,
+            dpi: referenceSignature.dpi
+          });
           
           // Confronta con Python analyzer
           try {
@@ -274,7 +280,10 @@ export function registerSignatureRoutes(appRouter: Router) {
             hasChart: !!updateData.comparisonChart,
             chartLength: updateData.comparisonChart?.length,
             hasReport: !!updateData.analysisReport,
-            comparisonResult: updateData.comparisonResult
+            comparisonResult: updateData.comparisonResult,
+            referenceFilename: updateData.referenceSignatureFilename,
+            referenceOriginalFilename: updateData.referenceSignatureOriginalFilename,
+            referenceDpi: updateData.referenceDpi
           });
           
           await storage.updateSignature(signature.id, updateData);
