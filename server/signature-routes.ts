@@ -5,7 +5,9 @@ import path from "path";
 import fs from "fs/promises";
 import { SignatureAnalyzer } from "./signature-analyzer";
 import { SignaturePythonAnalyzer } from "./python-bridge";
-import { insertSignatureProjectSchema, insertSignatureSchema } from "@shared/schema";
+import { insertSignatureProjectSchema, insertSignatureSchema, signatures } from "@shared/schema";
+import { eq } from 'drizzle-orm';
+import { db } from './db';
 import { log } from "./vite";
 import PDFDocument from "pdfkit";
 import OpenAI from "openai";
@@ -287,6 +289,27 @@ export function registerSignatureRoutes(appRouter: Router) {
           });
           
           console.log(`[COMPARE-ALL] Chiamata updateSignature per firma ${signature.id} con:`, updateData);
+          
+          // Aggiornamento diretto nel database PostgreSQL per i campi di riferimento
+          try {
+            await db.update(signatures)
+              .set({
+                comparisonChart: updateData.comparisonChart,
+                analysisReport: updateData.analysisReport,
+                reportPath: updateData.reportPath,
+                comparisonResult: updateData.comparisonResult,
+                referenceSignatureFilename: updateData.referenceSignatureFilename,
+                referenceSignatureOriginalFilename: updateData.referenceSignatureOriginalFilename,
+                referenceDpi: updateData.referenceDpi,
+                updatedAt: new Date()
+              })
+              .where(eq(signatures.id, signature.id));
+            
+            console.log(`[COMPARE-ALL] Aggiornamento DATABASE completato per firma ${signature.id}`);
+          } catch (dbError) {
+            console.error(`[COMPARE-ALL] Errore aggiornamento database per firma ${signature.id}:`, dbError);
+          }
+          
           await storage.updateSignature(signature.id, updateData);
           
           // Ottieni la firma aggiornata per includerla nei risultati
