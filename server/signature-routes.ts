@@ -286,10 +286,19 @@ export function registerSignatureRoutes(appRouter: Router) {
             referenceDpi: updateData.referenceDpi
           });
           
+          console.log(`[COMPARE-ALL] Chiamata updateSignature per firma ${signature.id} con:`, updateData);
           await storage.updateSignature(signature.id, updateData);
           
           // Ottieni la firma aggiornata per includerla nei risultati
           const updatedSignature = await storage.getSignature(signature.id);
+          console.log(`[COMPARE-ALL] Firma ${signature.id} dopo aggiornamento:`, {
+            id: updatedSignature?.id,
+            hasChart: !!updatedSignature?.comparisonChart,
+            hasReport: !!updatedSignature?.analysisReport,
+            referenceFilename: updatedSignature?.referenceSignatureFilename,
+            referenceOriginalFilename: updatedSignature?.referenceSignatureOriginalFilename,
+            referenceDpi: updatedSignature?.referenceDpi
+          });
           if (updatedSignature) {
             results.push(updatedSignature);
           }
