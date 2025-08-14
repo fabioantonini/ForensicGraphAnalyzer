@@ -579,15 +579,23 @@ export default function WakeUpPage() {
                 {/* Force show navigation if stuck */}
                 {!currentQuestion.answer?.answeredAt && (
                   <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p className="text-sm text-yellow-800 mb-2">Seleziona una risposta per procedere al prossimo step del quiz.</p>
-                    <Button 
-                      onClick={() => window.location.reload()}
-                      variant="outline" 
-                      size="sm"
-                      className="mt-2"
-                    >
-                      Ricarica pagina
-                    </Button>
+                    <p className="text-sm text-yellow-800 mb-2">Questa domanda non ha una risposta registrata. Puoi:</p>
+                    <div className="flex gap-2 mt-2">
+                      <Button 
+                        onClick={() => window.location.reload()}
+                        variant="outline" 
+                        size="sm"
+                      >
+                        Ricarica pagina
+                      </Button>
+                      <Button 
+                        onClick={handleNextQuestion}
+                        variant="default" 
+                        size="sm"
+                      >
+                        Salta alla prossima
+                      </Button>
+                    </div>
                   </div>
                 )}
 
