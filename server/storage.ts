@@ -1329,6 +1329,11 @@ export class DatabaseStorage implements IStorage {
     analysisReport?: string;
     reportPath?: string;
     dpi?: number;
+    comparisonResult?: number;
+    referenceSignatureFilename?: string;
+    referenceSignatureOriginalFilename?: string;
+    referenceDpi?: number;
+    updatedAt?: Date;
   }): Promise<Signature> {
     const [signature] = await db
       .update(signatures)
@@ -1337,7 +1342,11 @@ export class DatabaseStorage implements IStorage {
         ...(data.analysisReport !== undefined && { analysisReport: data.analysisReport }),
         ...(data.reportPath !== undefined && { reportPath: data.reportPath }),
         ...(data.dpi !== undefined && { dpi: data.dpi }),
-        updatedAt: new Date()
+        ...(data.comparisonResult !== undefined && { comparisonResult: data.comparisonResult }),
+        ...(data.referenceSignatureFilename !== undefined && { referenceSignatureFilename: data.referenceSignatureFilename }),
+        ...(data.referenceSignatureOriginalFilename !== undefined && { referenceSignatureOriginalFilename: data.referenceSignatureOriginalFilename }),
+        ...(data.referenceDpi !== undefined && { referenceDpi: data.referenceDpi }),
+        updatedAt: data.updatedAt || new Date()
       })
       .where(eq(signatures.id, id))
       .returning();
