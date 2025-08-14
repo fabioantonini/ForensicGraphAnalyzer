@@ -285,6 +285,46 @@ router.get("/session/:sessionId", async (req, res) => {
 });
 
 /**
+ * POST /api/wake-up/session/:sessionId/next
+ * Avanza alla prossima domanda
+ */
+router.post("/session/:sessionId/next", async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: "Non autenticato" });
+    }
+
+    const sessionId = parseInt(req.params.sessionId);
+
+    if (isNaN(sessionId)) {
+      return res.status(400).json({ error: "ID sessione non valido" });
+    }
+
+    // Verifica ownership della sessione
+    const session = await storage.getQuizSession(sessionId);
+    if (!session || session.userId !== req.user.id) {
+      return res.status(404).json({ error: "Sessione quiz non trovata" });
+    }
+
+    // Avanza alla domanda successiva
+    const nextQuestionNumber = session.currentQuestion + 1;
+    
+    await storage.updateQuizSession(sessionId, {
+      currentQuestion: nextQuestionNumber
+    });
+
+    res.json({ success: true, currentQuestion: nextQuestionNumber });
+
+  } catch (error) {
+    console.error("Errore avanza domanda quiz:", error);
+    res.status(500).json({ 
+      error: "Errore interno del server",
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
  * GET /api/wake-up/sessions
  * Ottieni tutte le sessioni quiz dell'utente
  */

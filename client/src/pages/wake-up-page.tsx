@@ -302,21 +302,44 @@ export default function WakeUpPage() {
     }
   };
 
-  const handleNextQuestion = () => {
+  const handleNextQuestion = async () => {
     if (!activeSession || !currentQuestions.length) return;
     
     const nextQuestionNumber = activeSession.currentQuestion + 1;
-    const updatedSession = {
-      ...activeSession,
-      currentQuestion: nextQuestionNumber
-    };
     
-    // Se abbiamo raggiunto l'ultima domanda, completa la sessione
-    if (nextQuestionNumber >= activeSession.totalQuestions) {
-      updatedSession.status = 'completed';
+    try {
+      // Update session in database
+      const response = await fetch(`/api/wake-up/session/${activeSession.id}/next`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
+      
+      if (!response.ok) throw new Error("Failed to update session");
+      
+      const updatedSession = {
+        ...activeSession,
+        currentQuestion: nextQuestionNumber
+      };
+      
+      // Se abbiamo raggiunto l'ultima domanda, completa la sessione
+      if (nextQuestionNumber >= activeSession.totalQuestions) {
+        updatedSession.status = 'completed';
+      }
+      
+      setActiveSession(updatedSession);
+      
+      toast({
+        title: "Avanzamento salvato",
+        description: `Passato alla domanda ${nextQuestionNumber + 1}`
+      });
+    } catch (error) {
+      console.error("Error updating session:", error);
+      toast({
+        title: "Errore",
+        description: "Impossibile salvare l'avanzamento",
+        variant: "destructive"
+      });
     }
-    
-    setActiveSession(updatedSession);
   };
 
   const canProceedToNext = () => {
