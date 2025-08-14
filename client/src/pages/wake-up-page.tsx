@@ -20,7 +20,8 @@ import {
   Eye,
   EyeOff,
   ChevronRight,
-  BarChart3
+  BarChart3,
+  Trash2
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -245,6 +246,31 @@ export default function WakeUpPage() {
       toast({
         title: "Errore",
         description: error.message || "Impossibile rivelare la spiegazione",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const deleteSessionMutation = useMutation({
+    mutationFn: async (sessionId: number) => {
+      const response = await fetch(`/api/wake-up/session/${sessionId}`, {
+        method: 'DELETE'
+      });
+      if (!response.ok) throw new Error("Failed to delete session");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/wake-up/sessions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/wake-up/stats'] });
+      toast({
+        title: "Sessione eliminata",
+        description: "La sessione quiz è stata eliminata con successo"
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Errore",
+        description: "Impossibile eliminare la sessione",
         variant: "destructive"
       });
     }
@@ -998,9 +1024,24 @@ export default function WakeUpPage() {
                         </div>
                       </div>
                     </div>
-                    <Button size="sm" onClick={() => handleContinueSession(session.id)}>
-                      Continua
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={() => handleContinueSession(session.id)}>
+                        Continua
+                      </Button>
+                      <Button 
+                        variant="destructive" 
+                        size="sm"
+                        onClick={() => {
+                          if (confirm("Sei sicuro di voler eliminare questa sessione? L'azione non può essere annullata.")) {
+                            deleteSessionMutation.mutate(session.id);
+                          }
+                        }}
+                        disabled={deleteSessionMutation.isPending}
+                        title="Elimina sessione"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>

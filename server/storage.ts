@@ -2096,6 +2096,20 @@ export class DatabaseStorage implements IStorage {
     return answer;
   }
 
+  async deleteQuizSession(sessionId: number): Promise<void> {
+    // Prima elimina tutte le risposte
+    const questions = await this.getSessionQuestions(sessionId);
+    for (const question of questions) {
+      await db.delete(quizAnswers).where(eq(quizAnswers.questionId, question.id));
+    }
+    
+    // Poi elimina tutte le domande
+    await db.delete(quizQuestions).where(eq(quizQuestions.sessionId, sessionId));
+    
+    // Infine elimina la sessione
+    await db.delete(quizSessions).where(eq(quizSessions.id, sessionId));
+  }
+
   async getUserQuizStats(userId: number): Promise<{
     totalSessions: number;
     completedSessions: number;

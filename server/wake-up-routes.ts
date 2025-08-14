@@ -356,6 +356,42 @@ router.post("/session/:sessionId/next", async (req, res) => {
 });
 
 /**
+ * DELETE /api/wake-up/session/:sessionId
+ * Elimina una sessione quiz
+ */
+router.delete("/session/:sessionId", async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: "Non autenticato" });
+    }
+
+    const sessionId = parseInt(req.params.sessionId);
+
+    if (isNaN(sessionId)) {
+      return res.status(400).json({ error: "ID sessione non valido" });
+    }
+
+    // Verifica ownership della sessione
+    const session = await storage.getQuizSession(sessionId);
+    if (!session || session.userId !== req.user.id) {
+      return res.status(404).json({ error: "Sessione quiz non trovata" });
+    }
+
+    // Elimina la sessione e tutti i dati correlati
+    await storage.deleteQuizSession(sessionId);
+
+    res.json({ success: true, message: "Sessione eliminata con successo" });
+
+  } catch (error) {
+    console.error("Errore eliminazione sessione quiz:", error);
+    res.status(500).json({ 
+      error: "Errore interno del server",
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
  * GET /api/wake-up/sessions
  * Ottieni tutte le sessioni quiz dell'utente
  */
