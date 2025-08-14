@@ -259,6 +259,32 @@ export default function WakeUpPage() {
     });
   };
 
+  const handleNextQuestion = () => {
+    if (!activeSession || !currentQuestions.length) return;
+    
+    const nextQuestionNumber = activeSession.currentQuestion + 1;
+    const updatedSession = {
+      ...activeSession,
+      currentQuestion: nextQuestionNumber
+    };
+    
+    // Se abbiamo raggiunto l'ultima domanda, completa la sessione
+    if (nextQuestionNumber >= activeSession.totalQuestions) {
+      updatedSession.status = 'completed';
+    }
+    
+    setActiveSession(updatedSession);
+  };
+
+  const canProceedToNext = () => {
+    const currentQ = getCurrentQuestion();
+    return currentQ && currentQ.answer?.answeredAt && 
+           activeSession && 
+           typeof activeSession.currentQuestion === 'number' && 
+           typeof activeSession.totalQuestions === 'number' &&
+           activeSession.currentQuestion < activeSession.totalQuestions - 1;
+  };
+
   const getCurrentQuestion = () => {
     if (!activeSession || !currentQuestions.length) return null;
     return currentQuestions.find(q => q.questionNumber === activeSession.currentQuestion + 1);
@@ -512,6 +538,33 @@ export default function WakeUpPage() {
                         <Eye className="h-4 w-4 mr-2" />
                         Mostra spiegazione
                       </Button>
+                    )}
+                    
+                    {/* Next Question Button */}
+                    {canProceedToNext() && (
+                      <div className="mt-4 pt-4 border-t">
+                        <Button 
+                          onClick={handleNextQuestion}
+                          className="w-full"
+                        >
+                          <ChevronRight className="h-4 w-4 mr-2" />
+                          Prossima domanda
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {/* Complete Quiz Button */}
+                    {currentQuestion.answer?.answeredAt && activeSession?.currentQuestion === activeSession?.totalQuestions - 1 && (
+                      <div className="mt-4 pt-4 border-t">
+                        <Button 
+                          onClick={() => setActiveSession({...activeSession, status: 'completed'})}
+                          className="w-full"
+                          variant="default"
+                        >
+                          <Trophy className="h-4 w-4 mr-2" />
+                          Completa quiz
+                        </Button>
+                      </div>
                     )}
                   </div>
                 )}
