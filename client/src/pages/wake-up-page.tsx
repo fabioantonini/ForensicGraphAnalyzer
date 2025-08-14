@@ -580,8 +580,22 @@ export default function WakeUpPage() {
                 {!currentQuestion.answer?.answeredAt && (
                   <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <p className="text-sm text-yellow-800 mb-2">Seleziona una risposta per procedere al prossimo step del quiz.</p>
+                    <Button 
+                      onClick={() => window.location.reload()}
+                      variant="outline" 
+                      size="sm"
+                      className="mt-2"
+                    >
+                      Ricarica pagina
+                    </Button>
                   </div>
                 )}
+
+                {/* Debug current question state */}
+                <div className="mt-4 p-2 bg-red-50 border border-red-200 rounded text-xs">
+                  <p>Debug: questionId={currentQuestion.id}, hasAnswer={!!currentQuestion.answer}, answeredAt={currentQuestion.answer?.answeredAt || 'none'}</p>
+                  <p>Answer object: {JSON.stringify(currentQuestion.answer)}</p>
+                </div>
 
                 {/* Show result after answering */}
                 {currentQuestion.answer?.answeredAt && (
@@ -648,6 +662,20 @@ export default function WakeUpPage() {
                         >
                           <ChevronRight className="h-4 w-4 mr-2" />
                           Forza prossima domanda
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {/* Emergency Next Button - sempre visibile se non ultima domanda */}
+                    {currentQuestion.questionNumber < activeSession.totalQuestions && (
+                      <div className="mt-4 pt-4 border-t">
+                        <Button 
+                          onClick={handleNextQuestion}
+                          className="w-full"
+                          variant="secondary"
+                        >
+                          <ChevronRight className="h-4 w-4 mr-2" />
+                          Vai alla prossima domanda ({currentQuestion.questionNumber + 1})
                         </Button>
                       </div>
                     )}
