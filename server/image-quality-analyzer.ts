@@ -50,16 +50,18 @@ interface ImageQualityResult {
  */
 export async function analyzeImageQuality(imagePath: string): Promise<ImageQualityResult> {
   try {
+    // Import fs using ES6 syntax
+    const fs = await import('fs');
+    
     // Check if file exists
-    const fs = require('fs').promises;
     try {
-      await fs.access(imagePath);
+      await fs.promises.access(imagePath);
     } catch (error) {
       throw new Error(`Image file not found: ${imagePath}`);
     }
 
     // Check file size
-    const stats = await fs.stat(imagePath);
+    const stats = await fs.promises.stat(imagePath);
     if (stats.size === 0) {
       throw new Error('Image file is empty');
     }

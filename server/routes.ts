@@ -57,8 +57,30 @@ const upload = multer({
   },
 });
 
+// Multer configuration for image quality analysis (needs disk storage)
+const imageQualityUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, 'uploads/temp/');
+    },
+    filename: (req, file, cb) => {
+      const uniqueName = `temp_${Date.now()}_${Math.random().toString(36).substring(7)}.${file.originalname.split('.').pop()}`;
+      cb(null, uniqueName);
+    }
+  }),
+  limits: {
+    fileSize: 25 * 1024 * 1024, // 25MB limit
+  },
+});
+
 export async function registerRoutes(app: Express): Promise<Server> {
 
+  // Ensure temp directory exists for image quality analysis
+  try {
+    await fs.mkdir('uploads/temp/', { recursive: true });
+  } catch (error) {
+    log(`Directory temp already exists or creation failed: ${error}`, "express");
+  }
 
   // Inizializzazione del sistema di persistenza vettoriale
   // Non blocchiamo l'app se fallisce per consentire al sistema di autenticazione di funzionare comunque
@@ -1386,7 +1408,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Image Quality Analysis endpoint for drag & drop confidence meter
-  app.post("/api/analyze-image-quality", isAuthenticated, isActiveUser, upload.single('image'), async (req, res, next) => {
+  app.post("/api/analyze-image-quality", isAuthenticated, isActiveUser, imageQualityUpload.single('image'), async (req, res, next) => {
     try {
       if (!req.file) {
         return res.status(400).json({ message: "No image file provided" });
