@@ -603,23 +603,87 @@ export function registerSignatureRoutes(appRouter: Router) {
       doc.text(`Valutazione: ${verdict}`, { fontSize: 16 });
       doc.moveDown(1.5);
       
-      // Aggiungi i parametri se disponibili
+      // Aggiungi i parametri completi se disponibili
       if (signature.parameters) {
         doc.fontSize(14).text('PARAMETRI ANALIZZATI', { underline: true });
         doc.moveDown(0.5);
         doc.fontSize(10);
         
+        // Parametri dimensionali
         if (signature.parameters.realDimensions) {
-          doc.text(`Dimensioni: ${signature.parameters.realDimensions.widthMm?.toFixed(1)}mm × ${signature.parameters.realDimensions.heightMm?.toFixed(1)}mm`);
+          doc.text(`Dimensioni reali: ${signature.parameters.realDimensions.widthMm?.toFixed(1)}mm × ${signature.parameters.realDimensions.heightMm?.toFixed(1)}mm`);
         }
-        if (signature.parameters.strokeWidth?.meanMm) {
-          doc.text(`Spessore medio tratto: ${signature.parameters.strokeWidth.meanMm.toFixed(2)}mm`);
+        
+        // Parametri del tratto
+        if (signature.parameters.strokeWidth) {
+          if (signature.parameters.strokeWidth.meanMm) {
+            doc.text(`Spessore medio tratto: ${signature.parameters.strokeWidth.meanMm.toFixed(2)}mm`);
+          }
+          if (signature.parameters.strokeWidth.varianceMm) {
+            doc.text(`Varianza spessore: ${signature.parameters.strokeWidth.varianceMm.toFixed(2)}mm`);
+          }
+          if (signature.parameters.strokeWidth.minMm && signature.parameters.strokeWidth.maxMm) {
+            doc.text(`Range spessore: ${signature.parameters.strokeWidth.minMm.toFixed(2)}mm - ${signature.parameters.strokeWidth.maxMm.toFixed(2)}mm`);
+          }
         }
+        
+        // Parametri di movimento
         if (signature.parameters.inclination !== undefined) {
-          doc.text(`Inclinazione: ${signature.parameters.inclination.toFixed(1)}°`);
+          doc.text(`Inclinazione media: ${signature.parameters.inclination.toFixed(1)}°`);
         }
         if (signature.parameters.velocity !== undefined) {
-          doc.text(`Velocità di scrittura: ${signature.parameters.velocity}/5`);
+          doc.text(`Velocità di scrittura: ${signature.parameters.velocity.toFixed(1)}/5`);
+        }
+        if (signature.parameters.pressure !== undefined) {
+          doc.text(`Pressione media: ${signature.parameters.pressure.toFixed(1)}/5`);
+        }
+        
+        // Parametri di forma
+        if (signature.parameters.curvature !== undefined) {
+          doc.text(`Curvatura: ${signature.parameters.curvature.toFixed(2)}`);
+        }
+        if (signature.parameters.angularity !== undefined) {
+          doc.text(`Angolosità: ${signature.parameters.angularity.toFixed(2)}`);
+        }
+        if (signature.parameters.connectivity !== undefined) {
+          doc.text(`Connettività: ${signature.parameters.connectivity.toFixed(2)}`);
+        }
+        
+        // Parametri di distribuzione
+        if (signature.parameters.spacingVariance !== undefined) {
+          doc.text(`Varianza spaziatura: ${signature.parameters.spacingVariance.toFixed(2)}`);
+        }
+        if (signature.parameters.densityUniformity !== undefined) {
+          doc.text(`Uniformità densità: ${signature.parameters.densityUniformity.toFixed(2)}`);
+        }
+        
+        // Parametri avanzati
+        if (signature.parameters.proportionRatio !== undefined) {
+          doc.text(`Rapporto proporzioni: ${signature.parameters.proportionRatio.toFixed(2)}`);
+        }
+        if (signature.parameters.styleClassification) {
+          doc.text(`Classificazione stile: ${signature.parameters.styleClassification}`);
+        }
+        if (signature.parameters.loopAnalysis !== undefined) {
+          doc.text(`Analisi asole: ${signature.parameters.loopAnalysis.toFixed(2)}`);
+        }
+        if (signature.parameters.dynamicInclination !== undefined) {
+          doc.text(`Inclinazione dinamica: ${signature.parameters.dynamicInclination.toFixed(1)}°`);
+        }
+        if (signature.parameters.multilevelPressure !== undefined) {
+          doc.text(`Pressione multi-livello: ${signature.parameters.multilevelPressure.toFixed(2)}`);
+        }
+        if (signature.parameters.microscaleCurvature !== undefined) {
+          doc.text(`Curvatura microscala: ${signature.parameters.microscaleCurvature.toFixed(2)}`);
+        }
+        if (signature.parameters.executionSpeed !== undefined) {
+          doc.text(`Velocità esecuzione: ${signature.parameters.executionSpeed.toFixed(2)}`);
+        }
+        if (signature.parameters.morphologicalConnections !== undefined) {
+          doc.text(`Connessioni morfologiche: ${signature.parameters.morphologicalConnections.toFixed(2)}`);
+        }
+        if (signature.parameters.calibratedSpacing !== undefined) {
+          doc.text(`Spaziatura calibrata: ${signature.parameters.calibratedSpacing.toFixed(2)}`);
         }
       }
       
