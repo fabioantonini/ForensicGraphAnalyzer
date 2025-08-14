@@ -499,9 +499,9 @@ def create_comparison_chart(verifica_data, comp_data):
         valore_v = verifica_data.get(parametri_numerici[i], 0)
         valore_c = comp_data.get(parametri_numerici[i], 0)
         
-        # Se entrambi i valori sono 0, ignora il parametro
+        # Se entrambi i valori sono 0, considera compatibilità perfetta (100%)
         if valore_v == 0 and valore_c == 0:
-            compatibilita_percentuale.append(0)
+            compatibilita_percentuale.append(100)
             continue
             
         # Calcola la compatibilità come percentuale basata sulla differenza relativa
