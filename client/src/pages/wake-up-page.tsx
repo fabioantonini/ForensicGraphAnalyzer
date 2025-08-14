@@ -278,11 +278,13 @@ export default function WakeUpPage() {
 
   const canProceedToNext = () => {
     const currentQ = getCurrentQuestion();
-    return currentQ && currentQ.answer?.answeredAt && 
-           activeSession && 
-           typeof activeSession.currentQuestion === 'number' && 
-           typeof activeSession.totalQuestions === 'number' &&
-           activeSession.currentQuestion < activeSession.totalQuestions - 1;
+    if (!currentQ || !currentQ.answer?.answeredAt || !activeSession) {
+      return false;
+    }
+    
+    // Verifica se ci sono ancora domande dopo quella corrente
+    const currentQuestionNumber = currentQ.questionNumber;
+    return currentQuestionNumber < activeSession.totalQuestions;
   };
 
   const getCurrentQuestion = () => {
@@ -554,7 +556,7 @@ export default function WakeUpPage() {
                     )}
                     
                     {/* Complete Quiz Button */}
-                    {currentQuestion.answer?.answeredAt && activeSession?.currentQuestion === activeSession?.totalQuestions - 1 && (
+                    {currentQuestion.answer?.answeredAt && currentQuestion.questionNumber === activeSession?.totalQuestions && (
                       <div className="mt-4 pt-4 border-t">
                         <Button 
                           onClick={() => setActiveSession({...activeSession, status: 'completed'})}
