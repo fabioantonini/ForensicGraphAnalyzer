@@ -639,29 +639,6 @@ export default function WakeUpPage() {
                   ))}
                 </div>
 
-                {/* Force show navigation if stuck - only show if not answered */}
-                {(!currentQuestion.answer?.answeredAt || currentQuestion.answer?.answeredAt === null) && (
-                  <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p className="text-sm text-yellow-800 mb-2">Questa domanda non ha una risposta registrata. Puoi:</p>
-                    <div className="flex gap-2 mt-2">
-                      <Button 
-                        onClick={() => window.location.reload()}
-                        variant="outline" 
-                        size="sm"
-                      >
-                        Ricarica pagina
-                      </Button>
-                      <Button 
-                        onClick={handleNextQuestion}
-                        variant="default" 
-                        size="sm"
-                      >
-                        Salta alla prossima
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
                 {/* Debug current question state */}
                 <div className="mt-4 p-2 bg-red-50 border border-red-200 rounded text-xs">
                   <p>Debug: questionId={currentQuestion.id}, hasAnswer={!!currentQuestion.answer}, answeredAt={currentQuestion.answer?.answeredAt || 'none'}</p>
@@ -711,8 +688,8 @@ export default function WakeUpPage() {
                       <p>Debug Nav: canProceed={canProceedToNext().toString()}, questionNum={currentQuestion.questionNumber}, total={activeSession.totalQuestions}, hasAnswer={!!currentQuestion.answer?.answeredAt}</p>
                     </div>
                     
-                    {/* Next Question Button */}
-                    {canProceedToNext() && (
+                    {/* Next Question Button - solo se ha risposto e non è l'ultima domanda */}
+                    {currentQuestion.answer?.answeredAt && currentQuestion.questionNumber < activeSession.totalQuestions && (
                       <div className="mt-4 pt-4 border-t">
                         <Button 
                           onClick={handleNextQuestion}
@@ -720,34 +697,6 @@ export default function WakeUpPage() {
                         >
                           <ChevronRight className="h-4 w-4 mr-2" />
                           Prossima domanda
-                        </Button>
-                      </div>
-                    )}
-                    
-                    {/* Force show Next Button if conditions seem right */}
-                    {!canProceedToNext() && currentQuestion.answer?.answeredAt && currentQuestion.questionNumber < activeSession.totalQuestions && (
-                      <div className="mt-4 pt-4 border-t">
-                        <Button 
-                          onClick={handleNextQuestion}
-                          className="w-full"
-                          variant="outline"
-                        >
-                          <ChevronRight className="h-4 w-4 mr-2" />
-                          Forza prossima domanda
-                        </Button>
-                      </div>
-                    )}
-                    
-                    {/* Emergency Next Button - sempre visibile se non ultima domanda */}
-                    {currentQuestion.questionNumber < activeSession.totalQuestions && (
-                      <div className="mt-4 pt-4 border-t">
-                        <Button 
-                          onClick={handleNextQuestion}
-                          className="w-full"
-                          variant="secondary"
-                        >
-                          <ChevronRight className="h-4 w-4 mr-2" />
-                          Vai alla prossima domanda ({currentQuestion.questionNumber + 1})
                         </Button>
                       </div>
                     )}
