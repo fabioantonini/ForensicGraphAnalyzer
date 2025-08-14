@@ -848,10 +848,14 @@ export function registerSignatureRoutes(appRouter: Router) {
           if (signature.parameters.strokeWidth?.minMm) {
             doc.text(`• Spessore minimo: ${formatNumber(signature.parameters.strokeWidth.minMm, 3)} mm`);
           }
-          if (signature.parameters.strokeWidth?.varianceMm) {
+          if (signature.parameters.strokeWidth?.variance !== undefined) {
+            doc.text(`• Varianza spessore: ${formatNumber(signature.parameters.strokeWidth.variance, 2)}`);
+          } else if (signature.parameters.strokeWidth?.varianceMm) {
             doc.text(`• Varianza spessore: ${formatNumber(signature.parameters.strokeWidth.varianceMm, 2)}`);
           }
-          if (signature.parameters.proportionRatio !== undefined) {
+          if (signature.parameters.proportion !== undefined) {
+            doc.text(`• Proporzione: ${formatNumber(signature.parameters.proportion, 3)}`);
+          } else if (signature.parameters.proportionRatio !== undefined) {
             doc.text(`• Proporzione: ${formatNumber(signature.parameters.proportionRatio, 3)}`);
           }
           if (signature.parameters.inclination !== undefined) {
@@ -868,27 +872,41 @@ export function registerSignatureRoutes(appRouter: Router) {
           } else {
             doc.text(`• Deviazione pressione: 15.0`);
           }
-          if (signature.parameters.curvature !== undefined) {
+          if (signature.parameters.avgCurvature !== undefined) {
+            doc.text(`• Curvatura media: ${formatNumber(signature.parameters.avgCurvature, 3)}`);
+          } else if (signature.parameters.curvature !== undefined) {
             doc.text(`• Curvatura media: ${formatNumber(signature.parameters.curvature, 3)}`);
           }
           if (signature.parameters.velocity !== undefined) {
             doc.text(`• Velocità scrittura: ${signature.parameters.velocity}/5`);
           }
-          if (signature.parameters.styleClassification) {
+          if (signature.parameters.writingStyle) {
+            doc.text(`• Stile scrittura: ${signature.parameters.writingStyle}`);
+          } else if (signature.parameters.styleClassification) {
             doc.text(`• Stile scrittura: ${signature.parameters.styleClassification}`);
           }
-          doc.text(`• Leggibilità: Bassa`); // Default per ora
-          if (signature.parameters.loopAnalysis !== undefined) {
+          if (signature.parameters.readability) {
+            doc.text(`• Leggibilità: ${signature.parameters.readability}`);
+          } else {
+            doc.text(`• Leggibilità: Bassa`);
+          }
+          if (signature.parameters.avgAsolaSize !== undefined) {
+            doc.text(`• Dimensione asole medie: ${formatNumber(signature.parameters.avgAsolaSize, 2)} mm`);
+          } else if (signature.parameters.loopAnalysis !== undefined) {
             doc.text(`• Dimensione asole medie: ${formatNumber(signature.parameters.loopAnalysis, 2)} mm`);
           }
-          if (signature.parameters.calibratedSpacing !== undefined) {
+          if (signature.parameters.avgSpacing !== undefined) {
+            doc.text(`• Spaziatura media: ${formatNumber(signature.parameters.avgSpacing, 2)} mm`);
+          } else if (signature.parameters.calibratedSpacing !== undefined) {
             doc.text(`• Spaziatura media: ${formatNumber(signature.parameters.calibratedSpacing, 2)} mm`);
           }
           doc.text(`• Rapporto sovrapposizione: 0.0%`); // Default
           if (signature.parameters.connectivity !== undefined) {
             doc.text(`• Connessioni lettere: ${formatNumber(signature.parameters.connectivity, 2)}`);
           }
-          if (signature.parameters.spacingVariance !== undefined) {
+          if (signature.parameters.baselineStdMm !== undefined) {
+            doc.text(`• Deviazione baseline: ${formatNumber(signature.parameters.baselineStdMm, 2)} mm`);
+          } else if (signature.parameters.spacingVariance !== undefined) {
             doc.text(`• Deviazione baseline: ${formatNumber(signature.parameters.spacingVariance, 2)} mm`);
           }
           // Componenti connesse e complessità tratto
@@ -923,10 +941,14 @@ export function registerSignatureRoutes(appRouter: Router) {
           if (referenceSignature.parameters.strokeWidth?.minMm) {
             doc.text(`• Spessore minimo: ${formatNumber(referenceSignature.parameters.strokeWidth.minMm, 3)} mm`);
           }
-          if (referenceSignature.parameters.strokeWidth?.varianceMm) {
+          if (referenceSignature.parameters.strokeWidth?.variance !== undefined) {
+            doc.text(`• Varianza spessore: ${formatNumber(referenceSignature.parameters.strokeWidth.variance, 2)}`);
+          } else if (referenceSignature.parameters.strokeWidth?.varianceMm) {
             doc.text(`• Varianza spessore: ${formatNumber(referenceSignature.parameters.strokeWidth.varianceMm, 2)}`);
           }
-          if (referenceSignature.parameters.proportionRatio !== undefined) {
+          if (referenceSignature.parameters.proportion !== undefined) {
+            doc.text(`• Proporzione: ${formatNumber(referenceSignature.parameters.proportion, 3)}`);
+          } else if (referenceSignature.parameters.proportionRatio !== undefined) {
             doc.text(`• Proporzione: ${formatNumber(referenceSignature.parameters.proportionRatio, 3)}`);
           }
           if (referenceSignature.parameters.inclination !== undefined) {
@@ -943,27 +965,41 @@ export function registerSignatureRoutes(appRouter: Router) {
           } else {
             doc.text(`• Deviazione pressione: 21.6`);
           }
-          if (referenceSignature.parameters.curvature !== undefined) {
+          if (referenceSignature.parameters.avgCurvature !== undefined) {
+            doc.text(`• Curvatura media: ${formatNumber(referenceSignature.parameters.avgCurvature, 3)}`);
+          } else if (referenceSignature.parameters.curvature !== undefined) {
             doc.text(`• Curvatura media: ${formatNumber(referenceSignature.parameters.curvature, 3)}`);
           }
           if (referenceSignature.parameters.velocity !== undefined) {
             doc.text(`• Velocità scrittura: ${referenceSignature.parameters.velocity}/5`);
           }
-          if (referenceSignature.parameters.styleClassification) {
+          if (referenceSignature.parameters.writingStyle) {
+            doc.text(`• Stile scrittura: ${referenceSignature.parameters.writingStyle}`);
+          } else if (referenceSignature.parameters.styleClassification) {
             doc.text(`• Stile scrittura: ${referenceSignature.parameters.styleClassification}`);
           }
-          doc.text(`• Leggibilità: Bassa`);
-          if (referenceSignature.parameters.loopAnalysis !== undefined) {
+          if (referenceSignature.parameters.readability) {
+            doc.text(`• Leggibilità: ${referenceSignature.parameters.readability}`);
+          } else {
+            doc.text(`• Leggibilità: Bassa`);
+          }
+          if (referenceSignature.parameters.avgAsolaSize !== undefined) {
+            doc.text(`• Dimensione asole medie: ${formatNumber(referenceSignature.parameters.avgAsolaSize, 2)} mm`);
+          } else if (referenceSignature.parameters.loopAnalysis !== undefined) {
             doc.text(`• Dimensione asole medie: ${formatNumber(referenceSignature.parameters.loopAnalysis, 2)} mm`);
           }
-          if (referenceSignature.parameters.calibratedSpacing !== undefined) {
+          if (referenceSignature.parameters.avgSpacing !== undefined) {
+            doc.text(`• Spaziatura media: ${formatNumber(referenceSignature.parameters.avgSpacing, 2)} mm`);
+          } else if (referenceSignature.parameters.calibratedSpacing !== undefined) {
             doc.text(`• Spaziatura media: ${formatNumber(referenceSignature.parameters.calibratedSpacing, 2)} mm`);
           }
           doc.text(`• Rapporto sovrapposizione: 0.0%`);
           if (referenceSignature.parameters.connectivity !== undefined) {
             doc.text(`• Connessioni lettere: ${formatNumber(referenceSignature.parameters.connectivity, 2)}`);
           }
-          if (referenceSignature.parameters.spacingVariance !== undefined) {
+          if (referenceSignature.parameters.baselineStdMm !== undefined) {
+            doc.text(`• Deviazione baseline: ${formatNumber(referenceSignature.parameters.baselineStdMm, 2)} mm`);
+          } else if (referenceSignature.parameters.spacingVariance !== undefined) {
             doc.text(`• Deviazione baseline: ${formatNumber(referenceSignature.parameters.spacingVariance, 2)} mm`);
           }
           // Componenti connesse e complessità per firma di riferimento
