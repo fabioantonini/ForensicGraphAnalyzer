@@ -72,6 +72,9 @@ Preferred communication style: Simple, everyday language.
 - **mammoth**: DOCX text extraction.
 
 ## Recent Changes (Gennaio 2025)
+- **WAKE UP QUIZ SISTEMA COMPLETO**: Implementato sistema educativo completo con quiz AI di grafologia e cultura generale. Frontend React integrato, routing completato, sidebar localizzata "Quiz Wake Up". Integrazione con servizio OpenAI esistente usando chiave API del profilo utente.
+- **NAVIGAZIONE QUIZ RIPARATA**: Risolti problemi di navigazione tra domande, aggiunto caricamento automatico sessioni attive, bottone "Abbandona quiz" per tornare alla schermata principale, logica anti-ricaricamento automatico dopo abbandono sessione.
+- **LOCALIZZAZIONE WAKE UP**: Sistema multilingue completato con traduzioni italiane per interfaccia Wake Up Quiz. Sidebar mostra correttamente "Quiz Wake Up" invece del codice non tradotto.
 - **RISOLTO BUG VISUALIZZAZIONE PERCENTUALI**: Corretto problema conversione che mostrava 0.8% invece di 84.3% di similarità
 - **Sincronizzazione Database-Frontend**: Database salva valori come frazione decimale, frontend ora moltiplica per 100 per visualizzazione corretta  
 - **Cache HTTP Disabilitato**: Eliminato caching per endpoint signatures per garantire dati sempre aggiornati dal PostgreSQL
