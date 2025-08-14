@@ -620,6 +620,11 @@ export default function WakeUpPage() {
                       </Button>
                     )}
                     
+                    {/* Debug: Show navigation state */}
+                    <div className="mt-4 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
+                      <p>Debug Nav: canProceed={canProceedToNext().toString()}, questionNum={currentQuestion.questionNumber}, total={activeSession.totalQuestions}, hasAnswer={!!currentQuestion.answer?.answeredAt}</p>
+                    </div>
+                    
                     {/* Next Question Button */}
                     {canProceedToNext() && (
                       <div className="mt-4 pt-4 border-t">
@@ -629,6 +634,20 @@ export default function WakeUpPage() {
                         >
                           <ChevronRight className="h-4 w-4 mr-2" />
                           Prossima domanda
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {/* Force show Next Button if conditions seem right */}
+                    {!canProceedToNext() && currentQuestion.answer?.answeredAt && currentQuestion.questionNumber < activeSession.totalQuestions && (
+                      <div className="mt-4 pt-4 border-t">
+                        <Button 
+                          onClick={handleNextQuestion}
+                          className="w-full"
+                          variant="outline"
+                        >
+                          <ChevronRight className="h-4 w-4 mr-2" />
+                          Forza prossima domanda
                         </Button>
                       </div>
                     )}
