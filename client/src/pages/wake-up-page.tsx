@@ -81,6 +81,7 @@ export default function WakeUpPage() {
   const [revealedQuestions, setRevealedQuestions] = useState<Set<number>>(new Set());
   const [isAnswering, setIsAnswering] = useState(false);
   const [showStats, setShowStats] = useState(false);
+  const [hasAbandonedSession, setHasAbandonedSession] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -94,9 +95,9 @@ export default function WakeUpPage() {
     queryKey: ["/api/wake-up/stats"],
   });
 
-  // Load active session automatically when available
+  // Load active session automatically when available (but not if user abandoned it)
   useEffect(() => {
-    if ((sessions as any)?.activeSessions && (sessions as any).activeSessions.length > 0 && !activeSession) {
+    if ((sessions as any)?.activeSessions && (sessions as any).activeSessions.length > 0 && !activeSession && !hasAbandonedSession) {
       const activeSessionFromServer = (sessions as any).activeSessions[0];
       
       // Fetch questions for this session
@@ -110,7 +111,7 @@ export default function WakeUpPage() {
           console.error("Error loading session questions:", error);
         });
     }
-  }, [sessions, activeSession]);
+  }, [sessions, activeSession, hasAbandonedSession]);
 
   // Start new quiz mutation
   const startQuizMutation = useMutation({
@@ -128,6 +129,7 @@ export default function WakeUpPage() {
       setCurrentQuestions(data.questions);
       setSelectedAnswers({});
       setRevealedQuestions(new Set());
+      setHasAbandonedSession(false); // Reset abandoned flag when starting new quiz
       queryClient.invalidateQueries({ queryKey: ["/api/wake-up/sessions"] });
       toast({
         title: "Quiz avviato!",
@@ -480,7 +482,13 @@ export default function WakeUpPage() {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={() => setActiveSession(null)}
+                  onClick={() => {
+                    setActiveSession(null);
+                    setCurrentQuestions([]);
+                    setHasAbandonedSession(true);
+                    setSelectedAnswers({});
+                    setRevealedQuestions(new Set());
+                  }}
                   className="mt-2"
                 >
                   Abbandona quiz
