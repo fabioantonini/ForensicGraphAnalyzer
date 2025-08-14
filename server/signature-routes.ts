@@ -617,14 +617,197 @@ export function registerSignatureRoutes(appRouter: Router) {
       doc.text(`Valutazione: ${verdict}`, { fontSize: 14 });
       doc.moveDown(1.5);
       
-      // ANALISI PERITALE AI (se disponibile analysisReport)
-      if (signature.analysisReport) {
+      // ANALISI PERITALE AI DETTAGLIATA
+      if (referenceSignature?.parameters) {
+        doc.fontSize(14).text('ANALISI PERITALE AI', { underline: true });
+        doc.fontSize(12).text('CONFRONTO PARAMETRO PER PARAMETRO', { underline: false });
+        doc.moveDown(0.5);
+        doc.fontSize(10);
+        
+        // Confronto Dimensioni
+        if (signature.parameters.realDimensions && referenceSignature.parameters.realDimensions) {
+          const sigWidth = signature.parameters.realDimensions.widthMm || 0;
+          const sigHeight = signature.parameters.realDimensions.heightMm || 0;
+          const refWidth = referenceSignature.parameters.realDimensions.widthMm || 0;
+          const refHeight = referenceSignature.parameters.realDimensions.heightMm || 0;
+          
+          doc.text(`Dimensioni: La firma in verifica ha dimensioni di ${formatNumber(sigWidth, 1)}x${formatNumber(sigHeight, 1)} mm rispetto alla firma di riferimento di ${formatNumber(refWidth, 1)}x${formatNumber(refHeight, 1)} mm. ${sigWidth < refWidth * 0.8 ? 'La firma in verifica è significativamente più piccola' : sigWidth > refWidth * 1.2 ? 'La firma in verifica è significativamente più grande' : 'Le dimensioni sono compatibili'}. Questa ${Math.abs(sigWidth - refWidth) > refWidth * 0.2 ? 'differenza potrebbe indicare una variazione nella modalità di esecuzione o una diversa impostazione mentale al momento della firma.' : 'compatibilità indica coerenza dimensionale.'}`, { align: 'justify' });
+          doc.moveDown(0.5);
+        }
+        
+        // Confronto Spessore Tratto
+        if (signature.parameters.strokeWidth?.meanMm && referenceSignature.parameters.strokeWidth?.meanMm) {
+          const sigStroke = signature.parameters.strokeWidth.meanMm;
+          const refStroke = referenceSignature.parameters.strokeWidth.meanMm;
+          const sigVariance = signature.parameters.strokeWidth.varianceMm || 0;
+          const refVariance = referenceSignature.parameters.strokeWidth.varianceMm || 0;
+          
+          doc.text(`Spessore Tratto: La firma in verifica presenta uno spessore medio di ${formatNumber(sigStroke, 3)} mm ${sigStroke > refStroke * 1.5 ? 'molto più elevato' : sigStroke < refStroke * 0.5 ? 'molto più ridotto' : 'compatibile'} rispetto ai ${formatNumber(refStroke, 3)} mm della firma di riferimento. La varianza di spessore ${sigVariance > refVariance * 2 ? 'è significativamente più alta nella firma in verifica, suggerendo maggiore irregolarità nella pressione' : 'è compatibile tra le due firme'}.`, { align: 'justify' });
+          doc.moveDown(0.5);
+        }
+        
+        // Confronto Inclinazione
+        if (signature.parameters.inclination !== undefined && referenceSignature.parameters.inclination !== undefined) {
+          const sigIncl = signature.parameters.inclination;
+          const refIncl = referenceSignature.parameters.inclination;
+          const angleDiff = Math.abs(sigIncl - refIncl);
+          
+          doc.text(`Inclinazione: La firma in verifica ha un'inclinazione di ${formatNumber(sigIncl, 1)}°, mentre quella di riferimento è di ${formatNumber(refIncl, 1)}°. ${angleDiff > 15 ? 'Questa differenza significativa può indicare un diverso orientamento della mano o del foglio durante la firma.' : 'Questa variazione è accettabile e indica coerenza stilistica.'}`, { align: 'justify' });
+          doc.moveDown(0.5);
+        }
+        
+        // Confronto Pressione
+        if (signature.parameters.pressure !== undefined && referenceSignature.parameters.pressure !== undefined) {
+          const sigPress = signature.parameters.pressure;
+          const refPress = referenceSignature.parameters.pressure;
+          
+          doc.text(`Pressione: La pressione media della firma in verifica è ${formatNumber(sigPress, 1)}, ${sigPress < refPress * 0.8 ? 'inferiore' : sigPress > refPress * 1.2 ? 'superiore' : 'compatibile'} rispetto ai ${formatNumber(refPress, 1)} della firma di riferimento. ${Math.abs(sigPress - refPress) > refPress * 0.3 ? 'Questa differenza suggerisce un possibile diverso stato emotivo o controllo motorio al momento della firma.' : 'Questa compatibilità indica coerenza nella modalità di esecuzione.'}`, { align: 'justify' });
+          doc.moveDown(0.5);
+        }
+        
+        // Confronto Spaziatura
+        if (signature.parameters.calibratedSpacing !== undefined && referenceSignature.parameters.calibratedSpacing !== undefined) {
+          const sigSpacing = signature.parameters.calibratedSpacing;
+          const refSpacing = referenceSignature.parameters.calibratedSpacing;
+          
+          doc.text(`Spaziatura Media: La firma in verifica ha una spaziatura media di ${formatNumber(sigSpacing, 2)} mm ${sigSpacing < refSpacing * 0.7 ? 'molto inferiore' : sigSpacing > refSpacing * 1.3 ? 'superiore' : 'compatibile'} rispetto ai ${formatNumber(refSpacing, 2)} mm della firma di riferimento, ${sigSpacing < refSpacing * 0.7 ? 'indicando maggiore compattezza e potenzialmente diversa velocità di esecuzione.' : 'indicando coerenza nella distribuzione spaziale.'}`, { align: 'justify' });
+          doc.moveDown(0.5);
+        }
+        
+        // Confronto Velocità
+        if (signature.parameters.velocity !== undefined && referenceSignature.parameters.velocity !== undefined) {
+          const sigVel = signature.parameters.velocity;
+          const refVel = referenceSignature.parameters.velocity;
+          
+          doc.text(`Velocità di Scrittura: La velocità di scrittura della firma in verifica è ${sigVel < refVel * 0.8 ? 'inferiore' : sigVel > refVel * 1.2 ? 'superiore' : 'compatibile'} (${formatNumber(sigVel, 2)}/5) rispetto a quella della firma di riferimento (${formatNumber(refVel, 2)}/5), ${sigVel < refVel * 0.8 ? 'suggerendo possibile maggiore attenzione o cautela durante la firma.' : 'indicando modalità di esecuzione coerenti.'}`, { align: 'justify' });
+          doc.moveDown(0.5);
+        }
+        
+        // Confronto Proporzione
+        if (signature.parameters.proportionRatio !== undefined && referenceSignature.parameters.proportionRatio !== undefined) {
+          const sigProp = signature.parameters.proportionRatio;
+          const refProp = referenceSignature.parameters.proportionRatio;
+          
+          doc.text(`Proporzione: La firma in verifica ha una proporzione di ${formatNumber(sigProp, 3)}, mentre la firma di riferimento ha una proporzione di ${formatNumber(refProp, 3)}. ${Math.abs(sigProp - refProp) > 0.2 ? 'Questa differenza indica una diversa distribuzione delle dimensioni tra le componenti della firma.' : 'Questa compatibilità indica coerenza proporzionale.'}`, { align: 'justify' });
+          doc.moveDown(0.5);
+        }
+        
+        // VALUTAZIONE DELLA COERENZA DIMENSIONALE E PROPORZIONALE
+        doc.fontSize(12).text('VALUTAZIONE DELLA COERENZA DIMENSIONALE E PROPORZIONALE', { underline: true });
+        doc.moveDown(0.3);
+        doc.fontSize(10);
+        
+        const percentageScore = signature.comparisonResult * 100;
+        if (percentageScore >= 85) {
+          doc.text('La firma in verifica presenta parametri dimensionali e proporzionali coerenti con la firma di riferimento. Le variazioni riscontrate rientrano nei margini di tolleranza accettabili per firme autentiche.', { align: 'justify' });
+        } else if (percentageScore >= 65) {
+          doc.text('La firma in verifica mostra alcune variazioni nei parametri dimensionali rispetto alla firma di riferimento. Queste differenze potrebbero indicare variazioni naturali legate al contesto di firma o necessitano di ulteriore valutazione.', { align: 'justify' });
+        } else {
+          doc.text('La firma in verifica presenta differenze significative nei parametri dimensionali e proporzionali rispetto alla firma di riferimento. La differenza nelle dimensioni e nella proporzione potrebbe indicare una variazione significativa nello stile di firma o una possibile alterazione intenzionale.', { align: 'justify' });
+        }
+        doc.moveDown(1);
+        
+        // ANALISI DELLE CARATTERISTICHE GRAFOLOGICHE
+        doc.fontSize(12).text('ANALISI DELLE CARATTERISTICHE GRAFOLOGICHE', { underline: true });
+        doc.moveDown(0.3);
+        doc.fontSize(10);
+        
+        if (signature.parameters.pressure !== undefined && referenceSignature.parameters.pressure !== undefined) {
+          const sigPress = signature.parameters.pressure;
+          const refPress = referenceSignature.parameters.pressure;
+          doc.text(`Pressione: ${Math.abs(sigPress - refPress) < refPress * 0.3 ? 'La pressione uniforme tra le due firme indica stabilità del controllo motorio e coerenza emotiva.' : 'La pressione differente potrebbe indicare un controllo motorio variabile o un diverso stato emotivo al momento della firma.'}`, { align: 'justify' });
+          doc.moveDown(0.3);
+        }
+        
+        if (signature.parameters.velocity !== undefined && referenceSignature.parameters.velocity !== undefined) {
+          const sigVel = signature.parameters.velocity;
+          const refVel = referenceSignature.parameters.velocity;
+          doc.text(`Fluidità e Controllo Motorio: ${Math.abs(sigVel - refVel) < refVel * 0.3 ? 'La velocità di scrittura coerente suggerisce un\'esecuzione naturale e fluida.' : 'La variazione nella velocità di scrittura suggerisce un\'esecuzione più controllata o meno fluida rispetto alla firma di riferimento.'}`, { align: 'justify' });
+          doc.moveDown(0.3);
+        }
+        
+        doc.moveDown(1);
+        
+        // IDENTIFICAZIONE DI EVENTUALI ANOMALIE O ELEMENTI SOSPETTI
+        doc.fontSize(12).text('IDENTIFICAZIONE DI EVENTUALI ANOMALIE O ELEMENTI SOSPETTI', { underline: true });
+        doc.moveDown(0.3);
+        doc.fontSize(10);
+        
+        if (percentageScore < 65) {
+          doc.text('Le differenze significative nei parametri di spessore, dimensioni, inclinazione e connettività potrebbero indicare una variazione intenzionale o non intenzionale nello stile di firma. Sono stati identificati elementi che richiedono particolare attenzione in un contesto forense.', { align: 'justify' });
+        } else if (percentageScore < 85) {
+          doc.text('Alcune variazioni nei parametri sono state riscontrate, ma restano entro margini di accettabilità. Si raccomanda valutazione contestuale per determinare se tali variazioni sono attribuibili a fattori naturali.', { align: 'justify' });
+        } else {
+          doc.text('Non sono state identificate anomalie significative nei parametri analizzati. La firma presenta caratteristiche coerenti con quelle di riferimento.', { align: 'justify' });
+        }
+        doc.moveDown(1);
+        
+        // CONCLUSIONE PROFESSIONALE SULL'AUTENTICITÀ
+        doc.fontSize(12).text('CONCLUSIONE PROFESSIONALE SULL\'AUTENTICITÀ', { underline: true });
+        doc.moveDown(0.3);
+        doc.fontSize(10);
+        
+        if (percentageScore >= 85) {
+          doc.text('Sulla base dell\'analisi comparativa dei parametri grafometrici, la firma in verifica presenta caratteristiche compatibili con la firma di riferimento. Il livello di similarità riscontrato supporta l\'ipotesi di autenticità.', { align: 'justify' });
+        } else if (percentageScore >= 65) {
+          doc.text('L\'analisi rivela alcune differenze tra la firma in verifica e quella di riferimento. Sebbene non sia possibile escludere l\'autenticità, si raccomanda un\'ulteriore valutazione da parte di un esperto grafologo forense e, se possibile, la raccolta di ulteriori campioni per un confronto più approfondito.', { align: 'justify' });
+        } else {
+          doc.text('Le differenze significative tra le due firme in termini di parametri grafometrici suggeriscono che la firma in verifica potrebbe non essere autentica o potrebbe essere stata eseguita in condizioni diverse rispetto alla firma di riferimento. Raccomando un\'ulteriore analisi da parte di un esperto grafologo forense e, se possibile, la raccolta di ulteriori campioni di firma per un confronto più approfondito.', { align: 'justify' });
+        }
+        doc.moveDown(1);
+        
+        // ANALISI TECNICA ALGORITMICA
+        doc.fontSize(12).text('ANALISI TECNICA ALGORITMICA', { underline: true });
+        doc.moveDown(0.3);
+        doc.fontSize(10);
+        
+        // Analisi automatica basata sui parametri
+        if (signature.parameters.velocity !== undefined && referenceSignature.parameters.velocity !== undefined) {
+          const sigVel = signature.parameters.velocity;
+          const refVel = referenceSignature.parameters.velocity;
+          doc.text(`La firma in verifica presenta una ${sigVel < refVel * 0.8 ? 'minore' : sigVel > refVel * 1.2 ? 'maggiore' : 'simile'} velocità di esecuzione rispetto alla comparativa.`);
+        }
+        
+        if (signature.parameters.proportionRatio !== undefined && referenceSignature.parameters.proportionRatio !== undefined) {
+          const sigProp = signature.parameters.proportionRatio;
+          const refProp = referenceSignature.parameters.proportionRatio;
+          doc.text(`Le proporzioni tra altezza e larghezza mostrano ${Math.abs(sigProp - refProp) > 0.2 ? 'differenze significative' : 'compatibilità'}.`);
+        }
+        
+        if (signature.parameters.pressure !== undefined && referenceSignature.parameters.pressure !== undefined) {
+          const sigPress = signature.parameters.pressure;
+          const refPress = referenceSignature.parameters.pressure;
+          doc.text(`La pressione esercitata durante la firma è ${Math.abs(sigPress - refPress) < refPress * 0.3 ? 'compatibile' : 'differente'} tra i due esemplari.`);
+        }
+        
+        if (signature.parameters.inclination !== undefined && referenceSignature.parameters.inclination !== undefined) {
+          const sigIncl = signature.parameters.inclination;
+          const refIncl = referenceSignature.parameters.inclination;
+          const angleDiff = Math.abs(sigIncl - refIncl);
+          doc.text(`L'inclinazione dei tratti ${angleDiff > 15 ? 'evidenzia differenze stilistiche' : 'risulta simile'}.`);
+        }
+        
+        if (signature.parameters.curvature !== undefined && referenceSignature.parameters.curvature !== undefined) {
+          const sigCurv = signature.parameters.curvature;
+          const refCurv = referenceSignature.parameters.curvature;
+          doc.text(`La curvilineità/angolosità delle firme è ${Math.abs(sigCurv - refCurv) < 0.1 ? 'coerente' : 'variabile'}.`);
+        }
+        
+        if (signature.parameters.calibratedSpacing !== undefined && referenceSignature.parameters.calibratedSpacing !== undefined) {
+          const sigSpacing = signature.parameters.calibratedSpacing;
+          const refSpacing = referenceSignature.parameters.calibratedSpacing;
+          doc.text(`La spaziatura tra le lettere appare ${Math.abs(sigSpacing - refSpacing) < refSpacing * 0.3 ? 'omogenea' : 'variabile'}.`);
+        }
+        
+        doc.moveDown(1);
+        
+      } else if (signature.analysisReport) {
+        // Fallback al report esistente se non c'è firma di riferimento
         doc.fontSize(14).text('ANALISI PERITALE AI', { underline: true });
         doc.text('CONFRONTO PARAMETRO PER PARAMETRO', { fontSize: 12 });
         doc.moveDown(0.5);
         doc.fontSize(10);
         
-        // Aggiungi il testo dell'analisi AI
         const analysisLines = signature.analysisReport.split('\n');
         for (const line of analysisLines) {
           if (line.trim()) {
