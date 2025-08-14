@@ -532,4 +532,110 @@ export function registerSignatureRoutes(appRouter: Router) {
       res.status(500).json({ error: error.message });
     }
   });
+
+  // Endpoint per scaricare un report PDF
+  appRouter.get("/signatures/:id/report", isAuthenticated, isActiveUser, async (req, res) => {
+    try {
+      const signatureId = parseInt(req.params.id);
+      const signature = await storage.getSignature(signatureId);
+      
+      if (!signature) {
+        return res.status(404).json({ error: 'Firma non trovata' });
+      }
+      
+      // Verifica che la firma appartenga all'utente corrente
+      const project = await storage.getSignatureProject(signature.projectId);
+      if (!project || project.userId !== req.user!.id) {
+        return res.status(403).json({ error: 'Non autorizzato' });
+      }
+      
+      // Per ora, restituiamo un PDF semplice generato al volo
+      if (!signature.comparisonResult) {
+        return res.status(400).json({ error: 'Report non disponibile. Esegui prima il confronto.' });
+      }
+      
+      // Genera un PDF semplice al volo
+      const PDFDocument = require('pdfkit');
+      const doc = new PDFDocument({
+        size: 'A4',
+        info: {
+          Title: 'Rapporto di Analisi Firma',
+          Author: 'GrapholexInsight',
+          Subject: 'Verifica Firma',
+          CreationDate: new Date()
+        }
+      });
+      
+      // Imposta headers per il download
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="report_${signature.originalFilename}_${Date.now()}.pdf"`);
+      
+      // Pipe il PDF direttamente alla risposta
+      doc.pipe(res);
+      
+      // Contenuto del PDF
+      doc.fontSize(20).text('RAPPORTO DI ANALISI FIRMA', { align: 'center' });
+      doc.moveDown(2);
+      
+      doc.fontSize(14).text('INFORMAZIONI DELLA FIRMA', { underline: true });
+      doc.moveDown(0.5);
+      doc.fontSize(12);
+      doc.text(`Nome file: ${signature.originalFilename}`);
+      doc.text(`Data analisi: ${new Date().toLocaleDateString('it-IT')}`);
+      doc.text(`Progetto: ${project.name}`);
+      doc.moveDown(1.5);
+      
+      doc.fontSize(16).text('RISULTATO DELL\'ANALISI', { underline: true });
+      doc.moveDown(0.5);
+      doc.fontSize(14);
+      
+      const percentageScore = (signature.comparisonResult * 100).toFixed(1);
+      let verdict = '';
+      
+      if (signature.comparisonResult >= 0.85) {
+        verdict = 'AUTENTICA';
+      } else if (signature.comparisonResult >= 0.65) {
+        verdict = 'PROBABILMENTE AUTENTICA';  
+      } else {
+        verdict = 'SOSPETTA';
+      }
+      
+      doc.text(`Punteggio di similarità: ${percentageScore}%`);
+      doc.text(`Valutazione: ${verdict}`, { fontSize: 16 });
+      doc.moveDown(1.5);
+      
+      // Aggiungi i parametri se disponibili
+      if (signature.parameters) {
+        doc.fontSize(14).text('PARAMETRI ANALIZZATI', { underline: true });
+        doc.moveDown(0.5);
+        doc.fontSize(10);
+        
+        if (signature.parameters.realDimensions) {
+          doc.text(`Dimensioni: ${signature.parameters.realDimensions.widthMm?.toFixed(1)}mm × ${signature.parameters.realDimensions.heightMm?.toFixed(1)}mm`);
+        }
+        if (signature.parameters.strokeWidth?.meanMm) {
+          doc.text(`Spessore medio tratto: ${signature.parameters.strokeWidth.meanMm.toFixed(2)}mm`);
+        }
+        if (signature.parameters.inclination !== undefined) {
+          doc.text(`Inclinazione: ${signature.parameters.inclination.toFixed(1)}°`);
+        }
+        if (signature.parameters.velocity !== undefined) {
+          doc.text(`Velocità di scrittura: ${signature.parameters.velocity}/5`);
+        }
+      }
+      
+      // Footer
+      doc.moveDown(2);
+      doc.fontSize(8).text(
+        `Report generato da GrapholexInsight il ${new Date().toLocaleDateString('it-IT')} alle ${new Date().toLocaleTimeString('it-IT')}`,
+        { align: 'center' }
+      );
+      
+      doc.end();
+      
+    } catch (error: any) {
+      console.error('[REPORT DOWNLOAD] Errore:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
 }
