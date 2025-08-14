@@ -560,6 +560,11 @@ export default function WakeUpPage() {
                       </Button>
                     )}
                     
+                    {/* Debug info (temporarily) */}
+                    <div className="mt-4 p-2 bg-gray-100 text-xs">
+                      Debug: answeredAt={currentQuestion.answer?.answeredAt}, canProceed={canProceedToNext()}, questionNumber={currentQuestion.questionNumber}, totalQuestions={activeSession?.totalQuestions}
+                    </div>
+                    
                     {/* Next Question Button */}
                     {canProceedToNext() && (
                       <div className="mt-4 pt-4 border-t">
