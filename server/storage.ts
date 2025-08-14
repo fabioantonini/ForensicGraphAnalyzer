@@ -875,16 +875,6 @@ export class MemStorage implements IStorage {
       throw new Error(`Signature with ID ${id} not found`);
     }
     
-    console.log(`[STORAGE] Aggiornamento firma ${id} con dati:`, {
-      hasChart: !!data.comparisonChart,
-      chartLength: data.comparisonChart?.length,
-      hasReport: !!data.analysisReport,
-      comparisonResult: data.comparisonResult,
-      referenceFilename: data.referenceSignatureFilename,
-      referenceOriginalFilename: data.referenceSignatureOriginalFilename,
-      referenceDpi: data.referenceDpi
-    });
-    
     const updatedSignature: Signature = {
       ...signature,
       ...(data.comparisonChart !== undefined && { comparisonChart: data.comparisonChart }),
@@ -897,8 +887,6 @@ export class MemStorage implements IStorage {
       ...(data.referenceDpi !== undefined && { referenceDpi: data.referenceDpi }),
       updatedAt: data.updatedAt || new Date(),
     };
-    
-    console.log(`[STORAGE] Firma ${id} aggiornata. ComparisonChart presente:`, !!updatedSignature.comparisonChart);
     
     this.signatures.set(id, updatedSignature);
     return updatedSignature;

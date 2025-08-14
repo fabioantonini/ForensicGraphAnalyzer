@@ -218,12 +218,6 @@ export function registerSignatureRoutes(appRouter: Router) {
           
           // Usa la prima firma di riferimento disponibile per il confronto
           const referenceSignature = completedReferences[0];
-          console.log(`[COMPARE-ALL] Using reference signature:`, {
-            id: referenceSignature.id,
-            filename: referenceSignature.filename,
-            originalFilename: referenceSignature.originalFilename,
-            dpi: referenceSignature.dpi
-          });
           
           // Confronta con Python analyzer
           try {
@@ -240,13 +234,6 @@ export function registerSignatureRoutes(appRouter: Router) {
             similarityScore = pythonResult.similarity / 100; // Converti in decimale
             comparisonChart = pythonResult.comparison_chart; // CORRETTO: field name è comparison_chart
             analysisReport = pythonResult.description; // CORRETTO: field name è description
-            
-            console.log(`[COMPARE-ALL] Python result per firma ${signature.id}:`, {
-              similarity: pythonResult.similarity,
-              hasChart: !!pythonResult.comparison_chart,
-              chartLength: pythonResult.comparison_chart?.length,
-              hasReport: !!pythonResult.description
-            });
             
           } catch (pythonError) {
             console.error(`[COMPARE-ALL] Errore Python analyzer per firma ${signature.id}:`, pythonError);
@@ -278,18 +265,6 @@ export function registerSignatureRoutes(appRouter: Router) {
             updateData.comparisonChart = comparisonChart;
           }
           
-          console.log(`[COMPARE-ALL] Dati da aggiornare per firma ${signature.id}:`, {
-            hasChart: !!updateData.comparisonChart,
-            chartLength: updateData.comparisonChart?.length,
-            hasReport: !!updateData.analysisReport,
-            comparisonResult: updateData.comparisonResult,
-            referenceFilename: updateData.referenceSignatureFilename,
-            referenceOriginalFilename: updateData.referenceSignatureOriginalFilename,
-            referenceDpi: updateData.referenceDpi
-          });
-          
-          console.log(`[COMPARE-ALL] Chiamata updateSignature per firma ${signature.id} con:`, updateData);
-          
           // Aggiornamento diretto nel database PostgreSQL per i campi di riferimento
           try {
             await db.update(signatures)
@@ -305,7 +280,6 @@ export function registerSignatureRoutes(appRouter: Router) {
               })
               .where(eq(signatures.id, signature.id));
             
-            console.log(`[COMPARE-ALL] Aggiornamento DATABASE completato per firma ${signature.id}`);
           } catch (dbError) {
             console.error(`[COMPARE-ALL] Errore aggiornamento database per firma ${signature.id}:`, dbError);
           }
@@ -314,14 +288,6 @@ export function registerSignatureRoutes(appRouter: Router) {
           
           // Ottieni la firma aggiornata per includerla nei risultati
           const updatedSignature = await storage.getSignature(signature.id);
-          console.log(`[COMPARE-ALL] Firma ${signature.id} dopo aggiornamento:`, {
-            id: updatedSignature?.id,
-            hasChart: !!updatedSignature?.comparisonChart,
-            hasReport: !!updatedSignature?.analysisReport,
-            referenceFilename: updatedSignature?.referenceSignatureFilename,
-            referenceOriginalFilename: updatedSignature?.referenceSignatureOriginalFilename,
-            referenceDpi: updatedSignature?.referenceDpi
-          });
           if (updatedSignature) {
             results.push(updatedSignature);
           }
@@ -341,7 +307,6 @@ export function registerSignatureRoutes(appRouter: Router) {
       
       // Filtra e restituisci solo le firme da verificare (non di riferimento)
       const verificationResults = results.filter(signature => !signature.isReference);
-      console.log(`[COMPARE-ALL] RISPOSTA FINALE: ${verificationResults.length} firme`);
       res.json(verificationResults);
       
     } catch (error: any) {

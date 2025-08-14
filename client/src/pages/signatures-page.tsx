@@ -395,7 +395,7 @@ export default function SignaturesPage() {
   const handleDeleteSignature = (signatureId: number) => {
     // Se l'ID è -1, è una richiesta di aggiornamento, non una cancellazione
     if (signatureId === -1) {
-      console.log('Richiesta di aggiornamento ricevuta, ricaricamento firme...');
+
       refetchSignatures();
       return;
     }
@@ -413,7 +413,7 @@ export default function SignaturesPage() {
     mutationFn: async () => {
       if (!selectedProject) throw new Error("Nessun progetto selezionato");
       
-      console.log(`Avvio generazione report per tutte le firme nel progetto ${selectedProject}`);
+
       
       // Utilizziamo il nuovo endpoint che genera report per tutte le firme in una singola richiesta
       const res = await fetch(`/api/signature-projects/${selectedProject}/generate-all-reports`, {
@@ -467,18 +467,12 @@ export default function SignaturesPage() {
     mutationFn: async () => {
       if (!selectedProject) throw new Error("Nessun progetto selezionato");
       
-      console.log(`[FRONTEND] Avvio confronto multiplo per progetto ${selectedProject} usando l'endpoint compare-all`);
-      console.log(`[FRONTEND] URL endpoint: /api/signature-projects/${selectedProject}/compare-all`);
-      console.log(`[FRONTEND] PRIMA della chiamata apiRequest - timestamp: ${new Date().toISOString()}`);
-      
       try {
         // FORZA INVALIDAZIONE CACHE prima della richiesta
-        console.log(`[FRONTEND] INVALIDAZIONE CACHE per progetto ${selectedProject}`);
         queryClient.invalidateQueries({ queryKey: [`/api/signature-projects/${selectedProject}/signatures`] });
         queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures"] });
         
         // BYPASS REACT QUERY CACHE - Usa fetch diretto con cache disabled
-        console.log(`[FRONTEND] CHIAMATA COMPARE-ALL VIA FETCH DIRETTO - timestamp: ${new Date().toISOString()}`);
         const response = await fetch(`/api/signature-projects/${selectedProject}/compare-all`, {
           method: "POST",
           headers: {
@@ -501,8 +495,6 @@ export default function SignaturesPage() {
         }
         
         const responseData = await response.json();
-        console.log(`[FRONTEND] DATI RICEVUTI VIA FETCH DIRETTO - timestamp: ${new Date().toISOString()}`);
-        console.log(`[FRONTEND] Dati ricevuti:`, responseData);
         return responseData;
       } catch (error) {
         console.error(`[FRONTEND] ERRORE fetch diretto:`, error);
@@ -510,20 +502,6 @@ export default function SignaturesPage() {
       }
     },
     onSuccess: (data: Signature[]) => {
-      console.log(`[FRONTEND] Successo confronto. Dati ricevuti:`, data);
-      console.log(`[FRONTEND] Numero firme ricevute:`, data.length);
-      
-      // Debug: verifica se ci sono grafici nei dati
-      data?.forEach((sig, index) => {
-        console.log(`[FRONTEND] Firma ${index + 1}:`, {
-          filename: sig.originalFilename,
-          hasChart: !!sig.comparisonChart,
-          chartLength: sig.comparisonChart?.length,
-          hasReport: !!sig.analysisReport,
-          chartPreview: sig.comparisonChart?.substring(0, 50)
-        });
-      });
-      
       // Salva i risultati e mostra il dialog
       setComparisonResults(data);
       setShowResultsDialog(true);
