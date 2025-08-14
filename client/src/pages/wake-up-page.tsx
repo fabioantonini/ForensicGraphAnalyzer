@@ -355,7 +355,8 @@ export default function WakeUpPage() {
 
   const getCurrentQuestion = () => {
     if (!activeSession || !currentQuestions.length) return null;
-    return currentQuestions.find(q => q.questionNumber === activeSession.currentQuestion + 1);
+    // currentQuestion in DB is 0-based for internal tracking, but we want 1-based for display
+    return currentQuestions.find(q => q.questionNumber === activeSession.currentQuestion);
   };
 
   const getAnsweredQuestions = () => {
@@ -501,7 +502,7 @@ export default function WakeUpPage() {
   if (activeSession) {
     const currentQuestion = getCurrentQuestion();
     const answeredQuestions = getAnsweredQuestions();
-    const progress = (activeSession.currentQuestion / activeSession.totalQuestions) * 100;
+    const progress = ((activeSession.currentQuestion) / activeSession.totalQuestions) * 100;
 
     return (
       <div className="container mx-auto p-6">
