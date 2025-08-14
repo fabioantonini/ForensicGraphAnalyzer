@@ -617,6 +617,10 @@ export function registerSignatureRoutes(appRouter: Router) {
       doc.text(`Valutazione: ${verdict}`, { fontSize: 14 });
       doc.moveDown(1.5);
       
+      // Ottieni la firma di riferimento per l'analisi AI
+      const referenceSignatures = await storage.getProjectSignatures(signature.projectId, true);
+      const referenceSignature = referenceSignatures.find(ref => ref.processingStatus === 'completed' && ref.parameters);
+      
       // ANALISI PERITALE AI DETTAGLIATA
       if (referenceSignature?.parameters) {
         doc.fontSize(14).text('ANALISI PERITALE AI', { underline: true });
@@ -817,10 +821,6 @@ export function registerSignatureRoutes(appRouter: Router) {
         }
         doc.moveDown(1);
       }
-      
-      // Ottieni la firma di riferimento per il confronto
-      const referenceSignatures = await storage.getProjectSignatures(signature.projectId, true);
-      const referenceSignature = referenceSignatures.find(ref => ref.processingStatus === 'completed' && ref.parameters);
       
       // PARAMETRI ANALIZZATI - Confronto dettagliato
       if (signature.parameters) {
