@@ -94,6 +94,24 @@ export default function WakeUpPage() {
     queryKey: ["/api/wake-up/stats"],
   });
 
+  // Load active session automatically when available
+  useEffect(() => {
+    if ((sessions as any)?.activeSessions && (sessions as any).activeSessions.length > 0 && !activeSession) {
+      const activeSessionFromServer = (sessions as any).activeSessions[0];
+      
+      // Fetch questions for this session
+      fetch(`/api/wake-up/session/${activeSessionFromServer.id}`)
+        .then(response => response.json())
+        .then(data => {
+          setActiveSession(activeSessionFromServer);
+          setCurrentQuestions(data.questions || []);
+        })
+        .catch(error => {
+          console.error("Error loading session questions:", error);
+        });
+    }
+  }, [sessions, activeSession]);
+
   // Start new quiz mutation
   const startQuizMutation = useMutation({
     mutationFn: async (data: { category: string; totalQuestions: number }) => {
