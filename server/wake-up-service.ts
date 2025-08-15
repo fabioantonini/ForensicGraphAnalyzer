@@ -200,3 +200,14 @@ export function generatePersonalizedTips(
   
   return tips;
 }
+
+/**
+ * Genera una singola domanda di quiz usando OpenAI API
+ */
+export async function generateQuizQuestion(
+  category: "grafologia" | "cultura" | "mista",
+  userApiKey?: string
+): Promise<GeneratedQuizQuestion> {
+  const questions = await generateQuizQuestions(category, 1, userApiKey);
+  return questions[0];
+}

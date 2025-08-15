@@ -27,7 +27,7 @@ router.post("/start", async (req, res) => {
     const { category, totalQuestions } = validation.data;
 
     // Genera domande usando OpenAI (usa la chiave API dell'utente se disponibile)
-    const generatedQuestions = await generateQuizQuestions(category, totalQuestions, req.user.openaiApiKey);
+    const generatedQuestions = await generateQuizQuestions(category, totalQuestions, req.user.openaiApiKey || undefined);
 
     // Crea sessione quiz
     const session = await storage.createQuizSession({
@@ -324,7 +324,7 @@ router.post("/session/:sessionId/next", async (req, res) => {
     if (!existingQuestion) {
       // Crea una nuova domanda usando il servizio Wake Up
       const { generateQuizQuestion } = await import('./wake-up-service');
-      const newQuestion = await generateQuizQuestion(session.category);
+      const newQuestion = await generateQuizQuestion(session.category as "grafologia" | "cultura" | "mista");
       
       // Salva la domanda nel database
       const savedQuestion = await storage.createQuizQuestion({
@@ -332,15 +332,18 @@ router.post("/session/:sessionId/next", async (req, res) => {
         questionNumber: nextQuestionNumber,
         question: newQuestion.question,
         options: newQuestion.options,
-        correctAnswer: newQuestion.correctAnswer,
-        explanation: newQuestion.explanation
+        correctAnswer: newQuestion.correct,
+        explanation: newQuestion.explanation,
+        category: newQuestion.category,
+        difficulty: newQuestion.difficulty
       });
 
       // Crea anche una risposta vuota per questa domanda
       await storage.createQuizAnswer({
         questionId: savedQuestion.id,
         userAnswer: null,
-        answeredAt: null
+        revealedAt: null,
+        answerTimeMs: null
       });
     }
 

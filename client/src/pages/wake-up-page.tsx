@@ -98,13 +98,19 @@ export default function WakeUpPage() {
 
   // Load active session automatically when available (but not if user abandoned it)
   useEffect(() => {
+    console.log("useEffect triggered:", { sessions, activeSession, hasAbandonedSession });
     if ((sessions as any)?.activeSessions && (sessions as any).activeSessions.length > 0 && !activeSession && !hasAbandonedSession) {
       const activeSessionFromServer = (sessions as any).activeSessions[0];
+      console.log("Loading session:", activeSessionFromServer);
       
       // Fetch questions for this session
       fetch(`/api/wake-up/session/${activeSessionFromServer.id}`)
-        .then(response => response.json())
+        .then(response => {
+          console.log("Session response status:", response.status);
+          return response.json();
+        })
         .then(data => {
+          console.log("Session data received:", data);
           setActiveSession(activeSessionFromServer);
           setCurrentQuestions(data.questions || []);
         })
@@ -590,6 +596,37 @@ export default function WakeUpPage() {
                   <p className="text-sm">Domande caricate: {currentQuestions.length}</p>
                   <p className="text-sm">Status sessione: {activeSession.status}</p>
                   <p className="text-sm">Domanda corrente: {activeSession.currentQuestion}</p>
+                  <Button 
+                    onClick={() => {
+                      console.log("Forcing question reload for session:", activeSession.id);
+                      fetch(`/api/wake-up/session/${activeSession.id}`)
+                        .then(response => {
+                          console.log("Response status:", response.status);
+                          return response.json();
+                        })
+                        .then(data => {
+                          console.log("Session data received:", data);
+                          setCurrentQuestions(data.questions || []);
+                          if (data.questions && data.questions.length > 0) {
+                            toast({
+                              title: "Domande caricate!",
+                              description: `${data.questions.length} domande caricate con successo`
+                            });
+                          }
+                        })
+                        .catch(error => {
+                          console.error("Error loading questions:", error);
+                          toast({
+                            title: "Errore",
+                            description: "Impossibile caricare le domande",
+                            variant: "destructive"
+                          });
+                        });
+                    }}
+                    className="mt-4"
+                  >
+                    Ricarica domande manualmente
+                  </Button>
                 </div>
               </CardContent>
             </Card>
