@@ -833,13 +833,13 @@ export default function WakeUpPage() {
                 <CardDescription>Riepilogo delle tue risposte</CardDescription>
               </CardHeader>
               <CardContent>
-                <ScrollArea className="max-h-96">
-                  <div className="space-y-4">
+                <ScrollArea className="h-[500px]">
+                  <div className="space-y-4 pr-4">
                     {answeredQuestions.map((question) => (
                       <div key={question.id} className="border rounded-lg p-4">
                         <div className="flex items-start justify-between mb-2">
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-2 mb-1">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center space-x-2 mb-1 flex-wrap">
                               <Badge variant="outline">Q{question.questionNumber}</Badge>
                               <Badge className={difficultyColors[question.difficulty as keyof typeof difficultyColors]}>
                                 {question.difficulty}
@@ -850,14 +850,14 @@ export default function WakeUpPage() {
                                 <AlertCircle className="h-4 w-4 text-red-600" />
                               )}
                             </div>
-                            <p className="text-sm font-medium">{question.question}</p>
+                            <p className="text-sm font-medium break-words">{question.question}</p>
                           </div>
-                          <Badge variant="secondary">+{question.answer?.points || 0}</Badge>
+                          <Badge variant="secondary" className="ml-2 flex-shrink-0">+{question.answer?.points || 0}</Badge>
                         </div>
                         
                         {question.explanation && revealedQuestions.has(question.id) ? (
                           <div className="mt-2 p-3 bg-blue-50 rounded text-sm">
-                            <strong>Spiegazione:</strong> {question.explanation}
+                            <strong>Spiegazione:</strong> <span className="break-words">{question.explanation}</span>
                           </div>
                         ) : question.answer?.answeredAt && (
                           <Button
@@ -865,6 +865,7 @@ export default function WakeUpPage() {
                             size="sm"
                             onClick={() => handleRevealExplanation(question.id)}
                             disabled={revealMutation.isPending}
+                            className="mt-2"
                           >
                             {revealedQuestions.has(question.id) ? (
                               <EyeOff className="h-4 w-4 mr-2" />
