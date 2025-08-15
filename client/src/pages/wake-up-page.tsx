@@ -178,8 +178,11 @@ export default function WakeUpPage() {
       ));
 
       queryClient.invalidateQueries({ queryKey: ["/api/wake-up/stats"] });
-
+      
       if (data.isCompleted) {
+        // Invalida anche la cache delle sessioni quando il quiz è completato
+        queryClient.invalidateQueries({ queryKey: ["/api/wake-up/sessions"] });
+        
         toast({
           title: "Quiz completato! 🎉",
           description: `Hai ottenuto ${data.newScore} punti!`
