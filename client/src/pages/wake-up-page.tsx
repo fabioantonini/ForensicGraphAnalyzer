@@ -96,29 +96,7 @@ export default function WakeUpPage() {
     queryKey: ["/api/wake-up/stats"],
   });
 
-  // Load active session automatically when available (but not if user abandoned it)
-  useEffect(() => {
-    console.log("useEffect triggered:", { sessions, activeSession, hasAbandonedSession });
-    if ((sessions as any)?.activeSessions && (sessions as any).activeSessions.length > 0 && !activeSession && !hasAbandonedSession) {
-      const activeSessionFromServer = (sessions as any).activeSessions[0];
-      console.log("Loading session:", activeSessionFromServer);
-      
-      // Fetch questions for this session
-      fetch(`/api/wake-up/session/${activeSessionFromServer.id}`)
-        .then(response => {
-          console.log("Session response status:", response.status);
-          return response.json();
-        })
-        .then(data => {
-          console.log("Session data received:", data);
-          setActiveSession(activeSessionFromServer);
-          setCurrentQuestions(data.questions || []);
-        })
-        .catch(error => {
-          console.error("Error loading session questions:", error);
-        });
-    }
-  }, [sessions, activeSession, hasAbandonedSession]);
+  // No longer auto-load active sessions - user must explicitly click to resume
 
   // Start new quiz mutation
   const startQuizMutation = useMutation({
@@ -308,7 +286,35 @@ export default function WakeUpPage() {
   });
 
   const handleStartQuiz = (category: "grafologia" | "cultura" | "mista", totalQuestions: number = 5) => {
+    // Check if there's an active session first
+    if ((sessions as any)?.activeSessions && (sessions as any).activeSessions.length > 0) {
+      const confirmed = confirm(
+        "Hai già una sessione quiz attiva. Se continui, quella sessione verrà abbandonata. Vuoi procedere comunque con un nuovo quiz?"
+      );
+      if (!confirmed) {
+        return;
+      }
+    }
+    
     startQuizMutation.mutate({ category, totalQuestions });
+  };
+
+  const handleResumeSession = (session: any) => {
+    // Fetch questions for this session
+    fetch(`/api/wake-up/session/${session.id}`)
+      .then(response => response.json())
+      .then(data => {
+        setActiveSession(session);
+        setCurrentQuestions(data.questions || []);
+      })
+      .catch(error => {
+        console.error("Error loading session questions:", error);
+        toast({
+          title: "Errore",
+          description: "Impossibile caricare la sessione",
+          variant: "destructive"
+        });
+      });
   };
 
   const handleAnswerQuestion = (questionId: number, userAnswer: number) => {
@@ -342,7 +348,7 @@ export default function WakeUpPage() {
       if (!response.ok) throw new Error("Failed to load session");
       const data = await response.json();
       
-      console.log("Loading session data:", data); // Debug
+
       
       setActiveSession(data.session);
       setCurrentQuestions(data.questions || []);
