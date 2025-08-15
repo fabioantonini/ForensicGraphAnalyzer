@@ -418,8 +418,9 @@ export default function WakeUpPage() {
 
   const getCurrentQuestion = () => {
     if (!activeSession || !currentQuestions.length) return null;
-    // currentQuestion in DB is 0-based for internal tracking, but we want 1-based for display
-    return currentQuestions.find(q => q.questionNumber === activeSession.currentQuestion);
+    // currentQuestion in DB is 0-based for internal tracking, but questionNumber is 1-based
+    const targetQuestionNumber = activeSession.currentQuestion + 1;
+    return currentQuestions.find(q => q.questionNumber === targetQuestionNumber);
   };
 
   const getAnsweredQuestions = () => {
@@ -748,12 +749,7 @@ export default function WakeUpPage() {
                   </div>
                 )}
 
-                {/* Debug current question state */}
-                <div className="mt-4 p-2 bg-red-50 border border-red-200 rounded text-xs">
-                  <p>Debug: questionId={currentQuestion.id}, hasAnswer={!!currentQuestion.answer}, answeredAt={currentQuestion.answer?.answeredAt || 'none'}</p>
-                  <p>Answer object: {JSON.stringify(currentQuestion.answer)}</p>
-                  <p>Buttons enabled: {!isAnswering}</p>
-                </div>
+
 
                 {/* Show result after answering */}
                 {currentQuestion.answer?.answeredAt && (
