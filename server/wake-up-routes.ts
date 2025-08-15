@@ -395,6 +395,48 @@ router.delete("/session/:sessionId", async (req, res) => {
 });
 
 /**
+ * DELETE /api/wake-up/stats
+ * Resetta tutte le statistiche quiz dell'utente
+ */
+router.delete("/stats", async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: "Non autenticato" });
+    }
+
+    // Elimina tutte le sessioni e dati correlati dell'utente
+    const userSessions = await storage.getUserQuizSessions(req.user.id);
+    
+    for (const session of userSessions) {
+      // Elimina tutte le risposte per ogni sessione
+      const questions = await storage.getSessionQuestions(session.id);
+      for (const question of questions) {
+        await storage.deleteQuizAnswer(question.id);
+      }
+      
+      // Elimina tutte le domande per ogni sessione
+      await storage.deleteSessionQuestions(session.id);
+      
+      // Elimina la sessione
+      await storage.deleteQuizSessionById(session.id);
+    }
+
+    res.json({ 
+      success: true, 
+      message: "Tutte le statistiche quiz sono state resettate",
+      deletedSessions: userSessions.length
+    });
+
+  } catch (error) {
+    console.error("Errore reset statistiche quiz:", error);
+    res.status(500).json({ 
+      error: "Errore interno del server",
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
  * GET /api/wake-up/sessions
  * Ottieni tutte le sessioni quiz dell'utente
  */

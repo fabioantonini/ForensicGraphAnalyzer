@@ -282,6 +282,31 @@ export default function WakeUpPage() {
     }
   });
 
+  const resetStatsMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/wake-up/stats', {
+        method: 'DELETE'
+      });
+      if (!response.ok) throw new Error("Failed to reset stats");
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/wake-up/sessions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/wake-up/stats'] });
+      toast({
+        title: "Statistiche resettate",
+        description: `${data.deletedSessions} sessioni eliminate. Tutte le statistiche sono state azzerate.`
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Errore",
+        description: "Impossibile resettare le statistiche",
+        variant: "destructive"
+      });
+    }
+  });
+
   const handleStartQuiz = (category: "grafologia" | "cultura" | "mista", totalQuestions: number = 5) => {
     startQuizMutation.mutate({ category, totalQuestions });
   };
@@ -915,6 +940,34 @@ export default function WakeUpPage() {
                 <div className="text-sm text-gray-600">Livello Attuale</div>
               </CardContent>
             </Card>
+          </div>
+        )}
+
+        {/* Stats Management */}
+        {stats && stats.completedSessions > 0 && (
+          <div className="mb-8 text-center">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                if (confirm("Sei sicuro di voler resettare tutte le statistiche? Questa azione eliminerà definitivamente tutti i quiz completati e i relativi dati. L'azione non può essere annullata.")) {
+                  resetStatsMutation.mutate();
+                }
+              }}
+              disabled={resetStatsMutation.isPending}
+              className="text-red-600 border-red-200 hover:bg-red-50"
+            >
+              {resetStatsMutation.isPending ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600 mr-2"></div>
+                  Resettando...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Resetta tutte le statistiche
+                </>
+              )}
+            </Button>
           </div>
         )}
 

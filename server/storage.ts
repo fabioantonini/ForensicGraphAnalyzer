@@ -2110,6 +2110,26 @@ export class DatabaseStorage implements IStorage {
     await db.delete(quizSessions).where(eq(quizSessions.id, sessionId));
   }
 
+  async getUserQuizSessions(userId: number): Promise<QuizSession[]> {
+    const sessions = await db
+      .select()
+      .from(quizSessions)
+      .where(eq(quizSessions.userId, userId));
+    return sessions;
+  }
+
+  async deleteQuizAnswer(questionId: number): Promise<void> {
+    await db.delete(quizAnswers).where(eq(quizAnswers.questionId, questionId));
+  }
+
+  async deleteSessionQuestions(sessionId: number): Promise<void> {
+    await db.delete(quizQuestions).where(eq(quizQuestions.sessionId, sessionId));
+  }
+
+  async deleteQuizSessionById(sessionId: number): Promise<void> {
+    await db.delete(quizSessions).where(eq(quizSessions.id, sessionId));
+  }
+
   async getUserQuizStats(userId: number): Promise<{
     totalSessions: number;
     completedSessions: number;
