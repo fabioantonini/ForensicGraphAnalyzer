@@ -140,7 +140,6 @@
       "percentCompleted": "{percent}% completato",
       "loadingQuestions": "Caricamento domande...",
       "quizCompleted": "Quiz Completato! 🎉",
-      "completedAllQuestions": "Hai risposto a tutte le domande. Punteggio finale: {score} punti",
       "backToDashboard": "Torna alla Dashboard",
       "viewStatistics": "Vedi Statistiche",
       "question": "Domanda",
@@ -148,9 +147,7 @@
       "skipToNext": "Salta alla prossima domanda",
       "correctAnswer": "Risposta Corretta!",
       "wrongAnswer": "Risposta Errata",
-      "correctAnswerLabel": "Risposta corretta:",
-      "completedAllQuestions": "Hai risposto a tutte le domande. Punteggio finale: {score} punti",
-      "percentCompleted": "{percent}% completato"
+      "correctAnswerLabel": "Risposta corretta:"
     },
     "sessionCompleted": {
       "title": "Quiz Completato!",

@@ -674,7 +674,7 @@ export default function WakeUpPage() {
             <div className="mt-4">
               <div className="flex justify-between text-sm text-gray-600 mb-2">
                 <span>{t('wakeUpQuiz.quiz.progress')}: {activeSession.currentQuestion} {t('wakeUpQuiz.quiz.of')} {activeSession.totalQuestions}</span>
-                <span>{t('wakeUpQuiz.quiz.percentCompleted', { percent: Math.round(progress) })}</span>
+                <span>{Math.round(progress)}% {t('wakeUpQuiz.quiz.completed')}</span>
               </div>
               <Progress value={progress} className="h-2" />
             </div>
@@ -704,7 +704,10 @@ export default function WakeUpPage() {
                   </div>
                   <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('wakeUpQuiz.quiz.quizCompleted')}</h2>
                   <p className="text-gray-600 mb-4">
-                    {t('wakeUpQuiz.quiz.completedAllQuestions', { score: activeSession.score || 0 })}
+                    {i18n.language === 'en' 
+                      ? `You answered all questions. Final score: ${activeSession.score || 0} points`
+                      : `Hai risposto a tutte le domande. Punteggio finale: ${activeSession.score || 0} punti`
+                    }
                   </p>
                   <div className="flex gap-3 justify-center">
                     <Button 
