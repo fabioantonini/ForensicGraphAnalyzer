@@ -488,6 +488,15 @@ export default function WakeUpPage() {
   };
 
   const getTipTranslation = (tip: string) => {
+    // Check for partial matches to handle backend-generated text
+    if (tip.includes("Focalizzati sulle aree") || tip.includes("Focus on weaker")) {
+      return t('wakeUpQuiz.statisticsDialog.suggestions.focusWeakAreas');
+    }
+    if (tip.includes("Approfondisci gli argomenti") || tip.includes("Study topics where")) {
+      return t('wakeUpQuiz.statisticsDialog.suggestions.studyMistakes');
+    }
+    
+    // Exact mappings as fallback
     const mapping: Record<string, string> = {
       "Focalizzati sulle aree tematiche più deboli": t('wakeUpQuiz.statisticsDialog.suggestions.focusWeakAreas'),
       "Approfondisci gli argomenti dove hai sbagliato": t('wakeUpQuiz.statisticsDialog.suggestions.studyMistakes'),
