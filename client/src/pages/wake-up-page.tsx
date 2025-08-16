@@ -637,46 +637,15 @@ export default function WakeUpPage() {
             </div>
           </div>
 
-          {/* Debug info */}
-          {(!currentQuestion || currentQuestions.length === 0) && (
+          {/* Only show loading for active sessions that need questions */}
+          {activeSession.status !== 'completed' && (!currentQuestion || currentQuestions.length === 0) && (
             <Card className="mb-6">
               <CardContent className="p-4">
                 <div className="text-center text-gray-600">
-                  <p>Caricamento domande...</p>
-                  <p className="text-sm">Domande caricate: {currentQuestions.length}</p>
-                  <p className="text-sm">Status sessione: {activeSession.status}</p>
-                  <p className="text-sm">Domanda corrente: {activeSession.currentQuestion}</p>
-                  <Button 
-                    onClick={() => {
-                      console.log("Forcing question reload for session:", activeSession.id);
-                      fetch(`/api/wake-up/session/${activeSession.id}`)
-                        .then(response => {
-                          console.log("Response status:", response.status);
-                          return response.json();
-                        })
-                        .then(data => {
-                          console.log("Session data received:", data);
-                          setCurrentQuestions(data.questions || []);
-                          if (data.questions && data.questions.length > 0) {
-                            toast({
-                              title: "Domande caricate!",
-                              description: `${data.questions.length} domande caricate con successo`
-                            });
-                          }
-                        })
-                        .catch(error => {
-                          console.error("Error loading questions:", error);
-                          toast({
-                            title: "Errore",
-                            description: "Impossibile caricare le domande",
-                            variant: "destructive"
-                          });
-                        });
-                    }}
-                    className="mt-4"
-                  >
-                    Ricarica domande manualmente
-                  </Button>
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-500"></div>
+                    <span>Caricamento domande...</span>
+                  </div>
                 </div>
               </CardContent>
             </Card>
