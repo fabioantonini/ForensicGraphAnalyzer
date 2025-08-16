@@ -644,7 +644,7 @@ export default function WakeUpPage() {
                     {categoryLabels[activeSession.category as keyof typeof categoryLabels]}
                   </Badge>
                   <Badge variant={activeSession.status === 'completed' ? 'default' : 'secondary'}>
-                    {activeSession.status === 'completed' ? 'Completato' : 'In corso'}
+                    {activeSession.status === 'completed' ? t('wakeUpQuiz.quiz.completed') : t('wakeUpQuiz.quiz.inProgress')}
                   </Badge>
                 </div>
                 <h1 className="text-2xl font-bold text-gray-900">
@@ -653,7 +653,7 @@ export default function WakeUpPage() {
               </div>
               <div className="text-right">
                 <div className="text-2xl font-bold text-blue-600">{activeSession.score}</div>
-                <div className="text-sm text-gray-600">punti</div>
+                <div className="text-sm text-gray-600">{t('wakeUpQuiz.quiz.points')}</div>
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -673,8 +673,8 @@ export default function WakeUpPage() {
             
             <div className="mt-4">
               <div className="flex justify-between text-sm text-gray-600 mb-2">
-                <span>Progresso: {activeSession.currentQuestion} {t('wakeUpQuiz.quiz.of')} {activeSession.totalQuestions}</span>
-                <span>{Math.round(progress)}% completato</span>
+                <span>{t('wakeUpQuiz.quiz.progress')}: {activeSession.currentQuestion} {t('wakeUpQuiz.quiz.of')} {activeSession.totalQuestions}</span>
+                <span>{t('wakeUpQuiz.quiz.percentCompleted', { percent: Math.round(progress) })}</span>
               </div>
               <Progress value={progress} className="h-2" />
             </div>
@@ -687,7 +687,7 @@ export default function WakeUpPage() {
                 <div className="text-center text-gray-600">
                   <div className="flex items-center justify-center space-x-2">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-500"></div>
-                    <span>Caricamento domande...</span>
+                    <span>{t('wakeUpQuiz.quiz.loadingQuestions')}</span>
                   </div>
                 </div>
               </CardContent>
@@ -702,9 +702,9 @@ export default function WakeUpPage() {
                   <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <CheckCircle className="h-8 w-8 text-green-600" />
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Quiz Completato! 🎉</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('wakeUpQuiz.quiz.quizCompleted')}</h2>
                   <p className="text-gray-600 mb-4">
-                    Hai risposto a tutte le domande. Punteggio finale: {activeSession.score || 0} punti
+                    {t('wakeUpQuiz.quiz.completedAllQuestions', { score: activeSession.score || 0 })}
                   </p>
                   <div className="flex gap-3 justify-center">
                     <Button 
@@ -716,13 +716,13 @@ export default function WakeUpPage() {
                       }}
                       variant="default"
                     >
-                      Torna alla Dashboard
+                      {t('wakeUpQuiz.quiz.backToDashboard')}
                     </Button>
                     <Button 
                       onClick={() => setShowStats(true)}
                       variant="outline"
                     >
-                      Vedi Statistiche
+                      {t('wakeUpQuiz.quiz.viewStatistics')}
                     </Button>
                   </div>
                 </div>
@@ -736,7 +736,7 @@ export default function WakeUpPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg">
-                    Domanda {currentQuestion.questionNumber}
+                    {t('wakeUpQuiz.quiz.question')} {currentQuestion.questionNumber}
                   </CardTitle>
                   <Badge className={difficultyColors[currentQuestion.difficulty as keyof typeof difficultyColors]}>
                     {getDifficultyLabel(currentQuestion.difficulty)}
@@ -767,14 +767,14 @@ export default function WakeUpPage() {
                 {/* Skip navigation for unanswered questions */}
                 {(!currentQuestion.answer?.answeredAt || currentQuestion.answer?.answeredAt === null) && currentQuestion.questionNumber < activeSession.totalQuestions && (
                   <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-sm text-blue-800 mb-2">Non hai ancora risposto a questa domanda.</p>
+                    <p className="text-sm text-blue-800 mb-2">{t('wakeUpQuiz.quiz.notAnsweredYet')}</p>
                     <Button 
                       onClick={handleNextQuestion}
                       variant="outline" 
                       size="sm"
                     >
                       <ChevronRight className="h-4 w-4 mr-2" />
-                      Salta alla prossima domanda
+                      {t('wakeUpQuiz.quiz.skipToNext')}
                     </Button>
                   </div>
                 )}
@@ -793,13 +793,13 @@ export default function WakeUpPage() {
                       <span className={`font-medium ${
                         currentQuestion.answer.isCorrect ? 'text-green-800' : 'text-red-800'
                       }`}>
-                        {currentQuestion.answer.isCorrect ? 'Risposta Corretta!' : 'Risposta Errata'}
+                        {currentQuestion.answer.isCorrect ? t('wakeUpQuiz.quiz.correctAnswer') : t('wakeUpQuiz.quiz.wrongAnswer')}
                       </span>
-                      <Badge variant="secondary">+{currentQuestion.answer.points} punti</Badge>
+                      <Badge variant="secondary">+{currentQuestion.answer.points} {t('wakeUpQuiz.quiz.points')}</Badge>
                     </div>
                     
                     <div className="text-sm text-gray-700 mb-3">
-                      <strong>Risposta corretta:</strong> {String.fromCharCode(65 + (currentQuestion.correctAnswer || 0))}. {currentQuestion.options[currentQuestion.correctAnswer || 0]}
+                      <strong>{t('wakeUpQuiz.quiz.correctAnswerLabel')}</strong> {String.fromCharCode(65 + (currentQuestion.correctAnswer || 0))}. {currentQuestion.options[currentQuestion.correctAnswer || 0]}
                     </div>
 
                     {currentQuestion.explanation && revealedQuestions.has(currentQuestion.id) ? (
