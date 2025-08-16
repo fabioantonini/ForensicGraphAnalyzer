@@ -673,8 +673,8 @@ export default function WakeUpPage() {
             
             <div className="mt-4">
               <div className="flex justify-between text-sm text-gray-600 mb-2">
-                <span>{t('wakeUpQuiz.quiz.progress')}: {activeSession.currentQuestion} {t('wakeUpQuiz.quiz.of')} {activeSession.totalQuestions}</span>
-                <span>{Math.round(progress)}% {t('wakeUpQuiz.quiz.completed')}</span>
+                <span>{i18n.language === 'en' ? `Progress: ${activeSession.currentQuestion} of ${activeSession.totalQuestions}` : `Progresso: ${activeSession.currentQuestion} di ${activeSession.totalQuestions}`}</span>
+                <span>{Math.round(progress)}% {i18n.language === 'en' ? 'completed' : 'completato'}</span>
               </div>
               <Progress value={progress} className="h-2" />
             </div>
@@ -702,7 +702,7 @@ export default function WakeUpPage() {
                   <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <CheckCircle className="h-8 w-8 text-green-600" />
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('wakeUpQuiz.quiz.quizCompleted')}</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">{i18n.language === 'en' ? 'Quiz Completed! 🎉' : 'Quiz Completato! 🎉'}</h2>
                   <p className="text-gray-600 mb-4">
                     {i18n.language === 'en' 
                       ? `You answered all questions. Final score: ${activeSession.score || 0} points`
@@ -719,13 +719,13 @@ export default function WakeUpPage() {
                       }}
                       variant="default"
                     >
-                      {t('wakeUpQuiz.quiz.backToDashboard')}
+                      {i18n.language === 'en' ? 'Back to Dashboard' : 'Torna alla Dashboard'}
                     </Button>
                     <Button 
                       onClick={() => setShowStats(true)}
                       variant="outline"
                     >
-                      {t('wakeUpQuiz.quiz.viewStatistics')}
+                      {i18n.language === 'en' ? 'View Statistics' : 'Vedi Statistiche'}
                     </Button>
                   </div>
                 </div>
