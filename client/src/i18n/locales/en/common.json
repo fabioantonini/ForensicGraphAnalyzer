@@ -148,7 +148,9 @@
       "skipToNext": "Skip to next question",
       "correctAnswer": "Correct Answer!",
       "wrongAnswer": "Wrong Answer",
-      "correctAnswerLabel": "Correct answer:"
+      "correctAnswerLabel": "Correct answer:",
+      "completedAllQuestions": "You answered all questions. Final score: {score} points",
+      "percentCompleted": "{percent}% completed"
     },
     "sessionCompleted": {
       "title": "Quiz Completed!",

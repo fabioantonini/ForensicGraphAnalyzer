@@ -148,7 +148,9 @@
       "skipToNext": "Salta alla prossima domanda",
       "correctAnswer": "Risposta Corretta!",
       "wrongAnswer": "Risposta Errata",
-      "correctAnswerLabel": "Risposta corretta:"
+      "correctAnswerLabel": "Risposta corretta:",
+      "completedAllQuestions": "Hai risposto a tutte le domande. Punteggio finale: {score} punti",
+      "percentCompleted": "{percent}% completato"
     },
     "sessionCompleted": {
       "title": "Quiz Completato!",
