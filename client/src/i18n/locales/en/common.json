@@ -50,5 +50,68 @@
     "wakeUp": "Wake Up Quiz",
     "settings": "Settings",
     "admin": "Administration"
+  },
+  "wakeUpQuiz": {
+    "title": "Wake Up Quiz",
+    "subtitle": "Test your forensic graphology and general culture knowledge with our AI-powered interactive quiz system",
+    "stats": {
+      "totalSessions": "Total Sessions",
+      "completedSessions": "Completed Sessions",
+      "averageScore": "Average Score"
+    },
+    "activeSessionsTitle": "Active Sessions",
+    "activeSessionsDescription": "Resume your ongoing quiz sessions",
+    "noActiveSessions": "No active sessions",
+    "resumeSession": "Resume Session",
+    "deleteSession": "Delete",
+    "newQuizTitle": "Start New Quiz",
+    "newQuizDescription": "Choose a category and start a new quiz session",
+    "selectCategory": "Select Category",
+    "categories": {
+      "graphology": "Forensic Graphology",
+      "general": "General Culture",
+      "mixed": "Mixed Questions"
+    },
+    "startQuiz": "Start Quiz",
+    "starting": "Starting...",
+    "activeSessionWarning": {
+      "title": "Active Sessions Found",
+      "description": "You have active quiz sessions. You can resume them or start a new quiz.",
+      "resume": "Resume Active Session",
+      "startNew": "Start New Quiz Anyway"
+    },
+    "quiz": {
+      "question": "Question",
+      "of": "of",
+      "score": "Score",
+      "points": "points",
+      "selectAnswer": "Select an answer",
+      "nextQuestion": "Next Question",
+      "abandonQuiz": "Abandon Quiz",
+      "completeQuiz": "Complete Quiz",
+      "completing": "Completing...",
+      "answering": "Answering..."
+    },
+    "completedQuestions": {
+      "title": "Completed Questions",
+      "description": "Summary of your answers",
+      "yourAnswer": "Your answer: ",
+      "correctAnswer": "Correct answer: ",
+      "showExplanation": "Show explanation",
+      "hideExplanation": "Hide explanation",
+      "explanation": "Explanation:"
+    },
+    "sessionCompleted": {
+      "title": "Quiz Completed!",
+      "description": "Well done! You've completed the quiz session.",
+      "backToHome": "Back to home"
+    },
+    "difficulty": {
+      "easy": "Easy",
+      "medium": "Medium", 
+      "hard": "Hard"
+    },
+    "loading": "Loading...",
+    "error": "Error loading quiz data"
   }
 }

@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 interface QuizSession {
   id: number;
@@ -85,6 +86,7 @@ export default function WakeUpPage() {
   const [hasAbandonedSession, setHasAbandonedSession] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   // Fetch active sessions
   const { data: sessions } = useQuery({
@@ -864,14 +866,14 @@ export default function WakeUpPage() {
                           <div className="mt-2 p-3 bg-gray-50 rounded text-sm">
                             <div className="flex flex-col space-y-1">
                               <div className="flex items-center">
-                                <span className="font-medium text-gray-700">La tua risposta: </span>
+                                <span className="font-medium text-gray-700">{t('wakeUpQuiz.completedQuestions.yourAnswer')}</span>
                                 <span className={question.answer.isCorrect ? "text-green-700 font-medium" : "text-red-700 font-medium"}>
                                   {question.options[question.answer.userAnswer]}
                                 </span>
                               </div>
                               {!question.answer.isCorrect && question.correctAnswer !== undefined && question.correctAnswer !== null && (
                                 <div className="flex items-center">
-                                  <span className="font-medium text-gray-700">Risposta corretta: </span>
+                                  <span className="font-medium text-gray-700">{t('wakeUpQuiz.completedQuestions.correctAnswer')}</span>
                                   <span className="text-green-700 font-medium">
                                     {question.options[question.correctAnswer]}
                                   </span>
@@ -883,7 +885,7 @@ export default function WakeUpPage() {
                         
                         {question.explanation && revealedQuestions.has(question.id) ? (
                           <div className="mt-2 p-3 bg-blue-50 rounded text-sm">
-                            <strong>Spiegazione:</strong> <span className="break-words">{question.explanation}</span>
+                            <strong>{t('wakeUpQuiz.completedQuestions.explanation')}</strong> <span className="break-words">{question.explanation}</span>
                           </div>
                         ) : question.answer?.answeredAt && (
                           <Button
@@ -898,7 +900,7 @@ export default function WakeUpPage() {
                             ) : (
                               <Eye className="h-4 w-4 mr-2" />
                             )}
-                            {revealedQuestions.has(question.id) ? 'Nascondi' : 'Mostra'} spiegazione
+                            {revealedQuestions.has(question.id) ? t('wakeUpQuiz.completedQuestions.hideExplanation') : t('wakeUpQuiz.completedQuestions.showExplanation')}
                           </Button>
                         )}
                       </div>
@@ -913,7 +915,7 @@ export default function WakeUpPage() {
           {activeSession.status === 'completed' && (
             <div className="mt-6 text-center">
               <Button onClick={() => setActiveSession(null)} size="lg">
-                Torna alla home
+                {t('wakeUpQuiz.sessionCompleted.backToHome')}
               </Button>
             </div>
           )}
@@ -932,16 +934,16 @@ export default function WakeUpPage() {
               <Brain className="h-8 w-8 text-blue-600" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Wake Up Quiz</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">{t('wakeUpQuiz.title')}</h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Testa le tue conoscenze di grafologia forense e cultura generale con il nostro sistema di quiz interattivo alimentato da AI
+            {t('wakeUpQuiz.subtitle')}
           </p>
         </div>
 
         {/* Active Sessions */}
         {(sessions as any)?.activeSessions && (sessions as any).activeSessions.length > 0 && (
           <div className="mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">📚 Sessioni Attive</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">📚 {t('wakeUpQuiz.activeSessionsTitle')}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {(sessions as any).activeSessions.map((session: any) => (
                 <Card key={session.id} className="border-orange-200 bg-orange-50 hover:shadow-lg transition-shadow">
@@ -959,11 +961,11 @@ export default function WakeUpPage() {
                     <div className="space-y-3">
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Progresso:</span>
-                        <span className="font-medium">{session.currentQuestion} di {session.totalQuestions}</span>
+                        <span className="font-medium">{session.currentQuestion} {t('wakeUpQuiz.quiz.of')} {session.totalQuestions}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Punteggio:</span>
-                        <span className="font-medium text-blue-600">{session.score} punti</span>
+                        <span className="text-gray-600">{t('wakeUpQuiz.quiz.score')}:</span>
+                        <span className="font-medium text-blue-600">{session.score} {t('wakeUpQuiz.quiz.points')}</span>
                       </div>
                       <div className="space-y-2">
                         <Button 
@@ -971,7 +973,7 @@ export default function WakeUpPage() {
                           className="w-full bg-orange-600 hover:bg-orange-700"
                         >
                           <Play className="h-4 w-4 mr-2" />
-                          Riprendi Sessione
+                          {t('wakeUpQuiz.resumeSession')}
                         </Button>
                         <Button 
                           variant="outline" 
@@ -981,7 +983,7 @@ export default function WakeUpPage() {
                           size="sm"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
-                          Elimina
+                          {t('wakeUpQuiz.deleteSession')}
                         </Button>
                       </div>
                     </div>
@@ -999,14 +1001,14 @@ export default function WakeUpPage() {
               <CardContent className="pt-6">
                 <Trophy className="h-8 w-8 mx-auto text-yellow-500 mb-2" />
                 <div className="text-2xl font-bold">{stats.completedSessions}</div>
-                <div className="text-sm text-gray-600">Quiz Completati</div>
+                <div className="text-sm text-gray-600">{t('wakeUpQuiz.stats.completedSessions')}</div>
               </CardContent>
             </Card>
             <Card className="text-center">
               <CardContent className="pt-6">
                 <Target className="h-8 w-8 mx-auto text-blue-500 mb-2" />
                 <div className="text-2xl font-bold">{Math.round(stats.averageScore)}</div>
-                <div className="text-sm text-gray-600">Punteggio Medio</div>
+                <div className="text-sm text-gray-600">{t('wakeUpQuiz.stats.averageScore')}</div>
               </CardContent>
             </Card>
             <Card className="text-center">
@@ -1063,7 +1065,7 @@ export default function WakeUpPage() {
                   <BookOpen className="h-6 w-6 text-blue-600" />
                 </div>
                 <div>
-                  <CardTitle>Grafologia Forense</CardTitle>
+                  <CardTitle>{t('wakeUpQuiz.categories.graphology')}</CardTitle>
                   <CardDescription>Analisi firme e perizia calligrafica</CardDescription>
                 </div>
               </div>

@@ -50,5 +50,68 @@
     "wakeUp": "Quiz Wake Up",
     "settings": "Impostazioni",
     "admin": "Amministrazione"
+  },
+  "wakeUpQuiz": {
+    "title": "Wake Up Quiz",
+    "subtitle": "Testa le tue conoscenze di grafologia forense e cultura generale con il nostro sistema di quiz interattivo alimentato da AI",
+    "stats": {
+      "totalSessions": "Sessioni Totali",
+      "completedSessions": "Sessioni Completate",
+      "averageScore": "Punteggio Medio"
+    },
+    "activeSessionsTitle": "Sessioni Attive",
+    "activeSessionsDescription": "Riprendi le tue sessioni di quiz in corso",
+    "noActiveSessions": "Nessuna sessione attiva",
+    "resumeSession": "Riprendi Sessione",
+    "deleteSession": "Elimina",
+    "newQuizTitle": "Inizia Nuovo Quiz",
+    "newQuizDescription": "Scegli una categoria e inizia una nuova sessione quiz",
+    "selectCategory": "Seleziona Categoria",
+    "categories": {
+      "graphology": "Grafologia Forense",
+      "general": "Cultura Generale",
+      "mixed": "Domande Miste"
+    },
+    "startQuiz": "Inizia Quiz",
+    "starting": "Avvio in corso...",
+    "activeSessionWarning": {
+      "title": "Sessioni Attive Trovate",
+      "description": "Hai delle sessioni di quiz attive. Puoi riprenderle o iniziare un nuovo quiz.",
+      "resume": "Riprendi Sessione Attiva",
+      "startNew": "Inizia Nuovo Quiz Comunque"
+    },
+    "quiz": {
+      "question": "Domanda",
+      "of": "di",
+      "score": "Punteggio",
+      "points": "punti",
+      "selectAnswer": "Seleziona una risposta",
+      "nextQuestion": "Prossima Domanda",
+      "abandonQuiz": "Abbandona Quiz",
+      "completeQuiz": "Completa Quiz",
+      "completing": "Completamento...",
+      "answering": "Risposta..."
+    },
+    "completedQuestions": {
+      "title": "Domande Completate",
+      "description": "Riepilogo delle tue risposte",
+      "yourAnswer": "La tua risposta: ",
+      "correctAnswer": "Risposta corretta: ",
+      "showExplanation": "Mostra spiegazione",
+      "hideExplanation": "Nascondi spiegazione",
+      "explanation": "Spiegazione:"
+    },
+    "sessionCompleted": {
+      "title": "Quiz Completato!",
+      "description": "Ottimo lavoro! Hai completato la sessione quiz.",
+      "backToHome": "Torna alla home"
+    },
+    "difficulty": {
+      "easy": "Facile",
+      "medium": "Medio",
+      "hard": "Difficile"
+    },
+    "loading": "Caricamento...",
+    "error": "Errore nel caricamento dei dati quiz"
   }
 }
