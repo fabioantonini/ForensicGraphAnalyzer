@@ -549,13 +549,13 @@ export default function WakeUpPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Precisione</CardTitle>
+              <CardTitle className="text-sm font-medium">{i18n.language === 'en' ? 'Accuracy' : 'Precisione'}</CardTitle>
               <CheckCircle className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{Math.round(stats.accuracy)}%</div>
               <p className="text-xs text-gray-600">
-                {stats.correctAnswers} di {stats.totalQuestions}
+                {i18n.language === 'en' ? `${stats.correctAnswers} of ${stats.totalQuestions}` : `${stats.correctAnswers} di ${stats.totalQuestions}`}
               </p>
             </CardContent>
           </Card>
@@ -770,14 +770,14 @@ export default function WakeUpPage() {
                 {/* Skip navigation for unanswered questions */}
                 {(!currentQuestion.answer?.answeredAt || currentQuestion.answer?.answeredAt === null) && currentQuestion.questionNumber < activeSession.totalQuestions && (
                   <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-sm text-blue-800 mb-2">{t('wakeUpQuiz.quiz.notAnsweredYet')}</p>
+                    <p className="text-sm text-blue-800 mb-2">{i18n.language === 'en' ? 'You haven\'t answered this question yet.' : 'Non hai ancora risposto a questa domanda.'}</p>
                     <Button 
                       onClick={handleNextQuestion}
                       variant="outline" 
                       size="sm"
                     >
                       <ChevronRight className="h-4 w-4 mr-2" />
-                      {t('wakeUpQuiz.quiz.skipToNext')}
+                      {i18n.language === 'en' ? 'Skip to next question' : 'Salta alla prossima domanda'}
                     </Button>
                   </div>
                 )}
