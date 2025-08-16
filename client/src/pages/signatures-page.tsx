@@ -1098,21 +1098,11 @@ export default function SignaturesPage() {
       <Dialog open={showResultsDialog} onOpenChange={setShowResultsDialog}>
         <DialogContent className="max-w-full max-h-full w-screen h-screen flex flex-col p-0 m-0">
           <DialogHeader className="px-6 pt-4 pb-2 border-b bg-background">
-            <div className="flex items-center justify-between">
-              <div>
-                <DialogTitle>Risultati Confronto Firme - Analisi Forense</DialogTitle>
-                <DialogDescription>
-                  Analisi completata utilizzando 16+ parametri avanzati per il confronto grafologico
-                </DialogDescription>
-              </div>
-              <Button
-                variant="ghost" 
-                size="sm"
-                onClick={() => setShowResultsDialog(false)}
-                className="h-8 w-8 p-0"
-              >
-                ✕
-              </Button>
+            <div>
+              <DialogTitle>Risultati Confronto Firme - Analisi Forense</DialogTitle>
+              <DialogDescription>
+                Analisi completata utilizzando 16+ parametri avanzati per il confronto grafologico
+              </DialogDescription>
             </div>
           </DialogHeader>
           
