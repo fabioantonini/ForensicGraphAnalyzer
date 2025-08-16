@@ -451,6 +451,15 @@ export default function WakeUpPage() {
     hard: "bg-red-100 text-red-800"
   };
 
+  const getDifficultyLabel = (difficulty: string) => {
+    const mapping: Record<string, string> = {
+      "easy": t('wakeUpQuiz.difficulty.easy'),
+      "medium": t('wakeUpQuiz.difficulty.medium'), 
+      "hard": t('wakeUpQuiz.difficulty.hard')
+    };
+    return mapping[difficulty] || difficulty;
+  };
+
   if (showStats && stats) {
     return (
       <div className="container mx-auto p-6">
@@ -611,14 +620,14 @@ export default function WakeUpPage() {
                   }}
                   className="mt-2"
                 >
-                  Abbandona quiz
+                  {t('wakeUpQuiz.quiz.abandonQuiz')}
                 </Button>
               </div>
             </div>
             
             <div className="mt-4">
               <div className="flex justify-between text-sm text-gray-600 mb-2">
-                <span>Progresso: {activeSession.currentQuestion} di {activeSession.totalQuestions}</span>
+                <span>Progresso: {activeSession.currentQuestion} {t('wakeUpQuiz.quiz.of')} {activeSession.totalQuestions}</span>
                 <span>{Math.round(progress)}% completato</span>
               </div>
               <Progress value={progress} className="h-2" />
@@ -715,7 +724,7 @@ export default function WakeUpPage() {
                     Domanda {currentQuestion.questionNumber}
                   </CardTitle>
                   <Badge className={difficultyColors[currentQuestion.difficulty as keyof typeof difficultyColors]}>
-                    {currentQuestion.difficulty}
+                    {getDifficultyLabel(currentQuestion.difficulty)}
                   </Badge>
                 </div>
                 <CardDescription>{currentQuestion.question}</CardDescription>
@@ -807,7 +816,7 @@ export default function WakeUpPage() {
                           className="w-full"
                         >
                           <ChevronRight className="h-4 w-4 mr-2" />
-                          Prossima domanda
+                          {t('wakeUpQuiz.quiz.nextQuestion')}
                         </Button>
                       </div>
                     )}
@@ -821,7 +830,7 @@ export default function WakeUpPage() {
                           variant="default"
                         >
                           <Trophy className="h-4 w-4 mr-2" />
-                          Completa quiz
+                          {t('wakeUpQuiz.quiz.completeQuiz')}
                         </Button>
                       </div>
                     )}
@@ -835,8 +844,8 @@ export default function WakeUpPage() {
           {answeredQuestions.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Domande Completate</CardTitle>
-                <CardDescription>Riepilogo delle tue risposte</CardDescription>
+                <CardTitle>{t('wakeUpQuiz.completedQuestions.title')}</CardTitle>
+                <CardDescription>{t('wakeUpQuiz.completedQuestions.description')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <ScrollArea className="h-[500px]">
@@ -848,7 +857,7 @@ export default function WakeUpPage() {
                             <div className="flex items-center space-x-2 mb-1 flex-wrap">
                               <Badge variant="outline">Q{question.questionNumber}</Badge>
                               <Badge className={difficultyColors[question.difficulty as keyof typeof difficultyColors]}>
-                                {question.difficulty}
+                                {getDifficultyLabel(question.difficulty)}
                               </Badge>
                               {question.answer?.isCorrect ? (
                                 <CheckCircle className="h-4 w-4 text-green-600" />
