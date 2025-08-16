@@ -56,8 +56,11 @@
     "subtitle": "Testa le tue conoscenze di grafologia forense e cultura generale con il nostro sistema di quiz interattivo alimentato da AI",
     "stats": {
       "totalSessions": "Sessioni Totali",
-      "completedSessions": "Sessioni Completate",
-      "averageScore": "Punteggio Medio"
+      "completedSessions": "Sessioni Completate", 
+      "averageScore": "Punteggio Medio",
+      "resetAll": "Resetta tutte le statistiche",
+      "precision": "Precisione",
+      "currentLevel": "Livello Attuale"
     },
     "activeSessionsTitle": "Sessioni Attive",
     "activeSessionsDescription": "Riprendi le tue sessioni di quiz in corso",
@@ -70,7 +73,12 @@
     "categories": {
       "graphology": "Grafologia Forense",
       "general": "Cultura Generale",
-      "mixed": "Domande Miste"
+      "mixed": "Domande Miste",
+      "cultura": "Cultura Generale",
+      "misto": "Misto", 
+      "graphologyDesc": "Domande specialistiche su tecniche di autenticazione, analisi parametrica, e metodologie forensi.",
+      "cultureDesc": "Testa le tue conoscenze su vari argomenti per mantenere la mente allenata e curiosa.",
+      "mixedDesc": "Una sfida completa che combina domande specialistiche e di cultura generale per un allenamento completo."
     },
     "startQuiz": "Inizia Quiz",
     "starting": "Avvio in corso...",
@@ -90,7 +98,9 @@
       "abandonQuiz": "Abbandona Quiz",
       "completeQuiz": "Completa Quiz",
       "completing": "Completamento...",
-      "answering": "Risposta..."
+      "answering": "Risposta...",
+      "quickQuiz": "Quiz Rapido",
+      "fullQuiz": "Quiz Completo"
     },
     "completedQuestions": {
       "title": "Domande Completate",

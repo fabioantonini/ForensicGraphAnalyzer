@@ -443,9 +443,9 @@ export default function WakeUpPage() {
   };
 
   const categoryLabels = {
-    grafologia: "Grafologia Forense",
-    cultura: "Cultura Generale",
-    mista: "Misto"
+    grafologia: t('wakeUpQuiz.categories.graphology'),
+    cultura: t('wakeUpQuiz.categories.cultura'),
+    mista: t('wakeUpQuiz.categories.misto')
   };
 
   const difficultyColors = {
@@ -1027,14 +1027,14 @@ export default function WakeUpPage() {
               <CardContent className="pt-6">
                 <CheckCircle className="h-8 w-8 mx-auto text-green-500 mb-2" />
                 <div className="text-2xl font-bold">{Math.round(stats.accuracy)}%</div>
-                <div className="text-sm text-gray-600">Precisione</div>
+                <div className="text-sm text-gray-600">{t('wakeUpQuiz.stats.precision')}</div>
               </CardContent>
             </Card>
             <Card className="text-center cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => setShowStats(true)}>
               <CardContent className="pt-6">
                 <BarChart3 className="h-8 w-8 mx-auto text-purple-500 mb-2" />
                 <div className={`text-2xl font-bold ${stats.performance.color}`}>{stats.performance.level}</div>
-                <div className="text-sm text-gray-600">Livello Attuale</div>
+                <div className="text-sm text-gray-600">{t('wakeUpQuiz.stats.currentLevel')}</div>
               </CardContent>
             </Card>
           </div>
@@ -1061,7 +1061,7 @@ export default function WakeUpPage() {
               ) : (
                 <>
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Resetta tutte le statistiche
+                  {t('wakeUpQuiz.stats.resetAll')}
                 </>
               )}
             </Button>
@@ -1084,7 +1084,7 @@ export default function WakeUpPage() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-gray-600 mb-4">
-                Domande specialistiche su tecniche di autenticazione, analisi parametrica, e metodologie forensi.
+                {t('wakeUpQuiz.categories.graphologyDesc')}
               </p>
               <div className="space-y-2">
                 <Button 
@@ -1093,7 +1093,7 @@ export default function WakeUpPage() {
                   disabled={startQuizMutation.isPending}
                 >
                   <Play className="h-4 w-4 mr-2" />
-                  Quiz Rapido (5 domande)
+                  {t('wakeUpQuiz.quiz.quickQuiz')} (5 domande)
                 </Button>
                 <Button 
                   variant="outline" 
@@ -1102,7 +1102,7 @@ export default function WakeUpPage() {
                   disabled={startQuizMutation.isPending}
                 >
                   <Clock className="h-4 w-4 mr-2" />
-                  Quiz Completo (10 domande)
+                  {t('wakeUpQuiz.quiz.fullQuiz')} (10 domande)
                 </Button>
               </div>
             </CardContent>
@@ -1115,14 +1115,14 @@ export default function WakeUpPage() {
                   <Globe className="h-6 w-6 text-green-600" />
                 </div>
                 <div>
-                  <CardTitle>Cultura Generale</CardTitle>
+                  <CardTitle>{t('wakeUpQuiz.categories.cultura')}</CardTitle>
                   <CardDescription>Arte, storia, scienza e letteratura</CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-gray-600 mb-4">
-                Testa le tue conoscenze su vari argomenti per mantenere la mente allenata e curiosa.
+                {t('wakeUpQuiz.categories.cultureDesc')}
               </p>
               <div className="space-y-2">
                 <Button 
@@ -1131,7 +1131,7 @@ export default function WakeUpPage() {
                   disabled={startQuizMutation.isPending}
                 >
                   <Play className="h-4 w-4 mr-2" />
-                  Quiz Rapido (5 domande)
+                  {t('wakeUpQuiz.quiz.quickQuiz')} (5 domande)
                 </Button>
                 <Button 
                   variant="outline" 
@@ -1140,7 +1140,7 @@ export default function WakeUpPage() {
                   disabled={startQuizMutation.isPending}
                 >
                   <Clock className="h-4 w-4 mr-2" />
-                  Quiz Completo (10 domande)
+                  {t('wakeUpQuiz.quiz.fullQuiz')} (10 domande)
                 </Button>
               </div>
             </CardContent>
@@ -1153,14 +1153,14 @@ export default function WakeUpPage() {
                   <Brain className="h-6 w-6 text-purple-600" />
                 </div>
                 <div>
-                  <CardTitle>Misto</CardTitle>
+                  <CardTitle>{t('wakeUpQuiz.categories.misto')}</CardTitle>
                   <CardDescription>Grafologia e cultura generale</CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-gray-600 mb-4">
-                Una sfida completa che combina domande specialistiche e di cultura generale per un allenamento completo.
+                {t('wakeUpQuiz.categories.mixedDesc')}
               </p>
               <div className="space-y-2">
                 <Button 
@@ -1169,7 +1169,7 @@ export default function WakeUpPage() {
                   disabled={startQuizMutation.isPending}
                 >
                   <Play className="h-4 w-4 mr-2" />
-                  Quiz Rapido (5 domande)
+                  {t('wakeUpQuiz.quiz.quickQuiz')} (5 domande)
                 </Button>
                 <Button 
                   variant="outline" 
@@ -1178,7 +1178,7 @@ export default function WakeUpPage() {
                   disabled={startQuizMutation.isPending}
                 >
                   <Clock className="h-4 w-4 mr-2" />
-                  Quiz Completo (10 domande)
+                  {t('wakeUpQuiz.quiz.fullQuiz')} (10 domande)
                 </Button>
               </div>
             </CardContent>

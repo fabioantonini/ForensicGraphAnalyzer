@@ -57,7 +57,10 @@
     "stats": {
       "totalSessions": "Total Sessions",
       "completedSessions": "Completed Sessions",
-      "averageScore": "Average Score"
+      "averageScore": "Average Score",
+      "resetAll": "Reset all statistics",
+      "precision": "Precision",
+      "currentLevel": "Current Level"
     },
     "activeSessionsTitle": "Active Sessions",
     "activeSessionsDescription": "Resume your ongoing quiz sessions",
@@ -69,8 +72,13 @@
     "selectCategory": "Select Category",
     "categories": {
       "graphology": "Forensic Graphology",
-      "general": "General Culture",
-      "mixed": "Mixed Questions"
+      "general": "General Culture", 
+      "mixed": "Mixed Questions",
+      "cultura": "General Culture",
+      "misto": "Mixed",
+      "graphologyDesc": "Specialized questions on authentication techniques, parametric analysis, and forensic methodology.",
+      "cultureDesc": "Test your knowledge on various topics to keep your mind alert and curious.",
+      "mixedDesc": "A complete challenge that combines specialized and general culture questions for complete training."
     },
     "startQuiz": "Start Quiz",
     "starting": "Starting...",
@@ -90,7 +98,9 @@
       "abandonQuiz": "Abandon Quiz",
       "completeQuiz": "Complete Quiz",
       "completing": "Completing...",
-      "answering": "Answering..."
+      "answering": "Answering...",
+      "quickQuiz": "Quick Quiz",
+      "fullQuiz": "Full Quiz"
     },
     "completedQuestions": {
       "title": "Completed Questions",
