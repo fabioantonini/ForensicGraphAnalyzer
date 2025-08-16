@@ -463,43 +463,59 @@ export default function WakeUpPage() {
     return mapping[difficulty] || difficulty;
   };
 
+  const getPerformanceLevelTranslation = (level: string) => {
+    const mapping: Record<string, string> = {
+      "Eccellente": t('wakeUpQuiz.statisticsDialog.performanceLevels.excellent'),
+      "Buono": t('wakeUpQuiz.statisticsDialog.performanceLevels.good'),
+      "Medio": t('wakeUpQuiz.statisticsDialog.performanceLevels.average'),
+      "Sotto la Media": t('wakeUpQuiz.statisticsDialog.performanceLevels.belowAverage'),
+      "Insufficiente": t('wakeUpQuiz.statisticsDialog.performanceLevels.poor'),
+      "Excellent": t('wakeUpQuiz.statisticsDialog.performanceLevels.excellent'),
+      "Good": t('wakeUpQuiz.statisticsDialog.performanceLevels.good'),
+      "Average": t('wakeUpQuiz.statisticsDialog.performanceLevels.average'),
+      "Below Average": t('wakeUpQuiz.statisticsDialog.performanceLevels.belowAverage'),
+      "Poor": t('wakeUpQuiz.statisticsDialog.performanceLevels.poor')
+    };
+    return mapping[level] || level;
+  };
+
   if (showStats && stats) {
     return (
       <div className="container mx-auto p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Statistiche Quiz</h1>
-            <p className="text-gray-600 mt-2">Le tue prestazioni nel sistema Wake Up</p>
+            <h1 className="text-3xl font-bold text-gray-900">{t('wakeUpQuiz.statisticsDialog.title')}</h1>
+            <p className="text-gray-600 mt-2">{t('wakeUpQuiz.statisticsDialog.subtitle')}</p>
           </div>
           <Button onClick={() => setShowStats(false)} variant="outline">
             <ChevronRight className="h-4 w-4 mr-2" />
-            Torna ai Quiz
+            {t('wakeUpQuiz.statisticsDialog.backToQuiz')}
           </Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Quiz Completati</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('wakeUpQuiz.stats.completedSessions')}</CardTitle>
               <Trophy className="h-4 w-4 text-yellow-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.completedSessions}</div>
               <p className="text-xs text-gray-600">
-                di {stats.totalSessions} totali
+                {t('wakeUpQuiz.statisticsDialog.totalSessions', { total: stats.totalSessions })}
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Punteggio Medio</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('wakeUpQuiz.stats.averageScore')}</CardTitle>
               <Target className="h-4 w-4 text-blue-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{Math.round(stats.averageScore)}</div>
               <p className="text-xs text-gray-600">
-                miglior: {stats.bestScore}
+                {t('wakeUpQuiz.statisticsDialog.bestScore', { score: stats.bestScore })}
               </p>
             </CardContent>
           </Card>
@@ -519,15 +535,15 @@ export default function WakeUpPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Livello</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('wakeUpQuiz.stats.currentLevel')}</CardTitle>
               <BarChart3 className="h-4 w-4 text-purple-500" />
             </CardHeader>
             <CardContent>
               <div className={`text-2xl font-bold ${stats.performance.color}`}>
-                {stats.performance.level}
+                {getPerformanceLevelTranslation(stats.performance.level)}
               </div>
               <p className="text-xs text-gray-600">
-                performance attuale
+{t('wakeUpQuiz.statisticsDialog.currentPerformance')}
               </p>
             </CardContent>
           </Card>
@@ -536,14 +552,14 @@ export default function WakeUpPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>Valutazione Performance</CardTitle>
+              <CardTitle>{t('wakeUpQuiz.statisticsDialog.performanceEvaluation')}</CardTitle>
               <CardDescription>{stats.performance.message}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div>
                   <div className="flex justify-between text-sm">
-                    <span>Precisione</span>
+                    <span>{t('wakeUpQuiz.stats.precision')}</span>
                     <span>{Math.round(stats.accuracy)}%</span>
                   </div>
                   <Progress value={stats.accuracy} className="mt-2" />
@@ -551,7 +567,7 @@ export default function WakeUpPage() {
                 
                 <div>
                   <div className="flex justify-between text-sm">
-                    <span>Quiz Completati</span>
+                    <span>{t('wakeUpQuiz.stats.completedSessions')}</span>
                     <span>{Math.round((stats.completedSessions / Math.max(stats.totalSessions, 1)) * 100)}%</span>
                   </div>
                   <Progress value={(stats.completedSessions / Math.max(stats.totalSessions, 1)) * 100} className="mt-2" />
@@ -562,8 +578,8 @@ export default function WakeUpPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Consigli Personalizzati</CardTitle>
-              <CardDescription>Suggerimenti per migliorare le tue performance</CardDescription>
+              <CardTitle>{t('wakeUpQuiz.statisticsDialog.personalizedAdvice')}</CardTitle>
+              <CardDescription>{t('wakeUpQuiz.statisticsDialog.performanceDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
               <ul className="space-y-3">
@@ -1002,7 +1018,7 @@ export default function WakeUpPage() {
             <Card className="text-center cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => setShowStats(true)}>
               <CardContent className="pt-6">
                 <BarChart3 className="h-8 w-8 mx-auto text-purple-500 mb-2" />
-                <div className={`text-2xl font-bold ${stats.performance.color}`}>{stats.performance.level}</div>
+                <div className={`text-2xl font-bold ${stats.performance.color}`}>{getPerformanceLevelTranslation(stats.performance.level)}</div>
                 <div className="text-sm text-gray-600">{t('wakeUpQuiz.stats.currentLevel')}</div>
               </CardContent>
             </Card>

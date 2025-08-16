@@ -111,6 +111,28 @@
       "hideExplanation": "Hide explanation",
       "explanation": "Explanation:"
     },
+    "statisticsDialog": {
+      "title": "Quiz Statistics", 
+      "subtitle": "Your performance in the Wake Up system",
+      "backToQuiz": "Back to Quiz",
+      "performanceEvaluation": "Performance Evaluation",
+      "personalizedAdvice": "Personalized Advice",
+      "performanceLevels": {
+        "excellent": "Excellent",
+        "good": "Good",
+        "average": "Average", 
+        "belowAverage": "Below Average",
+        "poor": "Poor"
+      },
+      "suggestions": {
+        "focusWeakAreas": "Focus on weaker thematic areas",
+        "studyMistakes": "Study topics where you made mistakes"
+      },
+      "performanceDesc": "Suggestions to improve your performance",
+      "currentPerformance": "current performance",
+      "totalSessions": "of {total} total",
+      "bestScore": "best: {score}"
+    },
     "sessionCompleted": {
       "title": "Quiz Completed!",
       "description": "Well done! You've completed the quiz session.",
