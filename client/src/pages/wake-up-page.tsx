@@ -482,7 +482,11 @@ export default function WakeUpPage() {
   const getPerformanceMessageTranslation = (message: string) => {
     const mapping: Record<string, string> = {
       "È necessario studiare di più per migliorare le tue conoscenze.": t('wakeUpQuiz.statisticsDialog.studyMoreMessage'),
-      "You need to study more to improve your knowledge.": t('wakeUpQuiz.statisticsDialog.studyMoreMessage')
+      "You need to study more to improve your knowledge.": t('wakeUpQuiz.statisticsDialog.studyMoreMessage'),
+      "Ottima prestazione! Dimostri una buona padronanza degli argomenti.": i18n.language === 'en' ? 'Great performance! You demonstrate good mastery of the topics.' : 'Ottima prestazione! Dimostri una buona padronanza degli argomenti.',
+      "Buona prestazione! Continua a studiare per migliorare ulteriormente.": i18n.language === 'en' ? 'Good performance! Keep studying to improve further.' : 'Buona prestazione! Continua a studiare per migliorare ulteriormente.',
+      "Prestazione straordinaria! Hai una conoscenza approfondita della materia.": i18n.language === 'en' ? 'Outstanding performance! You have deep knowledge of the subject.' : 'Prestazione straordinaria! Hai una conoscenza approfondita della materia.',
+      "Prestazione sufficiente. Ti consiglio di approfondire gli argomenti.": i18n.language === 'en' ? 'Sufficient performance. I recommend deepening the topics.' : 'Prestazione sufficiente. Ti consiglio di approfondire gli argomenti.'
     };
     return mapping[message] || message;
   };
@@ -495,11 +499,27 @@ export default function WakeUpPage() {
     if (tip.includes("Approfondisci gli argomenti") || tip.includes("Study topics where")) {
       return t('wakeUpQuiz.statisticsDialog.suggestions.studyMistakes');
     }
+    if (tip.includes("Eccellente! Continua a mantenerti aggiornato")) {
+      return i18n.language === 'en' ? '🎉 Excellent! Keep staying updated' : '🎉 Eccellente! Continua a mantenerti aggiornato';
+    }
+    if (tip.includes("Prova quiz più difficili per sfidare te stesso")) {
+      return i18n.language === 'en' ? '🏆 Try harder quizzes to challenge yourself' : '🏆 Prova quiz più difficili per sfidare te stesso';
+    }
+    if (tip.includes("Prova a rispondere più velocemente")) {
+      return i18n.language === 'en' ? '⏱️ Try to answer easier questions faster' : '⏱️ Prova a rispondere più velocemente alle domande facili';
+    }
+    if (tip.includes("Esercitati a riconoscere i pattern")) {
+      return i18n.language === 'en' ? '🧠 Practice recognizing patterns in questions' : '🧠 Esercitati a riconoscere i pattern nelle domande';
+    }
     
     // Exact mappings as fallback
     const mapping: Record<string, string> = {
-      "Focalizzati sulle aree tematiche più deboli": t('wakeUpQuiz.statisticsDialog.suggestions.focusWeakAreas'),
-      "Approfondisci gli argomenti dove hai sbagliato": t('wakeUpQuiz.statisticsDialog.suggestions.studyMistakes'),
+      "🎯 Focalizzati sulle aree tematiche più deboli": i18n.language === 'en' ? '🎯 Focus on weaker thematic areas' : '🎯 Focalizzati sulle aree tematiche più deboli',
+      "📚 Approfondisci gli argomenti dove hai sbagliato": i18n.language === 'en' ? '📚 Study topics where you made mistakes' : '📚 Approfondisci gli argomenti dove hai sbagliato',
+      "🎉 Eccellente! Continua a mantenerti aggiornato": i18n.language === 'en' ? '🎉 Excellent! Keep staying updated' : '🎉 Eccellente! Continua a mantenerti aggiornato',
+      "🏆 Prova quiz più difficili per sfidare te stesso": i18n.language === 'en' ? '🏆 Try harder quizzes to challenge yourself' : '🏆 Prova quiz più difficili per sfidare te stesso',
+      "⏱️ Prova a rispondere più velocemente alle domande facili": i18n.language === 'en' ? '⏱️ Try to answer easier questions faster' : '⏱️ Prova a rispondere più velocemente alle domande facili',
+      "🧠 Esercitati a riconoscere i pattern nelle domande": i18n.language === 'en' ? '🧠 Practice recognizing patterns in questions' : '🧠 Esercitati a riconoscere i pattern nelle domande',
       "Focus on weaker thematic areas": t('wakeUpQuiz.statisticsDialog.suggestions.focusWeakAreas'),
       "Study topics where you made mistakes": t('wakeUpQuiz.statisticsDialog.suggestions.studyMistakes')
     };
