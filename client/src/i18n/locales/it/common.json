@@ -128,7 +128,8 @@
         "focusWeakAreas": "Focalizzati sulle aree tematiche più deboli",
         "studyMistakes": "Approfondisci gli argomenti dove hai sbagliato"
       },
-      "performanceDesc": "Suggerimenti per migliorare le tue performance",
+      "performanceDesc": "Suggerimenti per migliorare le tue performance", 
+      "studyMoreMessage": "È necessario studiare di più per migliorare le tue conoscenze.",
       "currentPerformance": "performance attuale",
       "totalSessions": "di {total} totali",
       "bestScore": "miglior: {score}"

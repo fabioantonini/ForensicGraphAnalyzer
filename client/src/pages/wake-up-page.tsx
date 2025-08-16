@@ -479,6 +479,24 @@ export default function WakeUpPage() {
     return mapping[level] || level;
   };
 
+  const getPerformanceMessageTranslation = (message: string) => {
+    const mapping: Record<string, string> = {
+      "È necessario studiare di più per migliorare le tue conoscenze.": t('wakeUpQuiz.statisticsDialog.studyMoreMessage'),
+      "You need to study more to improve your knowledge.": t('wakeUpQuiz.statisticsDialog.studyMoreMessage')
+    };
+    return mapping[message] || message;
+  };
+
+  const getTipTranslation = (tip: string) => {
+    const mapping: Record<string, string> = {
+      "Focalizzati sulle aree tematiche più deboli": t('wakeUpQuiz.statisticsDialog.suggestions.focusWeakAreas'),
+      "Approfondisci gli argomenti dove hai sbagliato": t('wakeUpQuiz.statisticsDialog.suggestions.studyMistakes'),
+      "Focus on weaker thematic areas": t('wakeUpQuiz.statisticsDialog.suggestions.focusWeakAreas'),
+      "Study topics where you made mistakes": t('wakeUpQuiz.statisticsDialog.suggestions.studyMistakes')
+    };
+    return mapping[tip] || tip;
+  };
+
   if (showStats && stats) {
     return (
       <div className="container mx-auto p-6">
@@ -553,7 +571,7 @@ export default function WakeUpPage() {
           <Card>
             <CardHeader>
               <CardTitle>{t('wakeUpQuiz.statisticsDialog.performanceEvaluation')}</CardTitle>
-              <CardDescription>{stats.performance.message}</CardDescription>
+              <CardDescription>{getPerformanceMessageTranslation(stats.performance.message)}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -586,7 +604,7 @@ export default function WakeUpPage() {
                 {stats.tips.map((tip, index) => (
                   <li key={index} className="flex items-start space-x-2">
                     <ChevronRight className="h-4 w-4 mt-0.5 text-blue-500 flex-shrink-0" />
-                    <span className="text-sm">{tip}</span>
+                    <span className="text-sm">{getTipTranslation(tip)}</span>
                   </li>
                 ))}
               </ul>

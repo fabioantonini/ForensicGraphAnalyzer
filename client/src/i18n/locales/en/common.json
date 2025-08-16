@@ -129,6 +129,7 @@
         "studyMistakes": "Study topics where you made mistakes"
       },
       "performanceDesc": "Suggestions to improve your performance",
+      "studyMoreMessage": "You need to study more to improve your knowledge.",
       "currentPerformance": "current performance",
       "totalSessions": "of {total} total",
       "bestScore": "best: {score}"
