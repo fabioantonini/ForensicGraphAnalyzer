@@ -873,6 +873,7 @@ export const insertQuizAnswerSchema = createInsertSchema(quizAnswers).omit({
 export const createQuizRequestSchema = z.object({
   category: z.enum(['grafologia', 'cultura', 'mista']),
   totalQuestions: z.number().min(3).max(20).default(5),
+  language: z.string().optional(),
 });
 
 export const submitAnswerSchema = z.object({

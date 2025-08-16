@@ -26,6 +26,7 @@ import {
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
+import i18n from "@/i18n";
 
 interface QuizSession {
   id: number;
@@ -86,7 +87,7 @@ export default function WakeUpPage() {
   const [hasAbandonedSession, setHasAbandonedSession] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
+  const { t } = useTranslation('common');
 
   // Fetch active sessions
   const { data: sessions } = useQuery({
@@ -291,6 +292,8 @@ export default function WakeUpPage() {
   });
 
   const handleStartQuiz = (category: "grafologia" | "cultura" | "mista", totalQuestions: number = 5) => {
+    const currentLanguage = i18n.language || 'it';
+    
     // Check if there's an active session first
     if ((sessions as any)?.activeSessions && (sessions as any).activeSessions.length > 0) {
       const activeSessionsCount = (sessions as any).activeSessions.length;
@@ -302,7 +305,7 @@ export default function WakeUpPage() {
       }
     }
     
-    startQuizMutation.mutate({ category, totalQuestions });
+    startQuizMutation.mutate({ category, totalQuestions, language: currentLanguage });
   };
 
   const handleResumeSession = (session: any) => {

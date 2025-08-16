@@ -16,26 +16,33 @@ export interface GeneratedQuizQuestion {
 export async function generateQuizQuestions(
   category: "grafologia" | "cultura" | "mista",
   totalQuestions: number,
-  userApiKey?: string
+  userApiKey?: string,
+  language: string = "it"
 ): Promise<GeneratedQuizQuestion[]> {
   const categoryPrompts = {
-    grafologia: `domande di grafologia forense, analisi delle firme, autenticazione di documenti, perizia calligrafica, e tecniche di verifica della scrittura`,
-    cultura: `domande di cultura generale su arte, storia, scienza, letteratura, geografia e conoscenze generali`,
-    mista: `domande miste che combinano grafologia forense e cultura generale`
+    it: {
+      grafologia: `domande di grafologia forense, analisi delle firme, autenticazione di documenti, perizia calligrafica, e tecniche di verifica della scrittura`,
+      cultura: `domande di cultura generale su arte, storia, scienza, letteratura, geografia e conoscenze generali`,
+      mista: `domande miste che combinano grafologia forense e cultura generale`
+    },
+    en: {
+      grafologia: `forensic graphology questions, signature analysis, document authentication, handwriting examination, and writing verification techniques`,
+      cultura: `general knowledge questions about art, history, science, literature, geography and general knowledge`,
+      mista: `mixed questions combining forensic graphology and general culture`
+    }
   };
 
-  const prompt = `Genera esattamente ${totalQuestions} domande a scelta multipla di tipo quiz su ${categoryPrompts[category]}.
-
-REGOLE IMPORTANTI:
+  const instructions = {
+    it: {
+      rules: `REGOLE IMPORTANTI:
 - Ogni domanda deve avere esattamente 4 opzioni di risposta (A, B, C, D)
 - Solo una risposta deve essere corretta
 - Fornisci sempre una spiegazione dettagliata della risposta corretta
 - Le domande devono essere di livello professionale ma comprensibili
 - Varia la difficoltà: alcune facili, alcune medie, alcune difficili
 - Per grafologia: usa terminologia tecnica accurata
-- Per cultura generale: copri diverse aree tematiche
-
-Rispondi SOLO con un oggetto JSON valido in questo formato:
+- Per cultura generale: copri diverse aree tematiche`,
+      format: `Rispondi SOLO con un oggetto JSON valido in questo formato:
 {
   "questions": [
     {
@@ -49,7 +56,41 @@ Rispondi SOLO con un oggetto JSON valido in questo formato:
   ]
 }
 
-NON aggiungere altro testo oltre al JSON.`;
+NON aggiungere altro testo oltre al JSON.`
+    },
+    en: {
+      rules: `IMPORTANT RULES:
+- Each question must have exactly 4 answer options (A, B, C, D)
+- Only one answer must be correct
+- Always provide a detailed explanation of the correct answer
+- Questions should be professional level but understandable
+- Vary difficulty: some easy, some medium, some hard
+- For graphology: use accurate technical terminology
+- For general knowledge: cover different thematic areas`,
+      format: `Respond ONLY with a valid JSON object in this format:
+{
+  "questions": [
+    {
+      "question": "Question text?",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "correct": 2,
+      "explanation": "Detailed explanation of why option C is correct...",
+      "category": "${category}",
+      "difficulty": "medium"
+    }
+  ]
+}
+
+DO NOT add any other text besides the JSON.`
+    }
+  };
+
+  const lang = language === 'en' ? 'en' : 'it';
+  const prompt = `Generate exactly ${totalQuestions} multiple choice quiz questions about ${categoryPrompts[lang][category]}.
+
+${instructions[lang].rules}
+
+${instructions[lang].format}`;
 
   try {
     const openai = createOpenAIClient(userApiKey);
