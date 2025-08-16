@@ -291,8 +291,9 @@ export default function WakeUpPage() {
   const handleStartQuiz = (category: "grafologia" | "cultura" | "mista", totalQuestions: number = 5) => {
     // Check if there's an active session first
     if ((sessions as any)?.activeSessions && (sessions as any).activeSessions.length > 0) {
+      const activeSessionsCount = (sessions as any).activeSessions.length;
       const confirmed = confirm(
-        "Hai già una sessione quiz attiva. Se continui, quella sessione verrà abbandonata. Vuoi procedere comunque con un nuovo quiz?"
+        `Attenzione: hai ${activeSessionsCount} sessione/i quiz attiva/e in corso.\n\nSe procedi con un nuovo quiz, la sessione esistente verrà abbandonata e perderai i progressi non salvati.\n\nVuoi davvero creare un nuovo quiz? (consigliamo di completare prima le sessioni attive)`
       );
       if (!confirmed) {
         return;
@@ -914,6 +915,60 @@ export default function WakeUpPage() {
             Testa le tue conoscenze di grafologia forense e cultura generale con il nostro sistema di quiz interattivo alimentato da AI
           </p>
         </div>
+
+        {/* Active Sessions */}
+        {(sessions as any)?.activeSessions && (sessions as any).activeSessions.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">📚 Sessioni Attive</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {(sessions as any).activeSessions.map((session: any) => (
+                <Card key={session.id} className="border-orange-200 bg-orange-50 hover:shadow-lg transition-shadow">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Badge variant="outline" className="border-orange-300 text-orange-700">
+                          {categoryLabels[session.category as keyof typeof categoryLabels]}
+                        </Badge>
+                        <Badge className="bg-orange-200 text-orange-800">In corso</Badge>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Progresso:</span>
+                        <span className="font-medium">{session.currentQuestion} di {session.totalQuestions}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Punteggio:</span>
+                        <span className="font-medium text-blue-600">{session.score} punti</span>
+                      </div>
+                      <div className="space-y-2">
+                        <Button 
+                          onClick={() => handleContinueSession(session.id)}
+                          className="w-full bg-orange-600 hover:bg-orange-700"
+                        >
+                          <Play className="h-4 w-4 mr-2" />
+                          Riprendi Sessione
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => deleteSessionMutation.mutate(session.id)}
+                          disabled={deleteSessionMutation.isPending}
+                          className="w-full text-red-600 border-red-200 hover:bg-red-50"
+                          size="sm"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Elimina
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Quick Stats */}
         {stats && (
