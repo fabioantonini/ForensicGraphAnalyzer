@@ -859,6 +859,28 @@ export default function WakeUpPage() {
                           <Badge variant="secondary" className="ml-2 flex-shrink-0">+{question.answer?.points || 0}</Badge>
                         </div>
                         
+                        {/* Show answer details */}
+                        {question.answer?.answeredAt && question.options && (
+                          <div className="mt-2 p-3 bg-gray-50 rounded text-sm">
+                            <div className="flex flex-col space-y-1">
+                              <div className="flex items-center">
+                                <span className="font-medium text-gray-700">La tua risposta: </span>
+                                <span className={question.answer.isCorrect ? "text-green-700 font-medium" : "text-red-700 font-medium"}>
+                                  {question.options[question.answer.userAnswer]}
+                                </span>
+                              </div>
+                              {!question.answer.isCorrect && question.correctAnswer !== undefined && (
+                                <div className="flex items-center">
+                                  <span className="font-medium text-gray-700">Risposta corretta: </span>
+                                  <span className="text-green-700 font-medium">
+                                    {question.options[question.correctAnswer]}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        
                         {question.explanation && revealedQuestions.has(question.id) ? (
                           <div className="mt-2 p-3 bg-blue-50 rounded text-sm">
                             <strong>Spiegazione:</strong> <span className="break-words">{question.explanation}</span>
