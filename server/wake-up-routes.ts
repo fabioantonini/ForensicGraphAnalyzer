@@ -474,9 +474,8 @@ router.get("/stats", async (req, res) => {
 
     const stats = await storage.getUserQuizStats(req.user.id);
     
-    // Calcola performance level
-    const scorePercentage = stats.averageScore > 0 ? (stats.averageScore / (stats.averageScore + 100)) * 100 : 0;
-    const performance = getPerformanceLevel(scorePercentage);
+    // Calcola performance level basato sulla precisione (accuracy)
+    const performance = getPerformanceLevel(stats.accuracy);
     
     // Genera consigli personalizzati
     const tips = generatePersonalizedTips(
