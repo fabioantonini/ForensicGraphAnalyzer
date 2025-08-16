@@ -1090,7 +1090,7 @@ export default function WakeUpPage() {
                 </div>
                 <div>
                   <CardTitle>{t('wakeUpQuiz.categories.graphology')}</CardTitle>
-                  <CardDescription>Analisi firme e perizia calligrafica</CardDescription>
+                  <CardDescription>{t('wakeUpQuiz.categories.graphologyDesc')}</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -1105,7 +1105,7 @@ export default function WakeUpPage() {
                   disabled={startQuizMutation.isPending}
                 >
                   <Play className="h-4 w-4 mr-2" />
-                  {t('wakeUpQuiz.quiz.quickQuiz')} (5 domande)
+                  {t('wakeUpQuiz.quiz.quickQuiz')}
                 </Button>
                 <Button 
                   variant="outline" 
@@ -1114,7 +1114,7 @@ export default function WakeUpPage() {
                   disabled={startQuizMutation.isPending}
                 >
                   <Clock className="h-4 w-4 mr-2" />
-                  {t('wakeUpQuiz.quiz.fullQuiz')} (10 domande)
+                  {t('wakeUpQuiz.quiz.fullQuiz')}
                 </Button>
               </div>
             </CardContent>
@@ -1128,7 +1128,7 @@ export default function WakeUpPage() {
                 </div>
                 <div>
                   <CardTitle>{t('wakeUpQuiz.categories.cultura')}</CardTitle>
-                  <CardDescription>Arte, storia, scienza e letteratura</CardDescription>
+                  <CardDescription>{t('wakeUpQuiz.categories.cultureDesc')}</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -1143,7 +1143,7 @@ export default function WakeUpPage() {
                   disabled={startQuizMutation.isPending}
                 >
                   <Play className="h-4 w-4 mr-2" />
-                  {t('wakeUpQuiz.quiz.quickQuiz')} (5 domande)
+                  {t('wakeUpQuiz.quiz.quickQuiz')}
                 </Button>
                 <Button 
                   variant="outline" 
@@ -1152,7 +1152,7 @@ export default function WakeUpPage() {
                   disabled={startQuizMutation.isPending}
                 >
                   <Clock className="h-4 w-4 mr-2" />
-                  {t('wakeUpQuiz.quiz.fullQuiz')} (10 domande)
+                  {t('wakeUpQuiz.quiz.fullQuiz')}
                 </Button>
               </div>
             </CardContent>
@@ -1166,7 +1166,7 @@ export default function WakeUpPage() {
                 </div>
                 <div>
                   <CardTitle>{t('wakeUpQuiz.categories.misto')}</CardTitle>
-                  <CardDescription>Grafologia e cultura generale</CardDescription>
+                  <CardDescription>{t('wakeUpQuiz.categories.mixedDesc')}</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -1181,7 +1181,7 @@ export default function WakeUpPage() {
                   disabled={startQuizMutation.isPending}
                 >
                   <Play className="h-4 w-4 mr-2" />
-                  {t('wakeUpQuiz.quiz.quickQuiz')} (5 domande)
+                  {t('wakeUpQuiz.quiz.quickQuiz')}
                 </Button>
                 <Button 
                   variant="outline" 
@@ -1190,7 +1190,7 @@ export default function WakeUpPage() {
                   disabled={startQuizMutation.isPending}
                 >
                   <Clock className="h-4 w-4 mr-2" />
-                  {t('wakeUpQuiz.quiz.fullQuiz')} (10 domande)
+                  {t('wakeUpQuiz.quiz.fullQuiz')}
                 </Button>
               </div>
             </CardContent>

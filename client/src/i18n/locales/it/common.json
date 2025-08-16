@@ -99,8 +99,8 @@
       "completeQuiz": "Completa Quiz",
       "completing": "Completamento...",
       "answering": "Risposta...",
-      "quickQuiz": "Quiz Rapido",
-      "fullQuiz": "Quiz Completo"
+      "quickQuiz": "Quiz Rapido (5 domande)",
+      "fullQuiz": "Quiz Completo (10 domande)"
     },
     "completedQuestions": {
       "title": "Domande Completate",
