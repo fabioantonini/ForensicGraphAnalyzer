@@ -860,7 +860,7 @@ export default function WakeUpPage() {
                         </div>
                         
                         {/* Show answer details */}
-                        {question.answer?.answeredAt && question.options && (
+                        {question.answer?.answeredAt && question.options && question.answer.userAnswer !== null && (
                           <div className="mt-2 p-3 bg-gray-50 rounded text-sm">
                             <div className="flex flex-col space-y-1">
                               <div className="flex items-center">
@@ -869,7 +869,7 @@ export default function WakeUpPage() {
                                   {question.options[question.answer.userAnswer]}
                                 </span>
                               </div>
-                              {!question.answer.isCorrect && question.correctAnswer !== undefined && (
+                              {!question.answer.isCorrect && question.correctAnswer !== undefined && question.correctAnswer !== null && (
                                 <div className="flex items-center">
                                   <span className="font-medium text-gray-700">Risposta corretta: </span>
                                   <span className="text-green-700 font-medium">
