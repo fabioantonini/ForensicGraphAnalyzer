@@ -74,9 +74,23 @@ router.post("/start", async (req, res) => {
 
   } catch (error) {
     console.error("Errore avvio quiz:", error);
+    
+    // Log dettagliato per debug
+    if (error instanceof Error) {
+      console.error("Quiz start error details:", {
+        message: error.message,
+        stack: error.stack,
+        userId: req.user?.id,
+        username: req.user?.username,
+        hasUserApiKey: !!req.user?.openaiApiKey,
+        hasSystemApiKey: !!process.env.OPENAI_API_KEY
+      });
+    }
+    
     res.status(500).json({ 
       error: "Errore interno del server",
-      message: error instanceof Error ? error.message : 'Unknown error'
+      message: error instanceof Error ? error.message : 'Unknown error',
+      details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.stack : undefined) : undefined
     });
   }
 });

@@ -133,6 +133,17 @@ ${instructions[lang].format}`;
 
   } catch (error) {
     console.error("Error generating quiz questions:", error);
+    
+    // Log dettagliato per debug
+    if (error instanceof Error) {
+      console.error("Error details:", {
+        message: error.message,
+        stack: error.stack,
+        userApiKey: userApiKey ? "provided" : "not provided",
+        systemKey: process.env.OPENAI_API_KEY ? "available" : "missing"
+      });
+    }
+    
     throw new Error(`Failed to generate quiz questions: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
