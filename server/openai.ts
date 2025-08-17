@@ -80,7 +80,8 @@ export async function chatWithRAG(
   apiKey?: string,
   model: string = "gpt-4o",
   temperature: number = 0.7,
-  conversationContext: ConversationMessage[] = []
+  conversationContext: ConversationMessage[] = [],
+  userId?: number
 ): Promise<string> {
   // Handle case when context is empty
   if (context.length === 0) {
@@ -121,7 +122,7 @@ export async function chatWithRAG(
   
   // Normal production mode
   try {
-    const openai = createOpenAIClient(apiKey);
+    const openai = await createOpenAIClient(apiKey, userId);
     
     // If a specific document was mentioned but not found in context, inform the user
     if (mentionedDoc && !context.some(c => c.toLowerCase().includes(mentionedDoc.toLowerCase()))) {

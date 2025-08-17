@@ -716,7 +716,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         apiKeyToUse,
         model,
         temperature,
-        conversationContext // Passa il contesto della conversazione
+        conversationContext, // Passa il contesto della conversazione
+        userId // Aggiungo userId per attivare fallback
       );
       
       // Save query and response to database
