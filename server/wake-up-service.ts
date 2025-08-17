@@ -91,24 +91,28 @@ DO NOT add any other text besides the JSON.`
   // Aggiunto seed casuale per garantire varietà tra sessioni diverse
   const randomSeed = Date.now() + Math.random();
   const varietyInstructions = lang === 'it' ? 
-    `REGOLE FONDAMENTALI:
-1. VERIFICA TRIPLA di ogni risposta prima di proporla
-2. USA SOLO fatti consolidati e verificabili  
-3. Per domande di letteratura: cita solo opere e autori reali con dettagli corretti
-4. Per domande storiche: usa solo date e eventi verificati
-5. Per grafologia: usa solo terminologia tecnica standard
-6. NON inventare MAI informazioni
-7. Se non sei sicuro al 100%, scegli un altro argomento
-PRIORITÀ: ZERO ERRORI FATTUALI` :
-    `FUNDAMENTAL RULES:
-1. TRIPLE CHECK every answer before proposing it
-2. USE ONLY established and verifiable facts
-3. For literature questions: cite only real works and authors with correct details  
-4. For historical questions: use only verified dates and events
-5. For graphology: use only standard technical terminology
-6. NEVER invent information
-7. If not 100% certain, choose another topic
-PRIORITY: ZERO FACTUAL ERRORS`;
+    `ATTENZIONE: Stai commettendo errori GRAVISSIMI come confondere Dante (Divina Commedia) con Boccaccio (Decameron).
+
+ISTRUZIONI DI EMERGENZA:
+1. USA SOLO fatti ELEMENTARI che conosci al 100%
+2. Per letteratura: Dante=Divina Commedia, Boccaccio=Decameron, Shakespeare=Amleto
+3. Per storia: SOLO date e fatti universalmente noti
+4. Se hai il MINIMO dubbio, scegli una domanda più semplice
+5. MEGLIO domanda facile e corretta che complessa e sbagliata
+6. Ricontrolla OGNI associazione autore-opera
+
+ZERO TOLLERANZA per errori basic di cultura generale.` :
+    `WARNING: You are making SERIOUS errors like confusing Dante (Divine Comedy) with Boccaccio (Decameron).
+
+EMERGENCY INSTRUCTIONS:
+1. USE ONLY ELEMENTARY facts you know 100%
+2. For literature: Dante=Divine Comedy, Boccaccio=Decameron, Shakespeare=Hamlet
+3. For history: ONLY universally known dates and facts
+4. If you have ANY doubt, choose a simpler question
+5. BETTER easy and correct than complex and wrong
+6. Double-check EVERY author-work association
+
+ZERO TOLERANCE for basic general knowledge errors.`;
   
   const prompt = `[Seed: ${randomSeed}] Generate exactly ${totalQuestions} multiple choice quiz questions about ${categoryPrompts[lang][category]}.
 
@@ -125,7 +129,7 @@ ${instructions[lang].format}`;
       messages: [
         {
           role: "system",
-          content: "Sei un esperto accademico rigoroso. Genera SOLO domande con risposte verificate e incontestabili. PRIMA di scrivere ogni domanda, verifica mentalmente che la risposta sia corretta al 100%. USA solo fatti consolidati dalla letteratura accademica. EVITA qualsiasi speculazione o informazione incerta. L'accuratezza è l'UNICA priorità."
+          content: "Sei un professore universitario che sta preparando un esame. Ogni errore significherebbe perdere la cattedra. ESEMPI DI ERRORI DA EVITARE ASSOLUTAMENTE: confondere Dante (Divina Commedia) con Boccaccio (Decameron), confondere '1984' (Big Brother) con 'La Fattoria degli Animali' (Partito). Usa SOLO fatti basilari e incontrovertibili. Preferisci domande semplici ma corrette a domande complesse ma rischiose."
         },
         {
           role: "user",
@@ -133,11 +137,11 @@ ${instructions[lang].format}`;
         }
       ],
       response_format: { type: "json_object" },
-      temperature: 0.3, // Molto bassa per massima accuratezza
+      temperature: 0.1, // Minima creatività, massima precisione
       max_tokens: 4000,
-      top_p: 0.7, // Controllo stretto sulle risposte
-      frequency_penalty: 0.1, // Minimo per non compromettere accuratezza
-      presence_penalty: 0.0 // Rimosso per evitare deriva
+      top_p: 0.5, // Controllo massimo
+      frequency_penalty: 0.0, // Zero per evitare errori
+      presence_penalty: 0.0 // Zero per evitare deriva
     });
 
     const content = response.choices[0].message.content;
