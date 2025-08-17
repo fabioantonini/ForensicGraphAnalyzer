@@ -122,12 +122,21 @@ export async function sendEmailWithGmail(to: string, subject: string, html: stri
 
     const transporter = createGmailTransporter(config);
 
-    // Invia l'email
+    // Invia l'email con headers migliorati per deliverability
     await transporter.sendMail({
-      from: `GrapholexInsight <${config.email}>`,
+      from: `GrapholexInsight System <${config.email}>`,
       to,
       subject,
-      html
+      html,
+      // Headers per migliorare deliverability
+      headers: {
+        'X-Priority': '3',
+        'X-MSMail-Priority': 'Normal',
+        'X-Mailer': 'GrapholexInsight v1.0',
+        'Return-Path': config.email
+      },
+      // Versione testo per client che non supportano HTML
+      text: subject + '\n\nVisita il link per completare l\'operazione.'
     });
 
     console.log(`Email inviata con successo a ${to} via Gmail`);
