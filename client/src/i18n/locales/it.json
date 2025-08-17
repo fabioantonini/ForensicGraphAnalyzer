@@ -192,7 +192,7 @@
   "layout": {
     "dashboard": "Dashboard",
     "documents": "Documenti",
-    "ragQuery": "Assistente documentale",
+    "ragQuery": "Assistente Documentale",
     "signatures": "Verifica Firme",
     "settings": "Impostazioni",
     "admin": "Amministrazione",
@@ -287,7 +287,7 @@
     "details": "Dettagli",
     "date": "Data",
     "documentUpload": "Caricamento Documento",
-    "ragQuery": "Interrogazione RAG",
+    "ragQuery": "Assistente Documentale",
     "apiKeyUpdated": "Chiave API Aggiornata",
     "documentDelete": "Eliminazione Documento",
     "userLogin": "Accesso Utente",

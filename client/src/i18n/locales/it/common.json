@@ -42,7 +42,7 @@
     "appDescription": "Assistente di Grafologia Forense",
     "dashboard": "Dashboard",
     "documents": "Documenti",
-    "ragQuery": "Query RAG",
+    "ragQuery": "Assistente Documentale",
     "ocr": "OCR Avanzato",
     "signatures": "Verifica Firme",
     "signatureQuality": "Controllo Qualità Firme",
