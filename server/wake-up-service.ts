@@ -17,7 +17,8 @@ export async function generateQuizQuestions(
   category: "grafologia" | "cultura" | "mista",
   totalQuestions: number,
   userApiKey?: string,
-  language: string = "it"
+  language: string = "it",
+  userId?: number
 ): Promise<GeneratedQuizQuestion[]> {
   const categoryPrompts = {
     it: {
