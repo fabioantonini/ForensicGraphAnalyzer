@@ -629,7 +629,7 @@ export function registerSignatureRoutes(appRouter: Router) {
         doc.fontSize(10);
         
         // Confronto Dimensioni
-        if (signature.parameters.realDimensions && referenceSignature.parameters.realDimensions) {
+        if (signature.parameters?.realDimensions && referenceSignature.parameters?.realDimensions) {
           const sigWidth = signature.parameters.realDimensions.widthMm || 0;
           const sigHeight = signature.parameters.realDimensions.heightMm || 0;
           const refWidth = referenceSignature.parameters.realDimensions.widthMm || 0;
@@ -640,7 +640,7 @@ export function registerSignatureRoutes(appRouter: Router) {
         }
         
         // Confronto Spessore Tratto
-        if (signature.parameters.strokeWidth?.meanMm && referenceSignature.parameters.strokeWidth?.meanMm) {
+        if (signature.parameters?.strokeWidth?.meanMm && referenceSignature.parameters?.strokeWidth?.meanMm) {
           const sigStroke = signature.parameters.strokeWidth.meanMm;
           const refStroke = referenceSignature.parameters.strokeWidth.meanMm;
           const sigVariance = signature.parameters.strokeWidth.variance || 0;
@@ -651,7 +651,7 @@ export function registerSignatureRoutes(appRouter: Router) {
         }
         
         // Confronto Inclinazione
-        if (signature.parameters.inclination !== undefined && referenceSignature.parameters.inclination !== undefined) {
+        if (signature.parameters?.inclination !== undefined && referenceSignature.parameters?.inclination !== undefined) {
           const sigIncl = signature.parameters.inclination;
           const refIncl = referenceSignature.parameters.inclination;
           const angleDiff = Math.abs(sigIncl - refIncl);
@@ -661,7 +661,7 @@ export function registerSignatureRoutes(appRouter: Router) {
         }
         
         // Confronto Pressione (mapping from available fields)
-        if (signature.parameters.pressureStd !== undefined && referenceSignature.parameters.pressureStd !== undefined) {
+        if (signature.parameters?.pressureStd !== undefined && referenceSignature.parameters?.pressureStd !== undefined) {
           const sigPress = signature.parameters.pressureStd;
           const refPress = referenceSignature.parameters.pressureStd;
           
@@ -670,7 +670,7 @@ export function registerSignatureRoutes(appRouter: Router) {
         }
         
         // Confronto Spaziatura (mapping from available fields)
-        if (signature.parameters.avgSpacing !== undefined && referenceSignature.parameters.avgSpacing !== undefined) {
+        if (signature.parameters?.avgSpacing !== undefined && referenceSignature.parameters?.avgSpacing !== undefined) {
           const sigSpacing = signature.parameters.avgSpacing;
           const refSpacing = referenceSignature.parameters.avgSpacing;
           
@@ -679,7 +679,7 @@ export function registerSignatureRoutes(appRouter: Router) {
         }
         
         // Confronto Velocità
-        if (signature.parameters.velocity !== undefined && referenceSignature.parameters.velocity !== undefined) {
+        if (signature.parameters?.velocity !== undefined && referenceSignature.parameters?.velocity !== undefined) {
           const sigVel = signature.parameters.velocity;
           const refVel = referenceSignature.parameters.velocity;
           
@@ -688,9 +688,9 @@ export function registerSignatureRoutes(appRouter: Router) {
         }
         
         // Confronto Proporzione
-        if (signature.parameters.proportionRatio !== undefined && referenceSignature.parameters.proportionRatio !== undefined) {
-          const sigProp = signature.parameters.proportionRatio;
-          const refProp = referenceSignature.parameters.proportionRatio;
+        if (signature.parameters?.proportion !== undefined && referenceSignature.parameters?.proportion !== undefined) {
+          const sigProp = signature.parameters.proportion;
+          const refProp = referenceSignature.parameters.proportion;
           
           doc.text(`Proporzione: La firma in verifica ha una proporzione di ${formatNumber(sigProp, 3)}, mentre la firma di riferimento ha una proporzione di ${formatNumber(refProp, 3)}. ${Math.abs(sigProp - refProp) > 0.2 ? 'Questa differenza indica una diversa distribuzione delle dimensioni tra le componenti della firma.' : 'Questa compatibilità indica coerenza proporzionale.'}`, { align: 'justify' });
           doc.moveDown(0.5);
@@ -716,14 +716,14 @@ export function registerSignatureRoutes(appRouter: Router) {
         doc.moveDown(0.3);
         doc.fontSize(10);
         
-        if (signature.parameters.pressure !== undefined && referenceSignature.parameters.pressure !== undefined) {
-          const sigPress = signature.parameters.pressure;
-          const refPress = referenceSignature.parameters.pressure;
+        if (signature.parameters?.pressureMean !== undefined && referenceSignature.parameters?.pressureMean !== undefined) {
+          const sigPress = signature.parameters.pressureMean;
+          const refPress = referenceSignature.parameters.pressureMean;
           doc.text(`Pressione: ${Math.abs(sigPress - refPress) < refPress * 0.3 ? 'La pressione uniforme tra le due firme indica stabilità del controllo motorio e coerenza emotiva.' : 'La pressione differente potrebbe indicare un controllo motorio variabile o un diverso stato emotivo al momento della firma.'}`, { align: 'justify' });
           doc.moveDown(0.3);
         }
         
-        if (signature.parameters.velocity !== undefined && referenceSignature.parameters.velocity !== undefined) {
+        if (signature.parameters?.velocity !== undefined && referenceSignature.parameters?.velocity !== undefined) {
           const sigVel = signature.parameters.velocity;
           const refVel = referenceSignature.parameters.velocity;
           doc.text(`Fluidità e Controllo Motorio: ${Math.abs(sigVel - refVel) < refVel * 0.3 ? 'La velocità di scrittura coerente suggerisce un\'esecuzione naturale e fluida.' : 'La variazione nella velocità di scrittura suggerisce un\'esecuzione più controllata o meno fluida rispetto alla firma di riferimento.'}`, { align: 'justify' });
