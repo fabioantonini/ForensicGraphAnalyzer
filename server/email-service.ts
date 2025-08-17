@@ -32,19 +32,13 @@ const passwordResetTokens = new Map<string, PasswordResetToken>();
  */
 export async function sendEmail(to: string, subject: string, html: string): Promise<boolean> {
   try {
-    // Prima verifica se Gmail è configurato
+    // Usa solo Gmail SMTP (SendGrid rimosso)
     if (await isGmailConfigured()) {
       console.log('Invio email tramite Gmail SMTP...');
       return await sendEmailWithGmail(to, subject, html);
     }
     
-    // Fallback a SendGrid se Gmail non è configurato
-    if (await isSendGridConfigured()) {
-      console.log('Gmail non configurato, tentativo con SendGrid...');
-      return await sendEmailWithSendGrid(to, subject, html);
-    }
-    
-    console.error('Nessun provider email configurato (Gmail o SendGrid)');
+    console.error('Gmail SMTP non configurato. Configura Gmail per inviare email.');
     return false;
   } catch (error) {
     console.error('Errore nell\'invio dell\'email:', error);
@@ -57,11 +51,8 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
  * @returns true se il servizio email è configurato correttamente
  */
 export async function isEmailServiceConfigured(): Promise<boolean> {
-  // Controlla se Gmail o SendGrid sono configurati
-  const gmailConfigured = await isGmailConfigured();
-  const sendgridConfigured = await isSendGridConfigured();
-  
-  return gmailConfigured || sendgridConfigured;
+  // Usa solo Gmail SMTP (SendGrid rimosso)
+  return await isGmailConfigured();
 }
 
 /**
@@ -136,19 +127,13 @@ export function invalidatePasswordResetToken(token: string): void {
  * @returns Promise che si risolve a true se l'email è stata inviata con successo
  */
 export async function sendPasswordResetEmail(to: string, resetLink: string, locale: string = 'it'): Promise<boolean> {
-  // Prima verifica se Gmail è configurato
+  // Usa solo Gmail SMTP (SendGrid rimosso)
   if (await isGmailConfigured()) {
     console.log('Invio email reset password tramite Gmail SMTP...');
     return sendPasswordResetEmailWithGmail(to, resetLink, locale);
   }
   
-  // Fallback a SendGrid se Gmail non è configurato
-  if (await isSendGridConfigured()) {
-    console.log('Gmail non configurato, tentativo reset password con SendGrid...');
-    return sendPasswordResetEmailWithSendGrid(to, resetLink, locale);
-  }
-  
-  console.error('Nessun provider email configurato per reset password');
+  console.error('Gmail SMTP non configurato per reset password. Configura Gmail per inviare email di reset.');
   return false;
 }
 

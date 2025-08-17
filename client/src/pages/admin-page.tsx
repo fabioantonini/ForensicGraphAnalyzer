@@ -6,7 +6,7 @@ import { User } from "@/lib/types";
 import { UpdateUserRole } from "@shared/schema";
 import DemoAccountsManagement from "@/components/admin/demo-accounts-management";
 import EmailConfiguration from "@/components/admin/email-configuration";
-import { SendGridConfiguration } from "@/components/admin/sendgrid-configuration";
+import { GmailConfiguration } from "@/components/admin/gmail-configuration";
 
 import {
   Card,
@@ -179,7 +179,7 @@ export default function AdminPage() {
           <TabsTrigger value="stats">{t("admin.systemStats")}</TabsTrigger>
           <TabsTrigger value="demo-accounts">{t("admin.demoAccounts.title", "Account Demo")}</TabsTrigger>
           <TabsTrigger value="email-config">{t("admin.emailConfig.tabTitle", "Email")}</TabsTrigger>
-          <TabsTrigger value="sendgrid-config">{t("admin.sendgrid.tabTitle", "SendGrid")}</TabsTrigger>
+          <TabsTrigger value="gmail-config">{t("admin.gmail.tabTitle", "Gmail SMTP")}</TabsTrigger>
         </TabsList>
 
         {/* Tab per la gestione utenti */}
@@ -382,9 +382,9 @@ export default function AdminPage() {
           <EmailConfiguration />
         </TabsContent>
         
-        {/* Tab per la configurazione SendGrid */}
-        <TabsContent value="sendgrid-config">
-          <SendGridConfiguration />
+        {/* Tab per la configurazione Gmail SMTP */}
+        <TabsContent value="gmail-config">
+          <GmailConfiguration />
         </TabsContent>
       </Tabs>
 

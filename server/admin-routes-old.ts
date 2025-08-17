@@ -46,6 +46,7 @@ export function setupAdminRoutes(app: Express) {
   adminRouter.get("/stats", async (req, res) => {
     try {
       // Implementa la logica per ottenere statistiche
+      // Ad esempio: numero di utenti, documenti, query, ecc.
       const stats = {
         userCount: 0,
         documentCount: 0,
@@ -65,66 +66,31 @@ export function setupAdminRoutes(app: Express) {
       } catch (e) {
         console.error("Error getting document count:", e);
       }
-
+      
       try {
         stats.queryCount = await storage.getQueryCount();
       } catch (e) {
         console.error("Error getting query count:", e);
       }
-
+      
       try {
-        stats.totalSize = await storage.getTotalStorageSize();
+        stats.totalSize = await storage.getStorageUsed();
       } catch (e) {
-        console.error("Error getting storage size:", e);
-      }
-
-      try {
-        stats.newUsers = await storage.getRecentUsers(5);
-      } catch (e) {
-        console.error("Error getting recent users:", e);
+        console.error("Error getting storage used:", e);
       }
 
       res.json(stats);
     } catch (error) {
-      console.error("Errore nelle statistiche:", error);
-      res.status(500).json({ message: "Errore interno del server" });
-    }
-  });
-
-  // Rotta per modificare il ruolo di un utente (solo admin)
-  adminRouter.put("/users/:userId/role", async (req, res) => {
-    try {
-      const userId = parseInt(req.params.userId);
-      const { role } = req.body;
-
-      if (!role || (role !== "admin" && role !== "user")) {
-        return res.status(400).json({ message: "Ruolo non valido" });
-      }
-
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ message: "Utente non trovato" });
-      }
-
-      // Non consentire di modificare il proprio ruolo
-      if (userId === req.user!.id) {
-        return res.status(400).json({ message: "Non puoi modificare il tuo ruolo" });
-      }
-
-      await storage.updateUserRole(userId, role);
-      
-      res.status(200).json({ message: "Ruolo aggiornato con successo" });
-    } catch (error) {
-      console.error("Errore nella modifica del ruolo:", error);
+      console.error("Errore nel recupero delle statistiche:", error);
       res.status(500).json({ message: "Errore interno del server" });
     }
   });
 
   // Rotta per eliminare un utente (solo admin)
-  adminRouter.delete("/user/:userId", async (req, res) => {
+  adminRouter.delete("/users/:id", async (req, res) => {
     try {
-      const userId = parseInt(req.params.userId);
-
+      const userId = parseInt(req.params.id);
+      
       // Non consentire l'eliminazione dell'utente stesso
       if (userId === req.user!.id) {
         return res.status(400).json({ message: "Non puoi eliminare il tuo account" });
@@ -142,6 +108,68 @@ export function setupAdminRoutes(app: Express) {
       res.status(200).json({ message: "Utente eliminato con successo" });
     } catch (error) {
       console.error("Errore nell'eliminazione dell'utente:", error);
+      res.status(500).json({ message: "Errore interno del server" });
+    }
+  });
+
+    try {
+      // Non inviare la API key al client
+      const safeConfig = { 
+        ...config, 
+        apiKey: config.apiKey ? "********" : "" 
+      };
+      res.json(safeConfig);
+    } catch (error) {
+      res.status(500).json({ message: "Errore interno del server" });
+    }
+  });
+
+    try {
+      }
+      
+      // Invia un'email di test all'utente loggato
+      
+      if (success) {
+        res.json({ message: "Email di test inviata con successo" });
+      } else {
+        res.status(500).json({ message: "Invio email di test fallito" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Errore interno del server" });
+    }
+  });
+
+    try {
+      
+      if (config.isConfigured) {
+        if (!config.apiKey && config.apiKey !== "********") {
+        }
+        if (!config.senderEmail) {
+          return res.status(400).json({ message: "Email mittente mancante" });
+        }
+      }
+
+      // Se l'API key è "********", mantieni quella esistente
+      if (config.apiKey === "********") {
+        config.apiKey = currentConfig.apiKey;
+      }
+
+      
+      // Se la configurazione è stata disabilitata o aggiornata con successo
+      if (!config.isConfigured) {
+      } else {
+        // Testa la configurazione
+        const testEmail = req.user!.email;
+        const success = await sendEmail(
+          testEmail,
+        );
+
+        if (success) {
+        } else {
+          res.status(500).json({ message: "Configurazione salvata ma test fallito. Verifica i parametri." });
+        }
+      }
+    } catch (error) {
       res.status(500).json({ message: "Errore interno del server" });
     }
   });
@@ -255,6 +283,7 @@ export function setupAdminRoutes(app: Express) {
       }
 
       // Crea l'account demo
+      // Utilizziamo createUser invece di createDemoUser se il metodo specifico non esiste
       let user;
       if (typeof storage.createDemoUser === 'function') {
         user = await storage.createDemoUser({
@@ -267,19 +296,15 @@ export function setupAdminRoutes(app: Express) {
           profession: profession || null
         });
       } else {
-        // Fallback usando createUser con expiresAt calcolato
-        const expirationDate = new Date();
-        expirationDate.setDate(expirationDate.getDate() + parseInt(durationDays.toString()));
-        
+        // Fallback se createDemoUser non è disponibile
         user = await storage.createUser({
           username,
-          email,
           password,
+          confirmPassword: password, // Aggiungiamo confirmPassword
+          email,
           fullName: fullName || null,
           organization: organization || null,
-          profession: profession || null,
-          accountType: "demo" as any,
-          demoExpiresAt: expirationDate
+          profession: profession || null
         });
       }
 
@@ -289,33 +314,59 @@ export function setupAdminRoutes(app: Express) {
           id: user.id,
           username: user.username,
           email: user.email,
-          accountType: user.accountType || "demo"
+          fullName: user.fullName
         }
       });
     } catch (error) {
       console.error("Errore nella creazione dell'account demo:", error);
-      res.status(500).json({ message: "Errore nella creazione dell'account demo" });
-    }
-  });
-
-  // Rotta per configurazione generale email
-  adminRouter.get("/email-config", async (req, res) => {
-    try {
-      const isConfigured = await isEmailServiceConfigured();
-      const gmailConfigured = await isGmailConfigured();
-      
-      res.json({
-        isConfigured,
-        providers: {
-          gmail: gmailConfigured
-        }
-      });
-    } catch (error) {
-      console.error("Errore nella configurazione email:", error);
       res.status(500).json({ message: "Errore interno del server" });
     }
   });
 
-  // Monta le rotte admin
+  // Rotta per estendere la durata di un account demo (solo admin)
+  adminRouter.post("/extend-demo/:id", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { durationDays } = req.body;
+
+      if (!durationDays || durationDays <= 0) {
+        return res.status(400).json({ message: "Durata di estensione non valida" });
+      }
+
+      // Controlla se l'utente esiste
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Utente non trovato" });
+      }
+
+      // Se il metodo specifico esiste, usa quello
+      if (typeof storage.extendDemoAccount === 'function') {
+        try {
+          const updatedUser = await storage.extendDemoAccount(userId, parseInt(durationDays.toString()));
+          
+          res.json({ 
+            message: "Durata dell'account demo estesa con successo",
+            user: {
+              id: updatedUser.id,
+              username: updatedUser.username,
+              email: updatedUser.email,
+              demoExpiresAt: updatedUser.demoExpiresAt
+            }
+          });
+        } catch (error) {
+          console.error("Errore nell'estensione dell'account demo:", error);
+          res.status(500).json({ message: "Errore durante l'estensione dell'account demo" });
+        }
+      } else {
+        // Fallback se extendDemoAccount non è disponibile
+        res.status(501).json({ message: "Funzionalità non implementata" });
+      }
+    } catch (error) {
+      console.error("Errore nell'estensione dell'account demo:", error);
+      res.status(500).json({ message: "Errore interno del server" });
+    }
+  });
+
+  // Registra le rotte di amministrazione
   app.use("/api/admin", adminRouter);
 }
