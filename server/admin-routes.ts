@@ -11,6 +11,13 @@ import {
   testSendGridConfiguration,
   isSendGridConfigured
 } from "./sendgrid-service";
+import {
+  loadGmailConfig,
+  saveGmailConfig,
+  GmailConfig,
+  testGmailConfiguration,
+  isGmailConfigured
+} from "./gmail-service";
 
 // Funzione per verificare se l'utente è un amministratore
 function isAdmin(req: Request, res: Response, next: NextFunction) {
@@ -193,6 +200,93 @@ export function setupAdminRoutes(app: Express) {
       }
     } catch (error) {
       console.error("Errore nell'aggiornamento della configurazione SendGrid:", error);
+      res.status(500).json({ message: "Errore interno del server" });
+    }
+  });
+
+  // ====== GMAIL CONFIGURATION ROUTES ======
+  
+  // Rotta per ottenere la configurazione Gmail
+  adminRouter.get("/gmail-config", async (req, res) => {
+    try {
+      const config = await loadGmailConfig();
+      // Non inviare la password al client
+      const safeConfig = { 
+        ...config, 
+        appPassword: config.appPassword ? "********" : "" 
+      };
+      res.json(safeConfig);
+    } catch (error) {
+      console.error("Errore nel recupero della configurazione Gmail:", error);
+      res.status(500).json({ message: "Errore interno del server" });
+    }
+  });
+
+  // Rotta per testare la configurazione Gmail
+  adminRouter.post("/test-gmail", async (req, res) => {
+    try {
+      // Verifica se Gmail è configurato
+      if (!await isGmailConfigured()) {
+        return res.status(400).json({ message: "Gmail non configurato" });
+      }
+      
+      // Invia un'email di test all'utente loggato
+      const success = await testGmailConfiguration(req.user!.email);
+      
+      if (success) {
+        res.json({ message: "Email di test inviata con successo tramite Gmail" });
+      } else {
+        res.status(500).json({ message: "Invio email di test fallito" });
+      }
+    } catch (error) {
+      console.error("Errore nel test della configurazione Gmail:", error);
+      res.status(500).json({ message: "Errore interno del server" });
+    }
+  });
+
+  // Rotta per aggiornare la configurazione Gmail
+  adminRouter.post("/gmail-config", async (req, res) => {
+    try {
+      const config = req.body as GmailConfig;
+      
+      // Valida la configurazione Gmail
+      if (config.isConfigured) {
+        if (!config.email) {
+          return res.status(400).json({ message: "Email Gmail mancante" });
+        }
+        if (!config.appPassword && config.appPassword !== "********") {
+          return res.status(400).json({ message: "Password App Gmail mancante" });
+        }
+      }
+
+      // Se la password è "********", mantieni quella esistente
+      if (config.appPassword === "********") {
+        const currentConfig = await loadGmailConfig();
+        config.appPassword = currentConfig.appPassword;
+      }
+
+      await saveGmailConfig(config);
+      
+      // Se la configurazione è stata disabilitata o aggiornata con successo
+      if (!config.isConfigured) {
+        res.json({ message: "Configurazione Gmail disabilitata" });
+      } else {
+        // Testa la configurazione
+        const testEmail = req.user!.email;
+        const success = await sendEmail(
+          testEmail,
+          "Test Configurazione Gmail SMTP",
+          "<p>Questa è un'email di test per verificare la configurazione di Gmail SMTP per GrapholexInsight.</p><p>Se ricevi questa email, la configurazione funziona correttamente! 🎉</p>"
+        );
+
+        if (success) {
+          res.json({ message: "Configurazione Gmail aggiornata e testata con successo" });
+        } else {
+          res.status(500).json({ message: "Configurazione salvata ma test fallito. Verifica i parametri." });
+        }
+      }
+    } catch (error) {
+      console.error("Errore nell'aggiornamento della configurazione Gmail:", error);
       res.status(500).json({ message: "Errore interno del server" });
     }
   });

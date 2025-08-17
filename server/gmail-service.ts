@@ -1,167 +1,222 @@
-/**
- * Servizio per l'invio di email tramite Gmail API con OAuth 2.0
- */
-import { google } from 'googleapis';
-import { OAuth2Client } from 'google-auth-library';
-import { storage } from './storage';
+import nodemailer from 'nodemailer';
+import fs from 'fs/promises';
+import path from 'path';
 
-// Definizione del tipo di configurazione per Gmail OAuth
+const GMAIL_CONFIG_PATH = path.join(process.cwd(), '.gmail-config.json');
+
 export interface GmailConfig {
-  clientId: string;
-  clientSecret: string;
-  redirectUri: string;
-  refreshToken?: string;
+  email: string;
+  appPassword: string;
   isConfigured: boolean;
 }
 
-// Scopes richiesti per l'API Gmail
-const SCOPES = ['https://www.googleapis.com/auth/gmail.send'];
-
 /**
- * Crea un client OAuth2 per Gmail API
- * @param config Configurazione OAuth
- * @returns Client OAuth2
+ * Carica la configurazione Gmail
+ * @returns Configurazione Gmail
  */
-function createOAuth2Client(config: GmailConfig): OAuth2Client {
-  return new google.auth.OAuth2(
-    config.clientId,
-    config.clientSecret,
-    config.redirectUri
-  );
+export async function loadGmailConfig(): Promise<GmailConfig> {
+  try {
+    // Verifica se esiste il file di configurazione
+    try {
+      await fs.access(GMAIL_CONFIG_PATH);
+    } catch (error) {
+      // Se il file non esiste, crea una configurazione vuota
+      await fs.writeFile(
+        GMAIL_CONFIG_PATH,
+        JSON.stringify({
+          email: "",
+          appPassword: "",
+          isConfigured: false
+        }, null, 2),
+        "utf8"
+      );
+    }
+
+    // Leggi la configurazione
+    const configStr = await fs.readFile(GMAIL_CONFIG_PATH, "utf8");
+    const config = JSON.parse(configStr) as GmailConfig;
+
+    // Se abbiamo variabili d'ambiente, usale come fallback
+    if (process.env.GMAIL_EMAIL && !config.email) {
+      config.email = process.env.GMAIL_EMAIL;
+    }
+    if (process.env.GMAIL_APP_PASSWORD && !config.appPassword) {
+      config.appPassword = process.env.GMAIL_APP_PASSWORD;
+    }
+
+    // Verifica se la configurazione è valida
+    config.isConfigured = !!(config.email && config.appPassword);
+
+    return config;
+  } catch (error) {
+    console.error("Errore nel caricamento della configurazione Gmail:", error);
+    
+    // Ritorna una configurazione vuota
+    return {
+      email: process.env.GMAIL_EMAIL || "",
+      appPassword: process.env.GMAIL_APP_PASSWORD || "",
+      isConfigured: !!(process.env.GMAIL_EMAIL && process.env.GMAIL_APP_PASSWORD)
+    };
+  }
 }
 
 /**
- * Genera l'URL per l'autorizzazione OAuth
- * @param config Configurazione OAuth
- * @returns URL di autorizzazione
+ * Salva la configurazione Gmail
+ * @param config Configurazione da salvare
  */
-export function generateAuthUrl(config: GmailConfig): string {
-  const oauth2Client = createOAuth2Client(config);
-  
-  return oauth2Client.generateAuthUrl({
-    access_type: 'offline',
-    scope: SCOPES,
-    prompt: 'consent' // Forza la richiesta di un nuovo refresh token
+export async function saveGmailConfig(config: GmailConfig): Promise<void> {
+  try {
+    // Aggiorna le variabili d'ambiente
+    if (config.email) {
+      process.env.GMAIL_EMAIL = config.email;
+    }
+    if (config.appPassword) {
+      process.env.GMAIL_APP_PASSWORD = config.appPassword;
+    }
+
+    // Verifica se la configurazione è valida
+    config.isConfigured = !!(config.email && config.appPassword);
+
+    // Salva la configurazione
+    await fs.writeFile(
+      GMAIL_CONFIG_PATH,
+      JSON.stringify(config, null, 2),
+      "utf8"
+    );
+  } catch (error) {
+    console.error("Errore nel salvataggio della configurazione Gmail:", error);
+    throw error;
+  }
+}
+
+/**
+ * Crea transporter per Gmail SMTP
+ * @param config Configurazione Gmail
+ * @returns Transporter configurato
+ */
+function createGmailTransporter(config: GmailConfig) {
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: config.email,
+      pass: config.appPassword
+    }
   });
 }
 
 /**
- * Ottiene un token di accesso dal codice di autorizzazione
- * @param config Configurazione OAuth
- * @param code Codice di autorizzazione
- * @returns Promise con il refresh token
- */
-export async function getTokenFromCode(config: GmailConfig, code: string): Promise<string> {
-  const oauth2Client = createOAuth2Client(config);
-  
-  const { tokens } = await oauth2Client.getToken(code);
-  
-  if (!tokens.refresh_token) {
-    throw new Error('Non è stato ottenuto un refresh token. Prova ad autorizzare nuovamente.');
-  }
-  
-  return tokens.refresh_token;
-}
-
-/**
- * Invia un'email utilizzando Gmail API
+ * Invia un'email utilizzando Gmail SMTP
  * @param to Indirizzo email del destinatario
  * @param subject Oggetto dell'email
  * @param html Contenuto HTML dell'email
- * @param config Configurazione Gmail OAuth
  * @returns Promise che si risolve a true se l'email è stata inviata con successo
  */
-export async function sendGmailEmail(to: string, subject: string, html: string, config: GmailConfig): Promise<boolean> {
+export async function sendEmailWithGmail(to: string, subject: string, html: string): Promise<boolean> {
   try {
-    if (!config.refreshToken) {
-      console.error('Refresh token non configurato per Gmail API');
+    const config = await loadGmailConfig();
+    
+    if (!config.isConfigured) {
+      console.error("Gmail non configurato");
       return false;
     }
-    
-    const oauth2Client = createOAuth2Client(config);
-    oauth2Client.setCredentials({ refresh_token: config.refreshToken });
-    
-    const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
-    
-    // Preparazione del messaggio email secondo le specifiche MIME
-    const emailContent = [
-      'Content-Type: text/html; charset=utf-8',
-      'MIME-Version: 1.0',
-      `To: ${to}`,
-      `Subject: =?UTF-8?B?${Buffer.from(subject).toString('base64')}?=`,
-      '',
+
+    const transporter = createGmailTransporter(config);
+
+    // Invia l'email
+    await transporter.sendMail({
+      from: `GrapholexInsight <${config.email}>`,
+      to,
+      subject,
       html
-    ].join('\r\n');
-    
-    // Converti la stringa email in formato Base64 URL-safe
-    const encodedEmail = Buffer.from(emailContent)
-      .toString('base64')
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=+$/, '');
-    
-    // Invio dell'email
-    await gmail.users.messages.send({
-      userId: 'me',
-      requestBody: {
-        raw: encodedEmail
-      }
     });
-    
+
+    console.log(`Email inviata con successo a ${to} via Gmail`);
     return true;
   } catch (error) {
-    console.error('Errore nell\'invio dell\'email tramite Gmail API:', error);
+    console.error("Errore nell'invio dell'email con Gmail:", error);
     return false;
   }
 }
 
 /**
- * Verifica se il servizio Gmail API è configurato correttamente
- * @param config Configurazione Gmail OAuth
- * @returns true se il servizio è configurato correttamente
+ * Verifica se Gmail è configurato correttamente
+ * @returns true se Gmail è configurato correttamente
  */
-export function isGmailServiceConfigured(config: GmailConfig): boolean {
-  return !!(config && config.clientId && config.clientSecret && config.refreshToken);
-}
-
-/**
- * Salva la configurazione Gmail API
- * @param config Configurazione da salvare
- * @returns Promise che si risolve quando la configurazione è stata salvata
- */
-export async function saveGmailConfig(config: GmailConfig): Promise<void> {
-  await storage.saveSettings('gmail_config', JSON.stringify(config));
-}
-
-/**
- * Carica la configurazione Gmail API
- * @returns Promise con la configurazione caricata
- */
-export async function loadGmailConfig(): Promise<GmailConfig> {
-  const configJson = await storage.getSettings('gmail_config');
-  
-  if (!configJson) {
-    return {
-      clientId: '',
-      clientSecret: '',
-      redirectUri: '',
-      refreshToken: '',
-      isConfigured: false
-    };
-  }
-  
+export async function isGmailConfigured(): Promise<boolean> {
   try {
-    const config = JSON.parse(configJson);
-    config.isConfigured = isGmailServiceConfigured(config);
-    return config;
+    const config = await loadGmailConfig();
+    return config.isConfigured;
   } catch (error) {
-    console.error('Errore nel parsing della configurazione Gmail:', error);
-    return {
-      clientId: '',
-      clientSecret: '',
-      redirectUri: '',
-      refreshToken: '',
-      isConfigured: false
-    };
+    return false;
   }
+}
+
+/**
+ * Invia un'email di test per verificare la configurazione Gmail
+ * @param to Indirizzo email di destinazione per il test
+ * @returns Promise che si risolve a true se il test è riuscito
+ */
+export async function testGmailConfiguration(to: string): Promise<boolean> {
+  return sendEmailWithGmail(
+    to,
+    "Test Configurazione Gmail SMTP",
+    "<p>Questa è un'email di test per verificare la configurazione di Gmail SMTP per GrapholexInsight.</p><p>Se ricevi questa email, la configurazione funziona correttamente! 🎉</p>"
+  );
+}
+
+/**
+ * Invia un'email per il reset della password utilizzando Gmail
+ * @param to Indirizzo email del destinatario
+ * @param resetLink Link per il reset della password
+ * @param locale Lingua dell'utente per l'internazionalizzazione
+ * @returns Promise che si risolve a true se l'email è stata inviata con successo
+ */
+export async function sendPasswordResetEmailWithGmail(to: string, resetLink: string, locale: string = 'it'): Promise<boolean> {
+  const subject = locale === 'en' 
+    ? "Password Reset Request - GrapholexInsight" 
+    : "Richiesta di reimpostazione password - GrapholexInsight";
+  
+  const html = locale === 'en'
+    ? `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #2563eb;">Password Reset Request</h1>
+        <p>You have requested to reset your password for <strong>GrapholexInsight</strong>.</p>
+        <p>Click the button below to set a new password:</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${resetLink}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Reset Password</a>
+        </div>
+        <p>Or copy and paste this link in your browser:</p>
+        <p style="word-break: break-all; color: #2563eb;"><a href="${resetLink}">${resetLink}</a></p>
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
+        <p style="color: #6b7280; font-size: 14px;">
+          If you did not request a password reset, please ignore this email.<br>
+          This link will expire in 1 hour for security reasons.
+        </p>
+        <p style="color: #6b7280; font-size: 12px;">
+          GrapholexInsight - Forensic Graphology Analysis System
+        </p>
+      </div>
+    `
+    : `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #2563eb;">Richiesta di reimpostazione password</h1>
+        <p>Hai richiesto di reimpostare la password per <strong>GrapholexInsight</strong>.</p>
+        <p>Clicca sul pulsante qui sotto per impostare una nuova password:</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${resetLink}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Reimposta Password</a>
+        </div>
+        <p>Oppure copia e incolla questo link nel tuo browser:</p>
+        <p style="word-break: break-all; color: #2563eb;"><a href="${resetLink}">${resetLink}</a></p>
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
+        <p style="color: #6b7280; font-size: 14px;">
+          Se non hai richiesto la reimpostazione della password, ignora questa email.<br>
+          Questo link scadrà tra 1 ora per motivi di sicurezza.
+        </p>
+        <p style="color: #6b7280; font-size: 12px;">
+          GrapholexInsight - Sistema di Analisi Grafologica Forense
+        </p>
+      </div>
+    `;
+
+  return sendEmailWithGmail(to, subject, html);
 }

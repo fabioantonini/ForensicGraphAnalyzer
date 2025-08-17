@@ -6,6 +6,11 @@ import {
   sendPasswordResetEmailWithSendGrid,
   isSendGridConfigured
 } from './sendgrid-service';
+import {
+  sendEmailWithGmail,
+  sendPasswordResetEmailWithGmail,
+  isGmailConfigured
+} from './gmail-service';
 
 const generateRandomToken = promisify(randomBytes);
 
@@ -27,8 +32,20 @@ const passwordResetTokens = new Map<string, PasswordResetToken>();
  */
 export async function sendEmail(to: string, subject: string, html: string): Promise<boolean> {
   try {
-    // Utilizziamo SendGrid come provider principale
-    return await sendEmailWithSendGrid(to, subject, html);
+    // Prima verifica se Gmail è configurato
+    if (await isGmailConfigured()) {
+      console.log('Invio email tramite Gmail SMTP...');
+      return await sendEmailWithGmail(to, subject, html);
+    }
+    
+    // Fallback a SendGrid se Gmail non è configurato
+    if (await isSendGridConfigured()) {
+      console.log('Gmail non configurato, tentativo con SendGrid...');
+      return await sendEmailWithSendGrid(to, subject, html);
+    }
+    
+    console.error('Nessun provider email configurato (Gmail o SendGrid)');
+    return false;
   } catch (error) {
     console.error('Errore nell\'invio dell\'email:', error);
     return false;
@@ -40,7 +57,11 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
  * @returns true se il servizio email è configurato correttamente
  */
 export async function isEmailServiceConfigured(): Promise<boolean> {
-  return await isSendGridConfigured();
+  // Controlla se Gmail o SendGrid sono configurati
+  const gmailConfigured = await isGmailConfigured();
+  const sendgridConfigured = await isSendGridConfigured();
+  
+  return gmailConfigured || sendgridConfigured;
 }
 
 /**
@@ -115,12 +136,25 @@ export function invalidatePasswordResetToken(token: string): void {
  * @returns Promise che si risolve a true se l'email è stata inviata con successo
  */
 export async function sendPasswordResetEmail(to: string, resetLink: string, locale: string = 'it'): Promise<boolean> {
-  return sendPasswordResetEmailWithSendGrid(to, resetLink, locale);
+  // Prima verifica se Gmail è configurato
+  if (await isGmailConfigured()) {
+    console.log('Invio email reset password tramite Gmail SMTP...');
+    return sendPasswordResetEmailWithGmail(to, resetLink, locale);
+  }
+  
+  // Fallback a SendGrid se Gmail non è configurato
+  if (await isSendGridConfigured()) {
+    console.log('Gmail non configurato, tentativo reset password con SendGrid...');
+    return sendPasswordResetEmailWithSendGrid(to, resetLink, locale);
+  }
+  
+  console.error('Nessun provider email configurato per reset password');
+  return false;
 }
 
 // Esportiamo questi tipi e funzioni per mantenere la compatibilità con il resto del codice
 export enum EmailServiceType {
-  SMTP = 'smtp',
+  GMAIL = 'gmail',
   SENDGRID = 'sendgrid'
 }
 
@@ -130,6 +164,14 @@ export interface EmailServiceConfig {
 }
 
 export async function loadEmailConfig(): Promise<EmailServiceConfig> {
+  // Prima controlla Gmail, poi SendGrid come fallback
+  if (await isGmailConfigured()) {
+    return {
+      type: EmailServiceType.GMAIL,
+      isConfigured: true
+    };
+  }
+  
   return {
     type: EmailServiceType.SENDGRID,
     isConfigured: await isSendGridConfigured()
