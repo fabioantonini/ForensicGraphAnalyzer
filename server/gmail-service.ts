@@ -132,11 +132,11 @@ export async function sendEmailWithGmail(to: string, subject: string, html: stri
 
     console.log(`Email inviata con successo a ${to} via Gmail`);
     return true;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Errore nell'invio dell'email con Gmail:", error);
     
     // Messaggi di errore più specifici per debug
-    if (error.code === 'EAUTH') {
+    if (error?.code === 'EAUTH') {
       console.error("❌ GMAIL AUTH ERROR: Username/Password non accettati");
       console.error("🔧 Verifica: 1) Verifica in 2 passaggi attiva 2) Password app corretta 3) Account Gmail corretto");
     }
