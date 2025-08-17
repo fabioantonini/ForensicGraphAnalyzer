@@ -43,10 +43,16 @@ export default function ResetPasswordPage() {
     },
   });
   
-  // Estrai il token dall'URL al caricamento della pagina
+  // Estrai il token dall'URL (parametro o query string)
   useEffect(() => {
+    // Prima prova a ottenere il token dal path parameter (/reset-password/{token})
+    const pathToken = window.location.pathname.split('/reset-password/')[1];
+    
+    // Se non c'è nel path, prova nella query string (?token={token})
     const params = new URLSearchParams(window.location.search);
-    const tokenParam = params.get("token");
+    const queryToken = params.get("token");
+    
+    const tokenParam = pathToken || queryToken;
     
     if (!tokenParam) {
       setIsLoading(false);

@@ -206,8 +206,18 @@ export function setupAuth(app: Express) {
       // Genera un token per il reset della password
       const token = await generatePasswordResetToken(user.id);
       
-      // Costruisci il link di reset
-      const baseUrl = process.env.BASE_URL || `http://${req.headers.host}`;
+      // Costruisci il link di reset - usa l'URL corretto per Replit
+      const host = req.headers.host;
+      let baseUrl;
+      
+      if (host && host.includes('replit')) {
+        // Per Replit usa l'URL pubblico
+        baseUrl = `https://${host}`;
+      } else {
+        // Per sviluppo locale
+        baseUrl = process.env.BASE_URL || `http://${host}`;
+      }
+      
       const resetLink = `${baseUrl}/reset-password/${token}`;
       
       // Determina la lingua dell'utente (se disponibile, altrimenti usa l'italiano)
