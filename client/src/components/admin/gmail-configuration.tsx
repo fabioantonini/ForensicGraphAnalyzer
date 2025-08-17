@@ -159,11 +159,12 @@ export function GmailConfiguration() {
         <Alert>
           <Info className="h-4 w-4" />
           <AlertDescription>
-            <strong>Come configurare Gmail SMTP:</strong>
+            <strong>Setup Gmail dedicato (consigliato):</strong>
+            <br />• Crea nuovo Gmail: grapholexinsight@gmail.com
             <br />• Vai su Google Account → Sicurezza
             <br />• Attiva la verifica in 2 passaggi 
-            <br />• Genera una "Password per app" per "GrapholexInsight"
-            <br />• Usa quella password di 16 caratteri qui sotto
+            <br />• Genera "Password per app" per "GrapholexInsight"
+            <br />• Configura nome visualizzato professionale
           </AlertDescription>
         </Alert>
 
@@ -188,7 +189,7 @@ export function GmailConfiguration() {
             <Input
               id="gmail-email"
               type="email"
-              placeholder="tuoemail@gmail.com"
+              placeholder="grapholexinsight@gmail.com"
               value={email}
               onChange={(e) => handleInputChange(setEmail)(e.target.value)}
               disabled={!isConfigured}
@@ -207,6 +208,9 @@ export function GmailConfiguration() {
             />
             <div className="text-xs text-muted-foreground">
               Password di 16 caratteri generata nelle impostazioni Google
+              <br />
+              <strong>Consiglio:</strong> Usa un Gmail dedicato (es: grapholexinsight@gmail.com) 
+              invece del tuo account personale per maggiore professionalità
             </div>
           </div>
         </div>
