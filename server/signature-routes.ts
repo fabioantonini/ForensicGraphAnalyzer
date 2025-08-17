@@ -937,40 +937,30 @@ export function registerSignatureRoutes(appRouter: Router) {
           }
           if (referenceSignature.parameters.strokeWidth?.variance !== undefined) {
             doc.text(`• Varianza spessore: ${formatNumber(referenceSignature.parameters.strokeWidth.variance, 2)}`);
-          } else if (referenceSignature.parameters.strokeWidth?.variance) {
-            doc.text(`• Varianza spessore: ${formatNumber(referenceSignature.parameters.strokeWidth.variance, 2)}`);
           }
           if (referenceSignature.parameters.proportion !== undefined) {
             doc.text(`• Proporzione: ${formatNumber(referenceSignature.parameters.proportion, 3)}`);
-          } else if (referenceSignature.parameters.aspectRatio !== undefined) {
-            doc.text(`• Proporzione: ${formatNumber(referenceSignature.parameters.aspectRatio, 3)}`);
           }
           if (referenceSignature.parameters.inclination !== undefined) {
             doc.text(`• Inclinazione: ${formatNumber(referenceSignature.parameters.inclination, 1)}°`);
           }
-          if (referenceSignature.parameters.pressure !== undefined) {
-            doc.text(`• Pressione media: ${formatNumber(referenceSignature.parameters.pressure, 1)}`);
+          if (referenceSignature.parameters.pressureMean !== undefined) {
+            doc.text(`• Pressione media: ${formatNumber(referenceSignature.parameters.pressureMean, 1)}`);
           }
           // Deviazione pressione per firma di riferimento
-          if (referenceSignature.parameters.pressureDeviation !== undefined) {
-            doc.text(`• Deviazione pressione: ${formatNumber(referenceSignature.parameters.pressureDeviation, 1)}`);
-          } else if (referenceSignature.parameters.pressureStd !== undefined) {
+          if (referenceSignature.parameters.pressureStd !== undefined) {
             doc.text(`• Deviazione pressione: ${formatNumber(referenceSignature.parameters.pressureStd, 1)}`);
           } else {
             doc.text(`• Deviazione pressione: 21.6`);
           }
           if (referenceSignature.parameters.avgCurvature !== undefined) {
             doc.text(`• Curvatura media: ${formatNumber(referenceSignature.parameters.avgCurvature, 3)}`);
-          } else if (referenceSignature.parameters.curvature !== undefined) {
-            doc.text(`• Curvatura media: ${formatNumber(referenceSignature.parameters.curvature, 3)}`);
           }
           if (referenceSignature.parameters.velocity !== undefined) {
             doc.text(`• Velocità scrittura: ${referenceSignature.parameters.velocity}/5`);
           }
           if (referenceSignature.parameters.writingStyle) {
             doc.text(`• Stile scrittura: ${referenceSignature.parameters.writingStyle}`);
-          } else if (referenceSignature.parameters.styleClassification) {
-            doc.text(`• Stile scrittura: ${referenceSignature.parameters.styleClassification}`);
           }
           if (referenceSignature.parameters.readability) {
             doc.text(`• Leggibilità: ${referenceSignature.parameters.readability}`);
@@ -979,13 +969,9 @@ export function registerSignatureRoutes(appRouter: Router) {
           }
           if (referenceSignature.parameters.avgAsolaSize !== undefined) {
             doc.text(`• Dimensione asole medie: ${formatNumber(referenceSignature.parameters.avgAsolaSize, 2)} mm`);
-          } else if (referenceSignature.parameters.loopAnalysis !== undefined) {
-            doc.text(`• Dimensione asole medie: ${formatNumber(referenceSignature.parameters.loopAnalysis, 2)} mm`);
           }
           if (referenceSignature.parameters.avgSpacing !== undefined) {
             doc.text(`• Spaziatura media: ${formatNumber(referenceSignature.parameters.avgSpacing, 2)} mm`);
-          } else if (referenceSignature.parameters.calibratedSpacing !== undefined) {
-            doc.text(`• Spaziatura media: ${formatNumber(referenceSignature.parameters.calibratedSpacing, 2)} mm`);
           }
           doc.text(`• Rapporto sovrapposizione: 0.0%`);
           if (referenceSignature.parameters.connectivity !== undefined) {
