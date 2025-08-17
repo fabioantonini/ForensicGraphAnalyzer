@@ -680,7 +680,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Validate API key - prioritize user key, fall back to system key
       const apiKeyToUse = user.openaiApiKey || undefined; // undefined will trigger system key use
-      const isValidKey = await validateAPIKey(apiKeyToUse);
+      const isValidKey = await validateAPIKey(apiKeyToUse, userId);
       if (!isValidKey) {
         return res.status(400).json({ message: "Invalid OpenAI API key" });
       }

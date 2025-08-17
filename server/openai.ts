@@ -299,7 +299,7 @@ function generateMockResponse(query: string, context: string[]): string {
 }
 
 // Validate API key - can be either user-provided or system key
-export async function validateAPIKey(apiKey?: string): Promise<boolean> {
+export async function validateAPIKey(apiKey?: string, userId?: number): Promise<boolean> {
   // TESTING MODE: Always return true in test mode (when running in Replit and no keys available)
   if (process.env.NODE_ENV !== 'production' && !apiKey && !SYSTEM_API_KEY) {
     log("Test mode: Simulating successful API key validation", "openai");
@@ -307,12 +307,8 @@ export async function validateAPIKey(apiKey?: string): Promise<boolean> {
   }
   
   try {
-    // If no key provided, check if system key is available
-    if (!apiKey && !SYSTEM_API_KEY) {
-      return false;
-    }
-    
-    const openai = createOpenAIClient(apiKey);
+    // Use the same fallback system as other functions
+    const openai = await createOpenAIClient(apiKey, userId);
     
     // Make a small request to validate the API key
     await openai.models.list();
