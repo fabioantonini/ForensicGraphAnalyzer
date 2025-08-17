@@ -91,8 +91,8 @@ DO NOT add any other text besides the JSON.`
   // Aggiunto seed casuale per garantire varietà tra sessioni diverse
   const randomSeed = Date.now() + Math.random();
   const varietyInstructions = lang === 'it' ? 
-    `IMPORTANTE: Crea domande completamente diverse e originali. Evita argomenti ripetitivi. Esplora aspetti diversi e specifici della materia. Usa esempi concreti e casi pratici. Varia gli stili di domanda (definizioni, casi pratici, confronti, analisi).` :
-    `IMPORTANT: Create completely different and original questions. Avoid repetitive topics. Explore different and specific aspects of the subject. Use concrete examples and practical cases. Vary question styles (definitions, practical cases, comparisons, analysis).`;
+    `IMPORTANTE: Crea domande diverse e originali MA SEMPRE ACCURATE. Verifica che tutte le risposte siano corrette. Evita argomenti ripetitivi. Esplora aspetti diversi della materia. Usa esempi concreti e casi pratici. Varia gli stili di domanda (definizioni, casi pratici, confronti, analisi). PRIORITÀ ASSOLUTA: ACCURATEZZA DELLE RISPOSTE.` :
+    `IMPORTANT: Create different and original questions BUT ALWAYS ACCURATE. Verify that all answers are correct. Avoid repetitive topics. Explore different aspects of the subject. Use concrete examples and practical cases. Vary question styles (definitions, practical cases, comparisons, analysis). ABSOLUTE PRIORITY: ANSWER ACCURACY.`;
   
   const prompt = `[Seed: ${randomSeed}] Generate exactly ${totalQuestions} multiple choice quiz questions about ${categoryPrompts[lang][category]}.
 
@@ -109,7 +109,7 @@ ${instructions[lang].format}`;
       messages: [
         {
           role: "system",
-          content: "Sei un esperto di grafologia forense e cultura generale. Genera domande di quiz accurate e educative."
+          content: "Sei un esperto di grafologia forense e cultura generale. Genera domande di quiz ACCURATE e educative. VERIFICA SEMPRE che le risposte corrette siano effettivamente corrette. L'accuratezza è prioritaria rispetto alla creatività."
         },
         {
           role: "user",
@@ -117,11 +117,11 @@ ${instructions[lang].format}`;
         }
       ],
       response_format: { type: "json_object" },
-      temperature: 1.2, // Aumentata per maggiore varietà e creatività
+      temperature: 0.9, // Bilanciato: varietà ma mantenendo accuratezza
       max_tokens: 4000,
-      top_p: 0.95, // Aggiunto per ulteriore diversificazione
-      frequency_penalty: 0.3, // Penalizza ripetizioni di contenuto
-      presence_penalty: 0.2 // Incoraggia argomenti nuovi
+      top_p: 0.9, // Ridotto per maggiore controllo
+      frequency_penalty: 0.2, // Ridotto per evitare errori
+      presence_penalty: 0.1 // Ridotto per mantenere coerenza
     });
 
     const content = response.choices[0].message.content;
