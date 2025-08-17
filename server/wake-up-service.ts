@@ -87,36 +87,7 @@ DO NOT add any other text besides the JSON.`
   };
 
   const lang = language === 'en' ? 'en' : 'it';
-  
-  // Aggiunto seed casuale per garantire varietà tra sessioni diverse
-  const randomSeed = Date.now() + Math.random();
-  const varietyInstructions = lang === 'it' ? 
-    `ATTENZIONE: Stai commettendo errori GRAVISSIMI come confondere Dante (Divina Commedia) con Boccaccio (Decameron).
-
-ISTRUZIONI DI EMERGENZA:
-1. USA SOLO fatti ELEMENTARI che conosci al 100%
-2. Per letteratura: Dante=Divina Commedia, Boccaccio=Decameron, Shakespeare=Amleto
-3. Per storia: SOLO date e fatti universalmente noti
-4. Se hai il MINIMO dubbio, scegli una domanda più semplice
-5. MEGLIO domanda facile e corretta che complessa e sbagliata
-6. Ricontrolla OGNI associazione autore-opera
-
-ZERO TOLLERANZA per errori basic di cultura generale.` :
-    `WARNING: You are making SERIOUS errors like confusing Dante (Divine Comedy) with Boccaccio (Decameron).
-
-EMERGENCY INSTRUCTIONS:
-1. USE ONLY ELEMENTARY facts you know 100%
-2. For literature: Dante=Divine Comedy, Boccaccio=Decameron, Shakespeare=Hamlet
-3. For history: ONLY universally known dates and facts
-4. If you have ANY doubt, choose a simpler question
-5. BETTER easy and correct than complex and wrong
-6. Double-check EVERY author-work association
-
-ZERO TOLERANCE for basic general knowledge errors.`;
-  
-  const prompt = `[Seed: ${randomSeed}] Generate exactly ${totalQuestions} multiple choice quiz questions about ${categoryPrompts[lang][category]}.
-
-${varietyInstructions}
+  const prompt = `Generate exactly ${totalQuestions} multiple choice quiz questions about ${categoryPrompts[lang][category]}.
 
 ${instructions[lang].rules}
 
@@ -129,7 +100,7 @@ ${instructions[lang].format}`;
       messages: [
         {
           role: "system",
-          content: "Sei un professore universitario che sta preparando un esame. Ogni errore significherebbe perdere la cattedra. ESEMPI DI ERRORI DA EVITARE ASSOLUTAMENTE: confondere Dante (Divina Commedia) con Boccaccio (Decameron), confondere '1984' (Big Brother) con 'La Fattoria degli Animali' (Partito). Usa SOLO fatti basilari e incontrovertibili. Preferisci domande semplici ma corrette a domande complesse ma rischiose."
+          content: "Sei un esperto di grafologia forense e cultura generale. Genera domande di quiz accurate e educative."
         },
         {
           role: "user",
@@ -137,11 +108,8 @@ ${instructions[lang].format}`;
         }
       ],
       response_format: { type: "json_object" },
-      temperature: 0.1, // Minima creatività, massima precisione
-      max_tokens: 4000,
-      top_p: 0.5, // Controllo massimo
-      frequency_penalty: 0.0, // Zero per evitare errori
-      presence_penalty: 0.0 // Zero per evitare deriva
+      temperature: 0.8,
+      max_tokens: 4000
     });
 
     const content = response.choices[0].message.content;
