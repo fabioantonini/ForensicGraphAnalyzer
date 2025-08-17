@@ -87,7 +87,16 @@ DO NOT add any other text besides the JSON.`
   };
 
   const lang = language === 'en' ? 'en' : 'it';
-  const prompt = `Generate exactly ${totalQuestions} multiple choice quiz questions about ${categoryPrompts[lang][category]}.
+  
+  // Aggiunto seed casuale per garantire varietà tra sessioni diverse
+  const randomSeed = Date.now() + Math.random();
+  const varietyInstructions = lang === 'it' ? 
+    `IMPORTANTE: Crea domande completamente diverse e originali. Evita argomenti ripetitivi. Esplora aspetti diversi e specifici della materia. Usa esempi concreti e casi pratici. Varia gli stili di domanda (definizioni, casi pratici, confronti, analisi).` :
+    `IMPORTANT: Create completely different and original questions. Avoid repetitive topics. Explore different and specific aspects of the subject. Use concrete examples and practical cases. Vary question styles (definitions, practical cases, comparisons, analysis).`;
+  
+  const prompt = `[Seed: ${randomSeed}] Generate exactly ${totalQuestions} multiple choice quiz questions about ${categoryPrompts[lang][category]}.
+
+${varietyInstructions}
 
 ${instructions[lang].rules}
 
@@ -108,8 +117,11 @@ ${instructions[lang].format}`;
         }
       ],
       response_format: { type: "json_object" },
-      temperature: 0.8,
-      max_tokens: 4000
+      temperature: 1.2, // Aumentata per maggiore varietà e creatività
+      max_tokens: 4000,
+      top_p: 0.95, // Aggiunto per ulteriore diversificazione
+      frequency_penalty: 0.3, // Penalizza ripetizioni di contenuto
+      presence_penalty: 0.2 // Incoraggia argomenti nuovi
     });
 
     const content = response.choices[0].message.content;
