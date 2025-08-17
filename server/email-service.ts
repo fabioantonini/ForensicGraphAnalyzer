@@ -70,9 +70,25 @@ export async function generatePasswordResetToken(userId: number): Promise<string
 /**
  * Verifica se un token di reset password è valido
  * @param token Token da verificare
+ * @returns true se il token è valido, false altrimenti
+ */
+export function verifyPasswordResetToken(token: string): boolean {
+  const tokenData = passwordResetTokens.get(token);
+  
+  // Verifica esistenza e validità del token
+  if (!tokenData || tokenData.expiresAt < new Date()) {
+    return false;
+  }
+  
+  return true;
+}
+
+/**
+ * Ottiene l'ID utente da un token di reset password valido
+ * @param token Token da verificare
  * @returns ID dell'utente se il token è valido, altrimenti null
  */
-export function verifyPasswordResetToken(token: string): number | null {
+export function getUserIdFromResetToken(token: string): number | null {
   const tokenData = passwordResetTokens.get(token);
   
   // Verifica esistenza e validità del token

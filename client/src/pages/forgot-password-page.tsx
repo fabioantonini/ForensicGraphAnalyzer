@@ -37,7 +37,7 @@ export default function ForgotPasswordPage() {
     setIsSubmitting(true);
     
     try {
-      const response = await apiRequest("POST", "/api/request-password-reset", {
+      const response = await apiRequest("POST", "/api/forgot-password", {
         ...data,
         locale: i18n.language || 'it',
       });

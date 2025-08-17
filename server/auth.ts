@@ -11,7 +11,8 @@ import {
   verifyPasswordResetToken, 
   invalidatePasswordResetToken, 
   sendPasswordResetEmail,
-  isEmailServiceConfigured
+  isEmailServiceConfigured,
+  getUserIdFromResetToken
 } from "./email-service";
 
 declare global {
@@ -127,7 +128,7 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: "Invalid credentials format" });
       }
 
-      passport.authenticate("local", (err, user, info) => {
+      passport.authenticate("local", (err: any, user: any, info: any) => {
         if (err) return next(err);
         if (!user) {
           return res.status(401).json({ message: "Invalid username or password" });
@@ -210,7 +211,7 @@ export function setupAuth(app: Express) {
       const resetLink = `${baseUrl}/reset-password/${token}`;
       
       // Determina la lingua dell'utente (se disponibile, altrimenti usa l'italiano)
-      const locale = user.settings?.language || 'it';
+      const locale = 'it'; // Default to Italian since settings might not have language property
       
       // Invia l'email
       const emailSent = await sendPasswordResetEmail(email, resetLink, locale);
@@ -234,7 +235,86 @@ export function setupAuth(app: Express) {
     }
   });
   
-  // Le rotte per il reset password sono state spostate in admin-routes.ts
+  // Endpoint per verificare la validità del token di reset
+  app.get("/api/verify-reset-token", async (req, res, next) => {
+    try {
+      const { token } = req.query;
+      
+      if (!token || typeof token !== 'string') {
+        return res.status(400).json({ 
+          valid: false, 
+          message: "Token is required" 
+        });
+      }
+      
+      // Verifica la validità del token
+      const isValid = await verifyPasswordResetToken(token);
+      
+      if (isValid) {
+        res.json({ valid: true });
+      } else {
+        res.status(400).json({ 
+          valid: false, 
+          message: "Invalid or expired token" 
+        });
+      }
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Endpoint per il reset della password
+  app.post("/api/reset-password", async (req, res, next) => {
+    try {
+      const { token, newPassword } = req.body;
+      
+      if (!token || !newPassword) {
+        return res.status(400).json({ 
+          message: "Token and new password are required" 
+        });
+      }
+      
+      // Verifica la validità del token
+      const isValid = await verifyPasswordResetToken(token);
+      
+      if (!isValid) {
+        return res.status(400).json({ 
+          message: "Invalid or expired token" 
+        });
+      }
+      
+      // Ottieni l'ID utente dal token
+      const userId = await getUserIdFromResetToken(token);
+      
+      if (!userId) {
+        return res.status(400).json({ 
+          message: "Invalid token" 
+        });
+      }
+      
+      // Hash della nuova password
+      const hashedPassword = await hashPassword(newPassword);
+      
+      // Aggiorna la password dell'utente
+      await storage.updateUserPassword(userId, hashedPassword);
+      
+      // Invalida il token
+      await invalidatePasswordResetToken(token);
+      
+      // Crea un'attività per il reset della password
+      await storage.createActivity({
+        userId: userId,
+        type: "password_reset_completed",
+        details: "Password reset completed successfully",
+      });
+      
+      res.json({ 
+        message: "Password reset successfully" 
+      });
+    } catch (err) {
+      next(err);
+    }
+  });
 
   app.put("/api/user/api-key", async (req, res, next) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
@@ -299,6 +379,9 @@ export function setupAuth(app: Express) {
       
       // Get the current user to verify the current password
       const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
       
       // Verify the current password
       if (!await comparePasswords(currentPassword, user.password)) {
