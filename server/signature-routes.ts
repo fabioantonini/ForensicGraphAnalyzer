@@ -54,7 +54,7 @@ export function registerSignatureRoutes(appRouter: Router) {
   
   // Middleware to check if user is authenticated
   const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
-    if (req.isAuthenticated && req.isAuthenticated()) {
+    if (req.isAuthenticated()) {
       return next();
     }
     res.status(401).json({ message: "Unauthorized" });
@@ -62,7 +62,7 @@ export function registerSignatureRoutes(appRouter: Router) {
   
   // Middleware to check if user is active
   const isActiveUser = (req: Request, res: Response, next: NextFunction) => {
-    if (req.isAuthenticated && req.isAuthenticated() && req.user?.isActive !== false) {
+    if (req.isAuthenticated() && req.user?.isActive !== false) {
       return next();
     }
     res.status(403).json({ message: "Account disattivato o scaduto" });
@@ -643,8 +643,8 @@ export function registerSignatureRoutes(appRouter: Router) {
         if (signature.parameters.strokeWidth?.meanMm && referenceSignature.parameters.strokeWidth?.meanMm) {
           const sigStroke = signature.parameters.strokeWidth.meanMm;
           const refStroke = referenceSignature.parameters.strokeWidth.meanMm;
-          const sigVariance = signature.parameters.strokeWidth.varianceMm || 0;
-          const refVariance = referenceSignature.parameters.strokeWidth.varianceMm || 0;
+          const sigVariance = signature.parameters.strokeWidth.variance || 0;
+          const refVariance = referenceSignature.parameters.strokeWidth.variance || 0;
           
           doc.text(`Spessore Tratto: La firma in verifica presenta uno spessore medio di ${formatNumber(sigStroke, 3)} mm ${sigStroke > refStroke * 1.5 ? 'molto più elevato' : sigStroke < refStroke * 0.5 ? 'molto più ridotto' : 'compatibile'} rispetto ai ${formatNumber(refStroke, 3)} mm della firma di riferimento. La varianza di spessore ${sigVariance > refVariance * 2 ? 'è significativamente più alta nella firma in verifica, suggerendo maggiore irregolarità nella pressione' : 'è compatibile tra le due firme'}.`, { align: 'justify' });
           doc.moveDown(0.5);
@@ -660,19 +660,19 @@ export function registerSignatureRoutes(appRouter: Router) {
           doc.moveDown(0.5);
         }
         
-        // Confronto Pressione
-        if (signature.parameters.pressure !== undefined && referenceSignature.parameters.pressure !== undefined) {
-          const sigPress = signature.parameters.pressure;
-          const refPress = referenceSignature.parameters.pressure;
+        // Confronto Pressione (mapping from available fields)
+        if (signature.parameters.pressureStd !== undefined && referenceSignature.parameters.pressureStd !== undefined) {
+          const sigPress = signature.parameters.pressureStd;
+          const refPress = referenceSignature.parameters.pressureStd;
           
           doc.text(`Pressione: La pressione media della firma in verifica è ${formatNumber(sigPress, 1)}, ${sigPress < refPress * 0.8 ? 'inferiore' : sigPress > refPress * 1.2 ? 'superiore' : 'compatibile'} rispetto ai ${formatNumber(refPress, 1)} della firma di riferimento. ${Math.abs(sigPress - refPress) > refPress * 0.3 ? 'Questa differenza suggerisce un possibile diverso stato emotivo o controllo motorio al momento della firma.' : 'Questa compatibilità indica coerenza nella modalità di esecuzione.'}`, { align: 'justify' });
           doc.moveDown(0.5);
         }
         
-        // Confronto Spaziatura
-        if (signature.parameters.calibratedSpacing !== undefined && referenceSignature.parameters.calibratedSpacing !== undefined) {
-          const sigSpacing = signature.parameters.calibratedSpacing;
-          const refSpacing = referenceSignature.parameters.calibratedSpacing;
+        // Confronto Spaziatura (mapping from available fields)
+        if (signature.parameters.avgSpacing !== undefined && referenceSignature.parameters.avgSpacing !== undefined) {
+          const sigSpacing = signature.parameters.avgSpacing;
+          const refSpacing = referenceSignature.parameters.avgSpacing;
           
           doc.text(`Spaziatura Media: La firma in verifica ha una spaziatura media di ${formatNumber(sigSpacing, 2)} mm ${sigSpacing < refSpacing * 0.7 ? 'molto inferiore' : sigSpacing > refSpacing * 1.3 ? 'superiore' : 'compatibile'} rispetto ai ${formatNumber(refSpacing, 2)} mm della firma di riferimento, ${sigSpacing < refSpacing * 0.7 ? 'indicando maggiore compattezza e potenzialmente diversa velocità di esecuzione.' : 'indicando coerenza nella distribuzione spaziale.'}`, { align: 'justify' });
           doc.moveDown(0.5);
@@ -850,13 +850,13 @@ export function registerSignatureRoutes(appRouter: Router) {
           }
           if (signature.parameters.strokeWidth?.variance !== undefined) {
             doc.text(`• Varianza spessore: ${formatNumber(signature.parameters.strokeWidth.variance, 2)}`);
-          } else if (signature.parameters.strokeWidth?.varianceMm) {
-            doc.text(`• Varianza spessore: ${formatNumber(signature.parameters.strokeWidth.varianceMm, 2)}`);
+          } else if (signature.parameters.strokeWidth?.variance) {
+            doc.text(`• Varianza spessore: ${formatNumber(signature.parameters.strokeWidth.variance, 2)}`);
           }
           if (signature.parameters.proportion !== undefined) {
             doc.text(`• Proporzione: ${formatNumber(signature.parameters.proportion, 3)}`);
-          } else if (signature.parameters.proportionRatio !== undefined) {
-            doc.text(`• Proporzione: ${formatNumber(signature.parameters.proportionRatio, 3)}`);
+          } else if (signature.parameters.aspectRatio !== undefined) {
+            doc.text(`• Proporzione: ${formatNumber(signature.parameters.aspectRatio, 3)}`);
           }
           if (signature.parameters.inclination !== undefined) {
             doc.text(`• Inclinazione: ${formatNumber(signature.parameters.inclination, 1)}°`);
@@ -882,8 +882,6 @@ export function registerSignatureRoutes(appRouter: Router) {
           }
           if (signature.parameters.writingStyle) {
             doc.text(`• Stile scrittura: ${signature.parameters.writingStyle}`);
-          } else if (signature.parameters.styleClassification) {
-            doc.text(`• Stile scrittura: ${signature.parameters.styleClassification}`);
           }
           if (signature.parameters.readability) {
             doc.text(`• Leggibilità: ${signature.parameters.readability}`);
@@ -892,13 +890,9 @@ export function registerSignatureRoutes(appRouter: Router) {
           }
           if (signature.parameters.avgAsolaSize !== undefined) {
             doc.text(`• Dimensione asole medie: ${formatNumber(signature.parameters.avgAsolaSize, 2)} mm`);
-          } else if (signature.parameters.loopAnalysis !== undefined) {
-            doc.text(`• Dimensione asole medie: ${formatNumber(signature.parameters.loopAnalysis, 2)} mm`);
           }
           if (signature.parameters.avgSpacing !== undefined) {
             doc.text(`• Spaziatura media: ${formatNumber(signature.parameters.avgSpacing, 2)} mm`);
-          } else if (signature.parameters.calibratedSpacing !== undefined) {
-            doc.text(`• Spaziatura media: ${formatNumber(signature.parameters.calibratedSpacing, 2)} mm`);
           }
           doc.text(`• Rapporto sovrapposizione: 0.0%`); // Default
           if (signature.parameters.connectivity !== undefined) {
@@ -943,13 +937,13 @@ export function registerSignatureRoutes(appRouter: Router) {
           }
           if (referenceSignature.parameters.strokeWidth?.variance !== undefined) {
             doc.text(`• Varianza spessore: ${formatNumber(referenceSignature.parameters.strokeWidth.variance, 2)}`);
-          } else if (referenceSignature.parameters.strokeWidth?.varianceMm) {
-            doc.text(`• Varianza spessore: ${formatNumber(referenceSignature.parameters.strokeWidth.varianceMm, 2)}`);
+          } else if (referenceSignature.parameters.strokeWidth?.variance) {
+            doc.text(`• Varianza spessore: ${formatNumber(referenceSignature.parameters.strokeWidth.variance, 2)}`);
           }
           if (referenceSignature.parameters.proportion !== undefined) {
             doc.text(`• Proporzione: ${formatNumber(referenceSignature.parameters.proportion, 3)}`);
-          } else if (referenceSignature.parameters.proportionRatio !== undefined) {
-            doc.text(`• Proporzione: ${formatNumber(referenceSignature.parameters.proportionRatio, 3)}`);
+          } else if (referenceSignature.parameters.aspectRatio !== undefined) {
+            doc.text(`• Proporzione: ${formatNumber(referenceSignature.parameters.aspectRatio, 3)}`);
           }
           if (referenceSignature.parameters.inclination !== undefined) {
             doc.text(`• Inclinazione: ${formatNumber(referenceSignature.parameters.inclination, 1)}°`);
