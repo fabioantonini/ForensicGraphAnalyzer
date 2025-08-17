@@ -4,13 +4,31 @@ import { log } from "./vite";
 // Get system API key
 const SYSTEM_API_KEY = process.env.OPENAI_API_KEY;
 
-// Create a context-specific OpenAI client with the user's API key or fallback to system key
-export function createOpenAIClient(apiKey?: string) {
-  // Try user's key first, then fallback to system key
-  const finalApiKey = apiKey || SYSTEM_API_KEY;
+// Create a context-specific OpenAI client with the user's API key or fallback to admin key
+export async function createOpenAIClient(apiKey?: string, userId?: number) {
+  let finalApiKey = apiKey;
+  
+  // If user doesn't have API key, try to get admin's API key as fallback
+  if (!finalApiKey) {
+    try {
+      const { storage } = await import("./storage");
+      const adminUser = await storage.getUserByUsername("fabioantonini");
+      if (adminUser?.openaiApiKey) {
+        finalApiKey = adminUser.openaiApiKey;
+        console.log("Using admin fallback API key for user", userId || "unknown");
+      }
+    } catch (error) {
+      console.error("Failed to get admin API key:", error);
+    }
+  }
+  
+  // Only try system key as last resort
+  if (!finalApiKey) {
+    finalApiKey = SYSTEM_API_KEY;
+  }
   
   if (!finalApiKey) {
-    throw new Error("OpenAI API key is required (either user-provided or system)");
+    throw new Error("OpenAI API key is required (either user-provided, admin fallback, or system)");
   }
   
   return new OpenAI({ apiKey: finalApiKey });
@@ -35,7 +53,7 @@ export async function generateEmbedding(text: string, apiKey?: string): Promise<
   
   // Normal production mode
   try {
-    const openai = createOpenAIClient(apiKey);
+    const openai = await createOpenAIClient(apiKey);
     
     const response = await openai.embeddings.create({
       model: "text-embedding-ada-002",
