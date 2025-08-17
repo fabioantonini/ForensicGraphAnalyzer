@@ -1460,6 +1460,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // SendGrid configuration endpoint (admin only)
+  app.post("/api/admin/sendgrid-config", isAdmin, async (req, res, next) => {
+    try {
+      const { apiKey, senderEmail } = req.body;
+      
+      if (!apiKey || !senderEmail) {
+        return res.status(400).json({ 
+          message: "API key and sender email are required" 
+        });
+      }
+
+      const { saveSendGridConfig } = await import('./sendgrid-service');
+      await saveSendGridConfig({
+        apiKey,
+        senderEmail,
+        isConfigured: true
+      });
+
+      res.json({ message: "SendGrid configuration updated successfully" });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Test SendGrid configuration endpoint (admin only)
+  app.post("/api/admin/sendgrid-test", isAdmin, async (req, res, next) => {
+    try {
+      const { testEmail } = req.body;
+      
+      if (!testEmail) {
+        return res.status(400).json({ 
+          message: "Test email address is required" 
+        });
+      }
+
+      const { testSendGridConfiguration } = await import('./sendgrid-service');
+      const success = await testSendGridConfiguration(testEmail);
+
+      if (success) {
+        res.json({ message: "Test email sent successfully!" });
+      } else {
+        res.status(500).json({ message: "Failed to send test email" });
+      }
+    } catch (err) {
+      next(err);
+    }
+  });
+
   // Register Wake Up quiz routes
   app.use("/api/wake-up", wakeUpRoutes);
 
