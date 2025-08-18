@@ -874,6 +874,7 @@ export const createQuizRequestSchema = z.object({
   category: z.enum(['grafologia', 'cultura', 'mista']),
   totalQuestions: z.number().min(3).max(20).default(5),
   language: z.string().optional(),
+  model: z.enum(["gpt-4o", "gpt-5"]).optional().default("gpt-4o"),
 });
 
 export const submitAnswerSchema = z.object({

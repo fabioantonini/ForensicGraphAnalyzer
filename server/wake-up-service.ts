@@ -18,7 +18,8 @@ export async function generateQuizQuestions(
   totalQuestions: number,
   userApiKey?: string,
   language: string = "it",
-  userId?: number
+  userId?: number,
+  model: string = "gpt-4o"
 ): Promise<GeneratedQuizQuestion[]> {
   const categoryPrompts = {
     it: {
@@ -123,8 +124,9 @@ ${instructions[lang].format}`;
       ? "You are a forensic graphology expert and general knowledge specialist. Generate accurate and educational quiz questions."
       : "Sei un esperto di grafologia forense e cultura generale. Genera domande di quiz accurate e educative.";
 
+    console.log(`[WAKE-UP] Generating quiz with model: ${model}`);
     const response = await openai.chat.completions.create({
-      model: "gpt-4o", // GPT-4o remains default for stability, GPT-5 available as option
+      model: model, // User-selected model (GPT-4o default, GPT-5 available)
       messages: [
         {
           role: "system",

@@ -24,10 +24,10 @@ router.post("/start", async (req, res) => {
       });
     }
 
-    const { category, totalQuestions, language } = validation.data;
+    const { category, totalQuestions, language, model } = validation.data;
 
     // Genera domande usando OpenAI (usa la chiave API dell'utente se disponibile)
-    const generatedQuestions = await generateQuizQuestions(category, totalQuestions, req.user.openaiApiKey || undefined, language || 'it', req.user.id);
+    const generatedQuestions = await generateQuizQuestions(category, totalQuestions, req.user.openaiApiKey || undefined, language || 'it', req.user.id, model || 'gpt-4o');
 
     // Crea sessione quiz
     const session = await storage.createQuizSession({

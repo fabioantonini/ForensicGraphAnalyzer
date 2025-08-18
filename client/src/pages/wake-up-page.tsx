@@ -26,6 +26,7 @@ import {
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/hooks/use-auth";
 import i18n from "@/i18n";
 
 interface QuizSession {
@@ -88,6 +89,7 @@ export default function WakeUpPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { t } = useTranslation('common');
+  const { user } = useAuth();
 
   // Fetch active sessions
   const { data: sessions } = useQuery({
@@ -104,10 +106,21 @@ export default function WakeUpPage() {
   // Start new quiz mutation
   const startQuizMutation = useMutation({
     mutationFn: async (data: { category: string; totalQuestions: number }) => {
+      const currentLanguage = i18n.language || 'it';
+      const selectedModel = user?.model || 'gpt-4o';
+      
+      const requestData = {
+        ...data,
+        language: currentLanguage,
+        model: selectedModel
+      };
+      
+      console.log('[WAKE-UP] Starting quiz with model:', selectedModel);
+      
       const response = await fetch("/api/wake-up/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(requestData),
       });
       if (!response.ok) throw new Error("Failed to start quiz");
       return response.json();
@@ -292,8 +305,6 @@ export default function WakeUpPage() {
   });
 
   const handleStartQuiz = (category: "grafologia" | "cultura" | "mista", totalQuestions: number = 5) => {
-    const currentLanguage = i18n.language || 'it';
-    
     // Check if there's an active session first
     if ((sessions as any)?.activeSessions && (sessions as any).activeSessions.length > 0) {
       const activeSessionsCount = (sessions as any).activeSessions.length;
