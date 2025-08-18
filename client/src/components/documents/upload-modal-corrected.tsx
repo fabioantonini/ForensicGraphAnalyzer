@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { useTranslation } from "react-i18next";
-import { Link, Import, Upload } from "lucide-react";
+import { Link, Import, Upload, AlertCircle } from "lucide-react";
 
 interface UploadModalProps {
   open: boolean;
@@ -30,6 +30,12 @@ export function UploadModal({ open, onOpenChange, onUploadProgress }: UploadModa
   const [file, setFile] = useState<File | null>(null);
   const [url, setUrl] = useState<string>("");
   const [activeTab, setActiveTab] = useState<string>("file");
+  const [duplicateCheck, setDuplicateCheck] = useState<{
+    isDuplicate: boolean;
+    type?: 'exact' | 'similar';
+    message?: string;
+    existingDocument?: any;
+  } | null>(null);
   const { toast } = useToast();
 
   const uploadFileMutation = useMutation({
@@ -133,8 +139,43 @@ export function UploadModal({ open, onOpenChange, onUploadProgress }: UploadModa
     },
   });
 
+  const checkDuplicateFile = async (selectedFile: File) => {
+    try {
+      const response = await fetch("/api/documents/check-duplicate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          filename: selectedFile.name,
+          fileSize: selectedFile.size
+        }),
+        credentials: "include",
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        setDuplicateCheck(result);
+        
+        if (result.isDuplicate) {
+          toast({
+            title: result.type === 'exact' ? "Documento già presente" : "Documento simile trovato",
+            description: result.message,
+            variant: "destructive",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Errore controllo duplicati:", error);
+    }
+  };
+
   const handleFileSelect = (selectedFile: File) => {
     setFile(selectedFile);
+    setDuplicateCheck(null);
+    
+    // Check for duplicates immediately after file selection
+    checkDuplicateFile(selectedFile);
   };
 
   const handleRemoveFile = () => {
@@ -173,7 +214,7 @@ export function UploadModal({ open, onOpenChange, onUploadProgress }: UploadModa
   };
 
   const isUploading = uploadFileMutation.isPending || uploadUrlMutation.isPending;
-  const canUpload = (activeTab === "file" && file) || (activeTab === "url" && url);
+  const canUpload = (activeTab === "file" && file && (!duplicateCheck || !duplicateCheck.isDuplicate)) || (activeTab === "url" && url);
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -205,7 +246,33 @@ export function UploadModal({ open, onOpenChange, onUploadProgress }: UploadModa
                 helperText={t("documents.maxFileSize", "Maximum file size: 25MB")}
               />
             ) : (
-              <SelectedFile file={file} onRemove={handleRemoveFile} />
+              <div className="space-y-3">
+                <SelectedFile file={file} onRemove={handleRemoveFile} />
+                {duplicateCheck?.isDuplicate && (
+                  <div className={`p-3 rounded-lg border ${
+                    duplicateCheck.type === 'exact' 
+                      ? 'bg-red-50 border-red-200' 
+                      : 'bg-orange-50 border-orange-200'
+                  }`}>
+                    <div className="flex items-start space-x-2">
+                      <AlertCircle className={`h-4 w-4 mt-0.5 ${
+                        duplicateCheck.type === 'exact' ? 'text-red-600' : 'text-orange-600'
+                      }`} />
+                      <div className={`text-sm ${
+                        duplicateCheck.type === 'exact' ? 'text-red-800' : 'text-orange-800'
+                      }`}>
+                        <p className="font-medium">
+                          {duplicateCheck.type === 'exact' ? 'Documento identico trovato' : 'Documento simile trovato'}
+                        </p>
+                        <p className="mt-1">{duplicateCheck.message}</p>
+                        <p className="mt-2 text-xs">
+                          Il caricamento è stato bloccato per evitare duplicati.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </TabsContent>
           
