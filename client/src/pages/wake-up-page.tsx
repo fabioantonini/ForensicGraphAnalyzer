@@ -305,7 +305,7 @@ export default function WakeUpPage() {
       }
     }
     
-    startQuizMutation.mutate({ category, totalQuestions, language: currentLanguage });
+    startQuizMutation.mutate({ category, totalQuestions });
   };
 
   const handleResumeSession = (session: any) => {
@@ -1127,8 +1127,17 @@ export default function WakeUpPage() {
                   onClick={() => handleStartQuiz("grafologia", 5)}
                   disabled={startQuizMutation.isPending}
                 >
-                  <Play className="h-4 w-4 mr-2" />
-                  {t('wakeUpQuiz.quiz.quickQuiz')}
+                  {startQuizMutation.isPending ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      {i18n.language === 'en' ? 'Generating...' : 'Generando...'}
+                    </>
+                  ) : (
+                    <>
+                      <Play className="h-4 w-4 mr-2" />
+                      {t('wakeUpQuiz.quiz.quickQuiz')}
+                    </>
+                  )}
                 </Button>
                 <Button 
                   variant="outline" 
@@ -1136,8 +1145,17 @@ export default function WakeUpPage() {
                   onClick={() => handleStartQuiz("grafologia", 10)}
                   disabled={startQuizMutation.isPending}
                 >
-                  <Clock className="h-4 w-4 mr-2" />
-                  {t('wakeUpQuiz.quiz.fullQuiz')}
+                  {startQuizMutation.isPending ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
+                      {i18n.language === 'en' ? 'Generating...' : 'Generando...'}
+                    </>
+                  ) : (
+                    <>
+                      <Clock className="h-4 w-4 mr-2" />
+                      {t('wakeUpQuiz.quiz.fullQuiz')}
+                    </>
+                  )}
                 </Button>
               </div>
             </CardContent>
@@ -1165,8 +1183,17 @@ export default function WakeUpPage() {
                   onClick={() => handleStartQuiz("cultura", 5)}
                   disabled={startQuizMutation.isPending}
                 >
-                  <Play className="h-4 w-4 mr-2" />
-                  {t('wakeUpQuiz.quiz.quickQuiz')}
+                  {startQuizMutation.isPending ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      {i18n.language === 'en' ? 'Generating...' : 'Generando...'}
+                    </>
+                  ) : (
+                    <>
+                      <Play className="h-4 w-4 mr-2" />
+                      {t('wakeUpQuiz.quiz.quickQuiz')}
+                    </>
+                  )}
                 </Button>
                 <Button 
                   variant="outline" 
@@ -1174,8 +1201,17 @@ export default function WakeUpPage() {
                   onClick={() => handleStartQuiz("cultura", 10)}
                   disabled={startQuizMutation.isPending}
                 >
-                  <Clock className="h-4 w-4 mr-2" />
-                  {t('wakeUpQuiz.quiz.fullQuiz')}
+                  {startQuizMutation.isPending ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
+                      {i18n.language === 'en' ? 'Generating...' : 'Generando...'}
+                    </>
+                  ) : (
+                    <>
+                      <Clock className="h-4 w-4 mr-2" />
+                      {t('wakeUpQuiz.quiz.fullQuiz')}
+                    </>
+                  )}
                 </Button>
               </div>
             </CardContent>
@@ -1203,8 +1239,17 @@ export default function WakeUpPage() {
                   onClick={() => handleStartQuiz("mista", 5)}
                   disabled={startQuizMutation.isPending}
                 >
-                  <Play className="h-4 w-4 mr-2" />
-                  {t('wakeUpQuiz.quiz.quickQuiz')}
+                  {startQuizMutation.isPending ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      {i18n.language === 'en' ? 'Generating...' : 'Generando...'}
+                    </>
+                  ) : (
+                    <>
+                      <Play className="h-4 w-4 mr-2" />
+                      {t('wakeUpQuiz.quiz.quickQuiz')}
+                    </>
+                  )}
                 </Button>
                 <Button 
                   variant="outline" 
@@ -1212,8 +1257,17 @@ export default function WakeUpPage() {
                   onClick={() => handleStartQuiz("mista", 10)}
                   disabled={startQuizMutation.isPending}
                 >
-                  <Clock className="h-4 w-4 mr-2" />
-                  {t('wakeUpQuiz.quiz.fullQuiz')}
+                  {startQuizMutation.isPending ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
+                      {i18n.language === 'en' ? 'Generating...' : 'Generando...'}
+                    </>
+                  ) : (
+                    <>
+                      <Clock className="h-4 w-4 mr-2" />
+                      {t('wakeUpQuiz.quiz.fullQuiz')}
+                    </>
+                  )}
                 </Button>
               </div>
             </CardContent>
