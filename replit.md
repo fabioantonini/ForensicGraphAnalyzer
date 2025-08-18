@@ -31,14 +31,14 @@ Preferred communication style: Simple, everyday language.
 - **Authentication System**: Session-based authentication, role-based access control (user, admin, demo), password reset.
 - **Document Processing Pipeline**: Supports multi-format documents (PDF, DOCX, TXT, HTML), includes text extraction, chunking, and vector embedding generation (OpenAI API).
 - **Signature Analysis System**: Image upload and processing with Python integration (OpenCV), parameter extraction (stroke width, pressure, curvature), comparison algorithms, and PDF report generation. This includes automatic signature cropping using computer vision, and a unified cropping-calibration workflow for real-millimeter parameter extraction.
-- **Vector Database Integration**: Utilizes pgvector (PostgreSQL) and ChromaDB (fallback) for embedding storage, similarity search, and a RAG system for document querying.
-- **OCR System**: Employs Tesseract.js for text extraction and Sharp for image preprocessing (Auto, Enhance, Sharpen, Denoise modes), with multilingual support.
+- **Vector Database Integration**: Utilizes pgvector (PostgreSQL) and ChromaDB (fallback) for embedding storage, similarity search, and a RAG system for document querying. Automatic indexing of OCR documents confirmed working correctly.
+- **OCR System**: Employs Tesseract.js for text extraction and Sharp for image preprocessing (Auto, Enhance, Sharpen, Denoise modes), with multilingual support. Full integration with knowledge base - OCR documents are automatically indexed in vector store for RAG queries.
 - **Document Anonymization System**: AI-powered (OpenAI GPT-4o) for identifying and replacing 13 entity types across multiple document formats (PDF, DOCX, TXT).
 - **AI-Enhanced PDF Report Generation**: Native PDFKit solution integrated with AI (OpenAI GPT-4o) for objective signature evaluation and comprehensive forensic documentation.
 - **Dashboard Recommendations**: Provides suggestions for implemented functionalities like signature verification, multilingual OCR, semantic search, AI-powered reports, and document anonymization.
 - **Chart Visualization System**: Displays chart parameters and compatibility calculations using relative differences.
 - **Drag & Drop Interface**: Supports dual upload modes with visual feedback.
-- **Wake Up Quiz System**: AI-powered graphology and general knowledge quiz with multilingual support, user-specific progress tracking, stable question generation with anti-repetition system for enhanced variety while maintaining accuracy.
+- **Wake Up Quiz System**: AI-powered graphology and general knowledge quiz with multilingual support, user-specific progress tracking, stable question generation with anti-repetition system for enhanced variety while maintaining accuracy. Enhanced UX with loading indicators during question generation.
 
 ### System Design Choices
 - **Database Schema**: Includes tables for Users, documents, signatures, projects, activities, and queries.
