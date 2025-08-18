@@ -20,7 +20,7 @@ import { Eye, EyeOff } from "lucide-react";
 const apiSettingsSchema = z.object({
   openaiApiKey: z.string().min(1, "API key is required"),
   model: z.enum(["gpt-4o", "gpt-5"]),
-  temperature: z.number().min(0).max(1),
+  temperature: z.number().min(0).max(2),
 });
 
 type ApiSettingsFormValues = z.infer<typeof apiSettingsSchema>;
@@ -43,7 +43,7 @@ export function ApiSettings() {
     defaultValues: {
       openaiApiKey: user?.openaiApiKey || "",
       model: (user?.model as "gpt-4o" | "gpt-5") || "gpt-4o",
-      temperature: 0.7,
+      temperature: 1,
     },
   });
 
@@ -196,7 +196,7 @@ export function ApiSettings() {
                   <FormControl>
                     <Slider
                       min={0}
-                      max={1}
+                      max={2}
                       step={0.1}
                       value={[field.value]}
                       onValueChange={(values) => field.onChange(values[0])}

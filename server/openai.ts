@@ -121,7 +121,7 @@ export async function chatWithRAG(
   context: string[],
   apiKey?: string,
   model: string = "gpt-4o",
-  temperature: number = 0.7,
+  temperature: number = 1,
   conversationContext: ConversationMessage[] = [],
   userId?: number
 ): Promise<string> {

@@ -143,7 +143,7 @@ ${instructions[lang].format}`;
       ],
       {
         response_format: { type: "json_object" },
-        temperature: 0.8,
+        temperature: 1,
         maxTokens: 4000
       }
     );
