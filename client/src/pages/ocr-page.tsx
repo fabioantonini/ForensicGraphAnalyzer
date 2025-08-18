@@ -97,6 +97,19 @@ export default function OCRPage() {
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      // Verifica dimensione file (25MB limit)
+      const maxSize = 25 * 1024 * 1024; // 25MB in bytes
+      if (file.size > maxSize) {
+        toast({
+          title: "File troppo grande",
+          description: `Il file selezionato (${(file.size / 1024 / 1024).toFixed(2)} MB) supera il limite di 25 MB. Prova con un file più piccolo o dividilo in sezioni.`,
+          variant: "destructive",
+        });
+        // Reset input
+        event.target.value = '';
+        return;
+      }
+
       // Verifica tipo file supportato
       const supportedTypes = ['image/jpeg', 'image/png', 'image/tiff', 'image/bmp', 'application/pdf'];
       if (!supportedTypes.includes(file.type)) {
@@ -105,6 +118,8 @@ export default function OCRPage() {
           description: t('uploadArea.supportedFormats'),
           variant: "destructive",
         });
+        // Reset input
+        event.target.value = '';
         return;
       }
 
@@ -116,6 +131,13 @@ export default function OCRPage() {
         const url = URL.createObjectURL(file);
         setPreviewUrl(url);
       }
+
+      // Mostra informazioni file
+      toast({
+        title: "File caricato",
+        description: `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB) pronto per il processamento`,
+        variant: "default",
+      });
     }
   };
 
@@ -291,6 +313,16 @@ export default function OCRPage() {
                   onChange={handleFileSelect}
                   className="mt-1"
                 />
+                <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                  <div className="flex items-start gap-2">
+                    <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <div className="text-xs text-blue-800">
+                      <strong>Limite dimensione:</strong> Max 25 MB per file
+                      <br />
+                      <strong>Formati:</strong> PDF, JPG, PNG, TIFF, BMP
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {selectedFile && (
