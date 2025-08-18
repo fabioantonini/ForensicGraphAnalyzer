@@ -48,6 +48,8 @@ router.post("/start", async (req, res) => {
     for (let i = 0; i < generatedQuestions.length; i++) {
       const gq = generatedQuestions[i];
       
+      console.log(`[WAKE-UP-ROUTE] Creating question ${i+1}: correct answer index = ${gq.correct}, correct option = "${gq.options[gq.correct]}"`);
+      
       const question = await storage.createQuizQuestion({
         sessionId: session.id,
         questionNumber: i + 1,
@@ -58,6 +60,8 @@ router.post("/start", async (req, res) => {
         category: gq.category,
         difficulty: gq.difficulty
       });
+      
+      console.log(`[WAKE-UP-ROUTE] Saved question ${i+1} with correct answer: ${question.correctAnswer}`);
       
       const answer = await storage.createQuizAnswer({
         questionId: question.id
