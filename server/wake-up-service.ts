@@ -120,9 +120,18 @@ ${instructions[lang].format}`;
 
   try {
     const openai = await createOpenAIClient(userApiKey, userId);
-    const systemPrompt = lang === 'en' 
-      ? "You are a forensic graphology expert and general knowledge specialist. Generate accurate and educational quiz questions."
-      : "Sei un esperto di grafologia forense e cultura generale. Genera domande di quiz accurate e educative.";
+    
+    // Crea prompt di sistema specifico per categoria
+    let systemPrompt: string;
+    if (category === 'grafologia') {
+      systemPrompt = lang === 'en' 
+        ? "You are a forensic graphology expert. Generate accurate and educational quiz questions about handwriting analysis, forensic graphology techniques, and document examination."
+        : "Sei un esperto di grafologia forense. Genera domande di quiz accurate e educative su analisi calligrafica, tecniche di grafologia forense ed esame documenti.";
+    } else {
+      systemPrompt = lang === 'en' 
+        ? "You are a general knowledge specialist. Generate accurate and educational quiz questions about art, history, science, literature, geography, and general knowledge."
+        : "Sei un esperto di cultura generale. Genera domande di quiz accurate e educative su arte, storia, scienza, letteratura, geografia e conoscenze generali.";
+    }
 
     console.log(`[WAKE-UP] Generating quiz with model: ${model}`);
     
