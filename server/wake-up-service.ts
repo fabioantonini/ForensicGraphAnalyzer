@@ -127,6 +127,10 @@ ${instructions[lang].format}`;
       systemPrompt = lang === 'en' 
         ? "You are a forensic graphology expert. Generate accurate and educational quiz questions about handwriting analysis, forensic graphology techniques, and document examination."
         : "Sei un esperto di grafologia forense. Genera domande di quiz accurate e educative su analisi calligrafica, tecniche di grafologia forense ed esame documenti.";
+    } else if (category === 'mista') {
+      systemPrompt = lang === 'en' 
+        ? "You are both a forensic graphology expert and general knowledge specialist. Generate a balanced mix of quiz questions covering both handwriting analysis/forensic graphology AND general topics like art, history, science, literature, and geography."
+        : "Sei un esperto sia di grafologia forense che di cultura generale. Genera un mix equilibrato di domande di quiz che coprano sia l'analisi calligrafica/grafologia forense CHE argomenti generali come arte, storia, scienza, letteratura e geografia.";
     } else {
       systemPrompt = lang === 'en' 
         ? "You are a general knowledge specialist. Generate accurate and educational quiz questions about art, history, science, literature, geography, and general knowledge."
