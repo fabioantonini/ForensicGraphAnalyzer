@@ -4,7 +4,7 @@ import { log } from "./vite";
 // Get system API key
 const SYSTEM_API_KEY = process.env.OPENAI_API_KEY;
 
-// Helper function to create OpenAI request config with correct token parameter
+// Helper function to create OpenAI request config with correct parameters for each model
 export function createOpenAIRequestConfig(
   model: string, 
   messages: any[], 
@@ -15,7 +15,7 @@ export function createOpenAIRequestConfig(
     [key: string]: any;
   } = {}
 ): any {
-  const { maxTokens = 4000, ...otherOptions } = options;
+  const { maxTokens = 4000, temperature, ...otherOptions } = options;
   
   const config: any = {
     model,
@@ -23,11 +23,19 @@ export function createOpenAIRequestConfig(
     ...otherOptions
   };
   
-  // Use the correct token parameter based on model
+  // GPT-5 specific parameter handling
   if (model === "gpt-5") {
     config.max_completion_tokens = maxTokens;
+    // GPT-5 only supports temperature = 1 (default), so don't set it
+    if (temperature !== undefined && temperature !== 1) {
+      console.log(`[OpenAI] GPT-5 only supports temperature=1, ignoring requested temperature=${temperature}`);
+    }
   } else {
     config.max_tokens = maxTokens;
+    // For other models, use the provided temperature or default
+    if (temperature !== undefined) {
+      config.temperature = temperature;
+    }
   }
   
   return config;
