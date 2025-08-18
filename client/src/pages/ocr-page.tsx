@@ -838,30 +838,7 @@ export default function OCRPage() {
                         Copia
                       </Button>
                       
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          // Crea e scarica il file di testo
-                          const blob = new Blob([ocrResult.extractedText], { type: 'text/plain;charset=utf-8' });
-                          const url = URL.createObjectURL(blob);
-                          const link = document.createElement('a');
-                          link.href = url;
-                          link.download = `${documentTitle || 'documento-ocr'}.txt`;
-                          document.body.appendChild(link);
-                          link.click();
-                          document.body.removeChild(link);
-                          URL.revokeObjectURL(url);
-                          
-                          toast({
-                            title: "Download avviato",
-                            description: "Il documento è stato scaricato",
-                          });
-                        }}
-                        className={saveToKnowledgeBase ? "min-w-[100px]" : "flex-1 min-w-[100px]"}
-                      >
-                        <Download className="h-4 w-4 mr-2" />
-                        Scarica
-                      </Button>
+
                     </div>
                   </TabsContent>
                   
