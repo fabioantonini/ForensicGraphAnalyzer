@@ -667,7 +667,7 @@ export default function OCRPage() {
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="font-medium">{progressStage}</span>
-                    <span className="text-primary font-semibold">{progress}%</span>
+                    <span className="text-primary font-semibold">{Math.round(progress)}%</span>
                   </div>
                   <Progress value={progress} className="h-3" />
                 </div>

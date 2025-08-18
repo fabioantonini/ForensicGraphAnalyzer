@@ -478,26 +478,36 @@ async function processPdfWithOCR(pdfBuffer: Buffer, filename: string, settings: 
       // Prima determina il numero effettivo di pagine nel PDF
       const pdf2picCheck = pdf2pic.fromPath(tempPdfPath, { density: 72, format: "png" });
       
-      let actualPageCount = maxPages;
+      let actualPageCount = 1;
       try {
-        // Prova a convertire una pagina oltre il limite per determinare il numero reale
-        const testConvert = await pdf2picCheck(maxPages + 1, { responseType: "buffer" }).catch(() => null);
-        if (!testConvert) {
-          // Il PDF ha meno pagine del limite, trova il numero esatto
-          for (let testPage = 1; testPage <= maxPages; testPage++) {
-            const testResult = await pdf2picCheck(testPage, { responseType: "buffer" }).catch(() => null);
-            if (!testResult) {
-              actualPageCount = testPage - 1;
-              break;
-            }
+        // Determina il numero esatto di pagine nel PDF
+        let testPage = 1;
+        while (testPage <= maxPages) {
+          const testResult = await pdf2picCheck(testPage, { responseType: "buffer" }).catch(() => null);
+          if (!testResult || !testResult.buffer || testResult.buffer.length === 0) {
+            actualPageCount = testPage - 1;
+            break;
+          }
+          testPage++;
+          // Se raggiungiamo il limite, assumiamo che ci siano almeno quelle pagine
+          if (testPage > maxPages) {
+            actualPageCount = maxPages;
+            break;
           }
         }
+        
+        // Se actualPageCount è ancora 1 ma abbiamo superato il primo test, 
+        // significa che il PDF ha almeno una pagina
+        if (actualPageCount === 0) {
+          actualPageCount = 1;
+        }
       } catch (e) {
-        log("ocr", `Impossibile determinare il numero esatto di pagine, uso limite: ${maxPages}`);
+        log("ocr", `Impossibile determinare il numero esatto di pagine, uso default: 1`);
+        actualPageCount = 1;
       }
       
-      const pagesToProcess = Math.min(actualPageCount, maxPages);
-      log("ocr", `Processing ${pagesToProcess} pages (PDF has ~${actualPageCount} pages)`);
+      const pagesToProcess = settings.completeMode ? actualPageCount : Math.min(actualPageCount, maxPages);
+      log("ocr", `Processing ${pagesToProcess} pages (PDF has ${actualPageCount} pages, mode: ${settings.completeMode ? 'COMPLETA' : 'STANDARD'})`);
       
       // Processamento ottimizzato: batch paralleli per documenti grandi
       const batchSize = settings.batchSize || (settings.completeMode ? 5 : 1);
@@ -577,8 +587,8 @@ async function processPdfWithOCR(pdfBuffer: Buffer, filename: string, settings: 
           }
         }
         
-        // Aggiorna progresso
-        const progressPercent = 50 + (processedPages / pagesToProcess) * 35;
+        // Aggiorna progresso con arrotondamento
+        const progressPercent = Math.round(50 + (processedPages / pagesToProcess) * 35);
         progressCallback?.(progressPercent, `Elaborate ${processedPages}/${pagesToProcess} pagine...`);
       }
       
