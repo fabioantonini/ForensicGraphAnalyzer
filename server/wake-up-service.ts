@@ -169,12 +169,14 @@ ${instructions[lang].format}`;
     }
 
     const parsed = JSON.parse(content);
+    console.log(`[WAKE-UP] Parsed JSON:`, parsed);
     
     if (!parsed.questions || !Array.isArray(parsed.questions)) {
+      console.log(`[WAKE-UP] Invalid format - questions:`, parsed.questions);
       throw new Error("Invalid response format from OpenAI");
     }
 
-    return parsed.questions.map((q: any) => ({
+    const questions = parsed.questions.map((q: any) => ({
       question: q.question,
       options: q.options,
       correct: q.correct,
@@ -182,6 +184,9 @@ ${instructions[lang].format}`;
       category: q.category,
       difficulty: q.difficulty || "medium"
     }));
+    
+    console.log(`[WAKE-UP] Returning ${questions.length} questions`);
+    return questions;
 
   } catch (error) {
     console.error("Error generating quiz questions:", error);

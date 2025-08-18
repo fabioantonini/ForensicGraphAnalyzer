@@ -25,9 +25,9 @@ export function createOpenAIRequestConfig(
   
   // GPT-5 specific parameter handling
   if (model === "gpt-5") {
-    // GPT-5 needs more tokens because it uses reasoning tokens + actual output
-    // We need reasoning tokens + actual output tokens, so increase the limit
-    const gpt5Tokens = Math.max(maxTokens * 2, 8000); // Double the tokens for GPT-5
+    // GPT-5 needs MUCH more tokens because it uses reasoning tokens + actual output
+    // We need reasoning tokens + actual output tokens, so dramatically increase the limit
+    const gpt5Tokens = Math.max(maxTokens * 4, 16000); // Quadruple the tokens for GPT-5
     config.max_completion_tokens = gpt5Tokens;
     console.log(`[OpenAI] GPT-5 using ${gpt5Tokens} max_completion_tokens (increased for reasoning)`);
     
