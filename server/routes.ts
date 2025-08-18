@@ -914,6 +914,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check for duplicate documents before upload
+  app.post("/api/documents/check-duplicate", isAuthenticated, isActiveUser, async (req, res, next) => {
+    try {
+      const userId = req.user!.id;
+      const { filename, fileSize } = req.body;
+
+      if (!filename || !fileSize) {
+        return res.status(400).json({ message: "Nome file e dimensione sono obbligatori" });
+      }
+
+      // Check exact duplicate first
+      const exactDuplicate = await storage.checkDuplicateDocument(userId, filename, fileSize);
+      if (exactDuplicate) {
+        return res.json({
+          isDuplicate: true,
+          type: 'exact',
+          existingDocument: {
+            id: exactDuplicate.id,
+            filename: exactDuplicate.originalFilename,
+            uploadDate: exactDuplicate.createdAt,
+            indexed: exactDuplicate.indexed,
+            source: exactDuplicate.source
+          },
+          message: `Un documento identico è già presente nella raccolta. Caricato il ${exactDuplicate.createdAt.toLocaleDateString()}.`
+        });
+      }
+
+      // Check for OCR/similar document
+      const similarDuplicate = await storage.checkOCRDuplicateDocument(userId, filename);
+      if (similarDuplicate) {
+        return res.json({
+          isDuplicate: true,
+          type: 'similar',
+          existingDocument: {
+            id: similarDuplicate.id,
+            filename: similarDuplicate.originalFilename,
+            uploadDate: similarDuplicate.createdAt,
+            indexed: similarDuplicate.indexed,
+            source: similarDuplicate.source
+          },
+          message: `Un documento simile "${similarDuplicate.originalFilename}" è già presente. ${similarDuplicate.source === 'ocr' ? 'Processato tramite OCR' : 'Caricato direttamente'} il ${similarDuplicate.createdAt.toLocaleDateString()}.`
+        });
+      }
+
+      res.json({ isDuplicate: false });
+    } catch (error: any) {
+      console.error("Errore controllo duplicati:", error);
+      res.status(500).json({ message: "Errore durante il controllo duplicati" });
+    }
+  });
+
   // Save OCR result as document
   app.post("/api/documents/from-ocr", isAuthenticated, isActiveUser, async (req, res, next) => {
     try {

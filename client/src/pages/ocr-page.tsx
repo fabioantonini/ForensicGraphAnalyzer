@@ -82,6 +82,12 @@ export default function OCRPage() {
   const [documentTitle, setDocumentTitle] = useState("");
   const [saveToKnowledgeBase, setSaveToKnowledgeBase] = useState(true);
   const [processId, setProcessId] = useState<string | null>(null);
+  const [duplicateCheck, setDuplicateCheck] = useState<{
+    isDuplicate: boolean;
+    type?: 'exact' | 'similar';
+    message?: string;
+    existingDocument?: any;
+  } | null>(null);
 
   // Impostazioni OCR
   const [ocrSettings, setOcrSettings] = useState<OCRSettings>({
@@ -92,6 +98,38 @@ export default function OCRPage() {
     completeMode: false,
     batchSize: 3
   });
+
+  // Controllo duplicati
+  const checkForDuplicates = async (file: File) => {
+    try {
+      const response = await fetch("/api/documents/check-duplicate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          filename: file.name,
+          fileSize: file.size
+        }),
+        credentials: "include",
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        setDuplicateCheck(result);
+        
+        if (result.isDuplicate) {
+          toast({
+            title: result.type === 'exact' ? "Documento già presente" : "Documento simile trovato",
+            description: result.message,
+            variant: "destructive",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Errore controllo duplicati:", error);
+    }
+  };
 
   // Gestione selezione file
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -131,6 +169,9 @@ export default function OCRPage() {
         const url = URL.createObjectURL(file);
         setPreviewUrl(url);
       }
+
+      // Check for duplicates
+      checkForDuplicates(file);
 
       // Mostra informazioni file
       toast({
@@ -672,11 +713,37 @@ export default function OCRPage() {
             </CardContent>
           </Card>
 
+          {/* Avviso duplicato */}
+          {duplicateCheck?.isDuplicate && (
+            <div className={`p-4 rounded-lg border ${
+              duplicateCheck.type === 'exact' 
+                ? 'bg-red-50 border-red-200' 
+                : 'bg-orange-50 border-orange-200'
+            }`}>
+              <div className="flex items-start space-x-3">
+                <AlertCircle className={`h-5 w-5 mt-0.5 ${
+                  duplicateCheck.type === 'exact' ? 'text-red-600' : 'text-orange-600'
+                }`} />
+                <div className={`${
+                  duplicateCheck.type === 'exact' ? 'text-red-800' : 'text-orange-800'
+                }`}>
+                  <p className="font-medium mb-1">
+                    {duplicateCheck.type === 'exact' ? 'Documento identico trovato' : 'Documento simile trovato'}
+                  </p>
+                  <p className="text-sm mb-2">{duplicateCheck.message}</p>
+                  <p className="text-xs opacity-75">
+                    Il processamento è stato bloccato per evitare duplicati nella base di conoscenza.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Pulsanti di azione */}
           <div className="flex gap-3">
             <Button
               onClick={handleProcessOCR}
-              disabled={!selectedFile || isProcessing}
+              disabled={!selectedFile || isProcessing || (duplicateCheck?.isDuplicate)}
               className="flex-1"
             >
               {isProcessing ? (
