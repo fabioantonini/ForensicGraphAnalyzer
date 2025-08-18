@@ -249,7 +249,10 @@ export default function OCRPage() {
 
     setIsProcessing(true);
     setProgress(0);
-    setProgressStage("Avvio processamento OCR...");
+    const initialStage = ocrSettings.completeMode 
+      ? `Avvio processamento completo (modalità batch ${ocrSettings.batchSize} pagine)...`
+      : "Avvio processamento OCR standard...";
+    setProgressStage(initialStage);
     setProcessingStartTime(Date.now());
     setOcrResult(null); // Reset risultati precedenti
     

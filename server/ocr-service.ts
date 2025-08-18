@@ -191,7 +191,7 @@ export async function processOCR(
       // Per i PDF, usa estrazione diretta del testo con fallback OCR
       progressCallback?.(15, 'Estrazione testo da PDF...');
       
-      const extractedText = await processPdfText(fileBuffer, filename, progressCallback);
+      const extractedText = await processPdfText(fileBuffer, filename, settings, progressCallback);
       
       progressCallback?.(90, 'Finalizzazione risultati PDF...');
       
@@ -321,7 +321,7 @@ Soluzioni possibili:
 }
 
 // Funzione migliorata per processare PDF con fallback OCR
-async function processPdfText(pdfBuffer: Buffer, filename: string, progressCallback?: (progress: number, stage: string) => void): Promise<string> {
+async function processPdfText(pdfBuffer: Buffer, filename: string, settings: OCRSettings, progressCallback?: (progress: number, stage: string) => void): Promise<string> {
   try {
     log("ocr", "Estrazione testo diretto da PDF...");
     
