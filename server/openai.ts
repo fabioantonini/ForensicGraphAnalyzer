@@ -4,6 +4,35 @@ import { log } from "./vite";
 // Get system API key
 const SYSTEM_API_KEY = process.env.OPENAI_API_KEY;
 
+// Helper function to create OpenAI request config with correct token parameter
+export function createOpenAIRequestConfig(
+  model: string, 
+  messages: any[], 
+  options: {
+    temperature?: number;
+    maxTokens?: number;
+    responseFormat?: any;
+    [key: string]: any;
+  } = {}
+): any {
+  const { maxTokens = 4000, ...otherOptions } = options;
+  
+  const config: any = {
+    model,
+    messages,
+    ...otherOptions
+  };
+  
+  // Use the correct token parameter based on model
+  if (model === "gpt-5") {
+    config.max_completion_tokens = maxTokens;
+  } else {
+    config.max_tokens = maxTokens;
+  }
+  
+  return config;
+}
+
 // Create a context-specific OpenAI client with the user's API key or fallback to admin key
 export async function createOpenAIClient(apiKey?: string, userId?: number) {
   let finalApiKey = apiKey;

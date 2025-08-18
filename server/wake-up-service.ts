@@ -125,9 +125,13 @@ ${instructions[lang].format}`;
       : "Sei un esperto di grafologia forense e cultura generale. Genera domande di quiz accurate e educative.";
 
     console.log(`[WAKE-UP] Generating quiz with model: ${model}`);
-    const response = await openai.chat.completions.create({
-      model: model, // User-selected model (GPT-4o default, GPT-5 available)
-      messages: [
+    
+    // Import helper function
+    const { createOpenAIRequestConfig } = await import("./openai");
+    
+    const requestConfig = createOpenAIRequestConfig(
+      model, // User-selected model (GPT-4o default, GPT-5 available)
+      [
         {
           role: "system",
           content: systemPrompt
@@ -137,10 +141,14 @@ ${instructions[lang].format}`;
           content: prompt
         }
       ],
-      response_format: { type: "json_object" },
-      temperature: 0.8,
-      max_tokens: 4000
-    });
+      {
+        response_format: { type: "json_object" },
+        temperature: 0.8,
+        maxTokens: 4000
+      }
+    );
+    
+    const response = await openai.chat.completions.create(requestConfig);
 
     const content = response.choices[0].message.content;
     if (!content) {
