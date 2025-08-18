@@ -14,6 +14,7 @@ export const users = pgTable("users", {
   organization: text("organization"),
   profession: text("profession"),
   openaiApiKey: text("openai_api_key"),
+  model: text("model").default("gpt-4o").notNull(), // Modello OpenAI selezionato dall'utente
   role: text("role").default("user").notNull(), // 'user', 'admin' o 'demo'
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

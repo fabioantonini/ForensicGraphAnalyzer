@@ -42,7 +42,7 @@ export function ApiSettings() {
     resolver: zodResolver(apiSettingsSchema),
     defaultValues: {
       openaiApiKey: user?.openaiApiKey || "",
-      model: "gpt-4o",
+      model: (user?.model as "gpt-4o" | "gpt-5") || "gpt-4o",
       temperature: 0.7,
     },
   });
@@ -73,9 +73,38 @@ export function ApiSettings() {
     },
   });
 
+  // Update model mutation
+  const updateModelMutation = useMutation({
+    mutationFn: async (data: { model: string }) => {
+      const response = await apiRequest("PUT", "/api/user/model", data);
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Model updated",
+        description: "Your OpenAI model preference has been updated",
+        variant: "default",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Update failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Form submission handler
   const onSubmit = (values: ApiSettingsFormValues) => {
     updateApiKeyMutation.mutate({ openaiApiKey: values.openaiApiKey });
+  };
+
+  // Handle model change
+  const handleModelChange = (model: string) => {
+    form.setValue('model', model as "gpt-4o" | "gpt-5");
+    updateModelMutation.mutate({ model });
   };
 
   return (
@@ -140,7 +169,7 @@ export function ApiSettings() {
                 <FormItem>
                   <FormLabel>OpenAI Model</FormLabel>
                   <Select
-                    onValueChange={field.onChange}
+                    onValueChange={handleModelChange}
                     defaultValue={field.value}
                   >
                     <FormControl>

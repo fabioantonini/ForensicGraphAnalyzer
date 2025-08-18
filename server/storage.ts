@@ -37,6 +37,7 @@ export interface IStorage {
     profession?: string;
   }): Promise<User>;
   updateUserPassword(userId: number, hashedPassword: string): Promise<User>;
+  updateUserModel(userId: number, model: string): Promise<User>;
   
   // Admin methods
   getAllUsers(): Promise<User[]>;
@@ -284,6 +285,22 @@ export class MemStorage implements IStorage {
     const updatedUser: User = {
       ...user,
       password: hashedPassword,
+      updatedAt: new Date(),
+    };
+    
+    this.users.set(userId, updatedUser);
+    return updatedUser;
+  }
+
+  async updateUserModel(userId: number, model: string): Promise<User> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error(`User with ID ${userId} not found`);
+    }
+    
+    const updatedUser: User = {
+      ...user,
+      model,
       updatedAt: new Date(),
     };
     
@@ -1530,6 +1547,23 @@ export class DatabaseStorage implements IStorage {
       .update(users)
       .set({
         password: hashedPassword,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    
+    if (!updatedUser) {
+      throw new Error(`User with ID ${userId} not found`);
+    }
+    
+    return updatedUser;
+  }
+
+  async updateUserModel(userId: number, model: string): Promise<User> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({
+        model,
         updatedAt: new Date()
       })
       .where(eq(users.id, userId))

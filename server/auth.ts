@@ -349,6 +349,35 @@ export function setupAuth(app: Express) {
     }
   });
 
+  // Update user model preference
+  app.put("/api/user/model", async (req, res, next) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const { model } = req.body;
+      const userId = req.user!.id;
+      
+      // Validate model
+      if (!["gpt-4o", "gpt-5"].includes(model)) {
+        return res.status(400).json({ message: "Invalid model" });
+      }
+      
+      const updatedUser = await storage.updateUserModel(userId, model);
+      
+      // Create an activity for model update
+      await storage.createActivity({
+        userId: userId,
+        type: "model_update",
+        details: `OpenAI model updated to ${model}`,
+      });
+      
+      // Don't send the password back
+      const { password, ...userWithoutPassword } = updatedUser;
+      res.json(userWithoutPassword);
+    } catch (err) {
+      next(err);
+    }
+  });
+
   app.put("/api/user/profile", async (req, res, next) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     try {
