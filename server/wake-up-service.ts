@@ -148,10 +148,23 @@ ${instructions[lang].format}`;
       }
     );
     
+    console.log(`[WAKE-UP] Request config:`, JSON.stringify(requestConfig, null, 2));
+    
     const response = await openai.chat.completions.create(requestConfig);
 
+    console.log(`[WAKE-UP] OpenAI response status:`, response);
+    console.log(`[WAKE-UP] Response choices:`, response.choices);
+    console.log(`[WAKE-UP] First choice:`, response.choices[0]);
+    
+    if (!response.choices || response.choices.length === 0) {
+      throw new Error("No choices received from OpenAI");
+    }
+    
     const content = response.choices[0].message.content;
+    console.log(`[WAKE-UP] Message content:`, content);
+    
     if (!content) {
+      console.log(`[WAKE-UP] Full response object:`, JSON.stringify(response, null, 2));
       throw new Error("No content received from OpenAI");
     }
 
