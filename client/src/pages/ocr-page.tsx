@@ -60,6 +60,8 @@ interface OCRSettings {
   dpi: number;
   preprocessingMode: string;
   outputFormat: string;
+  completeMode?: boolean;
+  batchSize?: number;
 }
 
 export default function OCRPage() {
@@ -85,7 +87,9 @@ export default function OCRPage() {
     language: "ita+eng", // Italiano + Inglese
     dpi: 300,
     preprocessingMode: "auto",
-    outputFormat: "text"
+    outputFormat: "text",
+    completeMode: false,
+    batchSize: 3
   });
 
   // Gestione selezione file
@@ -310,17 +314,73 @@ export default function OCRPage() {
                 />
               </div>
 
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="save-to-kb"
-                  checked={saveToKnowledgeBase}
-                  onChange={(e) => setSaveToKnowledgeBase(e.target.checked)}
-                  className="rounded border-gray-300"
-                />
-                <Label htmlFor="save-to-kb" className="text-sm">
-                  Salva nella base di conoscenza per query future
-                </Label>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="save-to-kb"
+                    checked={saveToKnowledgeBase}
+                    onChange={(e) => setSaveToKnowledgeBase(e.target.checked)}
+                    className="rounded border-gray-300"
+                  />
+                  <Label htmlFor="save-to-kb" className="text-sm">
+                    Salva nella base di conoscenza per query future
+                  </Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Il documento verrà indicizzato per le ricerche future</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="complete-mode"
+                    checked={ocrSettings.completeMode || false}
+                    onChange={(e) => setOcrSettings(prev => ({ 
+                      ...prev, 
+                      completeMode: e.target.checked,
+                      batchSize: e.target.checked ? 5 : 3 
+                    }))}
+                    className="rounded border-gray-300"
+                  />
+                  <Label htmlFor="complete-mode" className="text-sm font-medium">
+                    Modalità Completa (tutto il documento)
+                  </Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-4 w-4 text-blue-500" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <div className="space-y-2">
+                          <p><strong>Modalità Standard:</strong> Prime 15 pagine, veloce</p>
+                          <p><strong>Modalità Completa:</strong> Tutto il documento, più lenta</p>
+                          <p>Usa batch paralleli per ottimizzare i tempi</p>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+
+                {ocrSettings.completeMode && (
+                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div className="flex items-start space-x-2">
+                      <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5" />
+                      <div className="text-sm text-yellow-800">
+                        <p className="font-medium">Modalità Completa Attiva</p>
+                        <p>Il processamento richiederà più tempo ma estrarrà tutto il contenuto del documento.</p>
+                        <p className="mt-1"><strong>Batch size:</strong> {ocrSettings.batchSize} pagine in parallelo</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

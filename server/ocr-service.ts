@@ -61,6 +61,8 @@ interface OCRSettings {
   dpi: number;
   preprocessingMode: string;
   outputFormat: string;
+  completeMode?: boolean; // Modalità per processare tutto il documento
+  batchSize?: number; // Numero di pagine da processare in parallelo
 }
 
 interface OCRResult {
@@ -346,7 +348,7 @@ async function processPdfText(pdfBuffer: Buffer, filename: string, progressCallb
       // Se il testo estratto è molto breve, prova con OCR
       if (extractedText.trim().length < 50) {
         log("ocr", "Testo estratto troppo breve, tentativo OCR...");
-        const ocrText = await processPdfWithOCR(pdfBuffer, filename, progressCallback);
+        const ocrText = await processPdfWithOCR(pdfBuffer, filename, settings, progressCallback);
         if (ocrText.length > extractedText.length) {
           extractedText = ocrText;
         }
@@ -358,7 +360,7 @@ async function processPdfText(pdfBuffer: Buffer, filename: string, progressCallb
       // Prova con OCR come fallback
       log("ocr", "Tentativo OCR per PDF scansionato...");
       try {
-        extractedText = await processPdfWithOCR(pdfBuffer, filename, progressCallback);
+        extractedText = await processPdfWithOCR(pdfBuffer, filename, settings, progressCallback);
         if (extractedText.length > 0) {
           log("ocr", `OCR riuscito: ${extractedText.length} caratteri estratti`);
         }
@@ -401,7 +403,7 @@ Per risolvere il problema:
 }
 
 // Funzione per processare PDF scansionati con OCR
-async function processPdfWithOCR(pdfBuffer: Buffer, filename: string, progressCallback?: (progress: number, stage: string) => void): Promise<string> {
+async function processPdfWithOCR(pdfBuffer: Buffer, filename: string, settings: OCRSettings, progressCallback?: (progress: number, stage: string) => void): Promise<string> {
   const uniqueId = `${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
   const sanitizedFilename = filename.replace(/[^a-zA-Z0-9.-]/g, '_');
   const tempPdfPath = path.join('./temp', `temp_ocr_${uniqueId}_${sanitizedFilename}`);
@@ -454,19 +456,20 @@ async function processPdfWithOCR(pdfBuffer: Buffer, filename: string, progressCa
     });
     
     // Determina dinamicamente il numero massimo di pagine da processare
-    // Per file piccoli (< 5MB): fino a 50 pagine
-    // Per file medi (5-15MB): fino a 25 pagine  
-    // Per file grandi (> 15MB): fino a 15 pagine
+    // Modalità Standard: limite conservativo per prestazioni
+    // Modalità Completa: nessun limite (attivabile dall'utente)
     const fileSize = pdfBuffer.length;
-    let maxPages = 15; // Default per file grandi
+    let maxPages = settings.completeMode ? 999 : 15; // Default conservativo
     
-    if (fileSize < 5 * 1024 * 1024) {
-      maxPages = 50; // File piccoli
-    } else if (fileSize < 15 * 1024 * 1024) {
-      maxPages = 25; // File medi
+    if (!settings.completeMode) {
+      if (fileSize < 5 * 1024 * 1024) {
+        maxPages = 50; // File piccoli
+      } else if (fileSize < 15 * 1024 * 1024) {
+        maxPages = 25; // File medi
+      }
     }
     
-    log("ocr", `PDF size: ${Math.round(fileSize / 1024 / 1024)}MB, processing up to ${maxPages} pages`);
+    log("ocr", `PDF size: ${Math.round(fileSize / 1024 / 1024)}MB, processing mode: ${settings.completeMode ? 'COMPLETA' : 'STANDARD'}, max pages: ${maxPages}`);
     let allText = "";
     
     try {
@@ -496,24 +499,41 @@ async function processPdfWithOCR(pdfBuffer: Buffer, filename: string, progressCa
       const pagesToProcess = Math.min(actualPageCount, maxPages);
       log("ocr", `Processing ${pagesToProcess} pages (PDF has ~${actualPageCount} pages)`);
       
-      // Converti una pagina alla volta per gestire meglio gli errori
-      for (let pageNum = 1; pageNum <= pagesToProcess; pageNum++) {
-        try {
-          log("ocr", `Conversione pagina ${pageNum}...`);
-          
-          // Converti singola pagina con timeout
-          const convertPromise = convert(pageNum, { responseType: "buffer" });
-          const timeoutPromise = new Promise<any>((_, reject) => 
-            setTimeout(() => reject(new Error(`Timeout conversione pagina ${pageNum}`)), 30000)
-          );
-          
-          const pageResult = await Promise.race([convertPromise, timeoutPromise]);
-          
-          if (pageResult && pageResult.buffer && pageResult.buffer.length > 0) {
-            log("ocr", `Pagina ${pageNum} convertita: ${pageResult.buffer.length} bytes`);
+      // Processamento ottimizzato: batch paralleli per documenti grandi
+      const batchSize = settings.batchSize || (settings.completeMode ? 5 : 1);
+      const batches = [];
+      
+      for (let i = 0; i < pagesToProcess; i += batchSize) {
+        const batch = [];
+        for (let j = i; j < Math.min(i + batchSize, pagesToProcess); j++) {
+          batch.push(j + 1); // pageNum è 1-indexed
+        }
+        batches.push(batch);
+      }
+      
+      log("ocr", `Processing ${pagesToProcess} pages in ${batches.length} batches of ${batchSize} pages each`);
+      
+      // Processa i batch sequenzialmente (ma le pagine nel batch in parallelo)
+      let processedPages = 0;
+      for (const batch of batches) {
+        // Processa tutte le pagine del batch in parallelo
+        const batchPromises = batch.map(async (pageNum) => {
+          try {
+            log("ocr", `Conversione pagina ${pageNum} (batch)...`);
             
-            // Verifica che il buffer dell'immagine sia valido
-            try {
+            // Converti singola pagina con timeout esteso per modalità completa
+            const timeout = settings.completeMode ? 60000 : 30000;
+            const convertPromise = convert(pageNum, { responseType: "buffer" });
+            const timeoutPromise = new Promise<any>((_, reject) => 
+              setTimeout(() => reject(new Error(`Timeout conversione pagina ${pageNum}`)), timeout)
+            );
+            
+            const pageResult = await Promise.race([convertPromise, timeoutPromise]);
+            
+            if (pageResult && pageResult.buffer && pageResult.buffer.length > 0) {
+              log("ocr", `Pagina ${pageNum} convertita: ${pageResult.buffer.length} bytes`);
+              
+              // Verifica che il buffer dell'immagine sia valido
               const imageMetadata = await sharp(pageResult.buffer).metadata();
               if (!imageMetadata.width || !imageMetadata.height) {
                 throw new Error(`Immagine pagina ${pageNum} non valida`);
@@ -521,29 +541,45 @@ async function processPdfWithOCR(pdfBuffer: Buffer, filename: string, progressCa
               
               log("ocr", `Immagine pagina ${pageNum} valida: ${imageMetadata.width}x${imageMetadata.height}`);
               
-              // Processa con OCR
-              const { data } = await worker.recognize(pageResult.buffer);
-              const pageText = data.text.trim();
-              
-              if (pageText.length > 0) {
-                allText += `\n=== Pagina ${pageNum} ===\n${pageText}\n`;
-                log("ocr", `Pagina ${pageNum} processata: ${pageText.length} caratteri`);
+              // Processa con OCR (ogni pagina ha il suo worker nel batch)
+              const pageWorker = await createWorker('eng');
+              try {
+                const { data } = await pageWorker.recognize(pageResult.buffer);
+                const pageText = data.text.trim();
+                
+                if (pageText.length > 0) {
+                  log("ocr", `Pagina ${pageNum} processata: ${pageText.length} caratteri`);
+                  return { pageNum, text: pageText };
+                }
+              } finally {
+                await pageWorker.terminate();
               }
-              
-            } catch (ocrError: any) {
-              log("ocr", `Errore OCR pagina ${pageNum}: ${ocrError.message}`);
-              // Continua con la prossima pagina
+            } else {
+              log("ocr", `Pagina ${pageNum} non convertita o buffer vuoto`);
             }
-          } else {
-            log("ocr", `Pagina ${pageNum} non convertita o buffer vuoto`);
+            
+            return null;
+            
+          } catch (pageError: any) {
+            log("ocr", `Errore conversione pagina ${pageNum}: ${pageError.message}`);
+            return null;
           }
-          
-          progressCallback?.(50 + (pageNum / pagesToProcess) * 35, `Elaborando pagina ${pageNum}/${pagesToProcess}...`);
-          
-        } catch (pageError: any) {
-          log("ocr", `Errore conversione pagina ${pageNum}: ${pageError.message}`);
-          // Continua con la prossima pagina
+        });
+        
+        // Attendi completamento batch
+        const batchResults = await Promise.all(batchPromises);
+        
+        // Aggiungi risultati in ordine
+        for (const result of batchResults) {
+          if (result) {
+            allText += `\n=== Pagina ${result.pageNum} ===\n${result.text}\n`;
+            processedPages++;
+          }
         }
+        
+        // Aggiorna progresso
+        const progressPercent = 50 + (processedPages / pagesToProcess) * 35;
+        progressCallback?.(progressPercent, `Elaborate ${processedPages}/${pagesToProcess} pagine...`);
       }
       
       progressCallback?.(90, 'Finalizzazione...');
