@@ -124,7 +124,7 @@ ${instructions[lang].format}`;
       : "Sei un esperto di grafologia forense e cultura generale. Genera domande di quiz accurate e educative.";
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      model: "gpt-4o", // GPT-4o remains default for stability, GPT-5 available as option
       messages: [
         {
           role: "system",

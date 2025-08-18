@@ -83,12 +83,7 @@ export function ChatInterface({
   const [model, setModel] = useState("gpt-4o");
   const [temperature, setTemperature] = useState(0.7);
   
-  // Quando cambia il modello, imposta la temperatura a 1 per o3 e o4-mini
-  useEffect(() => {
-    if (model === 'o3' || model === 'o4-mini') {
-      setTemperature(1);
-    }
-  }, [model]);
+  // GPT-4o rimane il default, GPT-5 disponibile come opzione
   
   // Salva i messaggi nel localStorage quando cambiano
   useEffect(() => {
@@ -374,30 +369,22 @@ export function ChatInterface({
                   <SelectValue placeholder="GPT-4o" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="o3">o3</SelectItem>
-                  <SelectItem value="o4-mini">o4-mini</SelectItem>
                   <SelectItem value="gpt-4o">GPT-4o</SelectItem>
-                  <SelectItem value="gpt-3.5-turbo">GPT-3.5</SelectItem>
+                  <SelectItem value="gpt-5">GPT-5</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
             <div className="flex items-center space-x-2">
               <span>{t('settings.api.temperature', 'Temp')}: {temperature}</span>
-              {model !== 'o3' && model !== 'o4-mini' ? (
-                <Slider
-                  className="w-24"
-                  min={0}
-                  max={1}
-                  step={0.1}
-                  value={[temperature]}
-                  onValueChange={(values) => setTemperature(values[0])}
-                />
-              ) : (
-                <div className="italic text-xs ml-2" title={t('query.tempDisabled', 'Temperature control is not available for this model')}>
-                  {t('query.fixedModel', 'Fixed for this model')}
-                </div>
-              )}
+              <Slider
+                className="w-24"
+                min={0}
+                max={1}
+                step={0.1}
+                value={[temperature]}
+                onValueChange={(values) => setTemperature(values[0])}
+              />
             </div>
           </div>
         </div>
