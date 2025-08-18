@@ -280,7 +280,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Unsupported file type" });
       }
 
-      // Check for duplicate documents
+      // Check for duplicate documents - exact match first
       const existingDocument = await storage.checkDuplicateDocument(userId, req.file.originalname, req.file.size);
       if (existingDocument) {
         return res.status(409).json({ 
@@ -291,6 +291,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
             filename: existingDocument.originalFilename,
             uploadDate: existingDocument.createdAt,
             indexed: existingDocument.indexed
+          }
+        });
+      }
+
+      // Also check for OCR-processed versions of the same base filename
+      const ocrExistingDocument = await storage.checkOCRDuplicateDocument(userId, req.file.originalname);
+      if (ocrExistingDocument) {
+        return res.status(409).json({ 
+          message: "Documento simile già presente", 
+          details: `Un documento con nome simile "${ocrExistingDocument.originalFilename}" è già nella raccolta. ${ocrExistingDocument.source === 'ocr' ? 'È stato processato tramite OCR' : 'È stato caricato direttamente'} il ${ocrExistingDocument.createdAt.toLocaleDateString()}.`,
+          existingDocument: {
+            id: ocrExistingDocument.id,
+            filename: ocrExistingDocument.originalFilename,
+            uploadDate: ocrExistingDocument.createdAt,
+            indexed: ocrExistingDocument.indexed,
+            source: ocrExistingDocument.source
           }
         });
       }
@@ -910,20 +926,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       log("ocr", `Salvataggio documento OCR per utente ${userId}: ${title}`);
 
-      // Check for duplicate documents based on filename and content size
+      // Check for duplicate documents based on base filename (smart OCR duplicate detection)
       const proposedFilename = `${title}.txt`;
-      const fileSize = Buffer.byteLength(content, 'utf8');
-      const existingDocument = await storage.checkDuplicateDocument(userId, proposedFilename, fileSize);
+      const existingDocument = await storage.checkOCRDuplicateDocument(userId, title);
       
       if (existingDocument) {
         return res.status(409).json({ 
           message: "Documento duplicato", 
-          details: `Un documento OCR con lo stesso nome e dimensione è già presente nella tua raccolta. Salvato il ${existingDocument.createdAt.toLocaleDateString()}.`,
+          details: `Un documento con nome simile "${existingDocument.originalFilename}" è già presente nella tua raccolta. Salvato il ${existingDocument.createdAt.toLocaleDateString()}. ${existingDocument.source === 'ocr' ? 'È stato processato tramite OCR.' : 'È stato caricato direttamente.'}`,
           existingDocument: {
             id: existingDocument.id,
             filename: existingDocument.originalFilename,
             uploadDate: existingDocument.createdAt,
-            indexed: existingDocument.indexed
+            indexed: existingDocument.indexed,
+            source: existingDocument.source
           }
         });
       }

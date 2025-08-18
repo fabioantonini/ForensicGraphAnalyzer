@@ -71,6 +71,7 @@ export interface IStorage {
   getLastUploadTime(userId: number): Promise<Date | null>;
   getStorageUsed(userId: number): Promise<number>;
   checkDuplicateDocument(userId: number, originalFilename: string, fileSize: number): Promise<Document | null>;
+  checkOCRDuplicateDocument(userId: number, baseFilename: string): Promise<Document | null>;
 
   // Activity methods
   createActivity(activity: InsertActivity): Promise<Activity>;
@@ -673,6 +674,24 @@ export class MemStorage implements IStorage {
       doc.originalFilename === originalFilename && 
       doc.fileSize === fileSize
     );
+    
+    return duplicate || null;
+  }
+
+  // Check for OCR duplicate documents based on base filename (without extension)
+  async checkOCRDuplicateDocument(userId: number, baseFilename: string): Promise<Document | null> {
+    const userDocuments = Array.from(this.documents.values()).filter(
+      (doc) => doc.userId === userId,
+    );
+    
+    // Remove extension from filename for comparison
+    const baseName = baseFilename.replace(/\.[^/.]+$/, "");
+    
+    // Check if any existing document has the same base name
+    const duplicate = userDocuments.find(doc => {
+      const existingBaseName = doc.originalFilename.replace(/\.[^/.]+$/, "");
+      return existingBaseName === baseName;
+    });
     
     return duplicate || null;
   }
@@ -1902,6 +1921,25 @@ export class DatabaseStorage implements IStorage {
         )
       )
       .limit(1);
+    
+    return duplicate || null;
+  }
+
+  // Check for OCR duplicate documents based on base filename (without extension)
+  async checkOCRDuplicateDocument(userId: number, baseFilename: string): Promise<Document | null> {
+    // Remove extension from filename for comparison
+    const baseName = baseFilename.replace(/\.[^/.]+$/, "");
+    
+    const duplicates = await db
+      .select()
+      .from(documents)
+      .where(eq(documents.userId, userId));
+    
+    // Check if any existing document has the same base name
+    const duplicate = duplicates.find(doc => {
+      const existingBaseName = doc.originalFilename.replace(/\.[^/.]+$/, "");
+      return existingBaseName === baseName;
+    });
     
     return duplicate || null;
   }
