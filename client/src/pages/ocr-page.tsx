@@ -21,7 +21,8 @@ import {
   Clock,
   Loader2,
   Save,
-  Settings
+  Settings,
+  Square
 } from "lucide-react";
 import {
   Select,
@@ -644,13 +645,32 @@ export default function OCRPage() {
               {isProcessing ? t('actions.processing') : t('actions.processFile')}
             </Button>
 
-            <Button
-              variant="outline"
-              onClick={resetForm}
-              disabled={isProcessing}
-            >
-              {t('actions.clear')}
-            </Button>
+            {isProcessing ? (
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  setIsProcessing(false);
+                  setProgress(0);
+                  setProgressStage('');
+                  setEstimatedTimeRemaining(null);
+                  toast({
+                    title: "Processamento interrotto",
+                    description: "L'elaborazione OCR è stata fermata dall'utente",
+                  });
+                }}
+              >
+                <Square className="h-4 w-4 mr-2" />
+                Interrompi
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                onClick={resetForm}
+                disabled={isProcessing}
+              >
+                {t('actions.clear')}
+              </Button>
+            )}
           </div>
 
           {/* Indicatore di progresso avanzato */}
@@ -819,7 +839,7 @@ export default function OCRPage() {
                           ) : (
                             <Save className="h-4 w-4 mr-2" />
                           )}
-                          {t('save.saveButton')}
+                          Salva nella Knowledge Base
                         </Button>
                       )}
                       
