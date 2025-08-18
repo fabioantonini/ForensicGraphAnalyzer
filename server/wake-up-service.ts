@@ -88,52 +88,7 @@ DO NOT add any other text besides the JSON.`
 
   const lang = language === 'en' ? 'en' : 'it';
   
-  // Strategie per aumentare variabilità mantenendo accuratezza
-  const variabilityStrategies = {
-    it: [
-      "Varia il formato delle domande: alcune dirette, altre con scenari pratici, altre con casi studio",
-      "Includi domande che richiedono ragionamento deduttivo oltre alla conoscenza memorizzata", 
-      "Per grafologia: alterna tra teoria, pratica, strumentazione, metodologie e casi forensi",
-      "Per cultura generale: bilancia epoche storiche, aree geografiche e discipline scientifiche",
-      "Usa diversi stili di formulazione: assertive, interrogative, comparative, analitiche"
-    ],
-    en: [
-      "Vary question formats: some direct, others with practical scenarios, others with case studies",
-      "Include questions requiring deductive reasoning beyond memorized knowledge",
-      "For graphology: alternate between theory, practice, instrumentation, methodologies and forensic cases", 
-      "For general knowledge: balance historical periods, geographic areas and scientific disciplines",
-      "Use different formulation styles: assertive, interrogative, comparative, analytical"
-    ]
-  };
-
-  const randomStrategy = variabilityStrategies[lang][Math.floor(Math.random() * variabilityStrategies[lang].length)];
-  
-  // Aggiungi ulteriori direttive per la variabilità
-  const additionalVariability = {
-    it: [
-      "EVITA domande ripetitive o troppo simili tra loro",
-      "INCLUDI diverse tipologie: definizioni, applicazioni, confronti, analisi di casi",
-      "VARIA la complessità linguistica e la lunghezza delle domande",
-      "UTILIZZA esempi concreti e situazioni pratiche quando appropriato",
-      "BILANCIA domande teoriche e pratiche per mantenere l'interesse"
-    ],
-    en: [
-      "AVOID repetitive or too similar questions", 
-      "INCLUDE different types: definitions, applications, comparisons, case analyses",
-      "VARY linguistic complexity and question length",
-      "USE concrete examples and practical situations when appropriate", 
-      "BALANCE theoretical and practical questions to maintain interest"
-    ]
-  };
-
-  const extraInstructions = additionalVariability[lang].join('\n- ');
-  
   const prompt = `Generate exactly ${totalQuestions} multiple choice quiz questions about ${categoryPrompts[lang][category]}.
-
-VARIABILITY STRATEGY: ${randomStrategy}
-
-ADDITIONAL REQUIREMENTS:
-- ${extraInstructions}
 
 ${instructions[lang].rules}
 
@@ -141,30 +96,16 @@ ${instructions[lang].format}`;
 
   try {
     const openai = await createOpenAIClient(userApiKey, userId);
-    // Aggiungi variabilità nel prompt di sistema per ridurre ripetizioni
-    const systemPrompts = {
-      it: [
-        "Sei un esperto di grafologia forense e cultura generale. Genera domande di quiz accurate e educative con approcci diversificati.",
-        "Sei un perito calligrafico e professore universitario. Crea domande stimolanti che testano sia conoscenza che ragionamento critico.",
-        "Sei un investigatore forense specializzato in documenti e un educatore. Sviluppa quiz che combinano teoria e applicazioni pratiche.",
-        "Sei un consulente tecnico di tribunale e ricercatore accademico. Formulate domande che riflettono scenari reali e conoscenze approfondite."
-      ],
-      en: [
-        "You are a forensic graphology expert and general knowledge specialist. Generate accurate and educational quiz questions with diversified approaches.",
-        "You are a handwriting expert and university professor. Create stimulating questions that test both knowledge and critical reasoning.",
-        "You are a forensic document investigator and educator. Develop quizzes that combine theory and practical applications.",
-        "You are a court technical consultant and academic researcher. Formulate questions that reflect real scenarios and in-depth knowledge."
-      ]
-    };
-
-    const randomSystemPrompt = systemPrompts[lang][Math.floor(Math.random() * systemPrompts[lang].length)];
+    const systemPrompt = lang === 'en' 
+      ? "You are a forensic graphology expert and general knowledge specialist. Generate accurate and educational quiz questions."
+      : "Sei un esperto di grafologia forense e cultura generale. Genera domande di quiz accurate e educative.";
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
       messages: [
         {
           role: "system",
-          content: randomSystemPrompt
+          content: systemPrompt
         },
         {
           role: "user",
@@ -172,9 +113,8 @@ ${instructions[lang].format}`;
         }
       ],
       response_format: { type: "json_object" },
-      temperature: 0.85, // Leggero aumento per più creatività mantenendo accuratezza
-      max_tokens: 4000,
-      top_p: 0.95 // Aggiunto per bilanciare creatività e coerenza
+      temperature: 0.8,
+      max_tokens: 4000
     });
 
     const content = response.choices[0].message.content;
