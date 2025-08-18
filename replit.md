@@ -38,7 +38,7 @@ Preferred communication style: Simple, everyday language.
 - **Dashboard Recommendations**: Provides suggestions for implemented functionalities like signature verification, multilingual OCR, semantic search, AI-powered reports, and document anonymization.
 - **Chart Visualization System**: Displays chart parameters and compatibility calculations using relative differences.
 - **Drag & Drop Interface**: Supports dual upload modes with visual feedback.
-- **Wake Up Quiz System**: AI-powered graphology and general knowledge quiz with multilingual support, user-specific progress tracking, and stable question generation prioritizing accuracy over variability.
+- **Wake Up Quiz System**: AI-powered graphology and general knowledge quiz with multilingual support, user-specific progress tracking, stable question generation with anti-repetition system for enhanced variety while maintaining accuracy.
 
 ### System Design Choices
 - **Database Schema**: Includes tables for Users, documents, signatures, projects, activities, and queries.

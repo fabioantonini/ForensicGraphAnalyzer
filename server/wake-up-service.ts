@@ -88,7 +88,30 @@ DO NOT add any other text besides the JSON.`
 
   const lang = language === 'en' ? 'en' : 'it';
   
+  // Sistema anti-ripetizione con istruzioni specifiche
+  const antiRepetitionInstructions = {
+    it: [
+      "EVITA domande ripetitive o troppo simili tra loro",
+      "INCLUDI diverse tipologie: definizioni, applicazioni, confronti, analisi di casi",
+      "VARIA la complessità linguistica e la lunghezza delle domande", 
+      "DIVERSIFICA gli argomenti specifici all'interno della categoria scelta",
+      "BILANCIA domande teoriche e pratiche per mantenere varietà"
+    ],
+    en: [
+      "AVOID repetitive or too similar questions",
+      "INCLUDE different types: definitions, applications, comparisons, case analyses", 
+      "VARY linguistic complexity and question length",
+      "DIVERSIFY specific topics within the chosen category",
+      "BALANCE theoretical and practical questions to maintain variety"
+    ]
+  };
+
+  const antiRepetitionText = antiRepetitionInstructions[lang].join('\n- ');
+
   const prompt = `Generate exactly ${totalQuestions} multiple choice quiz questions about ${categoryPrompts[lang][category]}.
+
+ANTI-REPETITION REQUIREMENTS:
+- ${antiRepetitionText}
 
 ${instructions[lang].rules}
 
