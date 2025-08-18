@@ -244,11 +244,21 @@ export default function OCRPage() {
       resetForm();
     },
     onError: (error: Error) => {
-      toast({
-        title: t('save.error'),
-        description: error.message,
-        variant: "destructive",
-      });
+      // Handle duplicate document error
+      if (error.message.includes("Documento duplicato") || error.message.includes("duplicate")) {
+        const parsedError = JSON.parse(error.message);
+        toast({
+          title: "Documento già presente",
+          description: parsedError.details || "Questo documento è già stato salvato in precedenza.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: t('save.error'),
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     },
   });
 

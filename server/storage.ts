@@ -70,6 +70,7 @@ export interface IStorage {
   getDocumentCount(userId: number): Promise<number>;
   getLastUploadTime(userId: number): Promise<Date | null>;
   getStorageUsed(userId: number): Promise<number>;
+  checkDuplicateDocument(userId: number, originalFilename: string, fileSize: number): Promise<Document | null>;
 
   // Activity methods
   createActivity(activity: InsertActivity): Promise<Activity>;
@@ -659,6 +660,21 @@ export class MemStorage implements IStorage {
     );
     
     return userDocuments.reduce((total, doc) => total + doc.fileSize, 0);
+  }
+
+  // Check for duplicate documents based on original filename and size
+  async checkDuplicateDocument(userId: number, originalFilename: string, fileSize: number): Promise<Document | null> {
+    const userDocuments = Array.from(this.documents.values()).filter(
+      (doc) => doc.userId === userId,
+    );
+    
+    // Find document with same original filename and size
+    const duplicate = userDocuments.find(doc => 
+      doc.originalFilename === originalFilename && 
+      doc.fileSize === fileSize
+    );
+    
+    return duplicate || null;
   }
 
   // Activity methods
@@ -1871,6 +1887,23 @@ export class DatabaseStorage implements IStorage {
       .where(eq(documents.userId, userId));
     
     return result?.sum || 0;
+  }
+
+  // Check for duplicate documents based on original filename and size
+  async checkDuplicateDocument(userId: number, originalFilename: string, fileSize: number): Promise<Document | null> {
+    const [duplicate] = await db
+      .select()
+      .from(documents)
+      .where(
+        and(
+          eq(documents.userId, userId),
+          eq(documents.originalFilename, originalFilename),
+          eq(documents.fileSize, fileSize)
+        )
+      )
+      .limit(1);
+    
+    return duplicate || null;
   }
 
   // Activity methods

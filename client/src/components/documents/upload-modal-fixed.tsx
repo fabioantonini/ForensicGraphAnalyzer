@@ -82,11 +82,30 @@ export function UploadModal({ open, onOpenChange, onUploadProgress }: UploadModa
       });
     },
     onError: (error: Error) => {
-      toast({
-        title: t("documents.uploadFailed", "Upload failed"),
-        description: error.message,
-        variant: "destructive",
-      });
+      // Handle duplicate document error specifically
+      if (error.message.includes("Documento duplicato") || error.message.includes("duplicate")) {
+        try {
+          const parsedError = JSON.parse(error.message);
+          toast({
+            title: "Documento già presente",
+            description: parsedError.details || "Questo documento è già stato caricato in precedenza.",
+            variant: "destructive",
+          });
+        } catch {
+          // If parsing fails, use a generic duplicate message
+          toast({
+            title: "Documento già presente",
+            description: "Un documento con questo nome e dimensione è già nella tua raccolta.",
+            variant: "destructive",
+          });
+        }
+      } else {
+        toast({
+          title: t("documents.uploadFailed", "Upload failed"),
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     },
   });
 
@@ -143,6 +162,16 @@ export function UploadModal({ open, onOpenChange, onUploadProgress }: UploadModa
 
   const handleUpload = () => {
     if (activeTab === "file" && file) {
+      // Check file size (25MB limit)
+      const maxSizeBytes = 25 * 1024 * 1024; // 25MB
+      if (file.size > maxSizeBytes) {
+        toast({
+          title: "File troppo grande",
+          description: `Il file selezionato (${(file.size / 1024 / 1024).toFixed(2)} MB) supera il limite di 25 MB. Seleziona un file più piccolo.`,
+          variant: "destructive",
+        });
+        return;
+      }
       uploadFileMutation.mutate(file);
     } else if (activeTab === "url" && url) {
       uploadUrlMutation.mutate(url);

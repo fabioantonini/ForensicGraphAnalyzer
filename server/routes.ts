@@ -279,6 +279,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!isValidFileType(req.file.mimetype)) {
         return res.status(400).json({ message: "Unsupported file type" });
       }
+
+      // Check for duplicate documents
+      const existingDocument = await storage.checkDuplicateDocument(userId, req.file.originalname, req.file.size);
+      if (existingDocument) {
+        return res.status(409).json({ 
+          message: "Documento duplicato", 
+          details: `Un documento con lo stesso nome e dimensione è già presente nella tua raccolta. Caricato il ${existingDocument.createdAt.toLocaleDateString()}.`,
+          existingDocument: {
+            id: existingDocument.id,
+            filename: existingDocument.originalFilename,
+            uploadDate: existingDocument.createdAt,
+            indexed: existingDocument.indexed
+          }
+        });
+      }
       
       // Inizializza la barra di progresso con un ID temporaneo
       const tempDocId = Date.now(); // Usiamo il timestamp come ID temporaneo
@@ -895,6 +910,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       log("ocr", `Salvataggio documento OCR per utente ${userId}: ${title}`);
 
+      // Check for duplicate documents based on filename and content size
+      const proposedFilename = `${title}.txt`;
+      const fileSize = Buffer.byteLength(content, 'utf8');
+      const existingDocument = await storage.checkDuplicateDocument(userId, proposedFilename, fileSize);
+      
+      if (existingDocument) {
+        return res.status(409).json({ 
+          message: "Documento duplicato", 
+          details: `Un documento OCR con lo stesso nome e dimensione è già presente nella tua raccolta. Salvato il ${existingDocument.createdAt.toLocaleDateString()}.`,
+          existingDocument: {
+            id: existingDocument.id,
+            filename: existingDocument.originalFilename,
+            uploadDate: existingDocument.createdAt,
+            indexed: existingDocument.indexed
+          }
+        });
+      }
+
       // Save as new document using existing storage system
       const timestamp = Date.now();
       const filename = `ocr_${timestamp}_${title.replace(/[^a-zA-Z0-9]/g, '_')}.txt`;
@@ -903,8 +936,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const documentData = {
         userId,
         filename,
-        originalFilename: `${title}.txt`,
-        fileSize: Buffer.byteLength(content, 'utf8'),
+        originalFilename: proposedFilename,
+        fileSize,
         fileType: 'text/plain',
         content,
         indexed: false,
