@@ -152,27 +152,14 @@ ${instructions[lang].format}`;
     
     const response = await openai.chat.completions.create(requestConfig);
 
-    console.log(`[WAKE-UP] OpenAI response status:`, response);
-    console.log(`[WAKE-UP] Response choices:`, response.choices);
-    console.log(`[WAKE-UP] First choice:`, response.choices[0]);
-    
-    if (!response.choices || response.choices.length === 0) {
-      throw new Error("No choices received from OpenAI");
-    }
-    
     const content = response.choices[0].message.content;
-    console.log(`[WAKE-UP] Message content:`, content);
-    
     if (!content) {
-      console.log(`[WAKE-UP] Full response object:`, JSON.stringify(response, null, 2));
       throw new Error("No content received from OpenAI");
     }
 
     const parsed = JSON.parse(content);
-    console.log(`[WAKE-UP] Parsed JSON:`, parsed);
     
     if (!parsed.questions || !Array.isArray(parsed.questions)) {
-      console.log(`[WAKE-UP] Invalid format - questions:`, parsed.questions);
       throw new Error("Invalid response format from OpenAI");
     }
 
@@ -185,7 +172,7 @@ ${instructions[lang].format}`;
       difficulty: q.difficulty || "medium"
     }));
     
-    console.log(`[WAKE-UP] Returning ${questions.length} questions`);
+    console.log(`[WAKE-UP] Successfully generated ${questions.length} quiz questions using GPT-4o`);
     return questions;
 
   } catch (error) {

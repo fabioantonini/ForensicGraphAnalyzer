@@ -27,8 +27,10 @@ router.post("/start", async (req, res) => {
     const { category, totalQuestions, language, model } = validation.data;
 
     // Genera domande usando OpenAI (usa la chiave API dell'utente se disponibile)
-    console.log(`[WAKE-UP-ROUTE] Generating questions for category: ${category}, count: ${totalQuestions}, model: ${model}`);
-    const generatedQuestions = await generateQuizQuestions(category, totalQuestions, req.user.openaiApiKey || undefined, language || 'it', req.user.id, model || 'gpt-4o');
+    console.log(`[WAKE-UP-ROUTE] Generating questions for category: ${category}, count: ${totalQuestions}, forced model: ${quizModel}`);
+    // Force GPT-4o for wake-up quiz generation (GPT-5 has compatibility issues)
+    const quizModel = 'gpt-4o';
+    const generatedQuestions = await generateQuizQuestions(category, totalQuestions, req.user.openaiApiKey || undefined, language || 'it', req.user.id, quizModel);
     console.log(`[WAKE-UP-ROUTE] Generated ${generatedQuestions.length} questions`);
 
     // Crea sessione quiz
@@ -72,7 +74,10 @@ router.post("/start", async (req, res) => {
         correctAnswer: undefined,
         explanation: undefined
       }))
-    });
+    };
+    
+    console.log(`[WAKE-UP-ROUTE] Sending response with ${responseData.questions.length} questions`);
+    res.json(responseData);
 
   } catch (error) {
     console.error("Errore avvio quiz:", error);
