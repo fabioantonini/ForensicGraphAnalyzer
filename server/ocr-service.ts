@@ -453,15 +453,51 @@ async function processPdfWithOCR(pdfBuffer: Buffer, filename: string, progressCa
       height: 1600
     });
     
-    // Converte solo le prime 3 pagine per evitare sovraccarico
-    const maxPages = 3;
+    // Determina dinamicamente il numero massimo di pagine da processare
+    // Per file piccoli (< 5MB): fino a 50 pagine
+    // Per file medi (5-15MB): fino a 25 pagine  
+    // Per file grandi (> 15MB): fino a 15 pagine
+    const fileSize = pdfBuffer.length;
+    let maxPages = 15; // Default per file grandi
+    
+    if (fileSize < 5 * 1024 * 1024) {
+      maxPages = 50; // File piccoli
+    } else if (fileSize < 15 * 1024 * 1024) {
+      maxPages = 25; // File medi
+    }
+    
+    log("ocr", `PDF size: ${Math.round(fileSize / 1024 / 1024)}MB, processing up to ${maxPages} pages`);
     let allText = "";
     
     try {
       progressCallback?.(50, 'Conversione immagini...');
       
+      // Prima determina il numero effettivo di pagine nel PDF
+      const pdf2picCheck = pdf2pic.fromPath(tempPdfPath, { density: 72, format: "png" });
+      
+      let actualPageCount = maxPages;
+      try {
+        // Prova a convertire una pagina oltre il limite per determinare il numero reale
+        const testConvert = await pdf2picCheck(maxPages + 1, { responseType: "buffer" }).catch(() => null);
+        if (!testConvert) {
+          // Il PDF ha meno pagine del limite, trova il numero esatto
+          for (let testPage = 1; testPage <= maxPages; testPage++) {
+            const testResult = await pdf2picCheck(testPage, { responseType: "buffer" }).catch(() => null);
+            if (!testResult) {
+              actualPageCount = testPage - 1;
+              break;
+            }
+          }
+        }
+      } catch (e) {
+        log("ocr", `Impossibile determinare il numero esatto di pagine, uso limite: ${maxPages}`);
+      }
+      
+      const pagesToProcess = Math.min(actualPageCount, maxPages);
+      log("ocr", `Processing ${pagesToProcess} pages (PDF has ~${actualPageCount} pages)`);
+      
       // Converti una pagina alla volta per gestire meglio gli errori
-      for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
+      for (let pageNum = 1; pageNum <= pagesToProcess; pageNum++) {
         try {
           log("ocr", `Conversione pagina ${pageNum}...`);
           
@@ -502,7 +538,7 @@ async function processPdfWithOCR(pdfBuffer: Buffer, filename: string, progressCa
             log("ocr", `Pagina ${pageNum} non convertita o buffer vuoto`);
           }
           
-          progressCallback?.(50 + (pageNum / maxPages) * 35, `Elaborando pagina ${pageNum}/${maxPages}...`);
+          progressCallback?.(50 + (pageNum / pagesToProcess) * 35, `Elaborando pagina ${pageNum}/${pagesToProcess}...`);
           
         } catch (pageError: any) {
           log("ocr", `Errore conversione pagina ${pageNum}: ${pageError.message}`);
@@ -513,10 +549,10 @@ async function processPdfWithOCR(pdfBuffer: Buffer, filename: string, progressCa
       progressCallback?.(90, 'Finalizzazione...');
       
       const finalText = allText.trim();
-      log("ocr", `OCR PDF completato: ${finalText.length} caratteri estratti`);
+      log("ocr", `OCR PDF completato: ${finalText.length} caratteri estratti da ${pagesToProcess} pagine`);
       
       if (finalText.length === 0) {
-        return `Impossibile estrarre testo leggibile da questo PDF.
+        return `Impossibile estrarre testo leggibile da questo PDF (processate ${pagesToProcess} pagine).
 
 Il documento potrebbe essere:
 - Un PDF con qualità di scansione molto bassa
@@ -526,7 +562,8 @@ Il documento potrebbe essere:
 Suggerimenti:
 - Verifica la qualità di scansione del documento originale
 - Prova a convertire il PDF in formato immagine con qualità più alta
-- Usa software specializzato per il riconoscimento ottico`;
+- Usa software specializzato per il riconoscimento ottico
+- Se il PDF ha più di ${pagesToProcess} pagine, suddividilo in sezioni più piccole`;
       }
       
       return finalText;
