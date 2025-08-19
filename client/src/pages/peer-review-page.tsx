@@ -429,7 +429,7 @@ const PeerReviewPage = () => {
                   <Alert>
                     <TrendingUp className="h-4 w-4" />
                     <AlertDescription>
-                      <strong>Suggerimenti per il Miglioramento:</strong><br />
+                      <strong>{t('analysis.suggestions')}:</strong><br />
                       {currentResult.suggestions}
                     </AlertDescription>
                   </Alert>
@@ -443,20 +443,20 @@ const PeerReviewPage = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileCheck className="h-5 w-5" />
-                  Storico Analisi Peer Review
+                  {t('history.title')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {historyLoading ? (
                   <div className="text-center py-8">
                     <Clock className="h-8 w-8 animate-spin text-gray-400 mx-auto mb-2" />
-                    <p>Caricamento storico...</p>
+                    <p>{t('common.loading')}</p>
                   </div>
                 ) : (historyData as any)?.reviews?.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     <FileCheck className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p>Nessuna analisi disponibile</p>
-                    <p className="text-sm">Carica la tua prima perizia per iniziare</p>
+                    <p>{t('history.noAnalyses')}</p>
+                    <p className="text-sm">{t('history.uploadFirst')}</p>
                   </div>
                 ) : (
                   <ScrollArea className="h-[500px]">
@@ -563,7 +563,7 @@ const PeerReviewPage = () => {
                       <div className="text-2xl font-bold text-orange-700">
                         {((statsData as any)?.classificationCounts?.eccellente || 0) + ((statsData as any)?.classificationCounts?.buono || 0)}
                       </div>
-                      <div className="text-sm text-orange-600">Conformi ENFSI</div>
+                      <div className="text-sm text-orange-600">{t('statistics.conformCompliant')}</div>
                     </div>
                   </CardContent>
                 </Card>
@@ -576,16 +576,14 @@ const PeerReviewPage = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Info className="h-5 w-5" />
-                  Framework ENFSI per Perizie Grafologiche
+                  {t('framework.title')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <Alert className="mb-6">
                   <Shield className="h-4 w-4" />
                   <AlertDescription>
-                    Il framework ENFSI (European Network of Forensic Science Institutes) definisce 
-                    gli standard professionali per l'esame forense delle manoscritture e la validazione 
-                    delle perizie grafologiche.
+                    {t('framework.description')}
                   </AlertDescription>
                 </Alert>
 
@@ -596,7 +594,7 @@ const PeerReviewPage = () => {
                         <CardHeader>
                           <div className="flex items-center justify-between">
                             <CardTitle className="text-lg">{category.name}</CardTitle>
-                            <Badge variant="outline">Peso: {category.weight}%</Badge>
+                            <Badge variant="outline">{t('common.weight')}: {category.weight}%</Badge>
                           </div>
                         </CardHeader>
                         <CardContent>
@@ -617,24 +615,24 @@ const PeerReviewPage = () => {
                 <div className="mt-8 p-6 bg-blue-50 rounded-lg">
                   <h3 className="font-semibold mb-4 flex items-center gap-2">
                     <Award className="h-5 w-5 text-blue-600" />
-                    Criteri di Conformità
+                    {t('framework.conformityCriteria')}
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex items-center gap-3">
                       <div className="w-4 h-4 bg-green-500 rounded-full"></div>
-                      <span><strong>Eccellente (90-100%):</strong> Conformità completa ENFSI</span>
+                      <span><strong>{t('framework.excellent')}</strong></span>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="w-4 h-4 bg-yellow-500 rounded-full"></div>
-                      <span><strong>Buono (75-89%):</strong> Standard rispettati, dettagli minori</span>
+                      <span><strong>{t('framework.good')}</strong></span>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="w-4 h-4 bg-orange-500 rounded-full"></div>
-                      <span><strong>Sufficiente (60-74%):</strong> Base accettabile, alcune lacune</span>
+                      <span><strong>{t('framework.sufficient')}</strong></span>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="w-4 h-4 bg-red-500 rounded-full"></div>
-                      <span><strong>Insufficiente (&lt;60%):</strong> Criteri fondamentali mancanti</span>
+                      <span><strong>{t('framework.insufficient')}</strong></span>
                     </div>
                   </div>
                 </div>
