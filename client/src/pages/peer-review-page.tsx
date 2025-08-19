@@ -65,6 +65,19 @@ interface ReviewHistory {
   createdAt: string;
 }
 
+interface StatsData {
+  totalReviews: number;
+  averageScore: number;
+  averageProcessingTime: number;
+  classificationCounts: {
+    eccellente?: number;
+    buono?: number;
+    sufficiente?: number;
+    insufficiente?: number;
+  };
+  recentReviews: ReviewHistory[];
+}
+
 const PeerReviewPage = () => {
   const { t: tCommon, i18n } = useTranslation('common');
   const { t } = useTranslation('peerReview');
@@ -79,7 +92,7 @@ const PeerReviewPage = () => {
   });
 
   // Caricamento statistiche
-  const { data: statsData } = useQuery({
+  const { data: statsData } = useQuery<StatsData>({
     queryKey: ["/api/peer-review/stats/summary"],
     enabled: true
   });
@@ -552,13 +565,13 @@ const PeerReviewPage = () => {
             </Card>
 
             {/* Stats Summary */}
-            {statsData && typeof statsData === 'object' && (
+            {statsData && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Card className="bg-gradient-to-br from-blue-50 to-blue-100">
                   <CardContent className="pt-4">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-blue-700">
-                        {(statsData as any)?.totalReviews || 0}
+                        {statsData?.totalReviews || 0}
                       </div>
                       <div className="text-sm text-blue-600">{t('statistics.totalAnalyses')}</div>
                     </div>
@@ -569,7 +582,7 @@ const PeerReviewPage = () => {
                   <CardContent className="pt-4">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-green-700">
-                        {(statsData as any)?.averageScore || 0}
+                        {statsData?.averageScore || 0}
                       </div>
                       <div className="text-sm text-green-600">{t('statistics.averageScore')}</div>
                     </div>
@@ -580,7 +593,7 @@ const PeerReviewPage = () => {
                   <CardContent className="pt-4">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-purple-700">
-                        {Math.round((statsData as any)?.averageProcessingTime || 0)}s
+                        {Math.round(statsData?.averageProcessingTime || 0)}s
                       </div>
                       <div className="text-sm text-purple-600">{t('statistics.averageTime')}</div>
                     </div>
@@ -591,7 +604,7 @@ const PeerReviewPage = () => {
                   <CardContent className="pt-4">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-orange-700">
-                        {((statsData as any)?.classificationCounts?.eccellente || 0) + ((statsData as any)?.classificationCounts?.buono || 0)}
+                        {(statsData?.classificationCounts?.eccellente || 0) + (statsData?.classificationCounts?.buono || 0)}
                       </div>
                       <div className="text-sm text-orange-600">{t('statistics.conformCompliant')}</div>
                     </div>
