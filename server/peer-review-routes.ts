@@ -116,6 +116,7 @@ router.post('/submit', requireAuth, upload.single('perizia'), async (req, res) =
     // Salva i risultati nel database
     const [peerReview] = await db.insert(peerReviews).values({
       userId,
+      documentId: null, // Optional field
       filename: req.file.filename,
       originalFilename: req.file.originalname,
       fileSize: req.file.size,
