@@ -48,7 +48,8 @@
     "signatureQuality": "Signature Quality Check",
     "anonymize": "Document Anonymization",
     "wakeUp": "Wake Up Quiz",
-    "settings": "Settings",
+    "peerReview": "ENFSI Peer Review",
+    "settings": "Settings", 
     "admin": "Administration"
   },
   "wakeUpQuiz": {

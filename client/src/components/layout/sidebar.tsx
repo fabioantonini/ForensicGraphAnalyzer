@@ -81,6 +81,12 @@ export function Sidebar({ className }: SidebarProps) {
       icon: <Shield className="h-5 w-5 mr-3" />,
     },
     {
+      href: "/peer-review",
+      label: "Peer Review ENFSI",
+      translationKey: "layout.peerReview",
+      icon: <ShieldCheck className="h-5 w-5 mr-3" />,
+    },
+    {
       href: "/wake-up",
       label: "Wake Up Quiz",
       translationKey: "layout.wakeUp",

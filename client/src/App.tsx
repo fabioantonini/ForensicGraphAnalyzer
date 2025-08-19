@@ -25,6 +25,7 @@ import AdminPage from "@/pages/admin-page";
 import ForgotPasswordPage from "@/pages/forgot-password-page";
 import ResetPasswordPage from "@/pages/reset-password-page";
 import WakeUpPage from "@/pages/wake-up-page";
+import PeerReviewPage from "@/pages/peer-review-page";
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -99,6 +100,12 @@ function Router() {
       <ProtectedRoute path="/wake-up" component={() => (
         <AppLayout>
           <WakeUpPage />
+        </AppLayout>
+      )} />
+
+      <ProtectedRoute path="/peer-review" component={() => (
+        <AppLayout>
+          <PeerReviewPage />
         </AppLayout>
       )} />
       

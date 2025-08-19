@@ -32,6 +32,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   signatureProjects: many(signatureProjects),
   anonymizations: many(anonymizations),
   quizSessions: many(quizSessions),
+  peerReviews: many(peerReviews),
 }));
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -203,6 +204,81 @@ export type InsertQuery = z.infer<typeof insertQuerySchema>;
 
 export type ReportTemplate = typeof reportTemplates.$inferSelect;
 export type InsertReportTemplate = z.infer<typeof insertReportTemplateSchema>;
+
+// Peer Review schema
+export const peerReviews = pgTable("peer_reviews", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  documentId: integer("document_id").references(() => documents.id), // Optional: if linked to uploaded document
+  filename: text("filename").notNull(),
+  originalFilename: text("original_filename").notNull(),
+  fileSize: integer("file_size").notNull(),
+  overallScore: real("overall_score").notNull(), // 0-100 score
+  status: text("status").notNull().default("completed"), // 'processing', 'completed', 'failed'
+  criteriaResults: jsonb("criteria_results").notNull().$type<{
+    structureInfo: { score: number; details: string; weight: number };
+    materialDocumentation: { score: number; details: string; weight: number };
+    methodology: { score: number; details: string; weight: number };
+    technicalAnalysis: { score: number; details: string; weight: number };
+    validation: { score: number; details: string; weight: number };
+    presentation: { score: number; details: string; weight: number };
+    competence: { score: number; details: string; weight: number };
+  }>(),
+  suggestions: text("suggestions").notNull(),
+  classification: text("classification").notNull(), // 'eccellente', 'buono', 'sufficiente', 'insufficiente'
+  processingTime: integer("processing_time"), // in seconds
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const peerReviewsRelations = relations(peerReviews, ({ one }) => ({
+  user: one(users, {
+    fields: [peerReviews.userId],
+    references: [users.id],
+  }),
+  document: one(documents, {
+    fields: [peerReviews.documentId],
+    references: [documents.id],
+  }),
+}));
+
+export const insertPeerReviewSchema = createInsertSchema(peerReviews).pick({
+  userId: true,
+  documentId: true,
+  filename: true,
+  originalFilename: true,
+  fileSize: true,
+  overallScore: true,
+  status: true,
+  criteriaResults: true,
+  suggestions: true,
+  classification: true,
+  processingTime: true,
+});
+
+// Review Criteria Reference schema (for storing framework criteria)
+export const reviewCriteria = pgTable("review_criteria", {
+  id: serial("id").primaryKey(),
+  category: text("category").notNull(), // 'structureInfo', 'methodology', etc.
+  criterion: text("criterion").notNull(),
+  description: text("description").notNull(),
+  weight: real("weight").notNull(), // percentage weight in final score
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertReviewCriteriaSchema = createInsertSchema(reviewCriteria).pick({
+  category: true,
+  criterion: true,
+  description: true,
+  weight: true,
+  isActive: true,
+});
+
+export type PeerReview = typeof peerReviews.$inferSelect;
+export type InsertPeerReview = z.infer<typeof insertPeerReviewSchema>;
+export type ReviewCriteria = typeof reviewCriteria.$inferSelect;
+export type InsertReviewCriteria = z.infer<typeof insertReviewCriteriaSchema>;
 
 
 // Type definition for signature parameters
