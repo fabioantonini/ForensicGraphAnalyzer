@@ -35,6 +35,7 @@
     "noAnalyses": "Nessuna analisi disponibile",
     "uploadFirst": "Carica la prima perizia per iniziare",
     "viewDetails": "Visualizza Dettagli",
+    "downloadReport": "Scarica Report PDF",
     "date": "Data",
     "filename": "Nome File",
     "score": "Punteggio",
@@ -42,10 +43,11 @@
   },
   "statistics": {
     "title": "Statistiche Sistema",
-    "totalAnalyses": "Analisi Totali",
+    "totalAnalyses": "Totale Analisi",
     "averageScore": "Punteggio Medio",
     "conformCompliant": "Conformi ENFSI",
     "averageTime": "Tempo Medio",
+    "conformCompliant": "Conformi ENFSI",
     "excellentGood": "Eccellenti + Buone",
     "distributionTitle": "Distribuzione Classificazioni"
   },

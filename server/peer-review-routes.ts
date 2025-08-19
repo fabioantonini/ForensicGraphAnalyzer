@@ -19,7 +19,7 @@ const requireAuth = (req: any, res: any, next: any) => {
 };
 import mammoth from "mammoth";
 import pdfParse from "pdf-parse";
-import * as PDFDocument from "pdfkit";
+import PDFDocument from "pdfkit";
 
 const router = express.Router();
 
@@ -266,30 +266,13 @@ router.delete('/:id', requireAuth, async (req, res) => {
     const reviewId = parseInt(req.params.id);
     const userId = req.user!.id;
 
-    // Verifica che l'analisi appartenga all'utente
-    const [review] = await db
-      .select({ filename: peerReviews.filename })
-      .from(peerReviews)
+    // Verifica che l'analisi appartenga all'utente e la elimina
+    const result = await db.delete(peerReviews)
       .where(and(eq(peerReviews.id, reviewId), eq(peerReviews.userId, userId)))
-      .limit(1);
+      .returning({ id: peerReviews.id });
 
-    if (!review) {
+    if (result.length === 0) {
       return res.status(404).json({ error: 'Analisi non trovata' });
-    }
-
-    // Elimina dal database
-    await db.delete(peerReviews)
-      .where(and(eq(peerReviews.id, reviewId), eq(peerReviews.userId, userId)));
-
-    // Elimina il file associato se esiste
-    const filePath = path.join(process.cwd(), 'uploads', 'peer-reviews', review.filename);
-    if (fs.existsSync(filePath)) {
-      try {
-        fs.unlinkSync(filePath);
-      } catch (fileError) {
-        console.error('[PEER-REVIEW] Errore eliminazione file:', fileError);
-        // Non blocchiamo la rimozione dal database per un errore del file
-      }
     }
 
     console.log(`[PEER-REVIEW] Analisi ${reviewId} eliminata per utente ${userId}`);
@@ -370,7 +353,7 @@ router.get('/:id/report', requireAuth, async (req, res) => {
     console.log(`[PEER-REVIEW] Generazione report PDF per analisi ID: ${reviewId}`);
 
     // Genera il report PDF utilizzando PDFKit
-    const doc = new (PDFDocument as any)({ margin: 50 });
+    const doc = new PDFDocument({ margin: 50 });
     
     // Imposta headers per download
     res.setHeader('Content-Type', 'application/pdf');
@@ -408,7 +391,8 @@ router.get('/:id/report', requireAuth, async (req, res) => {
       };
       
       doc.fontSize(12);
-      doc.text(`${categoryNames[key] || key}: ${criterion.score}% (Peso: ${criterion.weight}%)`);
+      const categoryName = (categoryNames as any)[key] || key;
+      doc.text(`${categoryName}: ${criterion.score}% (Peso: ${criterion.weight}%)`);
       doc.fontSize(10);
       doc.text(criterion.details, { indent: 20 });
       doc.moveDown(0.5);
