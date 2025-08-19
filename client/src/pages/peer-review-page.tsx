@@ -97,8 +97,7 @@ const PeerReviewPage = () => {
     enabled: true
   });
   
-  // Debug per verificare i dati delle statistiche
-  console.log('Stats Data:', statsData);
+
 
   // Caricamento framework ENFSI
   const { data: frameworkData } = useQuery({
