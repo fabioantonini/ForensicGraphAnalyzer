@@ -205,16 +205,15 @@ export type InsertQuery = z.infer<typeof insertQuerySchema>;
 export type ReportTemplate = typeof reportTemplates.$inferSelect;
 export type InsertReportTemplate = z.infer<typeof insertReportTemplateSchema>;
 
-// Peer Review schema
+// Peer Review schema (aligned with existing database structure)
 export const peerReviews = pgTable("peer_reviews", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
-  documentId: integer("document_id").references(() => documents.id), // Optional: if linked to uploaded document
-  filename: text("filename").notNull(),
   originalFilename: text("original_filename").notNull(),
   fileSize: integer("file_size").notNull(),
+  fileType: text("file_type").notNull(),
   overallScore: real("overall_score").notNull(), // 0-100 score
-  status: text("status").notNull().default("completed"), // 'processing', 'completed', 'failed'
+  classification: text("classification").notNull(), // 'eccellente', 'buono', 'sufficiente', 'insufficiente'
   criteriaResults: jsonb("criteria_results").notNull().$type<{
     structureInfo: { score: number; details: string; weight: number };
     materialDocumentation: { score: number; details: string; weight: number };
@@ -225,8 +224,8 @@ export const peerReviews = pgTable("peer_reviews", {
     competence: { score: number; details: string; weight: number };
   }>(),
   suggestions: text("suggestions").notNull(),
-  classification: text("classification").notNull(), // 'eccellente', 'buono', 'sufficiente', 'insufficiente'
   processingTime: integer("processing_time"), // in seconds
+  status: text("status").notNull().default("completed"), // 'processing', 'completed', 'failed'
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -236,24 +235,19 @@ export const peerReviewsRelations = relations(peerReviews, ({ one }) => ({
     fields: [peerReviews.userId],
     references: [users.id],
   }),
-  document: one(documents, {
-    fields: [peerReviews.documentId],
-    references: [documents.id],
-  }),
 }));
 
 export const insertPeerReviewSchema = createInsertSchema(peerReviews).pick({
   userId: true,
-  documentId: true,
-  filename: true,
   originalFilename: true,
   fileSize: true,
+  fileType: true,
   overallScore: true,
-  status: true,
+  classification: true,
   criteriaResults: true,
   suggestions: true,
-  classification: true,
   processingTime: true,
+  status: true,
 });
 
 // Review Criteria Reference schema (for storing framework criteria)
