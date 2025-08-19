@@ -171,6 +171,32 @@ const PeerReviewPage = () => {
     }
   };
 
+  // Funzione per scaricare il report PDF
+  const handleDownloadReport = async (reviewId: number) => {
+    try {
+      const response = await fetch(`/api/peer-review/${reviewId}/report`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Errore durante il download del report');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `report-peer-review-${reviewId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Errore download report:', error);
+    }
+  };
+
   const getClassificationColor = (classification: string) => {
     switch (classification) {
       case 'eccellente': return 'bg-green-100 text-green-800 border-green-200';
@@ -498,7 +524,8 @@ const PeerReviewPage = () => {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => {/* Implementare download report */}}
+                                  onClick={() => handleDownloadReport(review.id)}
+                                  title={t('analysis.downloadReport')}
                                 >
                                   <Download className="h-4 w-4" />
                                 </Button>

@@ -19,6 +19,7 @@ const requireAuth = (req: any, res: any, next: any) => {
 };
 import mammoth from "mammoth";
 import pdfParse from "pdf-parse";
+import PDFDocument from "pdfkit";
 
 const router = express.Router();
 
@@ -344,6 +345,92 @@ router.get('/stats/summary', requireAuth, async (req, res) => {
   } catch (error: any) {
     console.error('[PEER-REVIEW] Errore statistiche:', error);
     res.status(500).json({ error: 'Errore nel recupero delle statistiche' });
+  }
+});
+
+/**
+ * GET /api/peer-review/:id/report
+ * Genera e scarica il report PDF per una specifica analisi
+ */
+router.get('/:id/report', requireAuth, async (req, res) => {
+  try {
+    const reviewId = parseInt(req.params.id);
+    const userId = req.user!.id;
+
+    const [review] = await db
+      .select()
+      .from(peerReviews)
+      .where(and(eq(peerReviews.id, reviewId), eq(peerReviews.userId, userId)))
+      .limit(1);
+
+    if (!review) {
+      return res.status(404).json({ error: 'Analisi non trovata' });
+    }
+
+    console.log(`[PEER-REVIEW] Generazione report PDF per analisi ID: ${reviewId}`);
+
+    // Genera il report PDF utilizzando PDFKit
+    const PDFDocument = require('pdfkit');
+    const doc = new PDFDocument({ margin: 50 });
+    
+    // Imposta headers per download
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="report-peer-review-${reviewId}.pdf"`);
+    
+    // Pipe del documento al response
+    doc.pipe(res);
+
+    // Header del documento
+    doc.fontSize(20).text('Report Analisi ENFSI', { align: 'center' });
+    doc.moveDown();
+    
+    // Informazioni documento
+    doc.fontSize(14).text(`File: ${review.originalFilename}`);
+    doc.text(`Data analisi: ${new Date(review.createdAt).toLocaleDateString('it-IT')}`);
+    doc.text(`Punteggio complessivo: ${review.overallScore}/100`);
+    doc.text(`Classificazione: ${review.classification.toUpperCase()}`);
+    doc.text(`Tempo di elaborazione: ${review.processingTime}s`);
+    doc.moveDown();
+
+    // Sezione criteri
+    doc.fontSize(16).text('Analisi per Categoria', { underline: true });
+    doc.moveDown();
+
+    const criteriaResults = review.criteriaResults as any;
+    Object.entries(criteriaResults).forEach(([key, criterion]: [string, any]) => {
+      const categoryNames = {
+        structureInfo: 'Struttura e Informazioni',
+        materialDocumentation: 'Documentazione Materiale',
+        methodology: 'Metodologia',
+        technicalAnalysis: 'Analisi Tecnica', 
+        validation: 'Validazione',
+        presentation: 'Presentazione',
+        competence: 'Competenze'
+      };
+      
+      doc.fontSize(12);
+      doc.text(`${categoryNames[key] || key}: ${criterion.score}% (Peso: ${criterion.weight}%)`);
+      doc.fontSize(10);
+      doc.text(criterion.details, { indent: 20 });
+      doc.moveDown(0.5);
+    });
+
+    // Suggerimenti
+    doc.addPage();
+    doc.fontSize(16).text('Suggerimenti per Miglioramento', { underline: true });
+    doc.moveDown();
+    doc.fontSize(10).text(review.suggestions);
+    
+    // Footer
+    doc.moveDown();
+    doc.fontSize(8).text(`Report generato il ${new Date().toLocaleDateString('it-IT')} - GrapholexInsight`, { align: 'center' });
+
+    // Finalizza il documento
+    doc.end();
+
+  } catch (error: any) {
+    console.error('[PEER-REVIEW] Errore generazione report:', error);
+    res.status(500).json({ error: 'Errore nella generazione del report' });
   }
 });
 
