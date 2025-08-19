@@ -1,0 +1,77 @@
+{
+  "title": "ENFSI Peer Review",
+  "subtitle": "Graphological expertise validation system according to ENFSI standards",
+  "tabs": {
+    "upload": "Upload Report",
+    "history": "Analysis History",
+    "statistics": "Statistics", 
+    "framework": "ENFSI Framework"
+  },
+  "upload": {
+    "title": "Upload Report for Analysis",
+    "description": "Upload a graphological expertise in PDF, DOCX or TXT format to get an automatic evaluation according to ENFSI standards",
+    "dragDrop": "Drag your report here or click to select",
+    "formats": "Supported formats: PDF, DOCX, TXT (Max 25MB)",
+    "analyzing": "Analyzing...",
+    "uploadSuccess": "Report uploaded successfully",
+    "uploadError": "Error during upload"
+  },
+  "analysis": {
+    "title": "ENFSI Analysis Results",
+    "overallScore": "Overall Score",
+    "classification": "Classification",
+    "categories": "Category Analysis", 
+    "suggestions": "Improvement Suggestions",
+    "downloadReport": "Download PDF Report"
+  },
+  "classifications": {
+    "eccellente": "Excellent",
+    "buono": "Good",
+    "sufficiente": "Sufficient", 
+    "insufficiente": "Insufficient"
+  },
+  "history": {
+    "title": "Analysis History",
+    "noAnalyses": "No analyses available",
+    "uploadFirst": "Upload the first report to start",
+    "viewDetails": "View Details",
+    "date": "Date",
+    "filename": "Filename", 
+    "score": "Score",
+    "classification": "Classification"
+  },
+  "statistics": {
+    "title": "System Statistics",
+    "totalAnalyses": "Total Analyses",
+    "averageScore": "Average Score",
+    "conformCompliant": "ENFSI Compliant",
+    "excellentGood": "Excellent + Good",
+    "distributionTitle": "Classification Distribution"
+  },
+  "framework": {
+    "title": "ENFSI Framework for Graphological Expertise",
+    "description": "The ENFSI (European Network of Forensic Science Institutes) framework defines professional standards for forensic handwriting examination and validation of graphological expertise.",
+    "conformityCriteria": "Conformity Criteria",
+    "excellent": "Excellent (90-100%): Full ENFSI compliance",
+    "good": "Good (75-89%): Standards met, minor details",
+    "sufficient": "Sufficient (60-74%): Acceptable basis, some gaps",
+    "insufficient": "Insufficient (<60%): Missing fundamental criteria"
+  },
+  "categories": {
+    "structure": "Document Structure",
+    "documentation": "Documentation and Traceability",
+    "methodology": "Analysis Methodology",
+    "technicalAnalysis": "Technical Analysis", 
+    "presentation": "Presentation and Clarity",
+    "competence": "Competence and Qualifications"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "close": "Close",
+    "cancel": "Cancel", 
+    "save": "Save",
+    "weight": "Weight"
+  }
+}

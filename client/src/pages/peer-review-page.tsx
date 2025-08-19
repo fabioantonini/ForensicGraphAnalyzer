@@ -66,7 +66,8 @@ interface ReviewHistory {
 }
 
 const PeerReviewPage = () => {
-  const { t, i18n } = useTranslation();
+  const { t: tCommon, i18n } = useTranslation('common');
+  const { t } = useTranslation('peerReview');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [currentResult, setCurrentResult] = useState<PeerReviewResult | null>(null);
@@ -211,10 +212,10 @@ const PeerReviewPage = () => {
               <Shield className="h-8 w-8 text-blue-600" />
               <div>
                 <CardTitle className="text-2xl font-bold text-gray-900">
-                  Peer Review - Validazione Perizie ENFSI
+                  {t('title')}
                 </CardTitle>
                 <p className="text-gray-600 mt-1">
-                  Sistema di validazione automatica delle perizie grafologiche secondo gli standard forensi ENFSI
+                  {t('subtitle')}
                 </p>
               </div>
             </div>
@@ -222,18 +223,22 @@ const PeerReviewPage = () => {
         </Card>
 
         <Tabs defaultValue="upload" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="upload" className="flex items-center gap-2">
               <Upload className="h-4 w-4" />
-              Analisi Perizia
+              {t('tabs.upload')}
             </TabsTrigger>
             <TabsTrigger value="history" className="flex items-center gap-2">
               <FileCheck className="h-4 w-4" />
-              Storico Analisi
+              {t('tabs.history')}
+            </TabsTrigger>
+            <TabsTrigger value="statistics" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              {t('tabs.statistics')}
             </TabsTrigger>
             <TabsTrigger value="framework" className="flex items-center gap-2">
               <Info className="h-4 w-4" />
-              Framework ENFSI
+              {t('tabs.framework')}
             </TabsTrigger>
           </TabsList>
 
@@ -243,8 +248,11 @@ const PeerReviewPage = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Upload className="h-5 w-5" />
-                  Carica Perizia Grafica
+                  {t('upload.title')}
                 </CardTitle>
+                <p className="text-gray-600 text-sm">
+                  {t('upload.description')}
+                </p>
               </CardHeader>
               <CardContent>
                 <div
@@ -263,7 +271,7 @@ const PeerReviewPage = () => {
                       <FileText className="h-12 w-12 text-blue-600 mx-auto" />
                       <p className="font-medium">{selectedFile.name}</p>
                       <p className="text-sm text-gray-500">
-                        {formatBytes(selectedFile.size)} • Pronto per l'analisi
+                        {formatBytes(selectedFile.size)} • {t('upload.analyzing')}
                       </p>
                     </div>
                   ) : (
@@ -271,12 +279,12 @@ const PeerReviewPage = () => {
                       <Upload className="h-12 w-12 text-gray-400 mx-auto" />
                       <p className="text-lg font-medium">
                         {isDragActive 
-                          ? 'Rilascia il file qui...' 
-                          : 'Trascina qui la tua perizia grafica'
+                          ? t('upload.dragDrop').split(' o ')[0] + '...'
+                          : t('upload.dragDrop')
                         }
                       </p>
                       <p className="text-sm text-gray-500">
-                        Formati supportati: PDF, DOCX, TXT (max 25MB)
+                        {t('upload.formats')}
                       </p>
                     </div>
                   )}
@@ -292,7 +300,7 @@ const PeerReviewPage = () => {
                       {uploadMutation.isPending ? (
                         <>
                           <Clock className="h-4 w-4 mr-2 animate-spin" />
-                          Analisi in corso...
+                          {t('upload.analyzing')}
                         </>
                       ) : (
                         <>
@@ -522,7 +530,7 @@ const PeerReviewPage = () => {
                       <div className="text-2xl font-bold text-blue-700">
                         {(statsData as any)?.totalReviews || 0}
                       </div>
-                      <div className="text-sm text-blue-600">Analisi Totali</div>
+                      <div className="text-sm text-blue-600">{t('statistics.totalAnalyses')}</div>
                     </div>
                   </CardContent>
                 </Card>
@@ -533,7 +541,7 @@ const PeerReviewPage = () => {
                       <div className="text-2xl font-bold text-green-700">
                         {(statsData as any)?.averageScore || 0}
                       </div>
-                      <div className="text-sm text-green-600">Score Medio</div>
+                      <div className="text-sm text-green-600">{t('statistics.averageScore')}</div>
                     </div>
                   </CardContent>
                 </Card>

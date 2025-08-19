@@ -1,0 +1,77 @@
+{
+  "title": "Peer Review ENFSI",
+  "subtitle": "Sistema di validazione perizie grafologiche secondo standard ENFSI",
+  "tabs": {
+    "upload": "Carica Perizia",
+    "history": "Storico Analisi", 
+    "statistics": "Statistiche",
+    "framework": "Framework ENFSI"
+  },
+  "upload": {
+    "title": "Carica Perizia per Analisi",
+    "description": "Carica una perizia grafologica in formato PDF, DOCX o TXT per ottenere una valutazione automatica secondo gli standard ENFSI",
+    "dragDrop": "Trascina qui la tua perizia o clicca per selezionare",
+    "formats": "Formati supportati: PDF, DOCX, TXT (Max 25MB)",
+    "analyzing": "Analisi in corso...",
+    "uploadSuccess": "Perizia caricata con successo",
+    "uploadError": "Errore durante il caricamento"
+  },
+  "analysis": {
+    "title": "Risultati Analisi ENFSI",
+    "overallScore": "Punteggio Complessivo",
+    "classification": "Classificazione",
+    "categories": "Analisi per Categoria",
+    "suggestions": "Suggerimenti per Miglioramento",
+    "downloadReport": "Scarica Report PDF"
+  },
+  "classifications": {
+    "eccellente": "Eccellente",
+    "buono": "Buono", 
+    "sufficiente": "Sufficiente",
+    "insufficiente": "Insufficiente"
+  },
+  "history": {
+    "title": "Storico Analisi",
+    "noAnalyses": "Nessuna analisi disponibile",
+    "uploadFirst": "Carica la prima perizia per iniziare",
+    "viewDetails": "Visualizza Dettagli",
+    "date": "Data",
+    "filename": "Nome File",
+    "score": "Punteggio",
+    "classification": "Classificazione"
+  },
+  "statistics": {
+    "title": "Statistiche Sistema",
+    "totalAnalyses": "Analisi Totali",
+    "averageScore": "Punteggio Medio",
+    "conformCompliant": "Conformi ENFSI",
+    "excellentGood": "Eccellenti + Buone",
+    "distributionTitle": "Distribuzione Classificazioni"
+  },
+  "framework": {
+    "title": "Framework ENFSI per Perizie Grafologiche",
+    "description": "Il framework ENFSI (European Network of Forensic Science Institutes) definisce gli standard professionali per l'esame forense delle manoscritture e la validazione delle perizie grafologiche.",
+    "conformityCriteria": "Criteri di Conformità",
+    "excellent": "Eccellente (90-100%): Conformità completa ENFSI",
+    "good": "Buono (75-89%): Standard rispettati, dettagli minori", 
+    "sufficient": "Sufficiente (60-74%): Base accettabile, alcune lacune",
+    "insufficient": "Insufficiente (<60%): Criteri fondamentali mancanti"
+  },
+  "categories": {
+    "structure": "Struttura Documento",
+    "documentation": "Documentazione e Tracciabilità",
+    "methodology": "Metodologia di Analisi", 
+    "technicalAnalysis": "Analisi Tecnica",
+    "presentation": "Presentazione e Chiarezza",
+    "competence": "Competenze e Qualifiche"
+  },
+  "common": {
+    "loading": "Caricamento...",
+    "error": "Errore",
+    "success": "Successo",
+    "close": "Chiudi",
+    "cancel": "Annulla",
+    "save": "Salva",
+    "weight": "Peso"
+  }
+}
