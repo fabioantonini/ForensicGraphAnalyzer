@@ -86,8 +86,7 @@ const PeerReviewPage = () => {
 
   // Caricamento framework ENFSI
   const { data: frameworkData } = useQuery({
-    queryKey: ["/api/peer-review/framework/criteria", i18n.language],
-    queryFn: () => apiRequest(`/api/peer-review/framework/criteria?lang=${i18n.language}`),
+    queryKey: [`/api/peer-review/framework/criteria?lang=${i18n.language}`],
     enabled: true
   });
 
