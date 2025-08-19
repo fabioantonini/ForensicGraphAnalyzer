@@ -45,6 +45,7 @@
     "totalAnalyses": "Total Analyses",
     "averageScore": "Average Score",
     "conformCompliant": "ENFSI Compliant",
+    "averageTime": "Average Time",
     "excellentGood": "Excellent + Good",
     "distributionTitle": "Classification Distribution"
   },
