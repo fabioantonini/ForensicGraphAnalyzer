@@ -247,8 +247,9 @@ router.get('/:id', requireAuth, async (req, res) => {
  */
 router.get('/framework/criteria', requireAuth, async (req, res) => {
   try {
-    const framework = getENFSIFramework();
-    res.json({ framework });
+    const language = req.query.lang as string || 'it';
+    const framework = getENFSIFramework(language);
+    res.json(framework);
   } catch (error: any) {
     console.error('[PEER-REVIEW] Errore recupero framework:', error);
     res.status(500).json({ error: 'Errore nel recupero dei criteri' });

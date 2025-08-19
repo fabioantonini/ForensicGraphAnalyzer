@@ -5,8 +5,8 @@
 
 import { createOpenAIClient } from "./openai";
 
-// Framework ENFSI per valutazione perizie
-const ENFSI_FRAMEWORK = {
+// Framework ENFSI multilingue per valutazione perizie
+const ENFSI_FRAMEWORK_IT = {
   structureInfo: {
     name: "Struttura Obbligatoria della Relazione",
     weight: 15,
@@ -77,6 +77,81 @@ const ENFSI_FRAMEWORK = {
       "Opinione dell'esperto con motivazioni",
       "Scale di conclusioni standardizzate",
       "Documentazione adeguata e tracciabile"
+    ]
+  }
+};
+
+const ENFSI_FRAMEWORK_EN = {
+  structureInfo: {
+    name: "Mandatory Report Structure",
+    weight: 15,
+    criteria: [
+      "Unique case identifier",
+      "Name and address of laboratory/expert", 
+      "Examiner identity and qualifications",
+      "Forensic examiner signature",
+      "Dates (report signature, material receipt)",
+      "Name and status of submitter",
+      "Page numbering system"
+    ]
+  },
+  materialDocumentation: {
+    name: "Material Documentation",
+    weight: 15,
+    criteria: [
+      "Complete list of submitted material",
+      "Material condition and packaging upon receipt",
+      "Any alterations, damage or contamination",
+      "Information received with material",
+      "Chain of custody"
+    ]
+  },
+  methodology: {
+    name: "Methodology and Procedures",
+    weight: 25,
+    criteria: [
+      "Clear definition of examination purpose",
+      "Description of systematic approach used",
+      "Consideration of alternative hypotheses (pro/contra)",
+      "Justified examination priority and sequence",
+      "Details of examinations/analyses performed",
+      "Use of appropriate equipment",
+      "Non-destructive tests prioritized"
+    ]
+  },
+  technicalAnalysis: {
+    name: "Specialized Technical Analysis",
+    weight: 20,
+    criteria: [
+      "Handwriting analysis parameters",
+      "Handwriting variations analyzed",
+      "Writing styles identified",
+      "Graphic fluency assessed",
+      "External and internal factors considered",
+      "Comparison process described",
+      "Individual vs. class characteristics"
+    ]
+  },
+  validation: {
+    name: "Validation and Quality Controls", 
+    weight: 15,
+    criteria: [
+      "Mandatory peer review performed",
+      "Key evidence confirmed by second expert",
+      "Quality controls applied",
+      "Validation of techniques used",
+      "Anti-contamination protocols followed"
+    ]
+  },
+  presentation: {
+    name: "Presentation and Assessment",
+    weight: 10,
+    criteria: [
+      "Clear results supported by examinations",
+      "Significance assessment in context",
+      "Expert opinion with reasoning",
+      "Standardized conclusion scales",
+      "Adequate and traceable documentation"
     ]
   }
 };
@@ -217,7 +292,7 @@ RISPOSTA IN FORMATO JSON:
     for (const category of categories) {
       const categoryData = analysisResult[category];
       if (categoryData) {
-        const weight = ENFSI_FRAMEWORK[category as keyof typeof ENFSI_FRAMEWORK]?.weight || 0;
+        const weight = ENFSI_FRAMEWORK_IT[category as keyof typeof ENFSI_FRAMEWORK_IT]?.weight || 0;
         totalScore += (categoryData.score * weight);
         totalWeight += weight;
         
@@ -252,8 +327,17 @@ RISPOSTA IN FORMATO JSON:
 /**
  * Ottiene i criteri del framework ENFSI
  */
-export function getENFSIFramework() {
-  return ENFSI_FRAMEWORK;
+export function getENFSIFramework(language: string = 'it') {
+  const framework = language === 'en' ? ENFSI_FRAMEWORK_EN : ENFSI_FRAMEWORK_IT;
+  return {
+    framework,
+    classifications: {
+      eccellente: { min: 90, max: 100, description: "Conformità completa ENFSI" },
+      buono: { min: 75, max: 89, description: "Standard rispettati, dettagli minori" },
+      sufficiente: { min: 60, max: 74, description: "Base accettabile, alcune lacune" },
+      insufficiente: { min: 0, max: 59, description: "Criteri fondamentali mancanti" }
+    }
+  };
 }
 
 /**
