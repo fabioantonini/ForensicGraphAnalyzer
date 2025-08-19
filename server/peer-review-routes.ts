@@ -19,7 +19,7 @@ const requireAuth = (req: any, res: any, next: any) => {
 };
 import mammoth from "mammoth";
 import pdfParse from "pdf-parse";
-import PDFDocument from "pdfkit";
+import * as PDFDocument from "pdfkit";
 
 const router = express.Router();
 
@@ -370,8 +370,7 @@ router.get('/:id/report', requireAuth, async (req, res) => {
     console.log(`[PEER-REVIEW] Generazione report PDF per analisi ID: ${reviewId}`);
 
     // Genera il report PDF utilizzando PDFKit
-    const PDFDocument = require('pdfkit');
-    const doc = new PDFDocument({ margin: 50 });
+    const doc = new (PDFDocument as any)({ margin: 50 });
     
     // Imposta headers per download
     res.setHeader('Content-Type', 'application/pdf');
