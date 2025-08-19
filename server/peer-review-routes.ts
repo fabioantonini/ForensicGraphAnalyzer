@@ -111,7 +111,7 @@ router.post('/submit', requireAuth, upload.single('perizia'), async (req, res) =
     console.log(`[PEER-REVIEW] Testo estratto: ${peritiaContent.length} caratteri`);
 
     // Analizza la perizia con il framework ENFSI
-    const analysisResult = await analyzePeerReview(peritiaContent, userApiKey, userId);
+    const analysisResult = await analyzePeerReview(peritiaContent, userApiKey || undefined, userId);
 
     // Salva i risultati nel database
     const [peerReview] = await db.insert(peerReviews).values({

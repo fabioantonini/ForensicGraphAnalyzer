@@ -87,7 +87,10 @@ const PeerReviewPage = () => {
   // Caricamento framework ENFSI
   const { data: frameworkData } = useQuery({
     queryKey: ["/api/peer-review/framework/criteria", i18n.language],
-    queryFn: () => apiRequest(`/api/peer-review/framework/criteria?lang=${i18n.language}`),
+    queryFn: ({ queryKey }) => {
+      const [, lang] = queryKey;
+      return apiRequest(`/api/peer-review/framework/criteria?lang=${lang}`);
+    },
     enabled: true
   });
 
@@ -551,7 +554,7 @@ const PeerReviewPage = () => {
                   <CardContent className="pt-4">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-purple-700">
-                        {(statsData as any)?.averageProcessingTime || 0}s
+                        {Math.round((statsData as any)?.averageProcessingTime || 0)}s
                       </div>
                       <div className="text-sm text-purple-600">Tempo Medio</div>
                     </div>
