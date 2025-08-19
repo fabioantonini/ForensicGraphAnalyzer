@@ -4,7 +4,7 @@
   "tabs": {
     "upload": "Upload Report",
     "history": "Analysis History",
-    "statistics": "Statistics", 
+    "statistics": "Statistics",
     "framework": "ENFSI Framework"
   },
   "upload": {
@@ -35,6 +35,7 @@
     "noAnalyses": "No analyses available",
     "uploadFirst": "Upload the first report to start",
     "viewDetails": "View Details",
+    "downloadReport": "Download PDF Report",
     "date": "Date",
     "filename": "Filename", 
     "score": "Score",

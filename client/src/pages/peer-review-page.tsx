@@ -564,54 +564,67 @@ const PeerReviewPage = () => {
               </CardContent>
             </Card>
 
-            {/* Stats Summary */}
-            {statsData && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="bg-gradient-to-br from-blue-50 to-blue-100">
-                  <CardContent className="pt-4">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-blue-700">
-                        {statsData?.totalReviews || 0}
-                      </div>
-                      <div className="text-sm text-blue-600">{t('statistics.totalAnalyses')}</div>
-                    </div>
-                  </CardContent>
-                </Card>
+          </TabsContent>
 
-                <Card className="bg-gradient-to-br from-green-50 to-green-100">
-                  <CardContent className="pt-4">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-green-700">
-                        {statsData?.averageScore || 0}
-                      </div>
-                      <div className="text-sm text-green-600">{t('statistics.averageScore')}</div>
-                    </div>
-                  </CardContent>
-                </Card>
+          <TabsContent value="statistics" className="space-y-6">
+            <Card className="border-0 shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  {t('statistics.title')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {/* Stats Summary */}
+                {statsData && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <Card className="bg-gradient-to-br from-blue-50 to-blue-100">
+                      <CardContent className="pt-4">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-blue-700">
+                            {statsData?.totalReviews || 0}
+                          </div>
+                          <div className="text-sm text-blue-600">{t('statistics.totalAnalyses')}</div>
+                        </div>
+                      </CardContent>
+                    </Card>
 
-                <Card className="bg-gradient-to-br from-purple-50 to-purple-100">
-                  <CardContent className="pt-4">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-purple-700">
-                        {Math.round(statsData?.averageProcessingTime || 0)}s
-                      </div>
-                      <div className="text-sm text-purple-600">{t('statistics.averageTime')}</div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    <Card className="bg-gradient-to-br from-green-50 to-green-100">
+                      <CardContent className="pt-4">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-green-700">
+                            {statsData?.averageScore || 0}
+                          </div>
+                          <div className="text-sm text-green-600">{t('statistics.averageScore')}</div>
+                        </div>
+                      </CardContent>
+                    </Card>
 
-                <Card className="bg-gradient-to-br from-orange-50 to-orange-100">
-                  <CardContent className="pt-4">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-orange-700">
-                        {(statsData?.classificationCounts?.eccellente || 0) + (statsData?.classificationCounts?.buono || 0)}
-                      </div>
-                      <div className="text-sm text-orange-600">{t('statistics.conformCompliant')}</div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
+                    <Card className="bg-gradient-to-br from-purple-50 to-purple-100">
+                      <CardContent className="pt-4">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-purple-700">
+                            {Math.round(statsData?.averageProcessingTime || 0)}s
+                          </div>
+                          <div className="text-sm text-purple-600">{t('statistics.averageTime')}</div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-gradient-to-br from-orange-50 to-orange-100">
+                      <CardContent className="pt-4">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-orange-700">
+                            {(statsData?.classificationCounts?.eccellente || 0) + (statsData?.classificationCounts?.buono || 0)}
+                          </div>
+                          <div className="text-sm text-orange-600">{t('statistics.conformCompliant')}</div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="framework" className="space-y-6">
