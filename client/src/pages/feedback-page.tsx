@@ -396,7 +396,7 @@ const FeedbackPage = () => {
                     <div key={feedback.id} className="border rounded-lg p-4">
                       <div className="flex items-start justify-between mb-2">
                         <h3 className="font-semibold">{feedback.title}</h3>
-                        <StatusBadge status={feedback.status} />
+                        <StatusBadge status={feedback.status || 'open'} />
                       </div>
                       <p className="text-gray-600 text-sm mb-2">{feedback.description}</p>
                       <div className="flex items-center gap-4 text-xs text-gray-500">
