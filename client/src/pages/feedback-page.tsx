@@ -98,15 +98,15 @@ const FeedbackPage = () => {
   };
 
   // Quick action handlers
-  const handleQuickAction = (category: string, feature?: string, prefilledData?: Partial<FeedbackFormData>) => {
+  const handleQuickAction = (category: string, feature?: string, actionType?: 'rateApp' | 'recommendations') => {
     form.setValue('category', category);
     if (feature) form.setValue('feature', feature);
     
-    // Pre-fill additional data for specific actions
-    if (prefilledData) {
-      if (prefilledData.title) form.setValue('title', prefilledData.title);
-      if (prefilledData.description) form.setValue('description', prefilledData.description);
-      if (prefilledData.priority) form.setValue('priority', prefilledData.priority);
+    // Pre-fill additional data for specific actions using translations
+    if (actionType) {
+      form.setValue('title', t(`prefilledContent.${actionType}.title`));
+      form.setValue('description', t(`prefilledContent.${actionType}.description`));
+      form.setValue('priority', 'medium');
     }
     
     setActiveTab('submit');
@@ -119,15 +119,9 @@ const FeedbackPage = () => {
       resolved: 'bg-green-100 text-green-800',
       closed: 'bg-gray-100 text-gray-800',
     };
-    const statusTranslations = {
-      open: 'Aperto',
-      in_progress: 'In Lavorazione', 
-      resolved: 'Risolto',
-      closed: 'Chiuso'
-    };
     return (
       <Badge className={colors[status as keyof typeof colors] || colors.open}>
-        {statusTranslations[status as keyof typeof statusTranslations] || status}
+        {t(`status.${status}`) || status}
       </Badge>
     );
   };
@@ -135,27 +129,27 @@ const FeedbackPage = () => {
   return (
     <div className="container mx-auto p-6 max-w-6xl">
       <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Centro Feedback</h1>
-        <p className="text-gray-600">Aiutaci a migliorare GrapholexInsight con i tuoi commenti</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('title')}</h1>
+        <p className="text-gray-600">{t('subtitle')}</p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="submit" className="flex items-center gap-2">
             <MessageSquare className="h-4 w-4" />
-            Invia Feedback
+{t('tabs.submit')}
           </TabsTrigger>
           <TabsTrigger value="history" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-            Cronologia
+{t('tabs.history')}
           </TabsTrigger>
           <TabsTrigger value="stats" className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
-            Statistiche
+{t('tabs.stats')}
           </TabsTrigger>
           <TabsTrigger value="success" className="flex items-center gap-2">
             <CheckCircle className="h-4 w-4" />
-            Successo
+{t('tabs.success')}
           </TabsTrigger>
         </TabsList>
 
@@ -165,7 +159,7 @@ const FeedbackPage = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Heart className="h-5 w-5 text-red-500" />
-                Azioni Rapide
+{t('quickActions.title')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -176,7 +170,7 @@ const FeedbackPage = () => {
                   onClick={() => handleQuickAction('bug')}
                 >
                   <Bug className="h-5 w-5 text-red-500" />
-                  Segnala Bug
+{t('quickActions.reportBug')}
                 </Button>
                 <Button
                   variant="outline"
@@ -184,31 +178,23 @@ const FeedbackPage = () => {
                   onClick={() => handleQuickAction('feature_request')}
                 >
                   <Lightbulb className="h-5 w-5 text-yellow-500" />
-                  Richiedi Funzionalità
+{t('quickActions.requestFeature')}
                 </Button>
                 <Button
                   variant="outline"
                   className="h-16 flex flex-col gap-2"
-                  onClick={() => handleQuickAction('usability', 'general', {
-                    title: 'Valutazione generale di GrapholexInsight',
-                    description: 'Condividi la tua esperienza complessiva con l\'applicazione...',
-                    priority: 'medium'
-                  })}
+                  onClick={() => handleQuickAction('usability', 'general', 'rateApp')}
                 >
                   <Star className="h-5 w-5 text-blue-500" />
-                  Valuta App
+{t('quickActions.rateApp')}
                 </Button>
                 <Button
                   variant="outline"
                   className="h-16 flex flex-col gap-2"
-                  onClick={() => handleQuickAction('usability', 'general', {
-                    title: 'Raccomandazione per GrapholexInsight',
-                    description: 'Quanto consiglieresti GrapholexInsight ai tuoi colleghi? Condividi i motivi della tua valutazione...',
-                    priority: 'medium'
-                  })}
+                  onClick={() => handleQuickAction('usability', 'general', 'recommendations')}
                 >
                   <TrendingUp className="h-5 w-5 text-green-500" />
-                  Raccomandazioni
+{t('quickActions.recommendations')}
                 </Button>
               </div>
             </CardContent>
@@ -396,13 +382,13 @@ const FeedbackPage = () => {
         <TabsContent value="history" className="space-y-6 mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>Il Mio Feedback</CardTitle>
+              <CardTitle>{t('myFeedback.title')}</CardTitle>
             </CardHeader>
             <CardContent>
               {!(myFeedback as any)?.feedback || (myFeedback as any).feedback.length === 0 ? (
                 <div className="text-center py-8">
                   <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">Non hai ancora inviato feedback</p>
+                  <p className="text-gray-600">{t('myFeedback.empty')}</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -432,7 +418,7 @@ const FeedbackPage = () => {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-gray-600">
-                  Feedback Totali
+{t('stats.totalFeedback')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -443,7 +429,7 @@ const FeedbackPage = () => {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-gray-600">
-                  Valutazione Media
+{t('stats.averageRating')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -456,7 +442,7 @@ const FeedbackPage = () => {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-gray-600">
-                  Punteggio NPS Medio
+{t('stats.averageNPS')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -467,7 +453,7 @@ const FeedbackPage = () => {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-gray-600">
-                  Distribuzione per Stato
+{t('stats.statusBreakdown')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -489,14 +475,14 @@ const FeedbackPage = () => {
             <CardContent className="pt-6">
               <div className="text-center">
                 <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-                <h2 className="text-2xl font-bold text-green-600 mb-2">Feedback Inviato!</h2>
-                <p className="text-gray-600 mb-6">Grazie per il tuo contributo. Il tuo feedback ci aiuta a migliorare costantemente GrapholexInsight.</p>
+                <h2 className="text-2xl font-bold text-green-600 mb-2">{t('success.title')}</h2>
+                <p className="text-gray-600 mb-6">{t('success.message')}</p>
                 <div className="flex gap-4 justify-center">
                   <Button onClick={() => setActiveTab('history')}>
-                    Visualizza Cronologia
+{t('success.viewHistory')}
                   </Button>
                   <Button variant="outline" onClick={() => setActiveTab('submit')}>
-                    Invia Altro Feedback
+{t('success.submitAnother')}
                   </Button>
                 </div>
               </div>

@@ -69,7 +69,23 @@
     "reportBug": "Segnala Bug",
     "requestFeature": "Richiedi Funzionalità",
     "rateApp": "Valuta App",
-    "npsReview": "Review NPS"
+    "recommendations": "Raccomandazioni"
+  },
+  "tabs": {
+    "submit": "Invia",
+    "history": "Cronologia",
+    "stats": "Statistiche",
+    "success": "Successo"
+  },
+  "prefilledContent": {
+    "rateApp": {
+      "title": "Valutazione generale di GrapholexInsight",
+      "description": "Condividi la tua esperienza complessiva con l'applicazione..."
+    },
+    "recommendations": {
+      "title": "Raccomandazione per GrapholexInsight",
+      "description": "Quanto consiglieresti GrapholexInsight ai tuoi colleghi? Condividi i motivi della tua valutazione..."
+    }
   },
   "validation": {
     "categoryRequired": "Categoria è obbligatoria",

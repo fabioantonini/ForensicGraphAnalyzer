@@ -69,7 +69,23 @@
     "reportBug": "Report Bug",
     "requestFeature": "Request Feature",
     "rateApp": "Rate App",
-    "npsReview": "NPS Review"
+    "recommendations": "Recommendations"
+  },
+  "tabs": {
+    "submit": "Submit",
+    "history": "History",
+    "stats": "Statistics",
+    "success": "Success"
+  },
+  "prefilledContent": {
+    "rateApp": {
+      "title": "Overall GrapholexInsight Rating",
+      "description": "Share your overall experience with the application..."
+    },
+    "recommendations": {
+      "title": "Recommendation for GrapholexInsight",
+      "description": "How likely would you recommend GrapholexInsight to your colleagues? Share your reasoning..."
+    }
   },
   "validation": {
     "categoryRequired": "Category is required",
