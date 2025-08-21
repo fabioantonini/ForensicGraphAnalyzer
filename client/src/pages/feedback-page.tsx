@@ -98,9 +98,17 @@ const FeedbackPage = () => {
   };
 
   // Quick action handlers
-  const handleQuickAction = (category: string, feature?: string) => {
+  const handleQuickAction = (category: string, feature?: string, prefilledData?: Partial<FeedbackFormData>) => {
     form.setValue('category', category);
     if (feature) form.setValue('feature', feature);
+    
+    // Pre-fill additional data for specific actions
+    if (prefilledData) {
+      if (prefilledData.title) form.setValue('title', prefilledData.title);
+      if (prefilledData.description) form.setValue('description', prefilledData.description);
+      if (prefilledData.priority) form.setValue('priority', prefilledData.priority);
+    }
+    
     setActiveTab('submit');
   };
 
@@ -181,7 +189,11 @@ const FeedbackPage = () => {
                 <Button
                   variant="outline"
                   className="h-16 flex flex-col gap-2"
-                  onClick={() => handleQuickAction('usability')}
+                  onClick={() => handleQuickAction('usability', 'general', {
+                    title: 'Valutazione generale di GrapholexInsight',
+                    description: 'Condividi la tua esperienza complessiva con l\'applicazione...',
+                    priority: 'medium'
+                  })}
                 >
                   <Star className="h-5 w-5 text-blue-500" />
                   Valuta App
@@ -189,7 +201,11 @@ const FeedbackPage = () => {
                 <Button
                   variant="outline"
                   className="h-16 flex flex-col gap-2"
-                  onClick={() => handleQuickAction('usability')}
+                  onClick={() => handleQuickAction('usability', 'general', {
+                    title: 'Raccomandazione per GrapholexInsight',
+                    description: 'Quanto consiglieresti GrapholexInsight ai tuoi colleghi? Condividi i motivi della tua valutazione...',
+                    priority: 'medium'
+                  })}
                 >
                   <TrendingUp className="h-5 w-5 text-green-500" />
                   Raccomandazioni
