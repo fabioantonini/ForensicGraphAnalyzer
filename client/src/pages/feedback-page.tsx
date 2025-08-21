@@ -137,19 +137,19 @@ const FeedbackPage = () => {
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="submit" className="flex items-center gap-2">
             <MessageSquare className="h-4 w-4" />
-{t('tabs.submit')}
+            {t('tabs.submit')}
           </TabsTrigger>
           <TabsTrigger value="history" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-{t('tabs.history')}
+            {t('tabs.history')}
           </TabsTrigger>
           <TabsTrigger value="stats" className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
-{t('tabs.stats')}
+            {t('tabs.stats')}
           </TabsTrigger>
           <TabsTrigger value="success" className="flex items-center gap-2">
             <CheckCircle className="h-4 w-4" />
-{t('tabs.success')}
+            {t('tabs.success')}
           </TabsTrigger>
         </TabsList>
 
@@ -159,7 +159,7 @@ const FeedbackPage = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Heart className="h-5 w-5 text-red-500" />
-{t('quickActions.title')}
+                {t('quickActions.title')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -170,7 +170,7 @@ const FeedbackPage = () => {
                   onClick={() => handleQuickAction('bug')}
                 >
                   <Bug className="h-5 w-5 text-red-500" />
-{t('quickActions.reportBug')}
+                  {t('quickActions.reportBug')}
                 </Button>
                 <Button
                   variant="outline"
@@ -178,7 +178,7 @@ const FeedbackPage = () => {
                   onClick={() => handleQuickAction('feature_request')}
                 >
                   <Lightbulb className="h-5 w-5 text-yellow-500" />
-{t('quickActions.requestFeature')}
+                  {t('quickActions.requestFeature')}
                 </Button>
                 <Button
                   variant="outline"
@@ -186,7 +186,7 @@ const FeedbackPage = () => {
                   onClick={() => handleQuickAction('usability', 'general', 'rateApp')}
                 >
                   <Star className="h-5 w-5 text-blue-500" />
-{t('quickActions.rateApp')}
+                  {t('quickActions.rateApp')}
                 </Button>
                 <Button
                   variant="outline"
@@ -194,7 +194,7 @@ const FeedbackPage = () => {
                   onClick={() => handleQuickAction('usability', 'general', 'recommendations')}
                 >
                   <TrendingUp className="h-5 w-5 text-green-500" />
-{t('quickActions.recommendations')}
+                  {t('quickActions.recommendations')}
                 </Button>
               </div>
             </CardContent>
@@ -418,7 +418,7 @@ const FeedbackPage = () => {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-gray-600">
-{t('stats.totalFeedback')}
+                  {t('stats.totalFeedback')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -429,7 +429,7 @@ const FeedbackPage = () => {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-gray-600">
-{t('stats.averageRating')}
+                  {t('stats.averageRating')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -442,7 +442,7 @@ const FeedbackPage = () => {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-gray-600">
-{t('stats.averageNPS')}
+                  {t('stats.averageNPS')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -453,7 +453,7 @@ const FeedbackPage = () => {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-gray-600">
-{t('stats.statusBreakdown')}
+                  {t('stats.statusBreakdown')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -479,10 +479,10 @@ const FeedbackPage = () => {
                 <p className="text-gray-600 mb-6">{t('success.message')}</p>
                 <div className="flex gap-4 justify-center">
                   <Button onClick={() => setActiveTab('history')}>
-{t('success.viewHistory')}
+                    {t('success.viewHistory')}
                   </Button>
                   <Button variant="outline" onClick={() => setActiveTab('submit')}>
-{t('success.submitAnother')}
+                    {t('success.submitAnother')}
                   </Button>
                 </div>
               </div>
