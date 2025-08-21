@@ -25,6 +25,28 @@ export const users = pgTable("users", {
   isActive: boolean("is_active").default(true).notNull(), // Indica se l'account è attivo o disabilitato
 });
 
+// Feedback System
+export const feedback = pgTable("feedback", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  category: text("category").notNull(), // 'usability', 'accuracy', 'performance', 'design', 'bug', 'feature_request'
+  feature: text("feature"), // 'signatures', 'ocr', 'peer_review', 'wake_up', 'documents', 'general'
+  rating: integer("rating"), // 1-5 stars for rated feedback
+  npsScore: integer("nps_score"), // 0-10 for NPS surveys
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  userAgent: text("user_agent"),
+  url: text("url"),
+  screenshotUrl: text("screenshot_url"),
+  priority: text("priority").default("medium"), // 'low', 'medium', 'high', 'critical'
+  status: text("status").default("open"), // 'open', 'in_progress', 'resolved', 'closed'
+  adminResponse: text("admin_response"),
+  respondedAt: timestamp("responded_at"),
+  respondedBy: integer("responded_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const usersRelations = relations(users, ({ many }) => ({
   documents: many(documents),
   activities: many(activities),
@@ -33,6 +55,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   anonymizations: many(anonymizations),
   quizSessions: many(quizSessions),
   peerReviews: many(peerReviews),
+  feedback: many(feedback),
 }));
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -780,6 +803,34 @@ export type UserChallenge = typeof userChallenges.$inferSelect;
 export type InsertUserChallenge = z.infer<typeof insertUserChallengeSchema>;
 export type UserStats = typeof userStats.$inferSelect;
 export type InsertUserStats = z.infer<typeof insertUserStatsSchema>;
+
+// Feedback relations and schemas
+export const feedbackRelations = relations(feedback, ({ one }) => ({
+  user: one(users, {
+    fields: [feedback.userId],
+    references: [users.id],
+  }),
+  responder: one(users, {
+    fields: [feedback.respondedBy],
+    references: [users.id],
+  }),
+}));
+
+export const insertFeedbackSchema = createInsertSchema(feedback).pick({
+  category: true,
+  feature: true,
+  rating: true,
+  npsScore: true,
+  title: true,
+  description: true,
+  userAgent: true,
+  url: true,
+  screenshotUrl: true,
+  priority: true,
+});
+
+export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
+export type SelectFeedback = typeof feedback.$inferSelect;
 
 // Document Anonymization schema
 export const anonymizations = pgTable("anonymizations", {

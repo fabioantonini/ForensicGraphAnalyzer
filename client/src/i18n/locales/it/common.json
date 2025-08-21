@@ -48,7 +48,8 @@
     "signatureQuality": "Controllo Qualità Firme",
     "anonymize": "Anonimizzazione Documenti",
     "wakeUp": "Quiz Wake Up",
-    "peerReview": "Peer Review ENFSI", 
+    "peerReview": "Peer Review ENFSI",
+    "feedback": "Centro Feedback",
     "settings": "Impostazioni",
     "admin": "Amministrazione"
   },

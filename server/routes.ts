@@ -1612,6 +1612,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register Wake Up quiz routes
   app.use("/api/wake-up", wakeUpRoutes);
+
+  // Register Feedback routes
+  const { default: feedbackRoutes } = await import('./feedback-routes.js');
+  app.use("/api/feedback", feedbackRoutes);
   app.use("/api/peer-review", peerReviewRoutes);
 
   const httpServer = createServer(app);
