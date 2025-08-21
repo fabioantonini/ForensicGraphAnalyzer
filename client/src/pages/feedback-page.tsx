@@ -403,7 +403,7 @@ const FeedbackPage = () => {
                         <span>{feedback.category}</span>
                         {feedback.feature && <span>{feedback.feature}</span>}
                         {feedback.rating && <span>⭐ {feedback.rating}/5</span>}
-                        <span>{new Date(feedback.createdAt!).toLocaleDateString()}</span>
+                        <span>{feedback.createdAt ? new Date(feedback.createdAt).toLocaleDateString() : 'N/A'}</span>
                       </div>
                     </div>
                   ))}
