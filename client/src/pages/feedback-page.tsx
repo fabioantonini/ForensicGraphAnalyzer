@@ -111,9 +111,15 @@ const FeedbackPage = () => {
       resolved: 'bg-green-100 text-green-800',
       closed: 'bg-gray-100 text-gray-800',
     };
+    const statusTranslations = {
+      open: 'Aperto',
+      in_progress: 'In Lavorazione', 
+      resolved: 'Risolto',
+      closed: 'Chiuso'
+    };
     return (
       <Badge className={colors[status as keyof typeof colors] || colors.open}>
-        {t(`status.${status}`)}
+        {statusTranslations[status as keyof typeof statusTranslations] || status}
       </Badge>
     );
   };
@@ -211,10 +217,17 @@ const FeedbackPage = () => {
                       onValueChange={(value) => form.setValue('category', value)}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder={t('placeholder.selectCategory')} />
+                        <SelectValue placeholder="Seleziona categoria..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {Object.entries(t('categories', { returnObjects: true })).map(([key, label]) => (
+                        {Object.entries({
+                          usability: 'Usabilità',
+                          accuracy: 'Precisione', 
+                          performance: 'Performance',
+                          design: 'Design',
+                          bug: 'Bug/Errore',
+                          feature_request: 'Richiesta Funzionalità'
+                        }).map(([key, label]) => (
                           <SelectItem key={key} value={key}>
                             {label}
                           </SelectItem>
@@ -234,10 +247,17 @@ const FeedbackPage = () => {
                       onValueChange={(value) => form.setValue('feature', value)}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder={t('placeholder.selectFeature')} />
+                        <SelectValue placeholder="Seleziona area..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {Object.entries(t('features', { returnObjects: true })).map(([key, label]) => (
+                        {Object.entries({
+                          signatures: 'Analisi Firme',
+                          ocr: 'OCR',
+                          peer_review: 'Peer Review', 
+                          wake_up: 'Wake Up Quiz',
+                          documents: 'Gestione Documenti',
+                          general: 'Generale'
+                        }).map(([key, label]) => (
                           <SelectItem key={key} value={key}>
                             {label}
                           </SelectItem>
@@ -327,10 +347,15 @@ const FeedbackPage = () => {
                       onValueChange={(value) => form.setValue('priority', value)}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder={t('placeholder.selectPriority')} />
+                        <SelectValue placeholder="Seleziona priorità..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {Object.entries(t('priority', { returnObjects: true })).map(([key, label]) => (
+                        {Object.entries({
+                          low: 'Bassa',
+                          medium: 'Media', 
+                          high: 'Alta',
+                          critical: 'Critica'
+                        }).map(([key, label]) => (
                           <SelectItem key={key} value={key}>
                             {label}
                           </SelectItem>
@@ -373,8 +398,8 @@ const FeedbackPage = () => {
                       </div>
                       <p className="text-gray-600 text-sm mb-2">{feedback.description}</p>
                       <div className="flex items-center gap-4 text-xs text-gray-500">
-                        <span>{t(`categories.${feedback.category}`)}</span>
-                        {feedback.feature && <span>{t(`features.${feedback.feature}`)}</span>}
+                        <span>{feedback.category}</span>
+                        {feedback.feature && <span>{feedback.feature}</span>}
                         {feedback.rating && <span>⭐ {feedback.rating}/5</span>}
                         <span>{new Date(feedback.createdAt!).toLocaleDateString()}</span>
                       </div>
@@ -433,7 +458,7 @@ const FeedbackPage = () => {
                 <div className="space-y-1">
                   {(stats as any)?.statusBreakdown?.map((status: any) => (
                     <div key={status.status} className="flex justify-between text-sm">
-                      <span>{t(`status.${status.status}`)}</span>
+                      <span>{status.status}</span>
                       <span>{status.count}</span>
                     </div>
                   ))}
