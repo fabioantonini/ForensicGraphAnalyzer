@@ -41,6 +41,7 @@ Preferred communication style: Simple, everyday language.
 - **Drag & Drop Interface**: Supports dual upload modes with visual feedback.
 - **Wake Up Quiz System**: AI-powered graphology and general knowledge quiz with multilingual support, user-specific progress tracking, stable question generation with anti-repetition system for enhanced variety while maintaining accuracy. Enhanced UX with loading indicators during question generation.
 - **OpenAI Model Management**: Updated to support GPT-4o (default) and GPT-5, with removal of deprecated models (o3, o4-mini, gpt-3.5-turbo). Unified temperature control across all supported models.
+- **Feedback System**: Complete user feedback collection system with 4 quick actions (Bug Reports, Feature Requests, App Rating, Recommendations), multilingual support (Italian/English), smart form pre-filling, comprehensive statistics dashboard, and integrated history tracking. Fully localized interface with intuitive Italian terminology.
 
 ### System Design Choices
 - **Database Schema**: Includes tables for Users, documents, signatures, projects, activities, and queries.
