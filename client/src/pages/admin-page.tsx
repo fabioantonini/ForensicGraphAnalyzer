@@ -63,26 +63,12 @@ export default function AdminPage() {
 
   // Fetch lista utenti
   const { data: users, isLoading: isLoadingUsers } = useQuery<User[]>({
-    queryKey: ["/api/admin/users"],
-    onError: (error: Error) => {
-      toast({
-        title: t("common.error"),
-        description: error.message,
-        variant: "destructive",
-      });
-    },
+    queryKey: ["/api/admin/users"]
   });
 
   // Fetch statistiche sistema
   const { data: stats, isLoading: isLoadingStats } = useQuery<SystemStats>({
-    queryKey: ["/api/stats"],
-    onError: (error: Error) => {
-      toast({
-        title: t("common.error"),
-        description: error.message,
-        variant: "destructive",
-      });
-    },
+    queryKey: ["/api/stats"]
   });
 
   // Mutation per modificare il ruolo dell'utente
@@ -146,8 +132,8 @@ export default function AdminPage() {
 
   // Filtra gli utenti in base alla ricerca
   const filteredUsers = users
-    ? users.filter(
-        (user) =>
+    ? (users as any).filter(
+        (user: any) =>
           user.username.toLowerCase().includes(search.toLowerCase()) ||
           user.email.toLowerCase().includes(search.toLowerCase())
       )
@@ -224,7 +210,7 @@ export default function AdminPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredUsers.map((user) => (
+                      {filteredUsers.map((user: any) => (
                         <TableRow key={user.id}>
                           <TableCell className="font-medium">
                             {user.username}
@@ -345,9 +331,9 @@ export default function AdminPage() {
                   <div className="flex justify-center py-8">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
-                ) : stats?.newUsers && stats.newUsers.length > 0 ? (
+                ) : (stats as any)?.newUsers && (stats as any).newUsers.length > 0 ? (
                   <div className="space-y-4">
-                    {stats.newUsers.map((user) => (
+                    {(stats as any).newUsers.map((user: any) => (
                       <div
                         key={user.id}
                         className="flex items-center justify-between border-b pb-2"
