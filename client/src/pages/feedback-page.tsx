@@ -192,7 +192,7 @@ const FeedbackPage = () => {
                   onClick={() => handleQuickAction('usability')}
                 >
                   <TrendingUp className="h-5 w-5 text-green-500" />
-                  Review NPS
+                  Raccomandazioni
                 </Button>
               </div>
             </CardContent>
