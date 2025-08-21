@@ -28,6 +28,7 @@ import { registerSignatureRoutes } from "./signature-routes";
 import { setupAnonymizationRoutes } from "./anonymization-routes";
 import wakeUpRoutes from "./wake-up-routes";
 import peerReviewRoutes from "./peer-review-routes";
+import feedbackRoutes from "./feedback-routes";
 import { processOCR, saveOCRDocument, ocrUpload, processOCRWithProgress, getOCRProcessStatus } from "./ocr-service";
 import { eq, desc, sql } from "drizzle-orm";
 import { db, pool } from "./db";
@@ -1613,10 +1614,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register Wake Up quiz routes
   app.use("/api/wake-up", wakeUpRoutes);
 
-  // Register Feedback routes
-  const { default: feedbackRoutes } = await import('./feedback-routes.js');
-  app.use("/api/feedback", feedbackRoutes);
+  // Register peer review routes
   app.use("/api/peer-review", peerReviewRoutes);
+
+  // Register feedback routes
+  app.use("/api/feedback", feedbackRoutes);
 
   const httpServer = createServer(app);
   return httpServer;
