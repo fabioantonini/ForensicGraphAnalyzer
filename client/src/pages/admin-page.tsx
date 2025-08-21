@@ -7,6 +7,7 @@ import { UpdateUserRole } from "@shared/schema";
 import DemoAccountsManagement from "@/components/admin/demo-accounts-management";
 import EmailConfiguration from "@/components/admin/email-configuration";
 import { GmailConfiguration } from "@/components/admin/gmail-configuration";
+import FeedbackManagement from "@/components/admin/feedback-management";
 
 import {
   Card,
@@ -177,6 +178,7 @@ export default function AdminPage() {
         <TabsList className="mb-4" data-tour="admin-tabs">
           <TabsTrigger value="users">{t("admin.usersManagement")}</TabsTrigger>
           <TabsTrigger value="stats">{t("admin.systemStats")}</TabsTrigger>
+          <TabsTrigger value="feedback">Feedback</TabsTrigger>
           <TabsTrigger value="demo-accounts">{t("admin.demoAccounts.title", "Account Demo")}</TabsTrigger>
           <TabsTrigger value="email-config">{t("admin.emailConfig.tabTitle", "Email")}</TabsTrigger>
           <TabsTrigger value="gmail-config">{t("admin.gmail.tabTitle", "Gmail SMTP")}</TabsTrigger>
@@ -370,6 +372,21 @@ export default function AdminPage() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* Tab per la visualizzazione feedback */}
+        <TabsContent value="feedback">
+          <Card>
+            <CardHeader>
+              <CardTitle>Gestione Feedback</CardTitle>
+              <CardDescription>
+                Visualizza e gestisci tutti i feedback ricevuti dagli utenti
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FeedbackManagement />
+            </CardContent>
+          </Card>
         </TabsContent>
         
         {/* Tab per la gestione account demo */}

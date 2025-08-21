@@ -6,6 +6,13 @@ import { z } from 'zod';
 
 const router = express.Router();
 
+// Estendi il tipo di sessione per includere userId
+declare module 'express-session' {
+  interface SessionData {
+    userId?: number;
+  }
+}
+
 // Middleware per autenticazione
 const requireAuth = (req: express.Request, res: express.Response, next: express.NextFunction) => {
   if (!req.session.userId) {
@@ -57,7 +64,7 @@ router.post('/', async (req, res) => {
     // Add user info if authenticated
     const feedbackData: InsertFeedback & { userId?: number } = {
       ...validatedData,
-      userId: req.session.userId || null,
+      userId: req.session.userId || undefined,
     };
 
     // Add browser and page context if available
@@ -218,7 +225,7 @@ router.get('/my', requireAuth, async (req, res) => {
     const userFeedback = await db
       .select()
       .from(feedback)
-      .where(eq(feedback.userId, userId))
+      .where(eq(feedback.userId, userId!))
       .orderBy(desc(feedback.createdAt));
 
     res.json({ feedback: userFeedback });
