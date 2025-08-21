@@ -6,25 +6,41 @@ import { z } from 'zod';
 
 const router = express.Router();
 
-// Estendi il tipo di sessione per includere userId
-declare module 'express-session' {
-  interface SessionData {
-    userId?: number;
+// Estendi i tipi Express per includere user (Passport.js)
+declare global {
+  namespace Express {
+    interface User {
+      id: number;
+      username: string;
+      email: string;
+      role: string;
+    }
   }
 }
 
-// Middleware per autenticazione
+// Middleware per autenticazione (compatibile con Passport.js)
 const requireAuth = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  if (!req.session.userId) {
+  if (!req.isAuthenticated()) {
     return res.status(401).json({ error: 'Authentication required' });
   }
   next();
 };
 
+// Middleware per verificare se l'utente è admin
+const requireAdmin = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+  if (req.user?.role !== 'admin') {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+  next();
+};
+
 // GET /api/feedback - Get all feedback (admin only)
-router.get('/', requireAuth, async (req, res) => {
+router.get('/', requireAdmin, async (req, res) => {
   try {
-    const user = req.session.userId;
+    const userId = req.user!.id;
     
     // Simple check for admin role - extend this based on your user role system
     // For now, we'll check if user has admin role or just allow any authenticated user to see aggregated data
@@ -64,7 +80,7 @@ router.post('/', async (req, res) => {
     // Add user info if authenticated
     const feedbackData: InsertFeedback & { userId?: number } = {
       ...validatedData,
-      userId: req.session.userId || undefined,
+      userId: req.isAuthenticated() ? req.user!.id : undefined,
     };
 
     // Add browser and page context if available
@@ -102,8 +118,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// GET /api/feedback/stats - Get feedback statistics
-router.get('/stats', requireAuth, async (req, res) => {
+// GET /api/feedback/stats - Get feedback statistics (admin only)
+router.get('/stats', requireAdmin, async (req, res) => {
   try {
     // Get total feedback count
     const [totalCount] = await db
@@ -170,7 +186,7 @@ router.get('/stats', requireAuth, async (req, res) => {
 });
 
 // PUT /api/feedback/:id/status - Update feedback status (admin)
-router.put('/:id/status', requireAuth, async (req, res) => {
+router.put('/:id/status', requireAdmin, async (req, res) => {
   try {
     const feedbackId = parseInt(req.params.id);
     const { status, adminResponse } = req.body;
@@ -192,7 +208,7 @@ router.put('/:id/status', requireAuth, async (req, res) => {
     if (adminResponse) {
       updateData.adminResponse = adminResponse;
       updateData.respondedAt = new Date();
-      updateData.respondedBy = req.session.userId;
+      updateData.respondedBy = req.user!.id;
     }
 
     const [updatedFeedback] = await db
@@ -220,12 +236,12 @@ router.put('/:id/status', requireAuth, async (req, res) => {
 // GET /api/feedback/my - Get current user's feedback
 router.get('/my', requireAuth, async (req, res) => {
   try {
-    const userId = req.session.userId;
+    const userId = req.user!.id;
 
     const userFeedback = await db
       .select()
       .from(feedback)
-      .where(eq(feedback.userId, userId!))
+      .where(eq(feedback.userId, userId))
       .orderBy(desc(feedback.createdAt));
 
     res.json({ feedback: userFeedback });
