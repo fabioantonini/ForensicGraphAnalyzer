@@ -380,13 +380,13 @@ const FeedbackPage = () => {
         <TabsContent value="history" className="space-y-6 mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>{t('myFeedback.title')}</CardTitle>
+              <CardTitle>Il Mio Feedback</CardTitle>
             </CardHeader>
             <CardContent>
               {!(myFeedback as any)?.feedback || (myFeedback as any).feedback.length === 0 ? (
                 <div className="text-center py-8">
                   <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">{t('myFeedback.empty')}</p>
+                  <p className="text-gray-600">Non hai ancora inviato feedback</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -416,7 +416,7 @@ const FeedbackPage = () => {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-gray-600">
-                  {t('stats.totalFeedback')}
+                  Feedback Totali
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -427,7 +427,7 @@ const FeedbackPage = () => {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-gray-600">
-                  {t('stats.averageRating')}
+                  Valutazione Media
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -440,7 +440,7 @@ const FeedbackPage = () => {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-gray-600">
-                  {t('stats.averageNPS')}
+                  Punteggio NPS Medio
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -451,7 +451,7 @@ const FeedbackPage = () => {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-gray-600">
-                  {t('stats.statusBreakdown')}
+                  Distribuzione per Stato
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -473,14 +473,14 @@ const FeedbackPage = () => {
             <CardContent className="pt-6">
               <div className="text-center">
                 <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-                <h2 className="text-2xl font-bold text-green-600 mb-2">{t('success.title')}</h2>
-                <p className="text-gray-600 mb-6">{t('success.message')}</p>
+                <h2 className="text-2xl font-bold text-green-600 mb-2">Feedback Inviato!</h2>
+                <p className="text-gray-600 mb-6">Grazie per il tuo contributo. Il tuo feedback ci aiuta a migliorare costantemente GrapholexInsight.</p>
                 <div className="flex gap-4 justify-center">
                   <Button onClick={() => setActiveTab('history')}>
-                    {t('success.viewHistory')}
+                    Visualizza Cronologia
                   </Button>
                   <Button variant="outline" onClick={() => setActiveTab('submit')}>
-                    {t('success.submitAnother')}
+                    Invia Altro Feedback
                   </Button>
                 </div>
               </div>
