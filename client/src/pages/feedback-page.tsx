@@ -127,8 +127,8 @@ const FeedbackPage = () => {
   return (
     <div className="container mx-auto p-6 max-w-6xl">
       <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('title')}</h1>
-        <p className="text-gray-600">{t('subtitle')}</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Centro Feedback</h1>
+        <p className="text-gray-600">Aiutaci a migliorare GrapholexInsight con i tuoi commenti</p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -157,7 +157,7 @@ const FeedbackPage = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Heart className="h-5 w-5 text-red-500" />
-                {t('quickActions.title')}
+                Azioni Rapide
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -168,7 +168,7 @@ const FeedbackPage = () => {
                   onClick={() => handleQuickAction('bug')}
                 >
                   <Bug className="h-5 w-5 text-red-500" />
-                  {t('quickActions.reportBug')}
+                  Segnala Bug
                 </Button>
                 <Button
                   variant="outline"
@@ -176,7 +176,7 @@ const FeedbackPage = () => {
                   onClick={() => handleQuickAction('feature_request')}
                 >
                   <Lightbulb className="h-5 w-5 text-yellow-500" />
-                  {t('quickActions.requestFeature')}
+                  Richiedi Funzionalità
                 </Button>
                 <Button
                   variant="outline"
@@ -184,7 +184,7 @@ const FeedbackPage = () => {
                   onClick={() => handleQuickAction('usability')}
                 >
                   <Star className="h-5 w-5 text-blue-500" />
-                  {t('quickActions.rateApp')}
+                  Valuta App
                 </Button>
                 <Button
                   variant="outline"
@@ -192,7 +192,7 @@ const FeedbackPage = () => {
                   onClick={() => handleQuickAction('usability')}
                 >
                   <TrendingUp className="h-5 w-5 text-green-500" />
-                  {t('quickActions.npsReview')}
+                  Review NPS
                 </Button>
               </div>
             </CardContent>
@@ -211,7 +211,7 @@ const FeedbackPage = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Category */}
                   <div className="space-y-2">
-                    <Label htmlFor="category">{t('form.category')} *</Label>
+                    <Label htmlFor="category">Categoria *</Label>
                     <Select
                       value={form.watch('category')}
                       onValueChange={(value) => form.setValue('category', value)}
@@ -241,7 +241,7 @@ const FeedbackPage = () => {
 
                   {/* Feature */}
                   <div className="space-y-2">
-                    <Label htmlFor="feature">{t('form.feature')}</Label>
+                    <Label htmlFor="feature">Area Funzionale</Label>
                     <Select
                       value={form.watch('feature')}
                       onValueChange={(value) => form.setValue('feature', value)}
@@ -269,10 +269,10 @@ const FeedbackPage = () => {
 
                 {/* Title */}
                 <div className="space-y-2">
-                  <Label htmlFor="title">{t('form.title')} *</Label>
+                  <Label htmlFor="title">Titolo *</Label>
                   <Input
                     id="title"
-                    placeholder={t('form.titlePlaceholder')}
+                    placeholder="Descrivi brevemente il problema o suggerimento"
                     {...form.register('title')}
                   />
                   {form.formState.errors.title && (
@@ -282,10 +282,10 @@ const FeedbackPage = () => {
 
                 {/* Description */}
                 <div className="space-y-2">
-                  <Label htmlFor="description">{t('form.description')} *</Label>
+                  <Label htmlFor="description">Descrizione Dettagliata *</Label>
                   <Textarea
                     id="description"
-                    placeholder={t('form.descriptionPlaceholder')}
+                    placeholder="Fornisci dettagli specifici, passi per riprodurre il problema, o idee per miglioramenti"
                     rows={4}
                     {...form.register('description')}
                   />
@@ -298,7 +298,7 @@ const FeedbackPage = () => {
                   {/* Rating */}
                   <div className="space-y-2">
                     <Label htmlFor="rating">
-                      {t('form.rating')} {t('form.ratingOptional')}
+                      Valutazione (Opzionale)
                     </Label>
                     <Select
                       value={form.watch('rating')?.toString() || ''}
@@ -320,7 +320,7 @@ const FeedbackPage = () => {
                   {/* NPS Score */}
                   <div className="space-y-2">
                     <Label htmlFor="npsScore">
-                      {t('form.npsScore')} {t('form.npsOptional')}
+                      Consiglieresti GrapholexInsight? (0-10) (Opzionale)
                     </Label>
                     <Select
                       value={form.watch('npsScore')?.toString() || ''}
@@ -341,7 +341,7 @@ const FeedbackPage = () => {
 
                   {/* Priority */}
                   <div className="space-y-2">
-                    <Label htmlFor="priority">{t('form.priority')}</Label>
+                    <Label htmlFor="priority">Priorità</Label>
                     <Select
                       value={form.watch('priority')}
                       onValueChange={(value) => form.setValue('priority', value)}
@@ -370,7 +370,7 @@ const FeedbackPage = () => {
                   className="w-full"
                   disabled={submitFeedback.isPending}
                 >
-                  {submitFeedback.isPending ? t('form.submitting') : t('form.submit')}
+                  {submitFeedback.isPending ? 'Invio in corso...' : 'Invia Feedback'}
                 </Button>
               </form>
             </CardContent>
