@@ -1,0 +1,111 @@
+{
+  "title": "Centro Feedback",
+  "subtitle": "Aiutaci a migliorare GrapholexInsight con i tuoi commenti",
+  "categories": {
+    "usability": "Usabilità",
+    "accuracy": "Precisione",
+    "performance": "Performance",
+    "design": "Design",
+    "bug": "Bug/Errore",
+    "feature_request": "Richiesta Funzionalità"
+  },
+  "features": {
+    "signatures": "Analisi Firme",
+    "ocr": "OCR",
+    "peer_review": "Peer Review",
+    "wake_up": "Wake Up Quiz",
+    "documents": "Gestione Documenti",
+    "general": "Generale"
+  },
+  "form": {
+    "submitTitle": "Invia Nuovo Feedback",
+    "submitDescription": "Compila il form per condividere la tua esperienza e suggerimenti",
+    "category": "Categoria",
+    "feature": "Area Funzionale",
+    "title": "Titolo",
+    "titlePlaceholder": "Descrivi brevemente il problema o suggerimento",
+    "description": "Descrizione Dettagliata",
+    "descriptionPlaceholder": "Fornisci dettagli specifici, passi per riprodurre il problema, o idee per miglioramenti",
+    "rating": "Valutazione",
+    "ratingOptional": "(Opzionale)",
+    "npsScore": "Consiglieresti GrapholexInsight? (0-10)",
+    "npsOptional": "(Opzionale)",
+    "priority": "Priorità",
+    "submit": "Invia Feedback",
+    "submitting": "Invio in corso..."
+  },
+  "priority": {
+    "low": "Bassa",
+    "medium": "Media",
+    "high": "Alta",
+    "critical": "Critica"
+  },
+  "status": {
+    "open": "Aperto",
+    "in_progress": "In Lavorazione",
+    "resolved": "Risolto",
+    "closed": "Chiuso"
+  },
+  "success": {
+    "title": "Feedback Inviato!",
+    "message": "Grazie per il tuo contributo. Il tuo feedback ci aiuta a migliorare costantemente GrapholexInsight.",
+    "viewHistory": "Visualizza Cronologia",
+    "submitAnother": "Invia Altro Feedback"
+  },
+  "myFeedback": {
+    "title": "Il Mio Feedback",
+    "empty": "Non hai ancora inviato feedback",
+    "viewDetails": "Visualizza Dettagli"
+  },
+  "stats": {
+    "title": "Statistiche Feedback",
+    "totalFeedback": "Feedback Totali",
+    "averageRating": "Valutazione Media",
+    "averageNPS": "Punteggio NPS Medio",
+    "categoryBreakdown": "Distribuzione per Categoria",
+    "statusBreakdown": "Distribuzione per Stato",
+    "recentTrends": "Trend Recenti"
+  },
+  "quickActions": {
+    "title": "Azioni Rapide",
+    "reportBug": "Segnala Bug",
+    "requestFeature": "Richiedi Funzionalità",
+    "rateApp": "Valuta App",
+    "recommendations": "Raccomandazioni"
+  },
+  "tabs": {
+    "submit": "Invia",
+    "history": "Cronologia",
+    "stats": "Statistiche",
+    "success": "Successo"
+  },
+  "prefilledContent": {
+    "rateApp": {
+      "title": "Valutazione generale di GrapholexInsight",
+      "description": "Condividi la tua esperienza complessiva con l'applicazione..."
+    },
+    "recommendations": {
+      "title": "Raccomandazione per GrapholexInsight",
+      "description": "Quanto consiglieresti GrapholexInsight ai tuoi colleghi? Condividi i motivi della tua valutazione..."
+    }
+  },
+  "validation": {
+    "categoryRequired": "Categoria è obbligatoria",
+    "titleRequired": "Titolo è obbligatorio",
+    "titleMinLength": "Il titolo deve essere di almeno 5 caratteri",
+    "descriptionRequired": "Descrizione è obbligatoria",
+    "descriptionMinLength": "La descrizione deve essere di almeno 10 caratteri",
+    "ratingRange": "La valutazione deve essere tra 1 e 5",
+    "npsRange": "Il punteggio NPS deve essere tra 0 e 10"
+  },
+  "errors": {
+    "submitFailed": "Errore nell'invio del feedback",
+    "loadFailed": "Errore nel caricamento del feedback",
+    "tryAgain": "Riprova più tardi"
+  },
+  "placeholder": {
+    "selectCategory": "Seleziona categoria...",
+    "selectFeature": "Seleziona area...",
+    "selectPriority": "Seleziona priorità..."
+  }
+}

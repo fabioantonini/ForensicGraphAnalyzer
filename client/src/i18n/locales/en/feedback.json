@@ -1,0 +1,111 @@
+{
+  "title": "Feedback Center",
+  "subtitle": "Help us improve GrapholexInsight with your feedback",
+  "categories": {
+    "usability": "Usability",
+    "accuracy": "Accuracy",
+    "performance": "Performance",
+    "design": "Design",
+    "bug": "Bug/Error",
+    "feature_request": "Feature Request"
+  },
+  "features": {
+    "signatures": "Signature Analysis",
+    "ocr": "OCR",
+    "peer_review": "Peer Review",
+    "wake_up": "Wake Up Quiz",
+    "documents": "Document Management",
+    "general": "General"
+  },
+  "form": {
+    "submitTitle": "Submit New Feedback",
+    "submitDescription": "Fill out the form to share your experience and suggestions",
+    "category": "Category",
+    "feature": "Feature Area",
+    "title": "Title",
+    "titlePlaceholder": "Briefly describe the issue or suggestion",
+    "description": "Detailed Description",
+    "descriptionPlaceholder": "Provide specific details, steps to reproduce the issue, or improvement ideas",
+    "rating": "Rating",
+    "ratingOptional": "(Optional)",
+    "npsScore": "Would you recommend GrapholexInsight? (0-10)",
+    "npsOptional": "(Optional)",
+    "priority": "Priority",
+    "submit": "Submit Feedback",
+    "submitting": "Submitting..."
+  },
+  "priority": {
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High",
+    "critical": "Critical"
+  },
+  "status": {
+    "open": "Open",
+    "in_progress": "In Progress",
+    "resolved": "Resolved",
+    "closed": "Closed"
+  },
+  "success": {
+    "title": "Feedback Submitted!",
+    "message": "Thank you for your contribution. Your feedback helps us continuously improve GrapholexInsight.",
+    "viewHistory": "View History",
+    "submitAnother": "Submit Another Feedback"
+  },
+  "myFeedback": {
+    "title": "My Feedback",
+    "empty": "You haven't submitted any feedback yet",
+    "viewDetails": "View Details"
+  },
+  "stats": {
+    "title": "Feedback Statistics",
+    "totalFeedback": "Total Feedback",
+    "averageRating": "Average Rating",
+    "averageNPS": "Average NPS Score",
+    "categoryBreakdown": "Category Breakdown",
+    "statusBreakdown": "Status Breakdown",
+    "recentTrends": "Recent Trends"
+  },
+  "quickActions": {
+    "title": "Quick Actions",
+    "reportBug": "Report Bug",
+    "requestFeature": "Request Feature",
+    "rateApp": "Rate App",
+    "recommendations": "Recommendations"
+  },
+  "tabs": {
+    "submit": "Submit",
+    "history": "History",
+    "stats": "Statistics",
+    "success": "Success"
+  },
+  "prefilledContent": {
+    "rateApp": {
+      "title": "Overall GrapholexInsight Rating",
+      "description": "Share your overall experience with the application..."
+    },
+    "recommendations": {
+      "title": "Recommendation for GrapholexInsight",
+      "description": "How likely would you recommend GrapholexInsight to your colleagues? Share your reasoning..."
+    }
+  },
+  "validation": {
+    "categoryRequired": "Category is required",
+    "titleRequired": "Title is required",
+    "titleMinLength": "Title must be at least 5 characters",
+    "descriptionRequired": "Description is required",
+    "descriptionMinLength": "Description must be at least 10 characters",
+    "ratingRange": "Rating must be between 1 and 5",
+    "npsRange": "NPS score must be between 0 and 10"
+  },
+  "errors": {
+    "submitFailed": "Failed to submit feedback",
+    "loadFailed": "Failed to load feedback",
+    "tryAgain": "Please try again later"
+  },
+  "placeholder": {
+    "selectCategory": "Select category...",
+    "selectFeature": "Select area...",
+    "selectPriority": "Select priority..."
+  }
+}

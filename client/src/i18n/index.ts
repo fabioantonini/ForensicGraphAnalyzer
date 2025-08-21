@@ -15,6 +15,8 @@ import enAnonymizationTranslation from './locales/en/anonymization.json';
 import itAnonymizationTranslation from './locales/it/anonymization.json';
 import enPeerReviewTranslation from './locales/en/peerReview.json';
 import itPeerReviewTranslation from './locales/it/peerReview.json';
+import enFeedbackTranslation from './locales/en/feedback.json';
+import itFeedbackTranslation from './locales/it/feedback.json';
 
 // Create a very simplified version without language detection
 // This will ensure Italian is always the default language
@@ -29,7 +31,8 @@ i18n
         recommendations: enRecommendationsTranslation,
         ocr: enOcrTranslation,
         anonymization: enAnonymizationTranslation,
-        peerReview: enPeerReviewTranslation
+        peerReview: enPeerReviewTranslation,
+        feedback: enFeedbackTranslation
       },
       it: {
         translation: itTranslation,
@@ -38,7 +41,8 @@ i18n
         recommendations: itRecommendationsTranslation,
         ocr: itOcrTranslation,
         anonymization: itAnonymizationTranslation,
-        peerReview: itPeerReviewTranslation
+        peerReview: itPeerReviewTranslation,
+        feedback: itFeedbackTranslation
       }
     },
     lng: 'it', // Hard-code Italian as the default language
@@ -47,7 +51,7 @@ i18n
       escapeValue: false
     },
     defaultNS: 'translation',
-    ns: ['translation', 'admin', 'common', 'recommendations', 'ocr', 'anonymization', 'peerReview']
+    ns: ['translation', 'admin', 'common', 'recommendations', 'ocr', 'anonymization', 'peerReview', 'feedback']
   });
 
 // Helper function to ensure Italian is set as the default

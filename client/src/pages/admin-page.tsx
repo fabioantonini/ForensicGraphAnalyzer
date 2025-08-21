@@ -7,6 +7,7 @@ import { UpdateUserRole } from "@shared/schema";
 import DemoAccountsManagement from "@/components/admin/demo-accounts-management";
 import EmailConfiguration from "@/components/admin/email-configuration";
 import { GmailConfiguration } from "@/components/admin/gmail-configuration";
+import FeedbackManagement from "@/components/admin/feedback-management";
 
 import {
   Card,
@@ -62,26 +63,12 @@ export default function AdminPage() {
 
   // Fetch lista utenti
   const { data: users, isLoading: isLoadingUsers } = useQuery<User[]>({
-    queryKey: ["/api/admin/users"],
-    onError: (error: Error) => {
-      toast({
-        title: t("common.error"),
-        description: error.message,
-        variant: "destructive",
-      });
-    },
+    queryKey: ["/api/admin/users"]
   });
 
   // Fetch statistiche sistema
   const { data: stats, isLoading: isLoadingStats } = useQuery<SystemStats>({
-    queryKey: ["/api/stats"],
-    onError: (error: Error) => {
-      toast({
-        title: t("common.error"),
-        description: error.message,
-        variant: "destructive",
-      });
-    },
+    queryKey: ["/api/stats"]
   });
 
   // Mutation per modificare il ruolo dell'utente
@@ -145,8 +132,8 @@ export default function AdminPage() {
 
   // Filtra gli utenti in base alla ricerca
   const filteredUsers = users
-    ? users.filter(
-        (user) =>
+    ? (users as any).filter(
+        (user: any) =>
           user.username.toLowerCase().includes(search.toLowerCase()) ||
           user.email.toLowerCase().includes(search.toLowerCase())
       )
@@ -177,6 +164,7 @@ export default function AdminPage() {
         <TabsList className="mb-4" data-tour="admin-tabs">
           <TabsTrigger value="users">{t("admin.usersManagement")}</TabsTrigger>
           <TabsTrigger value="stats">{t("admin.systemStats")}</TabsTrigger>
+          <TabsTrigger value="feedback">Feedback</TabsTrigger>
           <TabsTrigger value="demo-accounts">{t("admin.demoAccounts.title", "Account Demo")}</TabsTrigger>
           <TabsTrigger value="email-config">{t("admin.emailConfig.tabTitle", "Email")}</TabsTrigger>
           <TabsTrigger value="gmail-config">{t("admin.gmail.tabTitle", "Gmail SMTP")}</TabsTrigger>
@@ -222,7 +210,7 @@ export default function AdminPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredUsers.map((user) => (
+                      {filteredUsers.map((user: any) => (
                         <TableRow key={user.id}>
                           <TableCell className="font-medium">
                             {user.username}
@@ -343,9 +331,9 @@ export default function AdminPage() {
                   <div className="flex justify-center py-8">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
-                ) : stats?.newUsers && stats.newUsers.length > 0 ? (
+                ) : (stats as any)?.newUsers && (stats as any).newUsers.length > 0 ? (
                   <div className="space-y-4">
-                    {stats.newUsers.map((user) => (
+                    {(stats as any).newUsers.map((user: any) => (
                       <div
                         key={user.id}
                         className="flex items-center justify-between border-b pb-2"
@@ -370,6 +358,21 @@ export default function AdminPage() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* Tab per la visualizzazione feedback */}
+        <TabsContent value="feedback">
+          <Card>
+            <CardHeader>
+              <CardTitle>Gestione Feedback</CardTitle>
+              <CardDescription>
+                Visualizza e gestisci tutti i feedback ricevuti dagli utenti
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FeedbackManagement />
+            </CardContent>
+          </Card>
         </TabsContent>
         
         {/* Tab per la gestione account demo */}

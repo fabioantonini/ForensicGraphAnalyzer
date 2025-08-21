@@ -93,6 +93,12 @@ export function Sidebar({ className }: SidebarProps) {
       icon: <Brain className="h-5 w-5 mr-3" />,
     },
     {
+      href: "/feedback",
+      label: "Feedback",
+      translationKey: "layout.feedback",
+      icon: <MessageSquare className="h-5 w-5 mr-3" />,
+    },
+    {
       href: "/settings",
       label: "Settings",
       translationKey: "layout.settings",
