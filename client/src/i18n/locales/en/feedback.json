@@ -18,6 +18,8 @@
     "general": "General"
   },
   "form": {
+    "submitTitle": "Submit New Feedback",
+    "submitDescription": "Fill out the form to share your experience and suggestions",
     "category": "Category",
     "feature": "Feature Area",
     "title": "Title",

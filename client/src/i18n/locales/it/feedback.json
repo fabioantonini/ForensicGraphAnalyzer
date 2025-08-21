@@ -18,6 +18,8 @@
     "general": "Generale"
   },
   "form": {
+    "submitTitle": "Invia Nuovo Feedback",
+    "submitDescription": "Compila il form per condividere la tua esperienza e suggerimenti",
     "category": "Categoria",
     "feature": "Area Funzionale",
     "title": "Titolo",

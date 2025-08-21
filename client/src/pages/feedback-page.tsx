@@ -203,9 +203,9 @@ const FeedbackPage = () => {
           {/* Feedback Form */}
           <Card>
             <CardHeader>
-              <CardTitle>Invia Nuovo Feedback</CardTitle>
+              <CardTitle>{t('form.submitTitle', 'Invia Nuovo Feedback')}</CardTitle>
               <CardDescription>
-                Compila il form per condividere la tua esperienza e suggerimenti
+                {t('form.submitDescription', 'Compila il form per condividere la tua esperienza e suggerimenti')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -213,22 +213,22 @@ const FeedbackPage = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Category */}
                   <div className="space-y-2">
-                    <Label htmlFor="category">Categoria *</Label>
+                    <Label htmlFor="category">{t('form.category')} *</Label>
                     <Select
                       value={form.watch('category')}
                       onValueChange={(value) => form.setValue('category', value)}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Seleziona categoria..." />
+                        <SelectValue placeholder={t('placeholder.selectCategory')} />
                       </SelectTrigger>
                       <SelectContent>
                         {Object.entries({
-                          usability: 'Usabilità',
-                          accuracy: 'Precisione', 
-                          performance: 'Performance',
-                          design: 'Design',
-                          bug: 'Bug/Errore',
-                          feature_request: 'Richiesta Funzionalità'
+                          usability: t('categories.usability'),
+                          accuracy: t('categories.accuracy'), 
+                          performance: t('categories.performance'),
+                          design: t('categories.design'),
+                          bug: t('categories.bug'),
+                          feature_request: t('categories.feature_request')
                         }).map(([key, label]) => (
                           <SelectItem key={key} value={key}>
                             {label}
@@ -243,22 +243,22 @@ const FeedbackPage = () => {
 
                   {/* Feature */}
                   <div className="space-y-2">
-                    <Label htmlFor="feature">Area Funzionale</Label>
+                    <Label htmlFor="feature">{t('form.feature')}</Label>
                     <Select
                       value={form.watch('feature')}
                       onValueChange={(value) => form.setValue('feature', value)}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Seleziona area..." />
+                        <SelectValue placeholder={t('placeholder.selectFeature')} />
                       </SelectTrigger>
                       <SelectContent>
                         {Object.entries({
-                          signatures: 'Analisi Firme',
-                          ocr: 'OCR',
-                          peer_review: 'Peer Review', 
-                          wake_up: 'Wake Up Quiz',
-                          documents: 'Gestione Documenti',
-                          general: 'Generale'
+                          signatures: t('features.signatures'),
+                          ocr: t('features.ocr'),
+                          peer_review: t('features.peer_review'), 
+                          wake_up: t('features.wake_up'),
+                          documents: t('features.documents'),
+                          general: t('features.general')
                         }).map(([key, label]) => (
                           <SelectItem key={key} value={key}>
                             {label}
@@ -271,10 +271,10 @@ const FeedbackPage = () => {
 
                 {/* Title */}
                 <div className="space-y-2">
-                  <Label htmlFor="title">Titolo *</Label>
+                  <Label htmlFor="title">{t('form.title')} *</Label>
                   <Input
                     id="title"
-                    placeholder="Descrivi brevemente il problema o suggerimento"
+                    placeholder={t('form.titlePlaceholder')}
                     {...form.register('title')}
                   />
                   {form.formState.errors.title && (
@@ -284,10 +284,10 @@ const FeedbackPage = () => {
 
                 {/* Description */}
                 <div className="space-y-2">
-                  <Label htmlFor="description">Descrizione Dettagliata *</Label>
+                  <Label htmlFor="description">{t('form.description')} *</Label>
                   <Textarea
                     id="description"
-                    placeholder="Fornisci dettagli specifici, passi per riprodurre il problema, o idee per miglioramenti"
+                    placeholder={t('form.descriptionPlaceholder')}
                     rows={4}
                     {...form.register('description')}
                   />
@@ -300,7 +300,7 @@ const FeedbackPage = () => {
                   {/* Rating */}
                   <div className="space-y-2">
                     <Label htmlFor="rating">
-                      Valutazione (Opzionale)
+                      {t('form.rating')} {t('form.ratingOptional')}
                     </Label>
                     <Select
                       value={form.watch('rating')?.toString() || ''}
@@ -322,7 +322,7 @@ const FeedbackPage = () => {
                   {/* NPS Score */}
                   <div className="space-y-2">
                     <Label htmlFor="npsScore">
-                      Consiglieresti GrapholexInsight? (0-10) (Opzionale)
+                      {t('form.npsScore')} {t('form.npsOptional')}
                     </Label>
                     <Select
                       value={form.watch('npsScore')?.toString() || ''}
@@ -343,20 +343,20 @@ const FeedbackPage = () => {
 
                   {/* Priority */}
                   <div className="space-y-2">
-                    <Label htmlFor="priority">Priorità</Label>
+                    <Label htmlFor="priority">{t('form.priority')}</Label>
                     <Select
                       value={form.watch('priority')}
                       onValueChange={(value) => form.setValue('priority', value)}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Seleziona priorità..." />
+                        <SelectValue placeholder={t('placeholder.selectPriority')} />
                       </SelectTrigger>
                       <SelectContent>
                         {Object.entries({
-                          low: 'Bassa',
-                          medium: 'Media', 
-                          high: 'Alta',
-                          critical: 'Critica'
+                          low: t('priority.low'),
+                          medium: t('priority.medium'), 
+                          high: t('priority.high'),
+                          critical: t('priority.critical')
                         }).map(([key, label]) => (
                           <SelectItem key={key} value={key}>
                             {label}
@@ -372,7 +372,7 @@ const FeedbackPage = () => {
                   className="w-full"
                   disabled={submitFeedback.isPending}
                 >
-                  {submitFeedback.isPending ? 'Invio in corso...' : 'Invia Feedback'}
+                  {submitFeedback.isPending ? t('form.submitting') : t('form.submit')}
                 </Button>
               </form>
             </CardContent>
