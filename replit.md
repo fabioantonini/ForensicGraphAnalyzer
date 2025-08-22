@@ -47,7 +47,7 @@ Preferred communication style: Simple, everyday language.
 ### System Design Choices
 - **Database Schema**: Includes tables for Users, documents, signatures, projects, activities, and queries.
 - **Authentication Thresholds**: Standardized authenticity thresholds: ≥85% authentic, 65-84% probably authentic, <65% suspicious.
-- **Email Service**: Uses Gmail SMTP for email services, with intelligent fallback mechanisms.
+- **Email Service**: Gmail SMTP fully configured and operational for password reset functionality and system notifications. Configuration managed via `.gmail-config.json` with secure app password authentication.
 
 ## External Dependencies
 
