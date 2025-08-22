@@ -216,7 +216,7 @@ export function registerSignatureRoutes(appRouter: Router) {
           console.log(`[COMPARE-ALL] Elaborazione firma ${signature.id}`);
           
           // Cancella grafico cached per forzare rigenerazione
-          await storage.updateSignature(signature.id, { comparisonChart: null });
+          await storage.updateSignature(signature.id, { comparisonChart: '' });
           
           let similarityScore = 0;
           let comparisonChart = null;
@@ -368,6 +368,19 @@ export function registerSignatureRoutes(appRouter: Router) {
       // Salva la firma nel database
       const signature = await storage.createSignature(signatureData);
       
+      // Avvia elaborazione automatica dei parametri per RIFERIMENTO
+      try {
+        console.log(`[SIGNATURE PROCESSING] Avvio elaborazione automatica per firma di riferimento ${signature.id}`);
+        
+        // Elabora parametri in background senza attendere
+        processSignatureParameters(signature.id).catch(error => {
+          console.error(`[SIGNATURE PROCESSING] Errore elaborazione firma ${signature.id}:`, error);
+        });
+        
+      } catch (error) {
+        console.error(`[SIGNATURE PROCESSING] Errore avvio elaborazione:`, error);
+      }
+      
       res.status(201).json(signature);
     } catch (error: any) {
       res.status(400).json({ error: error.message });
@@ -417,6 +430,19 @@ export function registerSignatureRoutes(appRouter: Router) {
       
       // Salva la firma nel database
       const signature = await storage.createSignature(signatureData);
+      
+      // Avvia elaborazione automatica dei parametri per VERIFICA
+      try {
+        console.log(`[SIGNATURE PROCESSING] Avvio elaborazione automatica per firma da verificare ${signature.id}`);
+        
+        // Elabora parametri in background senza attendere
+        processSignatureParameters(signature.id).catch(error => {
+          console.error(`[SIGNATURE PROCESSING] Errore elaborazione firma ${signature.id}:`, error);
+        });
+        
+      } catch (error) {
+        console.error(`[SIGNATURE PROCESSING] Errore avvio elaborazione:`, error);
+      }
       
       res.status(201).json(signature);
     } catch (error: any) {
@@ -1119,4 +1145,80 @@ export function registerSignatureRoutes(appRouter: Router) {
       }
     }
   });
+
+  // Elimina una singola firma
+  appRouter.delete("/signatures/:id", isAuthenticated, isActiveUser, async (req, res) => {
+    try {
+      const signatureId = parseInt(req.params.id);
+      const signature = await storage.getSignature(signatureId);
+      
+      if (!signature) {
+        return res.status(404).json({ error: 'Firma non trovata' });
+      }
+      
+      // Verifica che la firma appartenga all'utente corrente
+      const project = await storage.getSignatureProject(signature.projectId);
+      if (!project || project.userId !== req.user!.id) {
+        return res.status(403).json({ error: 'Non autorizzato' });
+      }
+      
+      // Elimina il file fisico se esiste
+      try {
+        const filePath = path.join(process.cwd(), 'uploads', 'signatures', signature.filename);
+        await fs.unlink(filePath);
+        console.log(`[DELETE SIGNATURE] File fisico eliminato: ${filePath}`);
+      } catch (fileError) {
+        console.warn(`[DELETE SIGNATURE] Impossibile eliminare file fisico:`, fileError);
+        // Non blocchiamo l'eliminazione se il file fisico non esiste
+      }
+      
+      // Elimina dal database
+      await storage.deleteSignature(signatureId);
+      
+      console.log(`[DELETE SIGNATURE] Firma ${signatureId} eliminata con successo`);
+      res.json({ message: 'Firma eliminata con successo' });
+    } catch (error: any) {
+      console.error('[DELETE SIGNATURE] Errore:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+}
+
+// Funzione per elaborare i parametri della firma in background
+async function processSignatureParameters(signatureId: number): Promise<void> {
+  try {
+    console.log(`[PROCESS PARAMS] Inizio elaborazione parametri per firma ${signatureId}`);
+    
+    const signature = await storage.getSignature(signatureId);
+    if (!signature) {
+      throw new Error('Firma non trovata');
+    }
+    
+    const filePath = path.join(process.cwd(), 'uploads', 'signatures', signature.filename);
+    
+    // Verifica che il file esista
+    try {
+      await fs.access(filePath);
+    } catch {
+      throw new Error('File immagine non trovato');
+    }
+    
+    // Usa l'analizzatore Python per elaborare i parametri
+    const parameters = await SignaturePythonAnalyzer.analyzeSignature(
+      filePath, 
+      signature.realWidthMm || 50, 
+      signature.realHeightMm || 20
+    );
+    
+    // Aggiorna la firma con i parametri elaborati (salvati come JSON nella descrizione temporaneamente)
+    await storage.updateSignature(signatureId, {
+      analysisReport: JSON.stringify(parameters)
+    });
+    
+    console.log(`[PROCESS PARAMS] Elaborazione completata per firma ${signatureId}`);
+    
+  } catch (error: any) {
+    console.error(`[PROCESS PARAMS] Errore elaborazione firma ${signatureId}:`, error);
+    throw error;
+  }
 }
