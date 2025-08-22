@@ -144,7 +144,7 @@ export default function SignaturesPage() {
     staleTime: 1000, // Ricarica dopo 1 secondo per aggiornamenti immediati
     refetchInterval: (data) => {
       // Polling intelligente: continua solo se ci sono firme in elaborazione
-      if (!data || data.length === 0) return false;
+      if (!data || !Array.isArray(data) || data.length === 0) return false;
       const hasProcessing = data.some(sig => sig.processingStatus === 'processing' || sig.processingStatus === 'pending');
       return hasProcessing ? 3000 : false; // 3 secondi se processing, altrimenti stop
     },
