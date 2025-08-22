@@ -13,11 +13,11 @@
   },
   "forgotPassword": {
     "title": "Forgot Password",
-    "description": "Enter your account email address to receive a reset link.",
+    "description": "Enter your username to receive a password reset link at the email address associated with your account.",
     "sendLink": "Send Link",
     "sending": "Sending...",
     "emailSent": "Email Sent",
-    "checkInbox": "Check your inbox for the password reset link. If you don't see it, check your spam folder as well.",
+    "checkInbox": "If the username exists, you will receive a password reset link at the email address associated with your account.",
     "backToLogin": "Back to login page"
   },
   "resetPassword": {

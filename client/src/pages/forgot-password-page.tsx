@@ -15,7 +15,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
 
 const forgotPasswordSchema = z.object({
-  email: z.string().email({ message: "Inserisci un indirizzo email valido" }),
+  username: z.string().min(1, { message: "Inserisci il nome utente" }),
 });
 
 type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
@@ -29,7 +29,7 @@ export default function ForgotPasswordPage() {
   const form = useForm<ForgotPasswordFormData>({
     resolver: zodResolver(forgotPasswordSchema),
     defaultValues: {
-      email: "",
+      username: "",
     },
   });
   
@@ -82,15 +82,15 @@ export default function ForgotPasswordPage() {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="email"
+                  name="username"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('common:fields.email')}</FormLabel>
+                      <FormLabel>{t('common:fields.username')}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="your.email@example.com"
-                          type="email"
-                          autoComplete="email"
+                          placeholder="inserisci il tuo nome utente"
+                          type="text"
+                          autoComplete="username"
                           {...field}
                         />
                       </FormControl>

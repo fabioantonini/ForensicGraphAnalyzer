@@ -13,11 +13,11 @@
   },
   "forgotPassword": {
     "title": "Password Dimenticata",
-    "description": "Inserisci l'indirizzo email associato al tuo account per ricevere un link di reset.",
+    "description": "Inserisci il tuo nome utente per ricevere un link di reset password all'email associata al tuo account.",
     "sendLink": "Invia Link",
     "sending": "Invio in corso...",
     "emailSent": "Email inviata",
-    "checkInbox": "Controlla la tua casella di posta per il link di reset password. Se non lo trovi, controlla anche nella cartella spam.",
+    "checkInbox": "Se il nome utente esiste, riceverai un link di reset password nella casella di posta associata al tuo account.",
     "backToLogin": "Torna alla pagina di accesso"
   },
   "resetPassword": {

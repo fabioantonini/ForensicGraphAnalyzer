@@ -179,10 +179,10 @@ export function setupAuth(app: Express) {
   // Endpoints per il recupero password
   app.post("/api/forgot-password", async (req, res, next) => {
     try {
-      const { email } = req.body;
+      const { username } = req.body;
       
-      if (!email) {
-        return res.status(400).json({ message: "Email is required" });
+      if (!username) {
+        return res.status(400).json({ message: "Username is required" });
       }
       
       // Verifica se il servizio email è configurato
@@ -192,14 +192,14 @@ export function setupAuth(app: Express) {
         });
       }
       
-      // Trova l'utente con questa email
-      const user = await storage.getUserByEmail(email);
+      // Trova l'utente con questo username
+      const user = await storage.getUserByUsername(username);
       
-      // Per ragioni di sicurezza, non rivelare se l'email esiste o meno
+      // Per ragioni di sicurezza, non rivelare se l'utente esiste o meno
       if (!user) {
         // Invia una risposta di successo anche se l'utente non esiste
         return res.status(200).json({ 
-          message: "If your email is registered, you will receive a password reset link shortly" 
+          message: "If your username is registered, you will receive a password reset link shortly" 
         });
       }
       
@@ -223,8 +223,8 @@ export function setupAuth(app: Express) {
       // Determina la lingua dell'utente (se disponibile, altrimenti usa l'italiano)
       const locale = 'it'; // Default to Italian since settings might not have language property
       
-      // Invia l'email
-      const emailSent = await sendPasswordResetEmail(email, resetLink, locale);
+      // Invia l'email all'indirizzo email associato al nome utente
+      const emailSent = await sendPasswordResetEmail(user.email, resetLink, locale);
       
       if (!emailSent) {
         return res.status(500).json({ message: "Failed to send password reset email" });
@@ -238,7 +238,7 @@ export function setupAuth(app: Express) {
       });
       
       res.status(200).json({ 
-        message: "If your email is registered, you will receive a password reset link shortly" 
+        message: "If your username is registered, you will receive a password reset link shortly" 
       });
     } catch (err) {
       next(err);
