@@ -675,9 +675,11 @@ export function registerSignatureRoutes(appRouter: Router) {
       try {
         if (signature.analysisReport) {
           signatureParams = JSON.parse(signature.analysisReport);
+          console.log('[PDF REPORT] Parametri firma in verifica:', Object.keys(signatureParams));
         }
         if (referenceSignature?.analysisReport) {
           referenceParams = JSON.parse(referenceSignature.analysisReport);
+          console.log('[PDF REPORT] Parametri firma di riferimento:', Object.keys(referenceParams));
         }
       } catch (e) {
         console.error('Errore parsing parametri:', e);
