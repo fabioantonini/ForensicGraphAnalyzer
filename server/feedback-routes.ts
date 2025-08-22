@@ -251,4 +251,68 @@ router.get('/my', requireAuth, async (req, res) => {
   }
 });
 
+// DELETE /api/feedback/:id - Delete a specific feedback (user can only delete their own)
+router.delete('/:id', requireAuth, async (req, res) => {
+  try {
+    const feedbackId = parseInt(req.params.id);
+    const userId = req.user!.id;
+
+    if (isNaN(feedbackId)) {
+      return res.status(400).json({ error: 'Invalid feedback ID' });
+    }
+
+    // Check if feedback exists and belongs to the user
+    const existingFeedback = await db
+      .select()
+      .from(feedback)
+      .where(and(eq(feedback.id, feedbackId), eq(feedback.userId, userId)))
+      .limit(1);
+
+    if (existingFeedback.length === 0) {
+      return res.status(404).json({ error: 'Feedback not found or access denied' });
+    }
+
+    // Delete the feedback
+    const [deletedFeedback] = await db
+      .delete(feedback)
+      .where(and(eq(feedback.id, feedbackId), eq(feedback.userId, userId)))
+      .returning();
+
+    console.log('[FEEDBACK] Deleted feedback ID:', feedbackId, 'by user:', userId);
+
+    res.json({ 
+      success: true, 
+      message: 'Feedback deleted successfully',
+      deletedFeedback 
+    });
+  } catch (error) {
+    console.error('Error deleting feedback:', error);
+    res.status(500).json({ error: 'Failed to delete feedback' });
+  }
+});
+
+// DELETE /api/feedback/all - Delete all feedback for the current user
+router.delete('/all', requireAuth, async (req, res) => {
+  try {
+    const userId = req.user!.id;
+
+    // Delete all feedback for the user
+    const deletedFeedbacks = await db
+      .delete(feedback)
+      .where(eq(feedback.userId, userId))
+      .returning();
+
+    console.log('[FEEDBACK] Deleted all feedback for user:', userId, 'Count:', deletedFeedbacks.length);
+
+    res.json({ 
+      success: true, 
+      message: 'All feedback deleted successfully',
+      deletedCount: deletedFeedbacks.length 
+    });
+  } catch (error) {
+    console.error('Error deleting all feedback:', error);
+    res.status(500).json({ error: 'Failed to delete all feedback' });
+  }
+});
+
 export default router;

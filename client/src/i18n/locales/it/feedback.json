@@ -107,5 +107,21 @@
     "selectCategory": "Seleziona categoria...",
     "selectFeature": "Seleziona area...",
     "selectPriority": "Seleziona priorità..."
+  },
+  "delete": {
+    "confirmMessage": "Sei sicuro di voler eliminare questo feedback? Questa azione non può essere annullata.",
+    "successTitle": "Feedback eliminato",
+    "successMessage": "Il feedback è stato eliminato con successo.",
+    "errorTitle": "Errore nell'eliminazione",
+    "errorMessage": "Impossibile eliminare il feedback. Riprova più tardi."
+  },
+  "deleteAll": {
+    "button": "Elimina Tutti",
+    "deleting": "Eliminazione...",
+    "confirmMessage": "Sei sicuro di voler eliminare TUTTI i tuoi feedback? Questa azione non può essere annullata e rimuoverà permanentemente tutta la cronologia.",
+    "successTitle": "Tutti i feedback eliminati",
+    "successMessage": "Tutti i tuoi feedback sono stati eliminati con successo.",
+    "errorTitle": "Errore nell'eliminazione",
+    "errorMessage": "Impossibile eliminare tutti i feedback. Riprova più tardi."
   }
 }

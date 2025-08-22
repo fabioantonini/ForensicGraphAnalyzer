@@ -107,5 +107,21 @@
     "selectCategory": "Select category...",
     "selectFeature": "Select area...",
     "selectPriority": "Select priority..."
+  },
+  "delete": {
+    "confirmMessage": "Are you sure you want to delete this feedback? This action cannot be undone.",
+    "successTitle": "Feedback deleted",
+    "successMessage": "The feedback has been successfully deleted.",
+    "errorTitle": "Deletion error",
+    "errorMessage": "Unable to delete the feedback. Please try again later."
+  },
+  "deleteAll": {
+    "button": "Delete All",
+    "deleting": "Deleting...",
+    "confirmMessage": "Are you sure you want to delete ALL your feedback? This action cannot be undone and will permanently remove your entire history.",
+    "successTitle": "All feedback deleted",
+    "successMessage": "All your feedback has been successfully deleted.",
+    "errorTitle": "Deletion error",
+    "errorMessage": "Unable to delete all feedback. Please try again later."
   }
 }

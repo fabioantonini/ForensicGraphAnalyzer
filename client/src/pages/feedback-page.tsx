@@ -447,8 +447,20 @@ const FeedbackPage = () => {
 
         <TabsContent value="history" className="space-y-6 mt-6">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>{t('myFeedback.title')}</CardTitle>
+              {(myFeedback as any)?.feedback && (myFeedback as any).feedback.length > 0 && (
+                <Button 
+                  variant="destructive" 
+                  size="sm"
+                  onClick={handleDeleteAllFeedback}
+                  disabled={deleteAllFeedback.isPending}
+                  className="flex items-center gap-2"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {deleteAllFeedback.isPending ? t('deleteAll.deleting') : t('deleteAll.button')}
+                </Button>
+              )}
             </CardHeader>
             <CardContent>
               {!(myFeedback as any)?.feedback || (myFeedback as any).feedback.length === 0 ? (
@@ -462,7 +474,18 @@ const FeedbackPage = () => {
                     <div key={feedback.id} className="border rounded-lg p-4">
                       <div className="flex items-start justify-between mb-2">
                         <h3 className="font-semibold">{feedback.title}</h3>
-                        <StatusBadge status={feedback.status || 'open'} />
+                        <div className="flex items-center gap-2">
+                          <StatusBadge status={feedback.status || 'open'} />
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleDeleteFeedback(feedback.id)}
+                            disabled={deleteFeedback.isPending}
+                            className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                       <p className="text-gray-600 text-sm mb-2">{feedback.description}</p>
                       <div className="flex items-center gap-4 text-xs text-gray-500">
