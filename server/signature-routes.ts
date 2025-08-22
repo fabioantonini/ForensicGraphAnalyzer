@@ -1220,7 +1220,12 @@ async function processSignatureParameters(signatureId: number): Promise<void> {
     
     // Verifica che l'aggiornamento sia andato a buon fine
     const updatedSignature = await storage.getSignature(signatureId);
-    console.log(`[PROCESS PARAMS] Status verificato nel database: ${updatedSignature?.processingStatus}`);
+    console.log(`[PROCESS PARAMS] Status verificato nel database:`, {
+      id: updatedSignature?.id,
+      processingStatus: updatedSignature?.processingStatus,
+      hasAnalysisReport: !!updatedSignature?.analysisReport,
+      analysisReportLength: updatedSignature?.analysisReport?.length
+    });
     
     console.log(`[PROCESS PARAMS] Elaborazione completata per firma ${signatureId}`);
     

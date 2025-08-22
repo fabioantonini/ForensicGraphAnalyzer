@@ -66,6 +66,8 @@ export function SignatureCard({
   
   // Function to get status badge color based on processing status
   const getStatusColor = () => {
+    // Debug rimosso per produzione
+    // console.log(`[DEBUG] Signature ${signature.id} processingStatus:`, signature.processingStatus);
     switch (signature.processingStatus) {
       case 'completed':
         return 'bg-green-500'; // Completato

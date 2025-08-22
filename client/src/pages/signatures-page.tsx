@@ -141,9 +141,14 @@ export default function SignaturesPage() {
   } = useQuery<Signature[]>({
     queryKey: [`/api/signature-projects/${selectedProject}/signatures`],
     enabled: !!user && !!selectedProject,
-    staleTime: 5000, // Ricarica dopo 5 secondi per aggiornamenti più rapidi
-    refetchOnMount: true, // Ricarica ad ogni montaggio del componente
-    // Rimosso refetchInterval per evitare loop infiniti
+    staleTime: 1000, // Ricarica dopo 1 secondo per aggiornamenti immediati
+    refetchInterval: (data) => {
+      // Polling intelligente: continua solo se ci sono firme in elaborazione
+      if (!data || data.length === 0) return false;
+      const hasProcessing = data.some(sig => sig.processingStatus === 'processing' || sig.processingStatus === 'pending');
+      return hasProcessing ? 3000 : false; // 3 secondi se processing, altrimenti stop
+    },
+    refetchOnMount: true,
     
     // Setup di un gestore di errore personalizzato
     select: (data) => {
