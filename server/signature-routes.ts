@@ -1206,18 +1206,53 @@ async function processSignatureParameters(signatureId: number): Promise<void> {
       throw new Error('Firma non trovata');
     }
     
-    const filePath = path.join(process.cwd(), 'uploads', signature.filename);
+    const originalFilePath = path.join(process.cwd(), 'uploads', signature.filename);
     
     // Verifica che il file esista
     try {
-      await fs.access(filePath);
+      await fs.access(originalFilePath);
     } catch {
       throw new Error('File immagine non trovato');
     }
     
+    // RITAGLIO AUTOMATICO - rimuove spazio bianco attorno alla firma
+    console.log(`[AUTO-CROP] Inizio ritaglio automatico per firma ${signatureId}`);
+    const croppedFilePath = originalFilePath.replace(/(\.[^.]+)$/, '_cropped$1');
+    
+    let finalFilePath = originalFilePath;
+    try {
+      const cropResult = await SignatureCropper.cropSignature({
+        inputPath: originalFilePath,
+        outputPath: croppedFilePath,
+        autoCrop: true
+      });
+      
+      if (cropResult.success && cropResult.croppedPath) {
+        console.log(`[AUTO-CROP] Ritaglio completato: ${cropResult.message} (confidenza: ${(cropResult.confidence*100).toFixed(1)}%)`);
+        finalFilePath = cropResult.croppedPath;
+        
+        // Se il ritaglio ha una buona confidenza, sostituisci il file originale
+        if (cropResult.confidence > 0.3) {
+          await fs.copyFile(croppedFilePath, originalFilePath);
+          console.log(`[AUTO-CROP] File originale sostituito con versione ritagliata`);
+        }
+        
+        // Rimuovi il file temporaneo ritagliato
+        try {
+          await fs.unlink(croppedFilePath);
+        } catch (e) {
+          // Ignora errori di pulizia
+        }
+      } else {
+        console.log(`[AUTO-CROP] Ritaglio non applicato: ${cropResult.message}`);
+      }
+    } catch (cropError) {
+      console.warn(`[AUTO-CROP] Errore durante ritaglio automatico (continuo con originale):`, cropError);
+    }
+    
     // Usa l'analizzatore Python per elaborare i parametri
     const parameters = await SignaturePythonAnalyzer.analyzeSignature(
-      filePath, 
+      originalFilePath, // Usa sempre il file originale (eventualmente sostituito)
       signature.realWidthMm || 50, 
       signature.realHeightMm || 20
     );
