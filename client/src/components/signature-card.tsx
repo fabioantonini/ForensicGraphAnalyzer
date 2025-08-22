@@ -64,26 +64,20 @@ export function SignatureCard({
   
   // Rimosso tutto il codice per la gestione del DPI - ora utilizziamo solo dimensioni reali
   
-  // Function to get status badge color
-  const getStatusColor = (status: string) => {
-    switch(status) {
-      case 'pending': return 'bg-yellow-500';
-      case 'processing': return 'bg-blue-500';
-      case 'completed': return 'bg-green-500';
-      case 'failed': return 'bg-red-500';
-      default: return 'bg-gray-500';
+  // Function to get status badge color based on analysis report
+  const getStatusColor = () => {
+    if (!signature.analysisReport || signature.analysisReport.trim() === '') {
+      return 'bg-yellow-500'; // In attesa/elaborazione
     }
+    return 'bg-green-500'; // Completato
   };
   
-  // Funzione per tradurre lo stato di elaborazione
-  const getStatusTranslation = (status: string) => {
-    switch(status) {
-      case 'pending': return t('signatures.status.pending', 'In attesa');
-      case 'processing': return t('signatures.status.processing', 'In elaborazione');
-      case 'completed': return t('signatures.status.completed', 'Completato');
-      case 'failed': return t('signatures.status.failed', 'Fallito');
-      default: return status;
+  // Function to get status translation based on analysis report
+  const getStatusTranslation = () => {
+    if (!signature.analysisReport || signature.analysisReport.trim() === '') {
+      return t('signatures.status.processing', 'In elaborazione');
     }
+    return t('signatures.status.completed', 'Completato');
   };
   
   // Function to render similarity score
@@ -117,7 +111,7 @@ export function SignatureCard({
   
   // Verifica se dobbiamo mostrare il pulsante per il rapporto di analisi dettagliato
   const hasAdvancedDetails = showSimilarity && 
-    signature.processingStatus === 'completed' && 
+    signature.analysisReport && signature.analysisReport.trim() !== '' && 
     signature.comparisonResult !== null && 
     (signature.comparisonChart || signature.analysisReport || signature.parameters);
     
@@ -130,7 +124,7 @@ export function SignatureCard({
           <SignatureImage 
             filename={signature.filename}
             originalFilename={signature.originalFilename}
-            processingStatus={signature.processingStatus}
+            processingStatus={signature.analysisReport ? 'completed' : 'processing'}
             className="w-full h-full"
             dpi={signature.dpi || 300}
             onLineLengthChange={(length) => {
@@ -149,7 +143,7 @@ export function SignatureCard({
                 <Eye className="h-4 w-4" />
               </Button>
             )}
-            {signature.processingStatus === 'completed' && (
+            {signature.analysisReport && signature.analysisReport.trim() !== '' && (
               <Button
                 variant="outline"
                 size="icon"
@@ -175,12 +169,12 @@ export function SignatureCard({
             {signature.originalFilename || 'Unknown File'}
           </p>
           <div className="flex flex-wrap items-center gap-1 mt-1">
-            <Badge className={getStatusColor(signature.processingStatus)}>
-              {getStatusTranslation(signature.processingStatus)}
+            <Badge className={getStatusColor()}>
+              {getStatusTranslation()}
             </Badge>
             
-            {/* Pulsante per riprocessare firme fallite */}
-            {signature.processingStatus === 'failed' && (
+            {/* Pulsante per riprocessare firme fallite - attualmente non usato */}
+            {false && (
               <Button 
                 size="sm" 
                 variant="outline" 
