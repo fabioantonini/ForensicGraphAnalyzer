@@ -196,7 +196,7 @@ export function registerSignatureRoutes(appRouter: Router) {
       
       if (completedReferences.length === 0) {
         return res.status(400).json({
-          error: 'Nessuna firma di riferimento elaborata disponibile'
+          error: 'Nessuna firma di riferimento elaborata disponibile. Carica una firma di riferimento.'
         });
       }
       
@@ -504,24 +504,24 @@ export function registerSignatureRoutes(appRouter: Router) {
       // Ottieni tutte le firme da verificare completate
       const verificationSignatures = await storage.getProjectSignatures(projectId, false);
       const completedVerifications = verificationSignatures.filter(
-        sig => sig.processingStatus === 'completed' && sig.parameters
+        sig => sig.processingStatus === 'completed' && sig.analysisReport && sig.comparisonResult
       );
       
       if (completedVerifications.length === 0) {
         return res.status(400).json({
-          error: 'Nessuna firma da verificare elaborata disponibile'
+          error: 'Nessuna firma da verificare elaborata disponibile. Esegui prima "Confronta tutte".'
         });
       }
       
       // Ottieni le firme di riferimento completate
       const referenceSignatures = await storage.getProjectSignatures(projectId, true);
       const completedReferences = referenceSignatures.filter(
-        sig => sig.processingStatus === 'completed' && sig.parameters
+        sig => sig.processingStatus === 'completed' && sig.analysisReport
       );
       
       if (completedReferences.length === 0) {
         return res.status(400).json({
-          error: 'Nessuna firma di riferimento elaborata disponibile'
+          error: 'Nessuna firma di riferimento elaborata disponibile. Carica una firma di riferimento.'
         });
       }
       
