@@ -42,7 +42,9 @@ export function SignatureImage({
   // Assicuriamoci che l'URL dell'immagine abbia tutte le parti necessarie
   const imageUrl = filename.startsWith('/uploads/') 
     ? filename 
-    : `/uploads/${filename}`;
+    : filename.startsWith('signatures/') 
+      ? `/uploads/${filename}`
+      : `/uploads/signatures/${filename}`;
 
   // Reset zoom when the image changes
   useEffect(() => {
