@@ -1,7 +1,7 @@
 import { QuizSession, QuizQuestion, CreateQuizRequest, InsertQuizQuestion, InsertQuizSession, quizQuestions } from "@shared/schema";
 import { createOpenAIClient } from "./openai";
 import { db } from "./db";
-import { and, eq, gt, desc } from "drizzle-orm";
+import { and, eq, gt, desc, sql } from "drizzle-orm";
 
 export interface GeneratedQuizQuestion {
   question: string;
@@ -111,9 +111,36 @@ DO NOT add any other text besides the JSON.`
 
   const antiRepetitionText = antiRepetitionInstructions[lang].join('\n- ');
 
-  // Recupera domande recenti per evitare ripetizioni
+  // Recupera domande più usate per evitare ripetizioni aggressive
+  let frequentQuestions: string[] = [];
   let recentQuestions: string[] = [];
+  
   try {
+    // Domande più utilizzate in assoluto (da evitare completamente)
+    const frequentQuestionsQuery = await db.select({
+      question: quizQuestions.question,
+      count: db.select().from(quizQuestions).where(eq(quizQuestions.question, quizQuestions.question))
+    })
+    .from(quizQuestions)
+    .where(eq(quizQuestions.category, category))
+    .groupBy(quizQuestions.question)
+    .having(db.count().gt(1))
+    .orderBy(db.count().desc())
+    .limit(20);
+
+    // Query diretta per domande frequenti usando execute_sql_tool approach
+    const frequentResult = await db.execute(sql`
+      SELECT question 
+      FROM quiz_questions 
+      WHERE category = ${category}
+      GROUP BY question 
+      HAVING COUNT(*) > 1 
+      ORDER BY COUNT(*) DESC 
+      LIMIT 15
+    `);
+    frequentQuestions = (frequentResult.rows as any[]).map((row: any) => row.question);
+
+    // Domande recenti (ultimi 3 giorni)
     const recentQuestionsQuery = await db.select({
       question: quizQuestions.question
     })
@@ -121,20 +148,23 @@ DO NOT add any other text besides the JSON.`
     .where(
       and(
         eq(quizQuestions.category, category),
-        gt(quizQuestions.createdAt, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)) // Ultimi 7 giorni
+        gt(quizQuestions.createdAt, new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)) // Ultimi 3 giorni
       )
     )
     .orderBy(desc(quizQuestions.createdAt))
-    .limit(50);
+    .limit(30);
     
     recentQuestions = recentQuestionsQuery.map((q: { question: string }) => q.question);
+    
+    console.log(`[WAKE-UP] Found ${frequentQuestions.length} frequent questions and ${recentQuestions.length} recent questions to avoid`);
   } catch (error) {
-    console.log(`[WAKE-UP] Could not fetch recent questions: ${error}`);
+    console.log(`[WAKE-UP] Could not fetch questions to avoid: ${error}`);
   }
 
-  // Crea lista di argomenti da evitare basata sulle domande recenti
-  const avoidTopics = recentQuestions.length > 0 
-    ? `\nEVITA questi argomenti già trattati di recente:\n${recentQuestions.slice(0, 15).map((q: string, i: number) => `${i+1}. ${q.slice(0, 80)}...`).join('\n')}`
+  // Crea lista aggressiva di argomenti da evitare
+  const allQuestionsToAvoid = [...new Set([...frequentQuestions, ...recentQuestions])];
+  const avoidTopics = allQuestionsToAvoid.length > 0 
+    ? `\n🚫 DOMANDE ASSOLUTAMENTE PROIBITE (NON CREARE QUESTE DOMANDE):\n${allQuestionsToAvoid.slice(0, 20).map((q: string, i: number) => `${i+1}. "${q}"`).join('\n')}\n\n⚠️ ATTENZIONE: SE CREI UNA DI QUESTE DOMANDE O SIMILI SARA' CONSIDERATO UN ERRORE GRAVE!`
     : '';
 
   const prompt = `Generate exactly ${totalQuestions} multiple choice quiz questions about ${categoryPrompts[lang][category]}.
@@ -147,11 +177,20 @@ DO NOT add any other text besides the JSON.`
 - Per scienza: usa solo fatti scientificamente provati
 - ZERO TOLLERANZA per risposte sbagliate - la precisione è CRITICA
 
-ANTI-REPETITION REQUIREMENTS:
+🔥 REQUISITI ANTI-RIPETIZIONE OBBLIGATORI 🔥:
 - ${antiRepetitionText}
-- CREA domande su argomenti e aspetti diversi da quelli già trattati
-- USA formulazioni linguistiche completamente diverse
-- ESPLORA sottocategorie e aspetti meno comuni del tema${avoidTopics}
+- CREA domande su argomenti COMPLETAMENTE DIVERSI da quelli già trattati
+- USA formulazioni linguistiche TOTALMENTE DIVERSE
+- ESPLORA sottocategorie e aspetti RARI e MENO COMUNI del tema
+- CONCENTRATI su argomenti ORIGINALI e UNICI${avoidTopics}
+
+🎯 SUGGERIMENTI PER ARGOMENTI FRESCHI (categoria cultura):
+- Letteratura: autori contemporanei, letteratura mondiale, premi Nobel recenti
+- Arte: movimenti artistici minori, artisti non europei, arte digitale
+- Storia: eventi del 20° secolo, storia dell'Africa/Asia, storia della tecnologia  
+- Scienza: scoperte recenti, biologia marina, neuroscienze, fisica quantistica
+- Geografia: isole remote, capitali africane/asiatiche, fenomeni naturali rari
+- Musica: compositori del 900, strumenti etnici, generi musicali regionali
 
 DIVERSIFICAZIONE INTELLIGENTE:
 - Se categoria grafologia: varia tra analisi tratti, perizie, strumenti, casi pratici, legislazione
