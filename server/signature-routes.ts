@@ -24,8 +24,14 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 // Configure multer for signature uploads
 const signatureUpload = multer({
   storage: multer.diskStorage({
-    destination: (req, file, cb) => {
+    destination: async (req, file, cb) => {
       const uploadDir = path.join(process.cwd(), 'uploads', 'signatures');
+      // Crea la directory se non esiste
+      try {
+        await fs.mkdir(uploadDir, { recursive: true });
+      } catch (error) {
+        console.error('Error creating uploads directory:', error);
+      }
       cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
