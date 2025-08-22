@@ -455,24 +455,44 @@ def create_comparison_chart(verifica_data, comp_data):
     # Normalizza le chiavi per compatibilità
     verifica_data = normalize_parameter_keys(verifica_data)
     comp_data = normalize_parameter_keys(comp_data)
-    # Parametri per entrambe le versioni delle funzioni di analisi
+    # LISTA COMPLETA DI TUTTI I PARAMETRI POSSIBILI (21+ parametri)
     parametri_numerici = [
+        # Parametri Python avanzati (14 parametri principali)
         'Proportion', 'Inclination', 'PressureMean', 'PressureStd',
+        'AvgCurvature', 'Curvature', 'Readability', 
         'AvgAsolaSize', 'AvgSpacing', 'Velocity',
-        'OverlapRatio', 'LetterConnections'
+        'OverlapRatio', 'LetterConnections', 'BaselineStd', 'BaselineStdMm',
+        
+        # Parametri tradizionali aggiuntivi
+        'StrokeWidth', 'StrokeComplexity', 'ConnectedComponents',
+        'AspectRatio', 'Area', 'Perimeter',
+        
+        # Parametri dimensionali 
+        'Width', 'Height', 'DiagonalLength'
     ]
     
-    # Aggiungi parametri specifici a seconda della versione dei dati
-    if 'AvgCurvature' in verifica_data or 'AvgCurvature' in comp_data:
-        parametri_numerici.append('AvgCurvature')
-    elif 'Curvature' in verifica_data or 'Curvature' in comp_data:
-        parametri_numerici.append('Curvature')
-        
-    # Aggiungi BaselineStd o BaselineStdMm a seconda della versione
-    if 'BaselineStdMm' in verifica_data or 'BaselineStdMm' in comp_data:
-        parametri_numerici.append('BaselineStdMm')
-    elif 'BaselineStd' in verifica_data or 'BaselineStd' in comp_data:
-        parametri_numerici.append('BaselineStd')
+    # Filtra solo i parametri che esistono effettivamente nei dati
+    parametri_disponibili = []
+    for param in parametri_numerici:
+        if (param in verifica_data and isinstance(verifica_data.get(param), (int, float))) or \
+           (param in comp_data and isinstance(comp_data.get(param), (int, float))):
+            parametri_disponibili.append(param)
+    
+    # Se abbiamo le dimensioni come array, aggiungiamole
+    if 'Dimensions' in verifica_data and isinstance(verifica_data['Dimensions'], list):
+        if len(verifica_data['Dimensions']) >= 2:
+            # Aggiungi larghezza e altezza come parametri separati
+            verifica_data['Width'] = verifica_data['Dimensions'][0]
+            verifica_data['Height'] = verifica_data['Dimensions'][1]
+            parametri_disponibili.extend(['Width', 'Height'])
+    
+    if 'Dimensions' in comp_data and isinstance(comp_data['Dimensions'], list):
+        if len(comp_data['Dimensions']) >= 2:
+            comp_data['Width'] = comp_data['Dimensions'][0]
+            comp_data['Height'] = comp_data['Dimensions'][1]
+    
+    # Usa i parametri disponibili
+    parametri_numerici = parametri_disponibili
 
     differenze = []
     etichette = []
@@ -517,8 +537,8 @@ def create_comparison_chart(verifica_data, comp_data):
             
             compatibilita_percentuale.append(compatibilita)
 
-    # Crea l'immagine del grafico
-    fig = Figure(figsize=(10, 6))
+    # Crea l'immagine del grafico - dimensioni più grandi per tutti i parametri
+    fig = Figure(figsize=(12, max(8, len(parametri_numerici) * 0.5)))
     ax = fig.add_subplot(111)
     
     bars = ax.barh(etichette, compatibilita_percentuale, color='skyblue')
