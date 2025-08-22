@@ -18,7 +18,8 @@
     "sending": "Invio in corso...",
     "emailSent": "Email inviata",
     "checkInbox": "Se il nome utente esiste, riceverai un link di reset password nella casella di posta associata al tuo account.",
-    "backToLogin": "Torna alla pagina di accesso"
+    "backToLogin": "Torna alla pagina di accesso",
+    "usernameRequired": "Il nome utente è obbligatorio per richiedere il reset della password"
   },
   "resetPassword": {
     "title": "Reimposta Password",

@@ -18,7 +18,8 @@
     "sending": "Sending...",
     "emailSent": "Email Sent",
     "checkInbox": "If the username exists, you will receive a password reset link at the email address associated with your account.",
-    "backToLogin": "Back to login page"
+    "backToLogin": "Back to login page",
+    "usernameRequired": "Username is required to request a password reset"
   },
   "resetPassword": {
     "title": "Reset Password",

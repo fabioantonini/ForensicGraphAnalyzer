@@ -15,7 +15,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
 
 const forgotPasswordSchema = z.object({
-  username: z.string().min(1, { message: "Inserisci il nome utente" }),
+  username: z.string().min(1, { message: "Username is required" }),
 });
 
 type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
@@ -34,6 +34,16 @@ export default function ForgotPasswordPage() {
   });
   
   const onSubmit = async (data: ForgotPasswordFormData) => {
+    // Validazione esplicita prima dell'invio
+    if (!data.username || data.username.trim() === "") {
+      toast({
+        title: t('common:errors.error'),
+        description: t('common:forgotPassword.usernameRequired'),
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
