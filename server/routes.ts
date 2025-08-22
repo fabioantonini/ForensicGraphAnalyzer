@@ -1,4 +1,5 @@
 import { Express, Request, Response, NextFunction, Router } from "express";
+import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
@@ -151,6 +152,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       next(err);
     }
   });
+
+  // Serve static files from uploads directory
+  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
   // Register signature routes
   const router = Router();

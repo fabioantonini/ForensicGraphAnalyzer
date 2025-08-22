@@ -141,9 +141,9 @@ export default function SignaturesPage() {
   } = useQuery<Signature[]>({
     queryKey: [`/api/signature-projects/${selectedProject}/signatures`],
     enabled: !!user && !!selectedProject,
-    staleTime: 10000, // Ricarica dopo 10 secondi
+    staleTime: 30000, // Ricarica dopo 30 secondi
     refetchOnMount: true, // Ricarica ad ogni montaggio del componente
-    refetchInterval: 5000, // Aggiorna ogni 5 secondi
+    // Rimosso refetchInterval per evitare loop infiniti
     
     // Setup di un gestore di errore personalizzato
     select: (data) => {
@@ -164,13 +164,13 @@ export default function SignaturesPage() {
         return []; // Restituisci un array vuoto quando i dati sono di tipo errato
       }
       
-      // Verifica se qualcuna delle firme ha cambiato stato
-      const pendingOrProcessing = data.some(
-        sig => sig.processingStatus === 'pending' || sig.processingStatus === 'processing'
+      // Verifica se qualcuna delle firme ha parametri (elaborazione completata)
+      const hasProcessedSignatures = data.some(
+        sig => sig.analysisReport && sig.analysisReport.trim() !== ''
       );
       
-      if (pendingOrProcessing) {
-        console.log("Rilevate firme in elaborazione, continuo a monitorare...");
+      if (!hasProcessedSignatures && data.length > 0) {
+        console.log("Firme caricate ma elaborazione parametri in corso...");
       }
       
       return data; // Restituisci tutti i dati, dovrebbero già essere filtrati dal server
@@ -1002,7 +1002,7 @@ export default function SignaturesPage() {
                     {Array.isArray(signatures) && 
                      signatures
                       .filter((s: any) => s.isReference)
-                      .sort((a: any, b: any) => a.processingStatus === 'completed' ? -1 : 1)
+                      .sort((a: any, b: any) => (a.analysisReport ? -1 : 1))
                       .map((signature: any) => (
                         <SignatureCard 
                           key={signature.id}
@@ -1038,9 +1038,9 @@ export default function SignaturesPage() {
                 {/* Messaggio se ci sono firme da verificare in elaborazione */}
                 {Array.isArray(signatures) && 
                   signatures.length > 0 && 
-                  signatures.some((s: any) => !s.isReference && s.processingStatus !== 'completed') && (
+                  signatures.some((s: any) => !s.isReference && !s.analysisReport) && (
                     <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-800 text-sm">
-                      Ci sono {signatures.filter((s: any) => !s.isReference && s.processingStatus !== 'completed').length} firme da verificare in elaborazione. 
+                      Ci sono {signatures.filter((s: any) => !s.isReference && !s.analysisReport).length} firme da verificare in elaborazione. 
                       Attendere il completamento per visualizzare il risultato della verifica.
                     </div>
                   )
@@ -1075,7 +1075,7 @@ export default function SignaturesPage() {
                     {Array.isArray(signatures) && 
                      signatures
                       .filter((s: any) => !s.isReference)
-                      .sort((a: any, b: any) => a.processingStatus === 'completed' ? -1 : 1)
+                      .sort((a: any, b: any) => (a.analysisReport ? -1 : 1))
                       .map((signature: any) => (
                         <SignatureCard 
                           key={signature.id} 
