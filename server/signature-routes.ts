@@ -227,8 +227,8 @@ export function registerSignatureRoutes(appRouter: Router) {
             const pythonResult = await SignaturePythonAnalyzer.compareSignatures(
               verificaPath,
               referencePath,
-              signature.parameters?.realDimensions || { widthMm: signature.realWidthMm, heightMm: signature.realHeightMm },
-              referenceSignature.parameters?.realDimensions || { widthMm: referenceSignature.realWidthMm, heightMm: referenceSignature.realHeightMm }
+              signature.parameters?.realDimensions || { widthMm: signature.realWidthMm || 0, heightMm: signature.realHeightMm || 0, pixelsPerMm: signature.dpi / 25.4 || 11.8 },
+              referenceSignature.parameters?.realDimensions || { widthMm: referenceSignature.realWidthMm || 0, heightMm: referenceSignature.realHeightMm || 0, pixelsPerMm: referenceSignature.dpi / 25.4 || 11.8 }
             );
             
             similarityScore = pythonResult.similarity; // Mantieni come percentuale diretta
@@ -238,12 +238,15 @@ export function registerSignatureRoutes(appRouter: Router) {
           } catch (pythonError) {
             console.error(`[COMPARE-ALL] Errore Python analyzer per firma ${signature.id}:`, pythonError);
             
-            // Fallback al JavaScript analyzer
+            // Fallback al JavaScript analyzer (disabilitato per incompatibilità di tipo)
             try {
-              const jsResult = await SignatureAnalyzer.compareSignatures(signature, referenceSignature);
-              similarityScore = jsResult.similarity;
-              comparisonChart = jsResult.chart;
-              analysisReport = jsResult.report;
+              // const jsResult = await SignatureAnalyzer.compareSignatures(signature, referenceSignature);
+              // similarityScore = jsResult.similarity;
+              // comparisonChart = jsResult.chart;
+              // analysisReport = jsResult.report;
+              console.log(`[COMPARE-ALL] JavaScript analyzer disabilitato per incompatibilità di tipo`);
+              similarityScore = 0;
+              analysisReport = "Analisi non disponibile: errore durante il confronto";
             } catch (jsError) {
               console.error(`[COMPARE-ALL] Errore anche con JavaScript analyzer:`, jsError);
               similarityScore = 0;
