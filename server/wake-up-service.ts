@@ -139,6 +139,14 @@ DO NOT add any other text besides the JSON.`
 
   const prompt = `Generate exactly ${totalQuestions} multiple choice quiz questions about ${categoryPrompts[lang][category]}.
 
+⚠️ CRITICAL ACCURACY REQUIREMENTS ⚠️:
+- VERIFICA SEMPRE i fatti storici, scientifici e letterari prima di creare la domanda
+- Per autori e opere: assicurati della corrispondenza corretta (es: "Guerra e pace" = Leo Tolstoj)
+- Per capitali e geografia: usa solo informazioni ufficiali
+- Per date storiche: controlla accuratezza degli eventi
+- Per scienza: usa solo fatti scientificamente provati
+- ZERO TOLLERANZA per risposte sbagliate - la precisione è CRITICA
+
 ANTI-REPETITION REQUIREMENTS:
 - ${antiRepetitionText}
 - CREA domande su argomenti e aspetti diversi da quelli già trattati
@@ -150,6 +158,11 @@ DIVERSIFICAZIONE INTELLIGENTE:
 - Se categoria cultura: alterna epoca storica, discipline scientifiche, generi artistici, aree geografiche
 - INCLUDI domande con diversi livelli di complessità linguistica
 
+ESEMPI DI CORRISPONDENZE CORRETTE DA VERIFICARE:
+- "Guerra e pace" → Leo Tolstoj (NON Anton Čechov)
+- Capitale Canada → Ottawa (NON Montreal)
+- Inizio Rivoluzione Francese → Presa della Bastiglia (NON Incoronazione Napoleone)
+
 ${instructions[lang].rules}
 
 ${instructions[lang].format}`;
@@ -157,20 +170,20 @@ ${instructions[lang].format}`;
   try {
     const openai = await createOpenAIClient(userApiKey, userId);
     
-    // Crea prompt di sistema specifico per categoria
+    // Crea prompt di sistema specifico per categoria con enfasi sulla precisione
     let systemPrompt: string;
     if (category === 'grafologia') {
       systemPrompt = lang === 'en' 
-        ? "You are a forensic graphology expert. Generate accurate and educational quiz questions about handwriting analysis, forensic graphology techniques, and document examination."
-        : "Sei un esperto di grafologia forense. Genera domande di quiz accurate e educative su analisi calligrafica, tecniche di grafologia forense ed esame documenti.";
+        ? "You are a forensic graphology expert. Generate FACTUALLY ACCURATE and educational quiz questions about handwriting analysis, forensic graphology techniques, and document examination. Double-check all facts before answering. Accuracy is CRITICAL."
+        : "Sei un esperto di grafologia forense. Genera domande di quiz FATALMENTE ACCURATE ed educative su analisi calligrafica, tecniche di grafologia forense ed esame documenti. Verifica SEMPRE i fatti prima di rispondere. La precisione è CRITICA.";
     } else if (category === 'mista') {
       systemPrompt = lang === 'en' 
-        ? "You are both a forensic graphology expert and general knowledge specialist. Generate a balanced mix of quiz questions covering both handwriting analysis/forensic graphology AND general topics like art, history, science, literature, and geography."
-        : "Sei un esperto sia di grafologia forense che di cultura generale. Genera un mix equilibrato di domande di quiz che coprano sia l'analisi calligrafica/grafologia forense CHE argomenti generali come arte, storia, scienza, letteratura e geografia.";
+        ? "You are both a forensic graphology expert and general knowledge specialist. Generate a balanced mix of FACTUALLY ACCURATE quiz questions covering both handwriting analysis/forensic graphology AND general topics like art, history, science, literature, and geography. Double-check all facts. Accuracy is CRITICAL."
+        : "Sei un esperto sia di grafologia forense che di cultura generale. Genera un mix equilibrato di domande di quiz FATALMENTE ACCURATE che coprano sia l'analisi calligrafica/grafologia forense CHE argomenti generali come arte, storia, scienza, letteratura e geografia. Verifica SEMPRE i fatti. La precisione è CRITICA.";
     } else {
       systemPrompt = lang === 'en' 
-        ? "You are a general knowledge specialist. Generate accurate and educational quiz questions about art, history, science, literature, geography, and general knowledge."
-        : "Sei un esperto di cultura generale. Genera domande di quiz accurate e educative su arte, storia, scienza, letteratura, geografia e conoscenze generali.";
+        ? "You are a general knowledge specialist. Generate FACTUALLY ACCURATE and educational quiz questions about art, history, science, literature, geography, and general knowledge. Double-check all historical facts, names, dates, and scientific information before answering. Accuracy is CRITICAL - wrong answers are unacceptable."
+        : "Sei un esperto di cultura generale. Genera domande di quiz FATALMENTE ACCURATE ed educative su arte, storia, scienza, letteratura, geografia e conoscenze generali. Verifica SEMPRE fatti storici, nomi, date e informazioni scientifiche prima di rispondere. La precisione è CRITICA - risposte sbagliate sono inaccettabili.";
     }
 
     console.log(`[WAKE-UP] Generating quiz with model: ${model}`);
@@ -192,7 +205,7 @@ ${instructions[lang].format}`;
       ],
       {
         response_format: { type: "json_object" },
-        temperature: 0.2, // Ridotta per maggiore precisione fattuale
+        temperature: 0.1, // Ulteriormente ridotta per precisione massima
         maxTokens: 4000
       }
     );
