@@ -156,7 +156,7 @@ ${instructions[lang].format}`;
       ],
       {
         response_format: { type: "json_object" },
-        temperature: 0.7, // Hardcoded for Wake-Up quiz stability
+        temperature: 0.2, // Ridotta per maggiore precisione fattuale
         maxTokens: 4000
       }
     );
