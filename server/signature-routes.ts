@@ -1210,15 +1210,26 @@ async function processSignatureParameters(signatureId: number): Promise<void> {
       signature.realHeightMm || 20
     );
     
-    // Aggiorna la firma con i parametri elaborati (salvati come JSON nella descrizione temporaneamente)
+    // Aggiorna la firma con i parametri elaborati e imposta lo stato come completato
     await storage.updateSignature(signatureId, {
-      analysisReport: JSON.stringify(parameters)
+      analysisReport: JSON.stringify(parameters),
+      processingStatus: 'completed'
     });
     
     console.log(`[PROCESS PARAMS] Elaborazione completata per firma ${signatureId}`);
     
   } catch (error: any) {
     console.error(`[PROCESS PARAMS] Errore elaborazione firma ${signatureId}:`, error);
+    
+    // In caso di errore, imposta lo stato come fallito
+    try {
+      await storage.updateSignature(signatureId, {
+        processingStatus: 'failed'
+      });
+    } catch (updateError) {
+      console.error(`[PROCESS PARAMS] Errore aggiornamento stato fallimento:`, updateError);
+    }
+    
     throw error;
   }
 }
