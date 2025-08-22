@@ -674,15 +674,20 @@ export function registerSignatureRoutes(appRouter: Router) {
       
       try {
         if (signature.analysisReport) {
+          console.log('[PDF REPORT] Tentativo parsing firma in verifica. Contenuto:', signature.analysisReport.substring(0, 100));
           signatureParams = JSON.parse(signature.analysisReport);
           console.log('[PDF REPORT] Parametri firma in verifica:', Object.keys(signatureParams));
         }
         if (referenceSignature?.analysisReport) {
+          console.log('[PDF REPORT] Tentativo parsing firma di riferimento. Contenuto:', referenceSignature.analysisReport.substring(0, 100));
           referenceParams = JSON.parse(referenceSignature.analysisReport);
           console.log('[PDF REPORT] Parametri firma di riferimento:', Object.keys(referenceParams));
         }
       } catch (e) {
-        console.error('Errore parsing parametri:', e);
+        console.error('[PDF REPORT] ERRORE parsing parametri:', e);
+        console.error('[PDF REPORT] analysisReport non è JSON valido, probabilmente è descrizione testuale');
+        signatureParams = null;
+        referenceParams = null;
       }
       
       // ANALISI PERITALE AI DETTAGLIATA
