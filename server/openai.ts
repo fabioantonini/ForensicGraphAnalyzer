@@ -147,15 +147,8 @@ export async function chatWithRAG(
   if (!apiKey && !process.env.OPENAI_API_KEY) {
     log("Using mock response for testing without OpenAI API", "openai");
     
-    // If a specific document was mentioned but not found in context, inform the user
-    if (mentionedDoc && !context.some(c => c.toLowerCase().includes(mentionedDoc.toLowerCase()))) {
-      const isItalian = /[àèéìòù]/i.test(query);
-      if (isItalian) {
-        return `Mi dispiace, non ho accesso al documento "${mentionedDoc}" che hai menzionato. Assicurati di aver caricato il documento e di averlo selezionato per questa query.`;
-      } else {
-        return `I'm sorry, I don't have access to the document "${mentionedDoc}" you mentioned. Please make sure you've uploaded the document and selected it for this query.`;
-      }
-    }
+    // DISABLED: Document name check causes false positives when document is selected but name not in content
+    // if (mentionedDoc && !context.some(c => c.toLowerCase().includes(mentionedDoc.toLowerCase()))) {
     
     // Create a simple response based on the query and context
     const mockResponse = generateMockResponse(query, context);
@@ -173,21 +166,8 @@ export async function chatWithRAG(
       log(`Context preview: ${context[0]?.substring(0, 100)}...`, "openai");
     }
     
-    // TEMPORARILY DISABLED: If a specific document was mentioned but not found in context, inform the user
-    // This check is causing false positives - document might be selected but name doesn't appear in content
-    /*
-    if (mentionedDoc && !context.some(c => c.toLowerCase().includes(mentionedDoc.toLowerCase()))) {
-      log(`User asked about document "${mentionedDoc}" which is not in context`, "openai");
-      
-      // Use a simple message to inform the user that the document wasn't found
-      const isItalian = /[àèéìòù]/i.test(query);
-      if (isItalian) {
-        return `Mi dispiace, non ho accesso al documento "${mentionedDoc}" che hai menzionato. Assicurati di aver caricato il documento e di averlo selezionato per questa query.`;
-      } else {
-        return `I'm sorry, I don't have access to the document "${mentionedDoc}" you mentioned. Please make sure you've uploaded the document and selected it for this query.`;
-      }
-    }
-    */
+    // Document name checking removed - was causing false positives
+    // Documents are verified through selection, not name matching in content
     
     // Models GPT-4o and GPT-5 are now the only supported options
     
