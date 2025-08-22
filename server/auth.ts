@@ -45,7 +45,12 @@ export function setupAuth(app: Express) {
     cookie: {
       secure: process.env.NODE_ENV === "production",
       maxAge: 24 * 60 * 60 * 1000, // 1 day
-    }
+      httpOnly: true, // Sicurezza aggiuntiva
+      sameSite: 'lax' // Protezione CSRF
+    },
+    // Configurazioni per stabilità
+    rolling: true, // Rinnova la sessione ad ogni richiesta
+    name: 'grapholex.session.id' // Nome personalizzato
   };
 
   app.set("trust proxy", 1);
