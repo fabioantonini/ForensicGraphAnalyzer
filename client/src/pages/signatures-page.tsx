@@ -42,7 +42,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Loader2, Trash2, Upload, FileCheck, AlertCircle } from "lucide-react";
+import { Loader2, Trash2, Upload, FileCheck, AlertCircle, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
@@ -142,6 +142,7 @@ export default function SignaturesPage() {
     queryKey: [`/api/signature-projects/${selectedProject}/signatures`],
     enabled: !!user && !!selectedProject,
     staleTime: 0, // Cache disabilitata per aggiornamenti immediati
+    refetchOnWindowFocus: true, // Refetch quando finestra diventa attiva
     refetchInterval: (data) => {
       // Polling intelligente: continua solo se ci sono firme in elaborazione
       if (!data || !Array.isArray(data) || data.length === 0) return false;
@@ -910,7 +911,15 @@ export default function SignaturesPage() {
                 </DialogContent>
               </Dialog>
               
-              <div className="flex items-center">
+              <div className="flex items-center space-x-2">
+                <Button
+                  onClick={() => refetchSignatures()}
+                  variant="outline"
+                  size="sm"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Aggiorna Status
+                </Button>
                 <Button 
                   variant="default"
                   onClick={() => compareAllSignatures.mutate()}
