@@ -48,6 +48,7 @@ Preferred communication style: Simple, everyday language.
 - **Database Schema**: Includes tables for Users, documents, signatures, projects, activities, and queries.
 - **Authentication Thresholds**: Standardized authenticity thresholds: ≥85% authentic, 65-84% probably authentic, <65% suspicious.
 - **Email Service**: Gmail SMTP fully configured and operational for password reset functionality and system notifications. Configuration managed via `.gmail-config.json` with secure app password authentication.
+- **Demo Account Management**: Automated cleanup system with 7-day trial period, 15-day data retention, and scheduled maintenance (hourly account deactivation, 6-hourly data purging). Manual cleanup available via admin routes `/api/admin/cleanup/status` and `/api/admin/cleanup/run`.
 
 ## External Dependencies
 

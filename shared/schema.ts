@@ -84,7 +84,7 @@ export const createDemoAccountSchema = z.object({
   fullName: z.string().optional(),
   organization: z.string().optional(),
   profession: z.string().optional(),
-  durationDays: z.number().default(14), // Durata in giorni (default 14)
+  durationDays: z.number().default(7), // Durata in giorni (default 7)
 });
 
 // Schema per l'estensione della demo

@@ -392,9 +392,9 @@ export class MemStorage implements IStorage {
     const expiryDate = new Date(now);
     expiryDate.setDate(expiryDate.getDate() + durationDays);
     
-    // Calcola la data di conservazione dati (2 settimane dopo la scadenza)
+    // Calcola la data di conservazione dati (15 giorni dopo la scadenza)
     const retentionDate = new Date(expiryDate);
-    retentionDate.setDate(retentionDate.getDate() + 14);
+    retentionDate.setDate(retentionDate.getDate() + 15);
     
     const user: User = {
       ...demoUser,
@@ -1075,9 +1075,9 @@ export class DatabaseStorage implements IStorage {
       const expiryDate = new Date(now);
       expiryDate.setDate(expiryDate.getDate() + durationDays);
       
-      // Calcola la data di conservazione dati (2 settimane dopo la scadenza)
+      // Calcola la data di conservazione dati (15 giorni dopo la scadenza)
       const retentionDate = new Date(expiryDate);
-      retentionDate.setDate(retentionDate.getDate() + 14);
+      retentionDate.setDate(retentionDate.getDate() + 15);
       
       // Crea l'utente con tipo account demo
       const [user] = await db
@@ -1131,9 +1131,9 @@ export class DatabaseStorage implements IStorage {
       
       newExpiryDate.setDate(newExpiryDate.getDate() + additionalDays);
       
-      // Calcola la nuova data di conservazione dati
+      // Calcola la nuova data di conservazione dati (15 giorni dopo la scadenza)
       const newRetentionDate = new Date(newExpiryDate);
-      newRetentionDate.setDate(newRetentionDate.getDate() + 14);
+      newRetentionDate.setDate(newRetentionDate.getDate() + 15);
       
       // Aggiorna l'utente
       const [updatedUser] = await db

@@ -6,6 +6,7 @@ import fsExtra from 'fs-extra';
 import { ensureReportDirectory } from "./pdf-utils";
 import { initializeVectorDB } from './vectordb'; // Nuovo modulo di persistenza vettoriale
 import { testDatabaseConnection, isPgVectorAvailable } from './db';
+import { startDemoCleanupScheduler } from './demo-cleanup-scheduler';
 import fs from 'fs';
 
 const app = express();
@@ -132,6 +133,9 @@ process.on('unhandledRejection', (reason, promise) => {
       reusePort: true,
     }, () => {
       log(`serving on port ${port}`);
+      
+      // Avvia il sistema di pulizia automatica degli account demo
+      startDemoCleanupScheduler();
     });
     
   } catch (startupError) {
