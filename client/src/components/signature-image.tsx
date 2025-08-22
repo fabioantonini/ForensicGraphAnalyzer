@@ -316,10 +316,13 @@ export function SignatureImage({
                     )}
                     onLoad={() => setIsImageLoaded(true)}
                     onError={(e) => {
-                      console.error(`Errore nel caricamento dell'immagine: ${imageUrl}`);
+                      if (!imageFailed) {
+                        console.error(`Errore nel caricamento dell'immagine: ${imageUrl}`);
+                        setImageFailed(true);
+                      }
+                      // Previeni ulteriori tentativi di caricamento
                       const img = e.target as HTMLImageElement;
-                      img.src = '/placeholder-image.svg'; // Fallback a un'immagine di placeholder
-                      setImageFailed(true);
+                      img.style.display = 'none';
                     }}
                   />
                   {isImageLoaded && (
