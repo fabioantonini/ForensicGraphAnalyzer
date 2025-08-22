@@ -22,7 +22,7 @@ interface FAQCategory {
 }
 
 export default function FAQPage() {
-  const { t } = useTranslation();
+  const { t } = useTranslation('faq');
   const [, setLocation] = useLocation();
   const [openSections, setOpenSections] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
