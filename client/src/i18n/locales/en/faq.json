@@ -1,0 +1,224 @@
+{
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "subtitle": "Find answers to the most common questions about GrapholexInsight",
+    "searchPlaceholder": "Search FAQs...",
+    "questions": "questions",
+    "noResults": "No FAQs found",
+    "tryDifferentSearch": "Try different search terms",
+    "stillNeedHelp": "Still need help?",
+    "contactDescription": "If you haven't found the answer you were looking for, contact us directly or send feedback.",
+    "contactSupport": "Contact Support",
+    "sendFeedback": "Send Feedback",
+    
+    "categories": {
+      "generale": {
+        "title": "General",
+        "description": "Basic information about GrapholexInsight"
+      },
+      "documenti": {
+        "title": "Document Management",
+        "description": "Document upload, management and organization"
+      },
+      "firme": {
+        "title": "Signature Analysis",
+        "description": "Signature verification and graphological analysis"
+      },
+      "ocr": {
+        "title": "OCR (Text Recognition)",
+        "description": "Text extraction from images and scanned documents"
+      },
+      "aiSearch": {
+        "title": "Semantic Search and AI",
+        "description": "Intelligent document search and AI responses"
+      },
+      "peerReview": {
+        "title": "Peer Review",
+        "description": "Collaborative expertise review system"
+      },
+      "wakeUpQuiz": {
+        "title": "Wake Up Quiz",
+        "description": "Interactive educational quiz system"
+      },
+      "privacy": {
+        "title": "Privacy and Security",
+        "description": "Data protection and security features"
+      },
+      "reports": {
+        "title": "Reports and Export",
+        "description": "PDF report generation and results export"
+      }
+    },
+    
+    "generale": {
+      "whatIs": {
+        "question": "What is GrapholexInsight?",
+        "answer": "GrapholexInsight is a comprehensive forensic graphology analysis system offering <strong>signature analysis with 21 real parameters</strong>, <strong>multilingual OCR</strong>, <strong>AI semantic search</strong>, <strong>peer review</strong> according to ENFSI standards, and an <strong>educational quiz system</strong>. It's designed for legal and investigative professionals."
+      },
+      "howToStart": {
+        "question": "How can I start using the application?",
+        "answer": "1. <strong>Register</strong> by creating an account<br>2. <strong>Upload your documents</strong> from the Documents section<br>3. <strong>Use the features</strong>: signature analysis, OCR, AI search<br>4. <strong>Generate professional reports</strong> of results<br>The system will guide you through each feature with contextual suggestions."
+      },
+      "supportedFormats": {
+        "question": "What document formats are supported?",
+        "answer": "GrapholexInsight supports:<br><strong>Documents:</strong> PDF, DOCX, TXT, HTML<br><strong>Images:</strong> PNG, JPEG, JPG (for signatures and OCR)<br><strong>Maximum size:</strong> 25MB per file<br>All formats are automatically processed and indexed for semantic search."
+      },
+      "languageChange": {
+        "question": "How can I change the interface language?",
+        "answer": "The interface is available in <strong>Italian</strong> and <strong>English</strong>. You can change language via the selector in the application's top bar. The change is applied immediately to all features, including reports, quizzes and user interface."
+      }
+    },
+    
+    "documenti": {
+      "upload": {
+        "question": "How do I upload a document?",
+        "answer": "You can upload documents in two ways:<br>1. <strong>Drag & Drop:</strong> Drag files directly into the upload area<br>2. <strong>Click to select:</strong> Click 'Select files' and choose from your computer<br>Documents are automatically processed and indexed for AI search."
+      },
+      "fileSize": {
+        "question": "What is the maximum file size?",
+        "answer": "The maximum size per file is <strong>25MB</strong>. This limit ensures optimal performance during processing. For very large documents, we recommend using the <strong>complete OCR mode</strong> which includes progress indicators and interruption controls."
+      },
+      "delete": {
+        "question": "How can I delete an uploaded document?",
+        "answer": "In the <strong>Documents</strong> section:<br>1. Find the document in the list<br>2. Click the trash icon<br>3. Confirm deletion<br><em>Warning:</em> Deletion permanently removes the document and all associated data from AI searches."
+      },
+      "indexing": {
+        "question": "Why isn't my document being indexed?",
+        "answer": "Possible causes:<br>• <strong>Unsupported format</strong> - Check it's PDF, DOCX, TXT or HTML<br>• <strong>Corrupted or password-protected file</strong><br>• <strong>Size exceeds 25MB</strong><br>• <strong>Non-textual content</strong> - For images use OCR function<br>Check status in the 'Indexed' column in the document list."
+      }
+    },
+    
+    "firme": {
+      "analysis": {
+        "question": "How does signature analysis work?",
+        "answer": "The system uses <strong>advanced computer vision</strong> to:<br>1. <strong>Automatic cropping</strong> of signature from image<br>2. <strong>Millimetric calibration</strong> for real parameters<br>3. <strong>Analysis of 21 forensic</strong> graphological parameters<br>4. <strong>Comparison with reference database</strong><br>5. <strong>PDF report generation</strong> with objective AI evaluation"
+      },
+      "parameters": {
+        "question": "What are the 21 analyzed parameters?",
+        "answer": "Parameters include:<br><strong>Dynamic:</strong> Pressure, speed, stroke fluidity<br><strong>Morphological:</strong> Inclination, dimensions, proportions<br><strong>Spatial:</strong> Spacing, alignment, distribution<br><strong>Qualitative:</strong> Tremors, interruptions, corrections<br><strong>Structural:</strong> Connections, angles, curvatures<br>All measured in <strong>real millimeters</strong> thanks to automatic calibration."
+      },
+      "authenticity": {
+        "question": "How do I interpret authenticity results?",
+        "answer": "Results are classified according to forensic standards:<br><strong>≥85%:</strong> <span style='color: green'>Authentic</span> - High probability of authenticity<br><strong>65-84%:</strong> <span style='color: orange'>Probably authentic</span> - Requires additional verification<br><strong>&lt;65%:</strong> <span style='color: red'>Suspicious</span> - Needs thorough analysis<br>The PDF report includes <strong>detailed AI analysis</strong> for each parameter."
+      },
+      "compare": {
+        "question": "Can I compare multiple signatures simultaneously?",
+        "answer": "Yes, the system supports <strong>multiple comparisons</strong>:<br>1. Upload the <strong>reference signature</strong> (known authentic)<br>2. Upload <strong>signatures to verify</strong><br>3. System generates <strong>automatic comparative tables</strong><br>4. Calculates <strong>compatibility percentages</strong> for each comparison<br>The report will include graphs and statistical analysis of parameters."
+      }
+    },
+    
+    "ocr": {
+      "languages": {
+        "question": "What languages does OCR support?",
+        "answer": "OCR supports <strong>over 100 languages</strong>, including:<br><strong>Major:</strong> Italian, English, French, German, Spanish<br><strong>European:</strong> Russian, Polish, Dutch, Portuguese<br><strong>Asian:</strong> Chinese, Japanese, Arabic<br>The system <strong>automatically detects</strong> document language and optimizes processing."
+      },
+      "improve": {
+        "question": "How to improve recognition quality?",
+        "answer": "Tips for optimal results:<br>• <strong>High resolution images</strong> (minimum 300 DPI)<br>• <strong>Well contrasted text</strong> on uniform background<br>• <strong>Avoid excessive inclinations</strong><br>• <strong>Use 'Enhance' mode</strong> for low quality images<br>• <strong>'Sharpen' mode</strong> for blurred text<br>• <strong>'Denoise' mode</strong> for noisy images"
+      },
+      "modes": {
+        "question": "What are the processing modes (Auto, Enhance, etc.)?",
+        "answer": "<strong>Auto:</strong> Automatically detects and applies best processing<br><strong>Enhance:</strong> Improves contrast and brightness for dark images<br><strong>Sharpen:</strong> Increases sharpness for blurred text<br><strong>Denoise:</strong> Removes noise and digital artifacts<br><strong>Complete:</strong> Advanced mode for large documents (120+ pages) with progress tracking"
+      },
+      "largeDocuments": {
+        "question": "Can I process multi-page documents?",
+        "answer": "Yes, <strong>complete mode</strong> is optimized for large documents:<br>• <strong>Progress indicators</strong> with precise percentages<br>• <strong>Interruption controls</strong> for long operations<br>• <strong>Block processing</strong> for memory efficiency<br>• <strong>Auto-indexing</strong> in database for AI searches<br>Supports documents up to <strong>500+ pages</strong>."
+      }
+    },
+    
+    "aiSearch": {
+      "semantic": {
+        "question": "How does document search work?",
+        "answer": "Search uses <strong>advanced semantic AI</strong>:<br>1. Documents are <strong>processed and vectorized</strong><br>2. Queries are <strong>analyzed for meaning</strong>, not just words<br>3. AI finds <strong>conceptually related content</strong><br>4. Generates <strong>contextual responses</strong> based on your documents<br>Supports <strong>natural language</strong> searches in Italian and English."
+      },
+      "whatSemantic": {
+        "question": "What does 'semantic search' mean?",
+        "answer": "Semantic search understands <strong>meaning</strong> beyond words:<br><strong>Traditional:</strong> Searches exact words 'sales contract'<br><strong>Semantic:</strong> Also finds 'transfer agreement', 'purchase deed'<br>AI understands <strong>synonyms, context and conceptual relationships</strong>, returning more relevant and complete results."
+      },
+      "betterAnswers": {
+        "question": "How can I get better answers from AI?",
+        "answer": "Tips for effective queries:<br>• <strong>Be specific:</strong> 'Find warranty clauses in contract' vs 'search warranty'<br>• <strong>Use context:</strong> 'In the 2023 document, what are payment terms?'<br>• <strong>Ask for elaboration:</strong> 'Summarize main contract points'<br>• <strong>Combine questions:</strong> 'Compare clauses between document A and B'"
+      },
+      "privacy": {
+        "question": "Are my documents private?",
+        "answer": "<strong>Absolute privacy guaranteed:</strong><br>• Documents are <strong>stored in your personal database</strong><br>• <strong>Never shared</strong> with other users or external services<br>• <strong>End-to-end encryption</strong> for transmissions<br>• <strong>Automatic anonymization</strong> available for sensitive data<br>• <strong>Secure deletion</strong> when requested"
+      }
+    },
+    
+    "peerReview": {
+      "whatIs": {
+        "question": "What is the Peer Review system?",
+        "answer": "Peer Review is a <strong>collaborative validation system</strong> for graphological expertise:<br>• <strong>Reviews by qualified sector experts</strong><br>• <strong>ENFSI standards compliance</strong> (European Network of Forensic Science Institutes)<br>• <strong>Anonymous process</strong> for impartiality<br>• <strong>Professional certification</strong> of results"
+      },
+      "request": {
+        "question": "How can I request a review?",
+        "answer": "To request a peer review:<br>1. Go to <strong>Peer Review</strong> section<br>2. Select the <strong>analysis or expertise</strong> to be reviewed<br>3. Choose <strong>review type</strong> (standard or detailed)<br>4. <strong>Submit request</strong><br>A qualified expert will examine the work and provide professional feedback."
+      },
+      "access": {
+        "question": "Who can access my expertise?",
+        "answer": "Access is <strong>strictly controlled</strong>:<br>• <strong>Only authorized reviewers</strong> can see anonymized expertise<br>• <strong>Personal data automatically removed</strong><br>• <strong>Reviewers bound by NDAs</strong> and professional ethical codes<br>• <strong>You maintain full control</strong> over which analyses to share<br>• <strong>Complete history</strong> of reviews available"
+      },
+      "enfsi": {
+        "question": "How does ENFSI standards validation work?",
+        "answer": "ENFSI validation ensures <strong>scientific quality</strong>:<br>• <strong>Internationally recognized standardized methodologies</strong><br>• <strong>ENFSI certified reviewers</strong> with proven experience<br>• <strong>Objective evaluation criteria</strong><br>• <strong>Complete process documentation</strong><br>• <strong>Legal recognition</strong> in European forensic context"
+      }
+    },
+    
+    "wakeUpQuiz": {
+      "purpose": {
+        "question": "What is the quiz system for?",
+        "answer": "The Wake Up Quiz is an <strong>intelligent educational system</strong> that:<br>• <strong>Keeps skills updated</strong> in graphology and forensics<br>• <strong>Tests knowledge</strong> on real cases and theory<br>• <strong>Generates personalized questions</strong> based on your interests<br>• <strong>Tracks progress</strong> over time<br>• <strong>Prepares for professional certifications</strong>"
+      },
+      "generation": {
+        "question": "How are questions generated?",
+        "answer": "Questions are created by <strong>advanced AI</strong>:<br>• <strong>Database of real cases</strong> and scientific literature<br>• <strong>Adaptation to user level</strong><br>• <strong>Anti-repetition system</strong> for guaranteed variety<br>• <strong>Continuous updates</strong> with new content<br>• <strong>Balance between theory and practice</strong>"
+      },
+      "topics": {
+        "question": "Can I choose quiz topics?",
+        "answer": "Yes, you can fully customize:<br><strong>Categories:</strong> Graphology, Forensics, Analysis techniques<br><strong>Difficulty:</strong> Basic, Intermediate, Advanced<br><strong>Types:</strong> Theory, Practical cases, Visual analysis<br><strong>Focus:</strong> Signatures, Writing, Legal expertise<br>The system adapts questions to your <strong>preferences and performance</strong>."
+      },
+      "results": {
+        "question": "Are results saved?",
+        "answer": "Yes, the system maintains a <strong>complete history</strong>:<br>• <strong>Scores by category</strong> and over time<br>• <strong>Improvement areas</strong> automatically identified<br>• <strong>Progress towards learning goals</strong><br>• <strong>Comparative statistics</strong> with other professionals<br>• <strong>Completion certificates</strong> for continuing education"
+      }
+    },
+    
+    "privacy": {
+      "dataProtection": {
+        "question": "How is my data protected?",
+        "answer": "GrapholexInsight implements <strong>enterprise-grade security</strong>:<br>• <strong>AES-256 encryption</strong> for data at rest<br>• <strong>TLS 1.3</strong> for transmissions<br>• <strong>Multi-factor authentication</strong> available<br>• <strong>Automatic backups</strong> with retention policy<br>• <strong>GDPR compliance</strong> for European users<br>• <strong>Complete audit trail</strong> of activities"
+      },
+      "anonymization": {
+        "question": "Can I anonymize documents?",
+        "answer": "Yes, the <strong>AI anonymization system</strong> automatically detects and replaces:<br><strong>Personal data:</strong> Names, addresses, phone numbers<br><strong>Identifiers:</strong> Tax codes, ID card numbers<br><strong>Sensitive information:</strong> Birth dates, places<br>AI recognizes <strong>13 entity types</strong> in PDF, DOCX, TXT formats."
+      },
+      "documentAccess": {
+        "question": "Who has access to my documents?",
+        "answer": "<strong>Only you have access to your documents:</strong><br>• <strong>Complete isolation</strong> between users<br>• <strong>Administrators cannot see</strong> content<br>• <strong>Peer review uses anonymized data</strong><br>• <strong>Encrypted backups</strong> with personal keys<br>• <strong>Definitive deletion</strong> on request"
+      },
+      "authentication": {
+        "question": "How does the authentication system work?",
+        "answer": "<strong>Multi-level secure</strong> authentication:<br>• <strong>Strong passwords</strong> with security criteria<br>• <strong>Timed sessions</strong> with automatic logout<br>• <strong>Brute force attack protection</strong><br>• <strong>Email verification</strong> for registration<br>• <strong>Secure password reset</strong> with temporary tokens<br>• <strong>Anomalous access monitoring</strong>"
+      }
+    },
+    
+    "reports": {
+      "generatePdf": {
+        "question": "How do I generate PDF reports of analyses?",
+        "answer": "<strong>Automatic and professional</strong> report generation:<br>1. Complete <strong>signature analysis</strong><br>2. System automatically generates <strong>PDF report</strong><br>3. Includes <strong>graphs, tables and AI analysis</strong><br>4. <strong>Customizable</strong> with professional templates<br>5. <strong>Immediate download</strong> or system saving<br>Each report includes <strong>forensic metadata</strong> and timestamps."
+      },
+      "templates": {
+        "question": "Can I customize report templates?",
+        "answer": "Yes, <strong>fully customizable</strong> template system:<br>• <strong>Predefined templates</strong> for different uses<br>• <strong>Visual editor</strong> for modifications<br>• <strong>Custom logos and headers</strong><br>• <strong>Modular sections</strong> to include/exclude<br>• <strong>Brand-adaptable styles and colors</strong><br>• <strong>Shareable templates</strong> between teams"
+      },
+      "export": {
+        "question": "How do I export analysis results?",
+        "answer": "<strong>Multiple and flexible</strong> export options:<br><strong>PDF:</strong> Complete formatted reports<br><strong>CSV:</strong> Parameter data for statistical analysis<br><strong>JSON:</strong> Structured data for integrations<br><strong>PNG/JPEG:</strong> Graphs and visualizations<br>All formats maintain data <strong>integrity and traceability</strong>."
+      },
+      "legal": {
+        "question": "Are reports compliant with legal standards?",
+        "answer": "<strong>Full compliance with forensic standards:</strong><br>• <strong>Scientifically validated methodologies</strong><br>• <strong>Complete process traceability</strong><br>• <strong>Cryptographic timestamps</strong> for integrity<br>• <strong>Complete metadata</strong> for audit trail<br>• <strong>ISO/IEC 17025 standards</strong> for laboratories<br>• <strong>Guaranteed procedural admissibility</strong>"
+      }
+    }
+  }
+}

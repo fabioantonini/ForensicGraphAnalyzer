@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronDownIcon, ChevronRightIcon } from "lucide-react";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +23,7 @@ interface FAQCategory {
 
 export default function FAQPage() {
   const { t } = useTranslation();
+  const [, setLocation] = useLocation();
   const [openSections, setOpenSections] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -442,10 +444,16 @@ export default function FAQPage() {
               {t("faq.contactDescription")}
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <button className="bg-white text-blue-600 px-6 py-2 rounded-lg font-semibold hover:bg-blue-50 transition-colors">
+              <button 
+                className="bg-white text-blue-600 px-6 py-2 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
+                onClick={() => setLocation('/feedback?category=bug&feature=general&title=Richiesta di supporto&description=Ho bisogno di supporto per:')}
+              >
                 {t("faq.contactSupport")}
               </button>
-              <button className="border border-white text-white px-6 py-2 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors">
+              <button 
+                className="border border-white text-white px-6 py-2 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors"
+                onClick={() => setLocation('/feedback')}
+              >
                 {t("faq.sendFeedback")}
               </button>
             </div>
