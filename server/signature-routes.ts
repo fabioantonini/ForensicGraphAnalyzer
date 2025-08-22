@@ -1218,6 +1218,10 @@ async function processSignatureParameters(signatureId: number): Promise<void> {
     });
     console.log(`[PROCESS PARAMS] Status aggiornato con successo per firma ${signatureId}`);
     
+    // Verifica che l'aggiornamento sia andato a buon fine
+    const updatedSignature = await storage.getSignature(signatureId);
+    console.log(`[PROCESS PARAMS] Status verificato nel database: ${updatedSignature?.processingStatus}`);
+    
     console.log(`[PROCESS PARAMS] Elaborazione completata per firma ${signatureId}`);
     
   } catch (error: any) {

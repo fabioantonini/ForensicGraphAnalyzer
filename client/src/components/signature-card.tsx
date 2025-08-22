@@ -64,20 +64,33 @@ export function SignatureCard({
   
   // Rimosso tutto il codice per la gestione del DPI - ora utilizziamo solo dimensioni reali
   
-  // Function to get status badge color based on analysis report
+  // Function to get status badge color based on processing status
   const getStatusColor = () => {
-    if (!signature.analysisReport || signature.analysisReport.trim() === '') {
-      return 'bg-yellow-500'; // In attesa/elaborazione
+    switch (signature.processingStatus) {
+      case 'completed':
+        return 'bg-green-500'; // Completato
+      case 'failed':
+        return 'bg-red-500'; // Fallito
+      case 'processing':
+      case 'pending':
+      default:
+        return 'bg-yellow-500'; // In elaborazione/attesa
     }
-    return 'bg-green-500'; // Completato
   };
   
-  // Function to get status translation based on analysis report
+  // Function to get status translation based on processing status
   const getStatusTranslation = () => {
-    if (!signature.analysisReport || signature.analysisReport.trim() === '') {
-      return t('signatures.status.processing', 'In elaborazione');
+    switch (signature.processingStatus) {
+      case 'completed':
+        return t('signatures.status.completed', 'Completato');
+      case 'failed':
+        return t('signatures.status.failed', 'Fallito');
+      case 'pending':
+        return t('signatures.status.pending', 'In attesa');
+      case 'processing':
+      default:
+        return t('signatures.status.processing', 'In elaborazione');
     }
-    return t('signatures.status.completed', 'Completato');
   };
   
   // Function to render similarity score
@@ -124,7 +137,7 @@ export function SignatureCard({
           <SignatureImage 
             filename={signature.filename}
             originalFilename={signature.originalFilename}
-            processingStatus={signature.analysisReport ? 'completed' : 'processing'}
+            processingStatus={signature.processingStatus || 'processing'}
             className="w-full h-full"
             dpi={signature.dpi || 300}
             onLineLengthChange={(length) => {
