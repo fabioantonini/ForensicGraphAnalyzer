@@ -108,6 +108,12 @@ export interface IStorage {
     analysisReport?: string;
     reportPath?: string;
     dpi?: number;
+    comparisonResult?: number;
+    referenceSignatureFilename?: string;
+    referenceSignatureOriginalFilename?: string;
+    referenceDpi?: number;
+    processingStatus?: string;
+    updatedAt?: Date;
   }): Promise<Signature>;
   deleteSignature(id: number): Promise<void>;
 
@@ -1423,6 +1429,7 @@ export class DatabaseStorage implements IStorage {
     referenceSignatureFilename?: string;
     referenceSignatureOriginalFilename?: string;
     referenceDpi?: number;
+    processingStatus?: string;
     updatedAt?: Date;
   }): Promise<Signature> {
     const [signature] = await db
@@ -1436,6 +1443,7 @@ export class DatabaseStorage implements IStorage {
         ...(data.referenceSignatureFilename !== undefined && { referenceSignatureFilename: data.referenceSignatureFilename }),
         ...(data.referenceSignatureOriginalFilename !== undefined && { referenceSignatureOriginalFilename: data.referenceSignatureOriginalFilename }),
         ...(data.referenceDpi !== undefined && { referenceDpi: data.referenceDpi }),
+        ...(data.processingStatus !== undefined && { processingStatus: data.processingStatus }),
         updatedAt: data.updatedAt || new Date()
       })
       .where(eq(signatures.id, id))

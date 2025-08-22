@@ -1211,10 +1211,12 @@ async function processSignatureParameters(signatureId: number): Promise<void> {
     );
     
     // Aggiorna la firma con i parametri elaborati e imposta lo stato come completato
+    console.log(`[PROCESS PARAMS] Aggiornamento firma ${signatureId} con status 'completed'`);
     await storage.updateSignature(signatureId, {
       analysisReport: JSON.stringify(parameters),
       processingStatus: 'completed'
     });
+    console.log(`[PROCESS PARAMS] Status aggiornato con successo per firma ${signatureId}`);
     
     console.log(`[PROCESS PARAMS] Elaborazione completata per firma ${signatureId}`);
     
