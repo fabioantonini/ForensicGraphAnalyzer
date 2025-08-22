@@ -443,18 +443,12 @@ export default function FAQPage() {
             <p className="text-blue-100 mb-6">
               {t("faq.contactDescription")}
             </p>
-            <div className="flex flex-wrap justify-center gap-4">
+            <div className="flex justify-center">
               <button 
-                className="bg-white text-blue-600 px-6 py-2 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
+                className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors text-lg"
                 onClick={() => setLocation('/feedback?category=bug&feature=general&title=Richiesta di supporto&description=Ho bisogno di supporto per:')}
               >
                 {t("faq.contactSupport")}
-              </button>
-              <button 
-                className="border border-white text-white px-6 py-2 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors"
-                onClick={() => setLocation('/feedback')}
-              >
-                {t("faq.sendFeedback")}
               </button>
             </div>
           </CardContent>
