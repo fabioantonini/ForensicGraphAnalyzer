@@ -183,15 +183,15 @@ export function registerSignatureRoutes(appRouter: Router) {
       // Ottieni tutte le firme di riferimento
       const referenceSignatures = await storage.getProjectSignatures(projectId, true);
       
-      // Filtra le firme di riferimento complete (con parametri)
+      // Filtra le firme di riferimento complete (con analysisReport)
       const completedReferences = referenceSignatures.filter(
-        ref => ref.processingStatus === 'completed' && ref.parameters
+        ref => ref.processingStatus === 'completed' && ref.analysisReport
       );
       
       console.log(`[COMPARE-ALL] Reference signatures found: ${referenceSignatures.length}`);
       console.log(`[COMPARE-ALL] Completed references: ${completedReferences.length}`);
       referenceSignatures.forEach(ref => {
-        console.log(`[COMPARE-ALL] Ref ${ref.id}: status=${ref.processingStatus}, hasParams=${!!ref.parameters}`);
+        console.log(`[COMPARE-ALL] Ref ${ref.id}: status=${ref.processingStatus}, hasAnalysisReport=${!!ref.analysisReport}`);
       });
       
       if (completedReferences.length === 0) {
@@ -203,15 +203,15 @@ export function registerSignatureRoutes(appRouter: Router) {
       // Ottieni tutte le firme da verificare
       const verificationSignatures = await storage.getProjectSignatures(projectId, false);
       
-      // Filtra le firme da verificare complete (con parametri)
+      // Filtra le firme da verificare complete (con analysisReport)
       const completedVerifications = verificationSignatures.filter(
-        sig => sig.processingStatus === 'completed' && sig.parameters
+        sig => sig.processingStatus === 'completed' && sig.analysisReport
       );
       
       console.log(`[COMPARE-ALL] Verification signatures found: ${verificationSignatures.length}`);
       console.log(`[COMPARE-ALL] Completed verifications: ${completedVerifications.length}`);
       verificationSignatures.forEach(ver => {
-        console.log(`[COMPARE-ALL] Ver ${ver.id}: status=${ver.processingStatus}, hasParams=${!!ver.parameters}`);
+        console.log(`[COMPARE-ALL] Ver ${ver.id}: status=${ver.processingStatus}, hasAnalysisReport=${!!ver.analysisReport}`);
       });
       
       if (completedVerifications.length === 0) {
