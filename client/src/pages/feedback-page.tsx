@@ -104,19 +104,43 @@ const FeedbackPage = () => {
       }
       return response.json();
     },
-    onSuccess: () => {
-      toast({
-        title: t('delete.successTitle'),
-        description: t('delete.successMessage'),
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/feedback'] });
+    onMutate: async (feedbackId: number) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['/api/feedback/my'] });
+      
+      // Get the current data
+      const previousData = queryClient.getQueryData(['/api/feedback/my']) as any;
+      
+      // Optimistically remove the feedback
+      if (previousData?.feedback) {
+        queryClient.setQueryData(['/api/feedback/my'], {
+          ...previousData,
+          feedback: previousData.feedback.filter((item: any) => item.id !== feedbackId)
+        });
+      }
+      
+      return { previousData };
     },
-    onError: (error: any) => {
+    onError: (error: any, feedbackId: number, context: any) => {
+      // Rollback on error
+      if (context?.previousData) {
+        queryClient.setQueryData(['/api/feedback/my'], context.previousData);
+      }
       toast({
         title: t('delete.errorTitle'),
         description: error.message || t('delete.errorMessage'),
         variant: 'destructive',
       });
+    },
+    onSuccess: () => {
+      toast({
+        title: t('delete.successTitle'),
+        description: t('delete.successMessage'),
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/feedback/my'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/feedback/stats'] });
     },
   });
 
@@ -135,7 +159,8 @@ const FeedbackPage = () => {
         title: t('deleteAll.successTitle'),
         description: t('deleteAll.successMessage'),
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/feedback'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/feedback/my'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/feedback/stats'] });
     },
     onError: (error: any) => {
       toast({
