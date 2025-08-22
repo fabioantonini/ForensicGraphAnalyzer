@@ -188,6 +188,12 @@ export function registerSignatureRoutes(appRouter: Router) {
         ref => ref.processingStatus === 'completed' && ref.parameters
       );
       
+      console.log(`[COMPARE-ALL] Reference signatures found: ${referenceSignatures.length}`);
+      console.log(`[COMPARE-ALL] Completed references: ${completedReferences.length}`);
+      referenceSignatures.forEach(ref => {
+        console.log(`[COMPARE-ALL] Ref ${ref.id}: status=${ref.processingStatus}, hasParams=${!!ref.parameters}`);
+      });
+      
       if (completedReferences.length === 0) {
         return res.status(400).json({
           error: 'Nessuna firma di riferimento elaborata disponibile'
@@ -201,6 +207,12 @@ export function registerSignatureRoutes(appRouter: Router) {
       const completedVerifications = verificationSignatures.filter(
         sig => sig.processingStatus === 'completed' && sig.parameters
       );
+      
+      console.log(`[COMPARE-ALL] Verification signatures found: ${verificationSignatures.length}`);
+      console.log(`[COMPARE-ALL] Completed verifications: ${completedVerifications.length}`);
+      verificationSignatures.forEach(ver => {
+        console.log(`[COMPARE-ALL] Ver ${ver.id}: status=${ver.processingStatus}, hasParams=${!!ver.parameters}`);
+      });
       
       if (completedVerifications.length === 0) {
         return res.status(400).json({
