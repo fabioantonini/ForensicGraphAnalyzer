@@ -141,7 +141,7 @@ export default function SignaturesPage() {
   } = useQuery<Signature[]>({
     queryKey: [`/api/signature-projects/${selectedProject}/signatures`],
     enabled: !!user && !!selectedProject,
-    staleTime: 30000, // Ricarica dopo 30 secondi
+    staleTime: 5000, // Ricarica dopo 5 secondi per aggiornamenti più rapidi
     refetchOnMount: true, // Ricarica ad ogni montaggio del componente
     // Rimosso refetchInterval per evitare loop infiniti
     
@@ -350,7 +350,7 @@ export default function SignaturesPage() {
       return res.ok;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/signature-projects/${selectedProject}/signatures`] });
       toast({
         title: "Successo",
         description: "Firma eliminata con successo",
