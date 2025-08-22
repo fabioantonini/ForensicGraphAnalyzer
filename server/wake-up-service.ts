@@ -184,10 +184,20 @@ DO NOT add any other text besides the JSON.`
 - ESPLORA sottocategorie e aspetti RARI e MENO COMUNI del tema
 - CONCENTRATI su argomenti ORIGINALI e UNICI${avoidTopics}
 
-🎯 SUGGERIMENTI PER ARGOMENTI FRESCHI (categoria cultura):
-- Letteratura: autori contemporanei, letteratura mondiale, premi Nobel recenti
+🎯 SUGGERIMENTI PER ARGOMENTI FRESCHI:
+
+📝 GRAFOLOGIA - Esplora aspetti specifici e tecnici:
+- Tecniche analisi: microtratti, pressione grafica, orientamento, spaziatura
+- Strumenti perizia: microscopi forensi, analisi spettrali, tecnologie digitali
+- Casi studio: falsificazioni storiche, perizie celebri, evoluzione tecniche
+- Normative: standard ENFSI, procedure legali, certificazioni internazionali
+- Metodologie: comparazione morfologica, analisi biomeccanica, pattern recognition
+- Patologie grafia: tremori, disgrafia, influenze neurologiche, farmacologiche
+
+🌍 CULTURA GENERALE - Varia temi e aree geografiche:
+- Letteratura: autori contemporanei, letteratura mondiale, premi Nobel recenti  
 - Arte: movimenti artistici minori, artisti non europei, arte digitale
-- Storia: eventi del 20° secolo, storia dell'Africa/Asia, storia della tecnologia  
+- Storia: eventi del 20° secolo, storia dell'Africa/Asia, storia della tecnologia
 - Scienza: scoperte recenti, biologia marina, neuroscienze, fisica quantistica
 - Geografia: isole remote, capitali africane/asiatiche, fenomeni naturali rari
 - Musica: compositori del 900, strumenti etnici, generi musicali regionali
