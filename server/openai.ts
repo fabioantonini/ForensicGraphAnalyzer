@@ -138,7 +138,7 @@ export async function chatWithRAG(
   }
   
   // Check if the user is explicitly asking about a specific document
-  const documentMentionRegex = /(\b(?:file|document|pdf|doc)\b.*?["']([^"']+)["'])|(\b[\w-]+-[\w-]+\.(?:pdf|doc|docx|txt))\b/i;
+  const documentMentionRegex = /(\b(?:file|document|pdf|doc)\b.*?["']([^"']+)["'])|(\b[\w-]+\.(?:pdf|doc|docx|txt))\b/i;
   const match = query.match(documentMentionRegex);
   const mentionedDoc = match ? (match[2] || match[3]) : null;
   
@@ -166,7 +166,16 @@ export async function chatWithRAG(
   try {
     const openai = await createOpenAIClient(apiKey, userId);
     
-    // If a specific document was mentioned but not found in context, inform the user
+    // DEBUG: Log document detection
+    if (mentionedDoc) {
+      log(`Document mentioned: "${mentionedDoc}"`, "openai");
+      log(`Context available: ${context.length} chunks`, "openai");
+      log(`Context preview: ${context[0]?.substring(0, 100)}...`, "openai");
+    }
+    
+    // TEMPORARILY DISABLED: If a specific document was mentioned but not found in context, inform the user
+    // This check is causing false positives - document might be selected but name doesn't appear in content
+    /*
     if (mentionedDoc && !context.some(c => c.toLowerCase().includes(mentionedDoc.toLowerCase()))) {
       log(`User asked about document "${mentionedDoc}" which is not in context`, "openai");
       
@@ -178,6 +187,7 @@ export async function chatWithRAG(
         return `I'm sorry, I don't have access to the document "${mentionedDoc}" you mentioned. Please make sure you've uploaded the document and selected it for this query.`;
       }
     }
+    */
     
     // Models GPT-4o and GPT-5 are now the only supported options
     
