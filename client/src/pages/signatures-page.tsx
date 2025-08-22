@@ -143,12 +143,7 @@ export default function SignaturesPage() {
     enabled: !!user && !!selectedProject,
     staleTime: 0, // Cache disabilitata per aggiornamenti immediati
     refetchOnWindowFocus: true, // Refetch quando finestra diventa attiva
-    refetchInterval: (data) => {
-      // Polling intelligente: continua solo se ci sono firme in elaborazione
-      if (!data || !Array.isArray(data) || data.length === 0) return false;
-      const hasProcessing = data.some(sig => sig.processingStatus === 'processing' || sig.processingStatus === 'pending');
-      return hasProcessing ? 2000 : false; // 2 secondi per aggiornamenti più rapidi
-    },
+    refetchInterval: 2000, // Polling fisso ogni 2 secondi - più affidabile
     refetchOnMount: true,
     
     // Setup di un gestore di errore personalizzato
@@ -309,11 +304,12 @@ export default function SignaturesPage() {
         description: "Firma caricata per la verifica",
       });
       
-      // Forziamo un refetch immediato delle firme
-      setTimeout(() => {
-        refetchSignatures();
-        console.log("Refetch forzato delle firme dopo verifica");
-      }, 1000);
+      // Forza refetch immediato e ripetuto per garantire aggiornamenti
+      console.log("Refetch forzato delle firme dopo verifica");
+      refetchSignatures();
+      setTimeout(() => refetchSignatures(), 1000);
+      setTimeout(() => refetchSignatures(), 3000);
+      setTimeout(() => refetchSignatures(), 5000);
     },
     onError: (error: Error) => {
       toast({
