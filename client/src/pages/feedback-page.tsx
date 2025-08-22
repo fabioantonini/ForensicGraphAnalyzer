@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle, MessageSquare, TrendingUp, Star, Users, Bug, Lightbulb, Heart } from 'lucide-react';
+import { CheckCircle, MessageSquare, TrendingUp, Star, Users, Bug, Lightbulb, Heart, Trash2, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { SelectFeedback, InsertFeedback } from '@shared/schema';
 
@@ -35,6 +35,7 @@ const FeedbackPage = () => {
   const { t } = useTranslation('feedback');
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('submit');
+  const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
   const queryClient = useQueryClient();
 
   // Form setup
@@ -93,8 +94,73 @@ const FeedbackPage = () => {
     },
   });
 
+  const deleteFeedback = useMutation({
+    mutationFn: async (feedbackId: number) => {
+      const response = await fetch(`/api/feedback/${feedbackId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete feedback');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: t('delete.successTitle'),
+        description: t('delete.successMessage'),
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/feedback'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: t('delete.errorTitle'),
+        description: error.message || t('delete.errorMessage'),
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const deleteAllFeedback = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/feedback/all', {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete all feedback');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: t('deleteAll.successTitle'),
+        description: t('deleteAll.successMessage'),
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/feedback'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: t('deleteAll.errorTitle'),
+        description: error.message || t('deleteAll.errorMessage'),
+        variant: 'destructive',
+      });
+    },
+  });
+
   const onSubmit = (data: FeedbackFormData) => {
     submitFeedback.mutate(data);
+  };
+
+  const handleDeleteFeedback = (feedbackId: number) => {
+    if (window.confirm(t('delete.confirmMessage'))) {
+      deleteFeedback.mutate(feedbackId);
+    }
+  };
+
+  const handleDeleteAllFeedback = () => {
+    if (window.confirm(t('deleteAll.confirmMessage'))) {
+      deleteAllFeedback.mutate();
+      setShowDeleteAllConfirm(false);
+    }
   };
 
   // Quick action handlers
