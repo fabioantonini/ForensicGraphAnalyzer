@@ -768,42 +768,54 @@ export function registerSignatureRoutes(appRouter: Router) {
         doc.moveDown(0.3);
         doc.fontSize(10);
         
-        // Analisi automatica basata sui parametri
-        if (signature.parameters.velocity !== undefined && referenceSignature.parameters.velocity !== undefined) {
-          const sigVel = signature.parameters.velocity;
-          const refVel = referenceSignature.parameters.velocity;
-          doc.text(`La firma in verifica presenta una ${sigVel < refVel * 0.8 ? 'minore' : sigVel > refVel * 1.2 ? 'maggiore' : 'simile'} velocità di esecuzione rispetto alla comparativa.`);
-        }
-        
-        if (signature.parameters.proportionRatio !== undefined && referenceSignature.parameters.proportionRatio !== undefined) {
-          const sigProp = signature.parameters.proportionRatio;
-          const refProp = referenceSignature.parameters.proportionRatio;
-          doc.text(`Le proporzioni tra altezza e larghezza mostrano ${Math.abs(sigProp - refProp) > 0.2 ? 'differenze significative' : 'compatibilità'}.`);
-        }
-        
-        if (signature.parameters.pressure !== undefined && referenceSignature.parameters.pressure !== undefined) {
-          const sigPress = signature.parameters.pressure;
-          const refPress = referenceSignature.parameters.pressure;
-          doc.text(`La pressione esercitata durante la firma è ${Math.abs(sigPress - refPress) < refPress * 0.3 ? 'compatibile' : 'differente'} tra i due esemplari.`);
-        }
-        
-        if (signature.parameters.inclination !== undefined && referenceSignature.parameters.inclination !== undefined) {
-          const sigIncl = signature.parameters.inclination;
-          const refIncl = referenceSignature.parameters.inclination;
-          const angleDiff = Math.abs(sigIncl - refIncl);
-          doc.text(`L'inclinazione dei tratti ${angleDiff > 15 ? 'evidenzia differenze stilistiche' : 'risulta simile'}.`);
-        }
-        
-        if (signature.parameters.curvature !== undefined && referenceSignature.parameters.curvature !== undefined) {
-          const sigCurv = signature.parameters.curvature;
-          const refCurv = referenceSignature.parameters.curvature;
-          doc.text(`La curvilineità/angolosità delle firme è ${Math.abs(sigCurv - refCurv) < 0.1 ? 'coerente' : 'variabile'}.`);
-        }
-        
-        if (signature.parameters.calibratedSpacing !== undefined && referenceSignature.parameters.calibratedSpacing !== undefined) {
-          const sigSpacing = signature.parameters.calibratedSpacing;
-          const refSpacing = referenceSignature.parameters.calibratedSpacing;
-          doc.text(`La spaziatura tra le lettere appare ${Math.abs(sigSpacing - refSpacing) < refSpacing * 0.3 ? 'omogenea' : 'variabile'}.`);
+        // Analisi automatica basata sui parametri disponibili
+        if (signature.parameters && referenceSignature.parameters) {
+          // Velocità (se disponibile)
+          if (signature.parameters.velocity !== undefined && referenceSignature.parameters.velocity !== undefined) {
+            const sigVel = signature.parameters.velocity;
+            const refVel = referenceSignature.parameters.velocity;
+            doc.text(`La firma in verifica presenta una ${sigVel < refVel * 0.8 ? 'minore' : sigVel > refVel * 1.2 ? 'maggiore' : 'simile'} velocità di esecuzione rispetto alla comparativa.`);
+          }
+          
+          // Proporzioni (corretto nome proprietà)
+          if (signature.parameters.proportion !== undefined && referenceSignature.parameters.proportion !== undefined) {
+            const sigProp = signature.parameters.proportion;
+            const refProp = referenceSignature.parameters.proportion;
+            doc.text(`Le proporzioni tra altezza e larghezza mostrano ${Math.abs(sigProp - refProp) > 0.2 ? 'differenze significative' : 'compatibilità'}.`);
+          }
+          
+          // Pressione (usando pressurePoints se disponibile)
+          if (signature.parameters.pressurePoints && referenceSignature.parameters.pressurePoints) {
+            const sigPress = signature.parameters.pressurePoints.pressureVariation;
+            const refPress = referenceSignature.parameters.pressurePoints.pressureVariation;
+            doc.text(`La pressione esercitata durante la firma è ${Math.abs(sigPress - refPress) < refPress * 0.3 ? 'compatibile' : 'differente'} tra i due esemplari.`);
+          }
+          
+          // Inclinazione
+          if (signature.parameters.inclination !== undefined && referenceSignature.parameters.inclination !== undefined) {
+            const sigIncl = signature.parameters.inclination;
+            const refIncl = referenceSignature.parameters.inclination;
+            const angleDiff = Math.abs(sigIncl - refIncl);
+            doc.text(`L'inclinazione dei tratti ${angleDiff > 15 ? 'evidenzia differenze stilistiche' : 'risulta simile'}.`);
+          }
+          
+          // Curvatura (nome proprietà corretto)
+          if (signature.parameters.curvatureMetrics && referenceSignature.parameters.curvatureMetrics) {
+            const sigCurv = signature.parameters.curvatureMetrics.averageCurvature;
+            const refCurv = referenceSignature.parameters.curvatureMetrics.averageCurvature;
+            doc.text(`La curvilineità/angolosità delle firme è ${Math.abs(sigCurv - refCurv) < 0.1 ? 'coerente' : 'variabile'}.`);
+          }
+          
+          // Spaziatura (usando connectivity se disponibile)
+          if (signature.parameters.connectivity && referenceSignature.parameters.connectivity) {
+            const sigSpacing = signature.parameters.connectivity.gaps;
+            const refSpacing = referenceSignature.parameters.connectivity.gaps;
+            doc.text(`La spaziatura tra le lettere appare ${Math.abs(sigSpacing - refSpacing) < refSpacing * 0.3 ? 'omogenea' : 'variabile'}.`);
+          }
+          
+          doc.text(`Analisi completata sui parametri disponibili.`);
+        } else {
+          doc.text(`Parametri di analisi non disponibili per confronto tecnico automatico.`);
         }
         
         doc.moveDown(1);
@@ -864,21 +876,21 @@ export function registerSignatureRoutes(appRouter: Router) {
           if (signature.parameters.inclination !== undefined) {
             doc.text(`• Inclinazione: ${formatNumber(signature.parameters.inclination, 1)}°`);
           }
-          if (signature.parameters.pressure !== undefined) {
-            doc.text(`• Pressione media: ${formatNumber(signature.parameters.pressure, 1)}`);
+          // Pressione (usando pressurePoints se disponibile)
+          if (signature.parameters.pressurePoints?.pressureVariation !== undefined) {
+            doc.text(`• Pressione media: ${formatNumber(signature.parameters.pressurePoints.pressureVariation, 1)}`);
           }
           // Deviazione pressione (mapped da pressureStd)
-          if (signature.parameters.pressureDeviation !== undefined) {
-            doc.text(`• Deviazione pressione: ${formatNumber(signature.parameters.pressureDeviation, 1)}`);
-          } else if (signature.parameters.pressureStd !== undefined) {
+          if (signature.parameters.pressureStd !== undefined) {
             doc.text(`• Deviazione pressione: ${formatNumber(signature.parameters.pressureStd, 1)}`);
           } else {
             doc.text(`• Deviazione pressione: 15.0`);
           }
-          if (signature.parameters.avgCurvature !== undefined) {
+          // Curvatura (usando curvatureMetrics se disponibile)
+          if (signature.parameters.curvatureMetrics?.averageCurvature !== undefined) {
+            doc.text(`• Curvatura media: ${formatNumber(signature.parameters.curvatureMetrics.averageCurvature, 3)}`);
+          } else if (signature.parameters.avgCurvature !== undefined) {
             doc.text(`• Curvatura media: ${formatNumber(signature.parameters.avgCurvature, 3)}`);
-          } else if (signature.parameters.curvature !== undefined) {
-            doc.text(`• Curvatura media: ${formatNumber(signature.parameters.curvature, 3)}`);
           }
           if (signature.parameters.velocity !== undefined) {
             doc.text(`• Velocità scrittura: ${signature.parameters.velocity}/5`);
@@ -903,17 +915,17 @@ export function registerSignatureRoutes(appRouter: Router) {
           }
           if (signature.parameters.baselineStdMm !== undefined) {
             doc.text(`• Deviazione baseline: ${formatNumber(signature.parameters.baselineStdMm, 2)} mm`);
-          } else if (signature.parameters.spacingVariance !== undefined) {
-            doc.text(`• Deviazione baseline: ${formatNumber(signature.parameters.spacingVariance, 2)} mm`);
+          } else if (signature.parameters.connectivity?.gaps !== undefined) {
+            doc.text(`• Deviazione baseline: ${formatNumber(signature.parameters.connectivity.gaps, 2)} mm`);
           }
-          // Componenti connesse e complessità tratto
-          if (signature.parameters.connectedComponents !== undefined) {
-            doc.text(`• Componenti connesse: ${signature.parameters.connectedComponents}`);
+          // Componenti connesse e complessità tratto (usando connectivity se disponibile)
+          if (signature.parameters.connectivity?.connectedComponents !== undefined) {
+            doc.text(`• Componenti connesse: ${signature.parameters.connectivity.connectedComponents}`);
           } else {
             doc.text(`• Componenti connesse: 1`);
           }
-          if (signature.parameters.strokeComplexity !== undefined) {
-            doc.text(`• Complessità tratto: ${formatNumber(signature.parameters.strokeComplexity * 100, 0)}%`);
+          if (signature.parameters.connectivity?.strokeComplexity !== undefined) {
+            doc.text(`• Complessità tratto: ${formatNumber(signature.parameters.connectivity.strokeComplexity * 100, 0)}%`);
           } else {
             doc.text(`• Complessità tratto: 1%`);
           }
