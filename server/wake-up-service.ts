@@ -1,5 +1,7 @@
-import { QuizSession, QuizQuestion, CreateQuizRequest, InsertQuizQuestion, InsertQuizSession } from "@shared/schema";
+import { QuizSession, QuizQuestion, CreateQuizRequest, InsertQuizQuestion, InsertQuizSession, quizQuestions } from "@shared/schema";
 import { createOpenAIClient } from "./openai";
+import { db } from "./db";
+import { and, eq, gt, desc } from "drizzle-orm";
 
 export interface GeneratedQuizQuestion {
   question: string;
@@ -109,10 +111,44 @@ DO NOT add any other text besides the JSON.`
 
   const antiRepetitionText = antiRepetitionInstructions[lang].join('\n- ');
 
+  // Recupera domande recenti per evitare ripetizioni
+  let recentQuestions: string[] = [];
+  try {
+    const recentQuestionsQuery = await db.select({
+      question: quizQuestions.question
+    })
+    .from(quizQuestions)
+    .where(
+      and(
+        eq(quizQuestions.category, category),
+        gt(quizQuestions.createdAt, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)) // Ultimi 7 giorni
+      )
+    )
+    .orderBy(desc(quizQuestions.createdAt))
+    .limit(50);
+    
+    recentQuestions = recentQuestionsQuery.map((q: { question: string }) => q.question);
+  } catch (error) {
+    console.log(`[WAKE-UP] Could not fetch recent questions: ${error}`);
+  }
+
+  // Crea lista di argomenti da evitare basata sulle domande recenti
+  const avoidTopics = recentQuestions.length > 0 
+    ? `\nEVITA questi argomenti già trattati di recente:\n${recentQuestions.slice(0, 15).map((q: string, i: number) => `${i+1}. ${q.slice(0, 80)}...`).join('\n')}`
+    : '';
+
   const prompt = `Generate exactly ${totalQuestions} multiple choice quiz questions about ${categoryPrompts[lang][category]}.
 
 ANTI-REPETITION REQUIREMENTS:
 - ${antiRepetitionText}
+- CREA domande su argomenti e aspetti diversi da quelli già trattati
+- USA formulazioni linguistiche completamente diverse
+- ESPLORA sottocategorie e aspetti meno comuni del tema${avoidTopics}
+
+DIVERSIFICAZIONE INTELLIGENTE:
+- Se categoria grafologia: varia tra analisi tratti, perizie, strumenti, casi pratici, legislazione
+- Se categoria cultura: alterna epoca storica, discipline scientifiche, generi artistici, aree geografiche
+- INCLUDI domande con diversi livelli di complessità linguistica
 
 ${instructions[lang].rules}
 
