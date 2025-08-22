@@ -94,6 +94,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     log(`Errore inizializzazione sistema di persistenza vettoriale (non bloccante): ${error}`, "express");
   }
 
+  // Serve static files FIRST - before authentication to avoid blocking images
+  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
   // Sets up /api/register, /api/login, /api/logout, /api/user
   setupAuth(app);
   
@@ -153,8 +156,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Serve static files from uploads directory
-  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+  // Static files already mounted before authentication
 
   // Register signature routes
   const router = Router();

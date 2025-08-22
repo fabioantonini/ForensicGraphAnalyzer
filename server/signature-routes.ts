@@ -355,7 +355,7 @@ export function registerSignatureRoutes(appRouter: Router) {
       
       const signatureData = insertSignatureSchema.parse({
         projectId,
-        filename: req.file.filename,
+        filename: `signatures/${req.file.filename}`,
         originalFilename: req.file.originalname,
         fileType: req.file.mimetype,
         fileSize: req.file.size,
@@ -418,7 +418,7 @@ export function registerSignatureRoutes(appRouter: Router) {
       
       const signatureData = insertSignatureSchema.parse({
         projectId,
-        filename: req.file.filename,
+        filename: `signatures/${req.file.filename}`,
         originalFilename: req.file.originalname,
         fileType: req.file.mimetype,
         fileSize: req.file.size,
