@@ -1164,7 +1164,7 @@ export function registerSignatureRoutes(appRouter: Router) {
       
       // Elimina il file fisico se esiste
       try {
-        const filePath = path.join(process.cwd(), 'uploads', 'signatures', signature.filename);
+        const filePath = path.join(process.cwd(), 'uploads', signature.filename);
         await fs.unlink(filePath);
         console.log(`[DELETE SIGNATURE] File fisico eliminato: ${filePath}`);
       } catch (fileError) {
@@ -1194,7 +1194,7 @@ async function processSignatureParameters(signatureId: number): Promise<void> {
       throw new Error('Firma non trovata');
     }
     
-    const filePath = path.join(process.cwd(), 'uploads', 'signatures', signature.filename);
+    const filePath = path.join(process.cwd(), 'uploads', signature.filename);
     
     // Verifica che il file esista
     try {
