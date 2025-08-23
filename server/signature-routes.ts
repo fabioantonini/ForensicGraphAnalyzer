@@ -713,6 +713,37 @@ export function registerSignatureRoutes(appRouter: Router) {
         doc.fontSize(14).text('PARAMETRI ANALIZZATI', { underline: true });
         doc.moveDown(0.5);
         
+        // Estrai dimensioni prima di usarle
+        let sigWidth = 0, sigHeight = 0, refWidth = 0, refHeight = 0;
+        
+        // Estrai dimensioni firma in verifica - USA SEMPRE QUELLE REALI DAL DATABASE
+        if (signature.realWidthMm && signature.realHeightMm) {
+          sigWidth = signature.realWidthMm;
+          sigHeight = signature.realHeightMm;
+        } else if (signatureParams.Dimensions) {
+          if (Array.isArray(signatureParams.Dimensions)) {
+            sigWidth = signatureParams.Dimensions[0] || 0;
+            sigHeight = signatureParams.Dimensions[1] || 0;
+          } else if (typeof signatureParams.Dimensions === 'object') {
+            sigWidth = signatureParams.Dimensions.width || 0;
+            sigHeight = signatureParams.Dimensions.height || 0;
+          }
+        }
+        
+        // Estrai dimensioni firma di riferimento - USA SEMPRE QUELLE REALI DAL DATABASE
+        if (referenceSignature?.realWidthMm && referenceSignature?.realHeightMm) {
+          refWidth = referenceSignature.realWidthMm;
+          refHeight = referenceSignature.realHeightMm;
+        } else if (referenceParams.Dimensions) {
+          if (Array.isArray(referenceParams.Dimensions)) {
+            refWidth = referenceParams.Dimensions[0] || 0;
+            refHeight = referenceParams.Dimensions[1] || 0;
+          } else if (typeof referenceParams.Dimensions === 'object') {
+            refWidth = referenceParams.Dimensions.width || 0;
+            refHeight = referenceParams.Dimensions.height || 0;
+          }
+        }
+        
         // FIRMA IN VERIFICA
         doc.fontSize(12).text('FIRMA IN VERIFICA:', { underline: true });
         doc.moveDown(0.3);
@@ -841,42 +872,7 @@ export function registerSignatureRoutes(appRouter: Router) {
         
         // CONFRONTO PARAMETRI PYTHON COMPLETO
         
-        // 1. Confronto Dimensioni (gestisce formati diversi)
-        let sigWidth = 0, sigHeight = 0, refWidth = 0, refHeight = 0;
-        
-        // Estrai dimensioni firma in verifica - USA SEMPRE QUELLE REALI DAL DATABASE
-        if (signature.realWidthMm && signature.realHeightMm) {
-          // Usa le dimensioni reali inserite dall'utente (dal database)
-          sigWidth = signature.realWidthMm;
-          sigHeight = signature.realHeightMm;
-        } else if (signatureParams.Dimensions) {
-          if (Array.isArray(signatureParams.Dimensions)) {
-            // Formato array [width, height]
-            sigWidth = signatureParams.Dimensions[0] || 0;
-            sigHeight = signatureParams.Dimensions[1] || 0;
-          } else if (typeof signatureParams.Dimensions === 'object') {
-            // Formato oggetto {width: x, height: y}
-            sigWidth = signatureParams.Dimensions.width || 0;
-            sigHeight = signatureParams.Dimensions.height || 0;
-          }
-        }
-        
-        // Estrai dimensioni firma di riferimento - USA SEMPRE QUELLE REALI DAL DATABASE
-        if (referenceSignature?.realWidthMm && referenceSignature?.realHeightMm) {
-          // Usa le dimensioni reali inserite dall'utente (dal database)
-          refWidth = referenceSignature.realWidthMm;
-          refHeight = referenceSignature.realHeightMm;
-        } else if (referenceParams.Dimensions) {
-          if (Array.isArray(referenceParams.Dimensions)) {
-            // Formato array [width, height]
-            refWidth = referenceParams.Dimensions[0] || 0;
-            refHeight = referenceParams.Dimensions[1] || 0;
-          } else if (typeof referenceParams.Dimensions === 'object') {
-            // Formato oggetto {width: x, height: y}
-            refWidth = referenceParams.Dimensions.width || 0;
-            refHeight = referenceParams.Dimensions.height || 0;
-          }
-        }
+        // 1. Confronto Dimensioni (già estratte sopra)
         
         // Solo se abbiamo dimensioni valide per entrambe
         if (sigWidth > 0 && sigHeight > 0 && refWidth > 0 && refHeight > 0) {
