@@ -374,6 +374,22 @@
       "comparisonChart": "Comparison Chart:",
       "refreshStatus": "Refresh Status"
     },
+    "compareAll": "Compare All",
+    "generateReports": "Generate PDF Report",
+    "analysisMethodology": "Analysis Methodology",
+    "completed": "Completed",
+    "signaturesToVerify": "Signatures to verify",
+    "similarityScore": "Similarity score",
+    "probablyAuthentic": "Probably authentic",
+    "status": {
+      "completed": "Completed"
+    },
+    "verification": {
+      "similarityScore": "Similarity score"
+    },
+    "methodology": {
+      "title": "Analysis Methodology"
+    },
     "comparisonTable": {
       "title": "Detailed Parameter Comparison",
       "parameter": "Parameter",

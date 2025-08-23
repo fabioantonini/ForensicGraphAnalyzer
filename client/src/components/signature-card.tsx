@@ -83,7 +83,7 @@ export function SignatureCard({
   const getStatusTranslation = () => {
     switch (signature.processingStatus) {
       case 'completed':
-        return t('signatures.status.completed', 'Completato');
+        return t('signatures.completed');
       case 'failed':
         return t('signatures.status.failed', 'Fallito');
       case 'pending':
@@ -115,7 +115,7 @@ export function SignatureCard({
     return (
       <div className="mt-2">
         <p className="text-sm font-medium">
-          {t('signatures.verification.similarityScore', 'Punteggio di somiglianza')}: {(score * 100).toFixed(1)}%
+          {t('signatures.similarityScore')}: {(score * 100).toFixed(1)}%
         </p>
         <Progress value={score * 100} className="h-2 mt-1" />
         <Badge className={`mt-2 ${color}`}>{t(textKey, defaultText)}</Badge>
@@ -246,7 +246,7 @@ export function SignatureCard({
               {signature.comparisonResult !== null && (
                 <div className="bg-muted rounded p-4">
                   <h3 className="font-medium text-lg mb-2">
-                    {t('signatures.verification.similarityScore', 'Punteggio di somiglianza')}: {(signature.comparisonResult * 100).toFixed(1)}%
+                    {t('signatures.similarityScore')}: {(signature.comparisonResult * 100).toFixed(1)}%
                   </h3>
                   <Progress value={signature.comparisonResult * 100} className="h-3" />
                 </div>
@@ -281,7 +281,7 @@ export function SignatureCard({
               {/* Metodologia di analisi */}
               <div className="bg-muted rounded p-4 border-l-4 border-primary">
                 <h3 className="font-medium text-lg mb-2">
-                  {t('signatures.methodology.title', 'Metodologia di analisi')}
+                  {t('signatures.analysisMethodology')}
                 </h3>
                 <div className="text-sm space-y-3">
                   <p>

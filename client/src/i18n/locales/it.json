@@ -375,6 +375,22 @@
       "comparisonChart": "Grafico di Confronto:",
       "refreshStatus": "Aggiorna Status"
     },
+    "compareAll": "Confronta Tutte",
+    "generateReports": "Genera Report PDF",
+    "analysisMethodology": "Metodologia di analisi",
+    "completed": "Completato",
+    "signaturesToVerify": "Firme da verificare",
+    "similarityScore": "Punteggio di somiglianza",
+    "probablyAuthentic": "Probabilmente autentica",
+    "status": {
+      "completed": "Completato"
+    },
+    "verification": {
+      "similarityScore": "Punteggio di somiglianza"
+    },
+    "methodology": {
+      "title": "Metodologia di analisi"
+    },
     "uploadFirstVerify": "Carica prima firma da verificare",
     "compareAll": "Confronta Tutte",
     "comparisonTable": {

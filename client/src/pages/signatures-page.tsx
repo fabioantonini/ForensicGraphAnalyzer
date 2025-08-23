@@ -941,7 +941,7 @@ export default function SignaturesPage() {
                   disabled={generateAllReports.isPending}
                 >
                   {generateAllReports.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {t('signatures.generateAllReports', 'Genera Report PDF')}
+                  {t('signatures.generateReports')}
                 </Button>
                 <HelpTooltip 
                   content=""
