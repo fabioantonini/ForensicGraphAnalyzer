@@ -955,19 +955,19 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
             else:
                 return 1.0  # Entrambi zero = perfetta compatibilità
         
-        # Lista parametri chiave per il calcolo pesato
+        # Lista parametri chiave per il calcolo pesato - privilegia parametri più stabili
         key_parameters = [
-            ('AspectRatio', 0.15),      # 15% - proporzioni
-            ('StrokeWidth', 0.10),      # 10% - spessore tratti  
-            ('PressureMean', 0.10),     # 10% - pressione media
-            ('Inclination', 0.10),      # 10% - inclinazione
-            ('Curvature', 0.08),        # 8%  - curvatura
-            ('Velocity', 0.08),         # 8%  - velocità
-            ('AvgAsolaSize', 0.06),     # 6%  - dimensione asole
+            ('PressureMean', 0.20),     # 20% - pressione media (molto stabile)
+            ('Curvature', 0.18),        # 18% - curvatura (caratteristica distintiva)
+            ('AspectRatio', 0.12),      # 12% - proporzioni (meno peso di prima)
+            ('Velocity', 0.10),         # 10% - velocità 
+            ('StrokeWidth', 0.08),      # 8%  - spessore tratti
+            ('AvgAsolaSize', 0.08),     # 8%  - dimensione asole (aumentato)
             ('AvgSpacing', 0.06),       # 6%  - spaziatura
-            ('BaselineStdMm', 0.05),    # 5%  - deviazione baseline
+            ('Inclination', 0.05),      # 5%  - inclinazione (ridotto, troppo variabile)
             ('OverlapRatio', 0.05),     # 5%  - sovrapposizioni
             ('LetterConnections', 0.05), # 5%  - connessioni
+            ('BaselineStdMm', 0.03),    # 3%  - baseline (ridotto, molto variabile)
         ]
         
         # Calcola punteggio parametri pesato
@@ -989,8 +989,8 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
         else:
             parameters_score = 0.5  # Fallback se nessun parametro disponibile
             
-        # Combina SSIM (40%) + Parametri (60%) per punteggio finale
-        final_similarity = (similarity * 0.4) + (parameters_score * 0.6)
+        # Combina SSIM (60%) + Parametri (40%) per punteggio finale - più peso all'analisi visuale
+        final_similarity = (similarity * 0.6) + (parameters_score * 0.4)
         
         print(f"DEBUG SCORING - SSIM: {similarity:.3f}, Parameters: {parameters_score:.3f}, Final: {final_similarity:.3f}", file=sys.stderr)
 
