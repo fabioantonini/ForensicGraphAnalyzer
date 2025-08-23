@@ -1234,14 +1234,6 @@ export default function SignaturesPage() {
                     </Badge>
                   </div>
                   
-                  {signature.analysisReport && (
-                    <div className="bg-muted p-2 rounded text-sm mt-2">
-                      <h5 className="font-medium mb-1">Analisi Dettagliata:</h5>
-                      <pre className="whitespace-pre-wrap text-xs font-mono">
-                        {signature.analysisReport}
-                      </pre>
-                    </div>
-                  )}
                   
                   {signature.comparisonChart && (
                     <div className="mt-2">

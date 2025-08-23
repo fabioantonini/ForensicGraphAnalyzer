@@ -406,17 +406,6 @@ export function SignatureCard({
                 </div>
               )}
               
-              {/* Visualizza il report di analisi se disponibile */}
-              {signature.analysisReport && (
-                <div>
-                  <h3 className="font-medium mb-2 text-lg">{t('signatures.analysisReport.technicalDescription', 'Descrizione tecnica')}</h3>
-                  <ScrollArea className="max-h-[400px] h-auto rounded bg-muted p-4 border border-border">
-                    <div className="whitespace-pre-line text-sm">
-                      {signature.analysisReport}
-                    </div>
-                  </ScrollArea>
-                </div>
-              )}
               
               {/* Visualizzazione dettagliata dei parametri di confronto */}
               {signature.parameters && (
