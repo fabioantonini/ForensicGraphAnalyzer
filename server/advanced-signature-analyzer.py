@@ -1164,60 +1164,6 @@ def compare_signatures_deprecated(verifica_path, comp_path, generate_report=Fals
     """
     print(f"ATTENZIONE: Uso di funzione deprecata che usa DPI. Utilizzare sempre dimensioni reali.", file=sys.stderr)
     return {"error": "Funzione deprecata - utilizzare sempre dimensioni reali invece di DPI"}
-        
-        # Analizza le firme
-        verifica_data = analyze_signature(verifica_path, dpi)
-        comp_data = analyze_signature(comp_path, dpi)
-        
-        if not verifica_data or not comp_data:
-            raise ValueError("Errore nell'analisi di una o entrambe le firme")
-        
-        # Crea il grafico di confronto
-        chart_img = create_comparison_chart(verifica_data, comp_data)
-        
-        # Crea il report descrittivo
-        description = create_descriptive_report(verifica_data, comp_data)
-        
-        # Genera il report se richiesto
-        report_path = None
-        if generate_report:
-            output_dir = tempfile.mkdtemp()
-            report_path_base = os.path.join(output_dir, f"report_firma_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
-            report_pdf_path = f"{report_path_base}.pdf"
-            try:
-                # Genera il report PDF
-                # Se l'ID del progetto è presente, lo includiamo nel nome del file
-                if project_id is not None:
-                    # Aggiorniamo il nome del file per includere l'ID del progetto
-                    output_dir = os.path.dirname(report_pdf_path)
-                    report_filename = f"report_firma_project_{project_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-                    report_pdf_path = os.path.join(output_dir, report_filename)
-                    print(f"Report path aggiornato con project_id={project_id}: {report_pdf_path}", file=sys.stderr)
-                
-                # Passiamo l'ID del progetto alla funzione di generazione del report
-                report_path = generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, similarity, report_pdf_path, case_info, project_id)
-                # Nessun output qui per evitare problemi con JSON
-            except Exception as e:
-                print(f"Errore nella generazione del report: {str(e)}", file=sys.stderr)
-        
-        # Prepara il risultato
-        result = {
-            "similarity": similarity,
-            "verdict": "Alta probabilità di autenticità" if similarity >= 0.8 else 
-                      "Sospetta" if similarity >= 0.6 else 
-                      "Bassa probabilità di autenticità",
-            "verifica_parameters": verifica_data,
-            "reference_parameters": comp_data,
-            "comparison_chart": chart_img,
-            "description": description,
-            "report_path": report_path if report_path else None
-        }
-        
-        return result
-    
-    except Exception as e:
-        print(f"Errore durante il confronto delle firme: {str(e)}", file=sys.stderr)
-        return {"error": str(e)}
 
 def adapt_parameters_for_json(params):
     """
