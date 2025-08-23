@@ -1419,11 +1419,16 @@ async function processSignatureParameters(signatureId: number): Promise<void> {
       console.warn(`[AUTO-CROP] Errore durante ritaglio automatico (continuo con originale):`, cropError);
     }
     
-    // Usa l'analizzatore Python per elaborare i parametri
+    // Verifica che le dimensioni reali siano presenti - OBBLIGATORIE
+    if (!signature.realWidthMm || !signature.realHeightMm || signature.realWidthMm <= 0 || signature.realHeightMm <= 0) {
+      throw new Error(`Firma ${signatureId} non ha dimensioni reali valide: ${signature.realWidthMm}x${signature.realHeightMm}mm`);
+    }
+    
+    // Usa l'analizzatore Python per elaborare i parametri con dimensioni reali
     const parameters = await SignaturePythonAnalyzer.analyzeSignature(
       originalFilePath, // Usa sempre il file originale (eventualmente sostituito)
-      signature.realWidthMm || 50, 
-      signature.realHeightMm || 20
+      signature.realWidthMm, 
+      signature.realHeightMm
     );
     
     // Aggiorna la firma con i parametri elaborati e imposta lo stato come completato
