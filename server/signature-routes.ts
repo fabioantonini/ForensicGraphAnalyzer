@@ -720,11 +720,11 @@ export function registerSignatureRoutes(appRouter: Router) {
         // 1. Confronto Dimensioni (gestisce formati diversi)
         let sigWidth = 0, sigHeight = 0, refWidth = 0, refHeight = 0;
         
-        // Estrai dimensioni firma in verifica (multipli formati supportati)
-        if (signatureParams.real_width_mm !== undefined && signatureParams.real_height_mm !== undefined) {
-          // Formato diretto con real_width_mm, real_height_mm
-          sigWidth = signatureParams.real_width_mm;
-          sigHeight = signatureParams.real_height_mm;
+        // Estrai dimensioni firma in verifica - USA SEMPRE QUELLE REALI DAL DATABASE
+        if (signature.realWidthMm && signature.realHeightMm) {
+          // Usa le dimensioni reali inserite dall'utente (dal database)
+          sigWidth = signature.realWidthMm;
+          sigHeight = signature.realHeightMm;
         } else if (signatureParams.Dimensions) {
           if (Array.isArray(signatureParams.Dimensions)) {
             // Formato array [width, height]
@@ -737,11 +737,11 @@ export function registerSignatureRoutes(appRouter: Router) {
           }
         }
         
-        // Estrai dimensioni firma di riferimento (multipli formati supportati)
-        if (referenceParams.real_width_mm !== undefined && referenceParams.real_height_mm !== undefined) {
-          // Formato diretto con real_width_mm, real_height_mm
-          refWidth = referenceParams.real_width_mm;
-          refHeight = referenceParams.real_height_mm;
+        // Estrai dimensioni firma di riferimento - USA SEMPRE QUELLE REALI DAL DATABASE
+        if (referenceSignature?.realWidthMm && referenceSignature?.realHeightMm) {
+          // Usa le dimensioni reali inserite dall'utente (dal database)
+          refWidth = referenceSignature.realWidthMm;
+          refHeight = referenceSignature.realHeightMm;
         } else if (referenceParams.Dimensions) {
           if (Array.isArray(referenceParams.Dimensions)) {
             // Formato array [width, height]

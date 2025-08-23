@@ -562,7 +562,7 @@ def create_descriptive_report(verifica_data, comp_data):
 
     return descrizione
 
-def generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, similarity, output_path, case_info=None, project_id=None):
+def generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, similarity, output_path, case_info=None, project_id=None, verifica_real_dims=None, reference_real_dims=None):
     # Debug info
     print(f"DEBUG_REPORT verifica_path={verifica_path}", file=sys.stderr)
     print(f"DEBUG_REPORT comp_path={comp_path}", file=sys.stderr)
@@ -664,9 +664,18 @@ def generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, simi
         params_list.append(Paragraph(f"<b>{title}:</b>", bold_style))
         params_list.append(Spacer(1, 3))
         
-        # Calcola dimensioni in pixel da dimensioni reali e pixels_per_mm
-        width_mm = data.get('real_width_mm', data.get('Dimensions', (0, 0))[0] if isinstance(data.get('Dimensions'), tuple) else 0)
-        height_mm = data.get('real_height_mm', data.get('Dimensions', (0, 0))[1] if isinstance(data.get('Dimensions'), tuple) else 0)
+        # Usa le dimensioni reali passate come parametri invece di quelle calcolate
+        if title == "FIRMA IN VERIFICA" and verifica_real_dims:
+            width_mm = verifica_real_dims[0]
+            height_mm = verifica_real_dims[1]
+        elif title == "FIRMA DI RIFERIMENTO" and reference_real_dims:
+            width_mm = reference_real_dims[0]
+            height_mm = reference_real_dims[1]
+        else:
+            # Fallback alle dimensioni calcolate se non disponibili
+            width_mm = data.get('real_width_mm', data.get('Dimensions', (0, 0))[0] if isinstance(data.get('Dimensions'), tuple) else 0)
+            height_mm = data.get('real_height_mm', data.get('Dimensions', (0, 0))[1] if isinstance(data.get('Dimensions'), tuple) else 0)
+        
         pixels_per_mm = data.get('pixels_per_mm', 1)
         width_px = int(width_mm * pixels_per_mm) if width_mm and pixels_per_mm else 0
         height_px = int(height_mm * pixels_per_mm) if height_mm and pixels_per_mm else 0
@@ -914,8 +923,8 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
                     report_pdf_path = os.path.join(output_dir, report_filename)
                     print(f"Report path aggiornato con project_id={project_id}: {report_pdf_path}", file=sys.stderr)
                 
-                # Passiamo l'ID del progetto alla funzione di generazione del report
-                report_path = generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, similarity, report_pdf_path, case_info, project_id)
+                # Passiamo l'ID del progetto e le dimensioni reali alla funzione di generazione del report
+                report_path = generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, similarity, report_pdf_path, case_info, project_id, verifica_dims, reference_dims)
                 # Nessun output qui per evitare problemi con JSON
             except Exception as e:
                 print(f"Errore nella generazione del report: {str(e)}", file=sys.stderr)
