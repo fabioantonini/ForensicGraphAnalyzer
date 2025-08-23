@@ -362,6 +362,18 @@
     "dpiRange": "DPI Value (72-1200)",
     "dpiUpdated": "DPI updated successfully",
     "dpiUpdateFailed": "DPI update failed",
+    "comparisonDialog": {
+      "title": "Signature Comparison Results - Forensic Analysis",
+      "subtitle": "Analysis completed using 16+ advanced parameters for graphological comparison",
+      "analysisSummary": "Analysis Summary",
+      "signaturesAnalyzed": "Signatures analyzed",
+      "authentic": "Authentic (≥85%)",
+      "probablyAuthentic": "Prob. Authentic (65-84%)",
+      "suspicious": "Suspicious (<65%)",
+      "similarity": "Similarity:",
+      "comparisonChart": "Comparison Chart:",
+      "refreshStatus": "Refresh Status"
+    },
     "comparisonTable": {
       "title": "Detailed Parameter Comparison",
       "parameter": "Parameter",

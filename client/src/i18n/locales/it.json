@@ -363,6 +363,18 @@
     "dpiRange": "Valore DPI (72-1200)",
     "dpiUpdated": "DPI aggiornato con successo",
     "dpiUpdateFailed": "Aggiornamento DPI fallito",
+    "comparisonDialog": {
+      "title": "Risultati Confronto Firme - Analisi Forense",
+      "subtitle": "Analisi completata utilizzando 16+ parametri avanzati per il confronto grafologico",
+      "analysisSummary": "Riepilogo Analisi",
+      "signaturesAnalyzed": "Firme analizzate",
+      "authentic": "Autentiche (≥85%)",
+      "probablyAuthentic": "Prob. Autentiche (65-84%)",
+      "suspicious": "Sospette (<65%)",
+      "similarity": "Similarità:",
+      "comparisonChart": "Grafico di Confronto:",
+      "refreshStatus": "Aggiorna Status"
+    },
     "uploadFirstVerify": "Carica prima firma da verificare",
     "compareAll": "Confronta Tutte",
     "comparisonTable": {

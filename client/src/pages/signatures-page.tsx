@@ -914,7 +914,7 @@ export default function SignaturesPage() {
                   size="sm"
                 >
                   <RefreshCw className="h-4 w-4 mr-2" />
-                  Aggiorna Status
+                  {t('signatures.comparisonDialog.refreshStatus')}
                 </Button>
                 <Button 
                   variant="default"
@@ -1109,9 +1109,9 @@ export default function SignaturesPage() {
         <DialogContent className="max-w-full max-h-full w-screen h-screen flex flex-col p-0 m-0">
           <DialogHeader className="px-6 pt-4 pb-2 border-b bg-background">
             <div>
-              <DialogTitle>Risultati Confronto Firme - Analisi Forense</DialogTitle>
+              <DialogTitle>{t('signatures.comparisonDialog.title')}</DialogTitle>
               <DialogDescription>
-                Analisi completata utilizzando 16+ parametri avanzati per il confronto grafologico
+                {t('signatures.comparisonDialog.subtitle')}
               </DialogDescription>
             </div>
           </DialogHeader>
@@ -1121,31 +1121,31 @@ export default function SignaturesPage() {
               {/* Statistiche generali */}
               {comparisonResults && comparisonResults.length > 0 && (
                 <div className="bg-muted/30 rounded-lg p-3 mb-3">
-                  <h3 className="font-medium mb-2">Riepilogo Analisi</h3>
+                  <h3 className="font-medium mb-2">{t('signatures.comparisonDialog.analysisSummary')}</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div className="text-center">
                       <div className="text-lg font-semibold text-primary">
                         {comparisonResults.filter(s => !s.isReference).length}
                       </div>
-                      <div className="text-muted-foreground">Firme analizzate</div>
+                      <div className="text-muted-foreground">{t('signatures.comparisonDialog.signaturesAnalyzed')}</div>
                     </div>
                     <div className="text-center">
                       <div className="text-lg font-semibold text-green-600">
                         {comparisonResults.filter(s => !s.isReference && (s.comparisonResult ?? 0) >= 0.85).length}
                       </div>
-                      <div className="text-muted-foreground">Autentiche (≥85%)</div>
+                      <div className="text-muted-foreground">{t('signatures.comparisonDialog.authentic')}</div>
                     </div>
                     <div className="text-center">
                       <div className="text-lg font-semibold text-yellow-600">
                         {comparisonResults.filter(s => !s.isReference && (s.comparisonResult ?? 0) >= 0.65 && (s.comparisonResult ?? 0) < 0.85).length}
                       </div>
-                      <div className="text-muted-foreground">Prob. Autentiche (65-84%)</div>
+                      <div className="text-muted-foreground">{t('signatures.comparisonDialog.probablyAuthentic')}</div>
                     </div>
                     <div className="text-center">
                       <div className="text-lg font-semibold text-red-600">
                         {comparisonResults.filter(s => !s.isReference && (s.comparisonResult ?? 0) < 0.65).length}
                       </div>
-                      <div className="text-muted-foreground">Sospette (&lt;65%)</div>
+                      <div className="text-muted-foreground">{t('signatures.comparisonDialog.suspicious')}</div>
                     </div>
                   </div>
                 </div>
@@ -1162,7 +1162,7 @@ export default function SignaturesPage() {
                           <div className="mt-2 space-y-2">
                             <div className="flex items-center gap-4">
                               <p className="text-sm text-muted-foreground">
-                                <strong>Similarità:</strong> {signature.comparisonResult ? (signature.comparisonResult * 100).toFixed(1) : '0'}%
+                                <strong>{t('signatures.comparisonDialog.similarity')}</strong> {signature.comparisonResult ? (signature.comparisonResult * 100).toFixed(1) : '0'}%
                               </p>
                               {signature.parameters?.realDimensions && (
                                 <p className="text-sm text-muted-foreground">
@@ -1311,7 +1311,7 @@ export default function SignaturesPage() {
                   
                   {signature.comparisonChart && (
                     <div className="mt-2">
-                      <h5 className="font-medium mb-1">Grafico di Confronto:</h5>
+                      <h5 className="font-medium mb-1">{t('signatures.comparisonDialog.comparisonChart')}</h5>
                       <div className="border rounded p-2 bg-white">
                         <img 
                           src={`data:image/png;base64,${signature.comparisonChart}`} 
