@@ -1263,10 +1263,31 @@ export default function SignaturesPage() {
                                         const verifyValue = reportData[param.key];
                                         if (refValue === undefined || verifyValue === undefined) return null;
                                         
-                                        // Calcola compatibilità come percentuale (100% - differenza percentuale)
+                                        // Calcola compatibilità con logica migliorata per valori piccoli
                                         const diff = Math.abs(refValue - verifyValue);
                                         const maxValue = Math.max(Math.abs(refValue), Math.abs(verifyValue));
-                                        const compatibility = maxValue > 0 ? Math.max(0, 100 - (diff / maxValue * 100)) : 100;
+                                        
+                                        let compatibility;
+                                        // Per parametri con valori molto piccoli (es. asole), usa soglie assolute
+                                        if (param.key === 'AvgAsolaSize' || param.key === 'BaselineStdMm') {
+                                          if (diff <= 0.05) compatibility = 95; // Entrambi molto piccoli = alta compatibilità
+                                          else if (diff <= 0.1) compatibility = 80;
+                                          else if (diff <= 0.2) compatibility = 60;
+                                          else compatibility = Math.max(0, 100 - (diff * 200)); // Scala lineare per diff > 0.2
+                                        }
+                                        // Per altri parametri, usa logica relativa migliorata
+                                        else {
+                                          if (maxValue > 0) {
+                                            const relativeDiff = diff / maxValue;
+                                            // Soglia di tolleranza per evitare 0% su piccole differenze
+                                            if (relativeDiff <= 0.05) compatibility = 98;
+                                            else if (relativeDiff <= 0.1) compatibility = 90;
+                                            else if (relativeDiff <= 0.15) compatibility = 80;
+                                            else compatibility = Math.max(0, 100 - (relativeDiff * 100));
+                                          } else {
+                                            compatibility = 100; // Entrambi zero
+                                          }
+                                        }
                                         
                                         return (
                                           <tr key={param.key} className="border-b">
