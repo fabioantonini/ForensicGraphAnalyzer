@@ -1062,8 +1062,8 @@ def analyze_signature_with_dimensions(image_path, real_width_mm, real_height_mm)
         
         # Costruisci il risultato con i parametri calibrati alle dimensioni reali
         result = {
-            'real_width_mm': actual_width_mm,
-            'real_height_mm': actual_height_mm,
+            'real_width_mm': real_width_mm,
+            'real_height_mm': real_height_mm,
             'pixels_per_mm': pixels_per_mm,
             'Proportion': proportion,
             'Inclination': inclination,
