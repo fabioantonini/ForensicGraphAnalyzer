@@ -1055,7 +1055,7 @@ export function registerSignatureRoutes(appRouter: Router) {
         if (signatureParams?.PressureMean !== undefined && referenceParams?.PressureMean !== undefined) {
           const sigPress = signatureParams.PressureMean;
           const refPress = referenceParams.PressureMean;
-          doc.text(`Pressione: ${Math.abs(sigPress - refPress) < refPress * 0.3 ? 'La pressione uniforme tra le due firme indica stabilità del controllo motorio e coerenza emotiva.' : 'La pressione differente potrebbe indicare un controllo motorio variabile o un diverso stato emotivo al momento della firma.'}`, { align: 'justify' });
+          doc.text(`Intensità dell'Inchiostro: ${Math.abs(sigPress - refPress) < refPress * 0.3 ? 'L\'intensità uniforme dell\'inchiostro tra le due firme indica stabilità nel controllo della pressione di scrittura e coerenza nell\'uso dello strumento.' : 'L\'intensità dell\'inchiostro differente potrebbe indicare una variazione nella pressione applicata, nel tipo di penna utilizzata o nelle condizioni di scrittura.'}`, { align: 'justify' });
           doc.moveDown(0.3);
         }
         
