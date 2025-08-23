@@ -929,11 +929,76 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
             except Exception as e:
                 print(f"Errore nella generazione del report: {str(e)}", file=sys.stderr)
         
-        # Prepara il risultato
+        # Calcola il punteggio finale pesato combinando SSIM e parametri graphologici
+        def calculate_parameter_compatibility(ref_val, ver_val, param_name):
+            """Calcola compatibilità di un singolo parametro con logica migliorata"""
+            if ref_val is None or ver_val is None:
+                return 0.5  # Compatibilità neutra se mancano dati
+                
+            diff = abs(ref_val - ver_val)
+            max_val = max(abs(ref_val), abs(ver_val))
+            
+            # Per parametri con valori molto piccoli (asole, baseline), usa soglie assolute
+            if param_name in ['AvgAsolaSize', 'BaselineStdMm']:
+                if diff <= 0.05: return 0.95
+                elif diff <= 0.1: return 0.80
+                elif diff <= 0.2: return 0.60
+                else: return max(0, 1 - (diff * 2))  # Scala lineare
+            
+            # Per altri parametri, usa logica relativa migliorata
+            if max_val > 0:
+                relative_diff = diff / max_val
+                if relative_diff <= 0.05: return 0.98
+                elif relative_diff <= 0.1: return 0.90
+                elif relative_diff <= 0.15: return 0.80
+                else: return max(0, 1 - relative_diff)
+            else:
+                return 1.0  # Entrambi zero = perfetta compatibilità
+        
+        # Lista parametri chiave per il calcolo pesato
+        key_parameters = [
+            ('AspectRatio', 0.15),      # 15% - proporzioni
+            ('StrokeWidth', 0.10),      # 10% - spessore tratti  
+            ('PressureMean', 0.10),     # 10% - pressione media
+            ('Inclination', 0.10),      # 10% - inclinazione
+            ('Curvature', 0.08),        # 8%  - curvatura
+            ('Velocity', 0.08),         # 8%  - velocità
+            ('AvgAsolaSize', 0.06),     # 6%  - dimensione asole
+            ('AvgSpacing', 0.06),       # 6%  - spaziatura
+            ('BaselineStdMm', 0.05),    # 5%  - deviazione baseline
+            ('OverlapRatio', 0.05),     # 5%  - sovrapposizioni
+            ('LetterConnections', 0.05), # 5%  - connessioni
+        ]
+        
+        # Calcola punteggio parametri pesato
+        total_weight = 0
+        weighted_score = 0
+        
+        for param_name, weight in key_parameters:
+            ref_val = comp_data.get(param_name)
+            ver_val = verifica_data.get(param_name) 
+            
+            if ref_val is not None and ver_val is not None:
+                compatibility = calculate_parameter_compatibility(ref_val, ver_val, param_name)
+                weighted_score += compatibility * weight
+                total_weight += weight
+        
+        # Normalizza il punteggio parametri
+        if total_weight > 0:
+            parameters_score = weighted_score / total_weight
+        else:
+            parameters_score = 0.5  # Fallback se nessun parametro disponibile
+            
+        # Combina SSIM (40%) + Parametri (60%) per punteggio finale
+        final_similarity = (similarity * 0.4) + (parameters_score * 0.6)
+        
+        print(f"DEBUG SCORING - SSIM: {similarity:.3f}, Parameters: {parameters_score:.3f}, Final: {final_similarity:.3f}", file=sys.stderr)
+
+        # Prepara il risultato  
         result = {
-            "similarity": similarity,
-            "verdict": "Alta probabilità di autenticità" if similarity >= 0.8 else 
-                      "Sospetta" if similarity >= 0.6 else 
+            "similarity": final_similarity,  # Nuovo punteggio combinato!
+            "verdict": "Alta probabilità di autenticità" if final_similarity >= 0.8 else 
+                      "Sospetta" if final_similarity >= 0.6 else 
                       "Bassa probabilità di autenticità",
             "verifica_parameters": verifica_data,
             "reference_parameters": comp_data,
