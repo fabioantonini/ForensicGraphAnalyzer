@@ -654,6 +654,63 @@ def generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, simi
     elements.append(ReportlabImage(comp_path, width=img_width, height=img_height))
     elements.append(Spacer(1, 12))
     
+    # PARAMETRI ANALIZZATI - Sezione dettagliata
+    elements.append(Paragraph("PARAMETRI ANALIZZATI", heading1_style))
+    elements.append(Spacer(1, 6))
+    
+    # Funzione helper per formatttare i parametri
+    def format_parameter_list(data, title):
+        params_list = []
+        params_list.append(Paragraph(f"<b>{title}:</b>", bold_style))
+        params_list.append(Spacer(1, 3))
+        
+        # Calcola dimensioni in pixel da dimensioni reali e pixels_per_mm
+        width_mm = data.get('real_width_mm', data.get('Dimensions', (0, 0))[0] if isinstance(data.get('Dimensions'), tuple) else 0)
+        height_mm = data.get('real_height_mm', data.get('Dimensions', (0, 0))[1] if isinstance(data.get('Dimensions'), tuple) else 0)
+        pixels_per_mm = data.get('pixels_per_mm', 1)
+        width_px = int(width_mm * pixels_per_mm) if width_mm and pixels_per_mm else 0
+        height_px = int(height_mm * pixels_per_mm) if height_mm and pixels_per_mm else 0
+        
+        # Lista parametri formattata
+        param_lines = [
+            f"• Dimensioni: {width_px}x{height_px} px",
+            f"• Dimensioni reali: {width_mm:.1f}x{height_mm:.1f} mm",
+            f"• Spessore tratto medio: {data.get('PressureMean', 0):.3f} mm",
+            f"• Varianza spessore: {data.get('PressureStd', 0):.2f}",
+            f"• Proporzione: {data.get('Proportion', 0):.3f}",
+            f"• Inclinazione: {data.get('Inclination', 0):.1f}°",
+            f"• Deviazione pressione: {data.get('PressureStd', 0):.1f}",
+            f"• Curvatura media: {data.get('AvgCurvature', 0):.3f}",
+            f"• Velocità scrittura: {data.get('Velocity', 0):.1f}/5",
+            f"• Stile scrittura: {data.get('WritingStyle', 'N/D')}",
+            f"• Leggibilità: {data.get('Readability', 'N/D')}",
+            f"• Dimensione asole medie: {data.get('AvgAsolaSize', 0):.2f} mm²",
+            f"• Spaziatura media: {data.get('AvgSpacing', 0):.2f} mm",
+            f"• Rapporto sovrapposizione: {data.get('OverlapRatio', 0)*100:.1f}%",
+            f"• Connessioni lettere: {data.get('LetterConnections', 0):.2f}",
+            f"• Deviazione baseline: {data.get('BaselineStdMm', 0):.2f} mm"
+        ]
+        
+        for line in param_lines:
+            params_list.append(Paragraph(line, normal_style))
+            params_list.append(Spacer(1, 2))
+        
+        return params_list
+    
+    # Aggiungi parametri firma da verificare
+    verifica_params = format_parameter_list(verifica_data, "FIRMA IN VERIFICA")
+    for element in verifica_params:
+        elements.append(element)
+    
+    elements.append(Spacer(1, 6))
+    
+    # Aggiungi parametri firma di riferimento
+    comp_params = format_parameter_list(comp_data, "FIRMA DI RIFERIMENTO")
+    for element in comp_params:
+        elements.append(element)
+        
+    elements.append(Spacer(1, 12))
+    
     # Risultati del confronto
     elements.append(Paragraph("Risultati del confronto", heading1_style))
     elements.append(Spacer(1, 6))
