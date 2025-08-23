@@ -415,7 +415,13 @@
       "velocity": "Velocità (1-5)",
       "spacing": "Spaziatura (mm)",
       "loopSize": "Dim. Asole (mm)",
-      "baselineDev": "Dev. Baseline (mm)"
+      "overlapRatio": "Rapporto Sovrap.",
+      "letterConnections": "Connessioni",
+      "baselineDev": "Dev. Baseline (mm)",
+      "strokeComplexity": "Complessità Tratto",
+      "connectedComponents": "Componenti",
+      "writingStyle": "Stile Scrittura",
+      "readability": "Leggibilità"
     },
     "help": {
       "dpiDesc": "Densità di pixel per pollice (DPI) delle immagini di firma. Utilizzato per calcolare le dimensioni reali. I valori comuni sono 300 per scansioni standard, 600 per scansioni ad alta risoluzione.",

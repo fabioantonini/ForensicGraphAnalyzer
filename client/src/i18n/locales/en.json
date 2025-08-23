@@ -412,7 +412,13 @@
       "velocity": "Velocity (1-5)",
       "spacing": "Spacing (mm)",
       "loopSize": "Loop Size (mm)",
-      "baselineDev": "Baseline Dev. (mm)"
+      "overlapRatio": "Overlap Ratio",
+      "letterConnections": "Letter Connections",
+      "baselineDev": "Baseline Dev. (mm)",
+      "strokeComplexity": "Stroke Complexity",
+      "connectedComponents": "Components",
+      "writingStyle": "Writing Style",
+      "readability": "Readability"
     },
     "help": {
       "dpiDesc": "Dots per inch (DPI) of signature images. Used to calculate real-world dimensions. Common values are 300 for standard scans, 600 for high-resolution scans.",

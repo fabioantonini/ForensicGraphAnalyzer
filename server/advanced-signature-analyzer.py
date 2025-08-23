@@ -974,8 +974,8 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
         
         # Lista parametri chiave per il calcolo pesato - usa TUTTI i parametri disponibili
         key_parameters = [
-            ('PressureMean', 0.18),     # 18% - pressione media (molto stabile)
-            ('AvgCurvature', 0.16),     # 16% - curvatura (caratteristica distintiva) 
+            ('PressureMean', 0.16),     # 16% - pressione media (molto stabile)
+            ('AvgCurvature', 0.14),     # 14% - curvatura (caratteristica distintiva) 
             ('Proportion', 0.12),       # 12% - proporzioni (aspect ratio)
             ('Velocity', 0.10),         # 10% - velocità 
             ('PressureStd', 0.08),      # 8%  - variazione pressione (importante!)
@@ -985,8 +985,10 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
             ('OverlapRatio', 0.05),     # 5%  - sovrapposizioni
             ('LetterConnections', 0.05), # 5%  - connessioni
             ('BaselineStdMm', 0.04),    # 4%  - baseline 
-            ('WritingStyle', 0.02),     # 2%  - stile (qualitativo)
-            ('Readability', 0.01),      # 1%  - leggibilità (qualitativo)
+            ('StrokeComplexity', 0.04), # 4%  - complessità del tratto
+            ('ConnectedComponents', 0.02), # 2%  - numero componenti
+            ('WritingStyle', 0.01),     # 1%  - stile (qualitativo)
+            ('Readability', 0.00),      # 0%  - leggibilità (qualitativo, rimosso per spazio)
         ]
         
         # Calcola punteggio parametri pesato
@@ -1144,6 +1146,13 @@ def analyze_signature_with_dimensions(image_path, real_width_mm, real_height_mm)
         baseline_std_px = np.std(baseline_y_positions) if baseline_y_positions else 0
         baseline_std_mm = baseline_std_px / pixels_per_mm_y if pixels_per_mm_y > 0 else 0
         
+        # Calcola la complessità del tratto (stroke complexity)
+        total_contour_points = sum([len(cnt) for cnt in contours])
+        stroke_complexity = total_contour_points / (w * h) if w * h > 0 else 0
+        
+        # Calcola il numero di componenti connesse
+        num_components = len(contours) if contours else 0
+        
         # Costruisci il risultato con i parametri calibrati alle dimensioni reali
         result = {
             'real_width_mm': real_width_mm,
@@ -1162,6 +1171,8 @@ def analyze_signature_with_dimensions(image_path, real_width_mm, real_height_mm)
             'OverlapRatio': overlap_ratio,
             'LetterConnections': letter_connections,
             'BaselineStdMm': baseline_std_mm,  # In mm
+            'StrokeComplexity': stroke_complexity,  # Densità dei punti del contorno
+            'ConnectedComponents': num_components,  # Numero di componenti separate
             'Dimensions': (actual_width_mm, actual_height_mm)
         }
             

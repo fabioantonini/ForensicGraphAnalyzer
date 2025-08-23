@@ -1228,9 +1228,39 @@ export default function SignaturesPage() {
                                 format: (v: number) => v?.toFixed(2) 
                               },
                               { 
+                                key: 'OverlapRatio', 
+                                label: t('signatures.comparisonTable.overlapRatio'), 
+                                format: (v: number) => v?.toFixed(2) 
+                              },
+                              { 
+                                key: 'LetterConnections', 
+                                label: t('signatures.comparisonTable.letterConnections'), 
+                                format: (v: number) => v?.toFixed(0) 
+                              },
+                              { 
                                 key: 'BaselineStdMm', 
                                 label: t('signatures.comparisonTable.baselineDev'), 
                                 format: (v: number) => v?.toFixed(1) 
+                              },
+                              { 
+                                key: 'StrokeComplexity', 
+                                label: t('signatures.comparisonTable.strokeComplexity'), 
+                                format: (v: number) => v?.toFixed(3) 
+                              },
+                              { 
+                                key: 'ConnectedComponents', 
+                                label: t('signatures.comparisonTable.connectedComponents'), 
+                                format: (v: number) => v?.toFixed(0) 
+                              },
+                              { 
+                                key: 'WritingStyle', 
+                                label: t('signatures.comparisonTable.writingStyle'), 
+                                format: (v: string) => v || 'N/A'
+                              },
+                              { 
+                                key: 'Readability', 
+                                label: t('signatures.comparisonTable.readability'), 
+                                format: (v: string) => v || 'N/A'
                               }
                             ];
                             
