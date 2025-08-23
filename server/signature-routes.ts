@@ -251,7 +251,17 @@ export function registerSignatureRoutes(appRouter: Router) {
             
             similarityScore = pythonResult.similarity; // Mantieni come percentuale diretta
             comparisonChart = pythonResult.comparison_chart; // CORRETTO: field name è comparison_chart
-            analysisReport = pythonResult.description; // CORRETTO: field name è description
+            
+            // CORREZIONE: Salva i parametri strutturati JSON invece della sola descrizione testuale
+            // Questo permette al sistema PDF di estrarre tutti i 21+ parametri per l'analisi dettagliata
+            if (pythonResult.verifica_parameters) {
+              analysisReport = JSON.stringify(pythonResult.verifica_parameters);
+              console.log(`[COMPARE-ALL] Salvati parametri JSON strutturati per firma ${signature.id} con ${Object.keys(pythonResult.verifica_parameters).length} parametri`);
+            } else {
+              // Fallback alla descrizione testuale se i parametri non sono disponibili
+              analysisReport = pythonResult.description;
+              console.log(`[COMPARE-ALL] Fallback a descrizione testuale per firma ${signature.id}`);
+            }
             
           } catch (pythonError) {
             console.error(`[COMPARE-ALL] Errore Python analyzer per firma ${signature.id}:`, pythonError);
