@@ -1052,16 +1052,16 @@ export function registerSignatureRoutes(appRouter: Router) {
         doc.moveDown(0.3);
         doc.fontSize(10);
         
-        if (signature.parameters?.pressureMean !== undefined && referenceSignature.parameters?.pressureMean !== undefined) {
-          const sigPress = signature.parameters.pressureMean;
-          const refPress = referenceSignature.parameters.pressureMean;
+        if (signatureParams?.PressureMean !== undefined && referenceParams?.PressureMean !== undefined) {
+          const sigPress = signatureParams.PressureMean;
+          const refPress = referenceParams.PressureMean;
           doc.text(`Pressione: ${Math.abs(sigPress - refPress) < refPress * 0.3 ? 'La pressione uniforme tra le due firme indica stabilità del controllo motorio e coerenza emotiva.' : 'La pressione differente potrebbe indicare un controllo motorio variabile o un diverso stato emotivo al momento della firma.'}`, { align: 'justify' });
           doc.moveDown(0.3);
         }
         
-        if (signature.parameters?.velocity !== undefined && referenceSignature.parameters?.velocity !== undefined) {
-          const sigVel = signature.parameters.velocity;
-          const refVel = referenceSignature.parameters.velocity;
+        if (signatureParams?.Velocity !== undefined && referenceParams?.Velocity !== undefined) {
+          const sigVel = signatureParams.Velocity;
+          const refVel = referenceParams.Velocity;
           doc.text(`Fluidità e Controllo Motorio: ${Math.abs(sigVel - refVel) < refVel * 0.3 ? 'La velocità di scrittura coerente suggerisce un\'esecuzione naturale e fluida.' : 'La variazione nella velocità di scrittura suggerisce un\'esecuzione più controllata o meno fluida rispetto alla firma di riferimento.'}`, { align: 'justify' });
           doc.moveDown(0.3);
         }
