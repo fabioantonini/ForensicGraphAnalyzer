@@ -1174,12 +1174,21 @@ export default function SignaturesPage() {
                         {/* Tabella di confronto parametri dettagliata */}
                         {signature.analysisReport && (() => {
                           try {
+                            console.log('DEBUG: analysisReport exists for signature', signature.id);
                             const reportData = JSON.parse(signature.analysisReport);
+                            console.log('DEBUG: reportData:', Object.keys(reportData));
+                            
                             const referenceSignatures = comparisonResults?.filter(s => s.isReference) || [];
+                            console.log('DEBUG: referenceSignatures found:', referenceSignatures.length);
+                            
                             const referenceData = referenceSignatures.length > 0 && referenceSignatures[0].analysisReport 
                               ? JSON.parse(referenceSignatures[0].analysisReport) : null;
+                            console.log('DEBUG: referenceData:', referenceData ? Object.keys(referenceData) : 'null');
                             
-                            if (!reportData || !referenceData) return null;
+                            if (!reportData || !referenceData) {
+                              console.log('DEBUG: Missing data - reportData:', !!reportData, 'referenceData:', !!referenceData);
+                              return null;
+                            }
                             
                             const comparisonParams = [
                               { 
