@@ -1184,72 +1184,72 @@ export default function SignaturesPage() {
                             const comparisonParams = [
                               { 
                                 key: 'real_width_mm', 
-                                label: 'Larghezza (mm)', 
+                                label: t('signatures.comparisonTable.width'), 
                                 format: (v: number) => v?.toFixed(1) 
                               },
                               { 
                                 key: 'real_height_mm', 
-                                label: 'Altezza (mm)', 
+                                label: t('signatures.comparisonTable.height'), 
                                 format: (v: number) => v?.toFixed(1) 
                               },
                               { 
                                 key: 'Proportion', 
-                                label: 'Proporzione', 
+                                label: t('signatures.comparisonTable.proportion'), 
                                 format: (v: number) => v?.toFixed(2) 
                               },
                               { 
                                 key: 'Inclination', 
-                                label: 'Inclinazione (°)', 
+                                label: t('signatures.comparisonTable.inclination'), 
                                 format: (v: number) => v?.toFixed(1) 
                               },
                               { 
                                 key: 'PressureMean', 
-                                label: 'Intensità Media (0-255)', 
+                                label: t('signatures.comparisonTable.intensityMean'), 
                                 format: (v: number) => v?.toFixed(0) 
                               },
                               { 
                                 key: 'PressureStd', 
-                                label: 'Dev. Intensità', 
+                                label: t('signatures.comparisonTable.intensityDev'), 
                                 format: (v: number) => v?.toFixed(1) 
                               },
                               { 
                                 key: 'AvgCurvature', 
-                                label: 'Curvatura Media', 
+                                label: t('signatures.comparisonTable.curvature'), 
                                 format: (v: number) => v?.toFixed(2) 
                               },
                               { 
                                 key: 'Velocity', 
-                                label: 'Velocità (1-5)', 
+                                label: t('signatures.comparisonTable.velocity'), 
                                 format: (v: number) => v?.toFixed(1) 
                               },
                               { 
                                 key: 'AvgSpacing', 
-                                label: 'Spaziatura (mm)', 
+                                label: t('signatures.comparisonTable.spacing'), 
                                 format: (v: number) => v?.toFixed(1) 
                               },
                               { 
                                 key: 'AvgAsolaSize', 
-                                label: 'Dim. Asole (mm)', 
+                                label: t('signatures.comparisonTable.loopSize'), 
                                 format: (v: number) => v?.toFixed(2) 
                               },
                               { 
                                 key: 'BaselineStdMm', 
-                                label: 'Dev. Baseline (mm)', 
+                                label: t('signatures.comparisonTable.baselineDev'), 
                                 format: (v: number) => v?.toFixed(1) 
                               }
                             ];
                             
                             return (
                               <div className="mt-3 border rounded-lg p-3 bg-gray-50">
-                                <h6 className="font-medium mb-2 text-sm">Confronto Parametri Dettagliato</h6>
+                                <h6 className="font-medium mb-2 text-sm">{t('signatures.comparisonTable.title')}</h6>
                                 <div className="overflow-x-auto">
                                   <table className="w-full text-xs">
                                     <thead>
                                       <tr className="border-b">
-                                        <th className="text-left py-1 px-2">Parametro</th>
-                                        <th className="text-center py-1 px-2">Riferimento</th>
-                                        <th className="text-center py-1 px-2">Verifica</th>
-                                        <th className="text-center py-1 px-2">Compatibilità</th>
+                                        <th className="text-left py-1 px-2">{t('signatures.comparisonTable.parameter')}</th>
+                                        <th className="text-center py-1 px-2">{t('signatures.comparisonTable.reference')}</th>
+                                        <th className="text-center py-1 px-2">{t('signatures.comparisonTable.verification')}</th>
+                                        <th className="text-center py-1 px-2">{t('signatures.comparisonTable.compatibility')}</th>
                                       </tr>
                                     </thead>
                                     <tbody>
