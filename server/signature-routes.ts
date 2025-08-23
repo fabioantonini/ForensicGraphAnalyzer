@@ -759,7 +759,7 @@ export function registerSignatureRoutes(appRouter: Router) {
         
         // Parametri disponibili dal JSON
         if (signatureParams.PressureMean !== undefined) {
-          doc.text(`• Spessore tratto medio: ${formatNumber(signatureParams.PressureMean, 3)} mm`);
+          doc.text(`• Intensità pixel media: ${formatNumber(signatureParams.PressureMean, 1)} (0=nero/alta pressione, 255=bianco/bassa pressione)`);
         }
         if (signatureParams.PressureStd !== undefined) {
           doc.text(`• Varianza spessore: ${formatNumber(signatureParams.PressureStd, 2)}`);
@@ -818,7 +818,7 @@ export function registerSignatureRoutes(appRouter: Router) {
         
         // Parametri disponibili dal JSON
         if (referenceParams.PressureMean !== undefined) {
-          doc.text(`• Spessore tratto medio: ${formatNumber(referenceParams.PressureMean, 3)} mm`);
+          doc.text(`• Intensità pixel media: ${formatNumber(referenceParams.PressureMean, 1)} (0=nero/alta pressione, 255=bianco/bassa pressione)`);
         }
         if (referenceParams.PressureStd !== undefined) {
           doc.text(`• Varianza spessore: ${formatNumber(referenceParams.PressureStd, 2)}`);
