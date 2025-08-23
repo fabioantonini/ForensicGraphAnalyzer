@@ -708,6 +708,130 @@ export function registerSignatureRoutes(appRouter: Router) {
         referenceParams = null;
       }
       
+      // PARAMETRI ANALIZZATI - Sezione con elenchi puntati dettagliati
+      if (referenceParams && signatureParams) {
+        doc.fontSize(14).text('PARAMETRI ANALIZZATI', { underline: true });
+        doc.moveDown(0.5);
+        
+        // FIRMA IN VERIFICA
+        doc.fontSize(12).text('FIRMA IN VERIFICA:', { underline: true });
+        doc.moveDown(0.3);
+        doc.fontSize(10);
+        
+        // Calcola dimensioni in pixel dalle dimensioni reali + pixels_per_mm
+        const sigPixelsPerMm = signatureParams.pixels_per_mm || 1;
+        const sigWidthPx = Math.round(sigWidth * sigPixelsPerMm);
+        const sigHeightPx = Math.round(sigHeight * sigPixelsPerMm);
+        
+        doc.text(`• Dimensioni: ${sigWidthPx}x${sigHeightPx} px`);
+        doc.text(`• Dimensioni reali: ${formatNumber(sigWidth, 1)}x${formatNumber(sigHeight, 1)} mm`);
+        
+        // Parametri disponibili dal JSON
+        if (signatureParams.PressureMean !== undefined) {
+          doc.text(`• Spessore tratto medio: ${formatNumber(signatureParams.PressureMean, 3)} mm`);
+        }
+        if (signatureParams.PressureStd !== undefined) {
+          doc.text(`• Varianza spessore: ${formatNumber(signatureParams.PressureStd, 2)}`);
+        }
+        if (signatureParams.Proportion !== undefined) {
+          doc.text(`• Proporzione: ${formatNumber(signatureParams.Proportion, 3)}`);
+        }
+        if (signatureParams.Inclination !== undefined) {
+          doc.text(`• Inclinazione: ${formatNumber(signatureParams.Inclination, 1)}°`);
+        }
+        if (signatureParams.PressureStd !== undefined) {
+          doc.text(`• Deviazione pressione: ${formatNumber(signatureParams.PressureStd, 1)}`);
+        }
+        if (signatureParams.AvgCurvature !== undefined) {
+          doc.text(`• Curvatura media: ${formatNumber(signatureParams.AvgCurvature, 3)}`);
+        }
+        if (signatureParams.Velocity !== undefined) {
+          doc.text(`• Velocità scrittura: ${formatNumber(signatureParams.Velocity, 2)}/5`);
+        }
+        if (signatureParams.WritingStyle !== undefined) {
+          doc.text(`• Stile scrittura: ${signatureParams.WritingStyle}`);
+        }
+        if (signatureParams.Readability !== undefined) {
+          doc.text(`• Leggibilità: ${signatureParams.Readability}`);
+        }
+        if (signatureParams.AvgAsolaSize !== undefined) {
+          doc.text(`• Dimensione asole medie: ${formatNumber(signatureParams.AvgAsolaSize, 2)} mm²`);
+        }
+        if (signatureParams.AvgSpacing !== undefined) {
+          doc.text(`• Spaziatura media: ${formatNumber(signatureParams.AvgSpacing, 2)} mm`);
+        }
+        if (signatureParams.OverlapRatio !== undefined) {
+          doc.text(`• Rapporto sovrapposizione: ${formatNumber(signatureParams.OverlapRatio * 100, 1)}%`);
+        }
+        if (signatureParams.LetterConnections !== undefined) {
+          doc.text(`• Connessioni lettere: ${formatNumber(signatureParams.LetterConnections, 2)}`);
+        }
+        if (signatureParams.BaselineStdMm !== undefined) {
+          doc.text(`• Deviazione baseline: ${formatNumber(signatureParams.BaselineStdMm, 2)} mm`);
+        }
+        
+        doc.moveDown(1);
+        
+        // FIRMA DI RIFERIMENTO
+        doc.fontSize(12).text('FIRMA DI RIFERIMENTO:', { underline: true });
+        doc.moveDown(0.3);
+        doc.fontSize(10);
+        
+        // Calcola dimensioni in pixel dalle dimensioni reali + pixels_per_mm
+        const refPixelsPerMm = referenceParams.pixels_per_mm || 1;
+        const refWidthPx = Math.round(refWidth * refPixelsPerMm);
+        const refHeightPx = Math.round(refHeight * refPixelsPerMm);
+        
+        doc.text(`• Dimensioni: ${refWidthPx}x${refHeightPx} px`);
+        doc.text(`• Dimensioni reali: ${formatNumber(refWidth, 1)}x${formatNumber(refHeight, 1)} mm`);
+        
+        // Parametri disponibili dal JSON
+        if (referenceParams.PressureMean !== undefined) {
+          doc.text(`• Spessore tratto medio: ${formatNumber(referenceParams.PressureMean, 3)} mm`);
+        }
+        if (referenceParams.PressureStd !== undefined) {
+          doc.text(`• Varianza spessore: ${formatNumber(referenceParams.PressureStd, 2)}`);
+        }
+        if (referenceParams.Proportion !== undefined) {
+          doc.text(`• Proporzione: ${formatNumber(referenceParams.Proportion, 3)}`);
+        }
+        if (referenceParams.Inclination !== undefined) {
+          doc.text(`• Inclinazione: ${formatNumber(referenceParams.Inclination, 1)}°`);
+        }
+        if (referenceParams.PressureStd !== undefined) {
+          doc.text(`• Deviazione pressione: ${formatNumber(referenceParams.PressureStd, 1)}`);
+        }
+        if (referenceParams.AvgCurvature !== undefined) {
+          doc.text(`• Curvatura media: ${formatNumber(referenceParams.AvgCurvature, 3)}`);
+        }
+        if (referenceParams.Velocity !== undefined) {
+          doc.text(`• Velocità scrittura: ${formatNumber(referenceParams.Velocity, 0)}/5`);
+        }
+        if (referenceParams.WritingStyle !== undefined) {
+          doc.text(`• Stile scrittura: ${referenceParams.WritingStyle}`);
+        }
+        if (referenceParams.Readability !== undefined) {
+          doc.text(`• Leggibilità: ${referenceParams.Readability}`);
+        }
+        if (referenceParams.AvgAsolaSize !== undefined) {
+          doc.text(`• Dimensione asole medie: ${formatNumber(referenceParams.AvgAsolaSize, 2)} mm²`);
+        }
+        if (referenceParams.AvgSpacing !== undefined) {
+          doc.text(`• Spaziatura media: ${formatNumber(referenceParams.AvgSpacing, 2)} mm`);
+        }
+        if (referenceParams.OverlapRatio !== undefined) {
+          doc.text(`• Rapporto sovrapposizione: ${formatNumber(referenceParams.OverlapRatio * 100, 1)}%`);
+        }
+        if (referenceParams.LetterConnections !== undefined) {
+          doc.text(`• Connessioni lettere: ${formatNumber(referenceParams.LetterConnections, 2)}`);
+        }
+        if (referenceParams.BaselineStdMm !== undefined) {
+          doc.text(`• Deviazione baseline: ${formatNumber(referenceParams.BaselineStdMm, 2)} mm`);
+        }
+        
+        doc.moveDown(1.5);
+      }
+      
       // ANALISI PERITALE AI DETTAGLIATA
       if (referenceParams && signatureParams) {
         doc.fontSize(14).text('ANALISI PERITALE AI', { underline: true });
@@ -1050,192 +1174,6 @@ export function registerSignatureRoutes(appRouter: Router) {
         doc.moveDown(1);
       }
       
-      // PARAMETRI ANALIZZATI - Confronto dettagliato
-      if (signature.parameters) {
-        doc.addPage();
-        doc.fontSize(14).text('PARAMETRI ANALIZZATI', { underline: true });
-        doc.moveDown(0.5);
-        
-        if (referenceSignature?.parameters) {
-          // Confronto firma in verifica vs firma di riferimento
-          doc.fontSize(12).text('FIRMA IN VERIFICA:', { underline: true });
-          doc.moveDown(0.3);
-          doc.fontSize(10);
-        
-          // Lista completa parametri firma in verifica
-          doc.text(`• Dimensioni: 800x400 px`);
-          if (signature.parameters.realDimensions) {
-            doc.text(`• Dimensioni reali: ${formatNumber(signature.parameters.realDimensions.widthMm, 1)}x${formatNumber(signature.parameters.realDimensions.heightMm, 1)} mm`);
-          }
-          if (signature.parameters.strokeWidth?.meanMm) {
-            doc.text(`• Spessore tratto medio: ${formatNumber(signature.parameters.strokeWidth.meanMm, 3)} mm`);
-          }
-          if (signature.parameters.strokeWidth?.maxMm) {
-            doc.text(`• Spessore massimo: ${formatNumber(signature.parameters.strokeWidth.maxMm, 3)} mm`);
-          }
-          if (signature.parameters.strokeWidth?.minMm) {
-            doc.text(`• Spessore minimo: ${formatNumber(signature.parameters.strokeWidth.minMm, 3)} mm`);
-          }
-          if (signature.parameters.strokeWidth?.variance !== undefined) {
-            doc.text(`• Varianza spessore: ${formatNumber(signature.parameters.strokeWidth.variance, 2)}`);
-          } else if (signature.parameters.strokeWidth?.variance) {
-            doc.text(`• Varianza spessore: ${formatNumber(signature.parameters.strokeWidth.variance, 2)}`);
-          }
-          if (signature.parameters.proportion !== undefined) {
-            doc.text(`• Proporzione: ${formatNumber(signature.parameters.proportion, 3)}`);
-          } else if (signature.parameters.aspectRatio !== undefined) {
-            doc.text(`• Proporzione: ${formatNumber(signature.parameters.aspectRatio, 3)}`);
-          }
-          if (signature.parameters.inclination !== undefined) {
-            doc.text(`• Inclinazione: ${formatNumber(signature.parameters.inclination, 1)}°`);
-          }
-          // Pressione (usando pressurePoints se disponibile)
-          if (signature.parameters.pressurePoints?.pressureVariation !== undefined) {
-            doc.text(`• Pressione media: ${formatNumber(signature.parameters.pressurePoints.pressureVariation, 1)}`);
-          }
-          // Deviazione pressione (mapped da pressureStd)
-          if (signature.parameters.pressureStd !== undefined) {
-            doc.text(`• Deviazione pressione: ${formatNumber(signature.parameters.pressureStd, 1)}`);
-          } else {
-            doc.text(`• Deviazione pressione: 15.0`);
-          }
-          // Curvatura (usando curvatureMetrics se disponibile)
-          if (signature.parameters.curvatureMetrics?.averageCurvature !== undefined) {
-            doc.text(`• Curvatura media: ${formatNumber(signature.parameters.curvatureMetrics.averageCurvature, 3)}`);
-          } else if (signature.parameters.avgCurvature !== undefined) {
-            doc.text(`• Curvatura media: ${formatNumber(signature.parameters.avgCurvature, 3)}`);
-          }
-          if (signature.parameters.velocity !== undefined) {
-            doc.text(`• Velocità scrittura: ${signature.parameters.velocity}/5`);
-          }
-          if (signature.parameters.writingStyle) {
-            doc.text(`• Stile scrittura: ${signature.parameters.writingStyle}`);
-          }
-          if (signature.parameters.readability) {
-            doc.text(`• Leggibilità: ${signature.parameters.readability}`);
-          } else {
-            doc.text(`• Leggibilità: Bassa`);
-          }
-          if (signature.parameters.avgAsolaSize !== undefined) {
-            doc.text(`• Dimensione asole medie: ${formatNumber(signature.parameters.avgAsolaSize, 2)} mm`);
-          }
-          if (signature.parameters.avgSpacing !== undefined) {
-            doc.text(`• Spaziatura media: ${formatNumber(signature.parameters.avgSpacing, 2)} mm`);
-          }
-          doc.text(`• Rapporto sovrapposizione: 0.0%`); // Default
-          if (signature.parameters.connectivity !== undefined) {
-            doc.text(`• Connessioni lettere: ${formatNumber(signature.parameters.connectivity, 2)}`);
-          }
-          if (signature.parameters.baselineStdMm !== undefined) {
-            doc.text(`• Deviazione baseline: ${formatNumber(signature.parameters.baselineStdMm, 2)} mm`);
-          } else if (signature.parameters.connectivity?.gaps !== undefined) {
-            doc.text(`• Deviazione baseline: ${formatNumber(signature.parameters.connectivity.gaps, 2)} mm`);
-          }
-          // Componenti connesse e complessità tratto (usando connectivity se disponibile)
-          if (signature.parameters.connectivity?.connectedComponents !== undefined) {
-            doc.text(`• Componenti connesse: ${signature.parameters.connectivity.connectedComponents}`);
-          } else {
-            doc.text(`• Componenti connesse: 1`);
-          }
-          if (signature.parameters.connectivity?.strokeComplexity !== undefined) {
-            doc.text(`• Complessità tratto: ${formatNumber(signature.parameters.connectivity.strokeComplexity * 100, 0)}%`);
-          } else {
-            doc.text(`• Complessità tratto: 1%`);
-          }
-          
-          doc.moveDown(1);
-          
-          // FIRMA DI RIFERIMENTO
-          doc.fontSize(12).text('FIRMA DI RIFERIMENTO:', { underline: true });
-          doc.moveDown(0.3);
-          doc.fontSize(10);
-          
-          doc.text(`• Dimensioni: 800x400 px`);
-          if (referenceSignature.parameters.realDimensions) {
-            doc.text(`• Dimensioni reali: ${formatNumber(referenceSignature.parameters.realDimensions.widthMm, 1)}x${formatNumber(referenceSignature.parameters.realDimensions.heightMm, 1)} mm`);
-          }
-          if (referenceSignature.parameters.strokeWidth?.meanMm) {
-            doc.text(`• Spessore tratto medio: ${formatNumber(referenceSignature.parameters.strokeWidth.meanMm, 3)} mm`);
-          }
-          if (referenceSignature.parameters.strokeWidth?.maxMm) {
-            doc.text(`• Spessore massimo: ${formatNumber(referenceSignature.parameters.strokeWidth.maxMm, 3)} mm`);
-          }
-          if (referenceSignature.parameters.strokeWidth?.minMm) {
-            doc.text(`• Spessore minimo: ${formatNumber(referenceSignature.parameters.strokeWidth.minMm, 3)} mm`);
-          }
-          if (referenceSignature.parameters.strokeWidth?.variance !== undefined) {
-            doc.text(`• Varianza spessore: ${formatNumber(referenceSignature.parameters.strokeWidth.variance, 2)}`);
-          }
-          if (referenceSignature.parameters.proportion !== undefined) {
-            doc.text(`• Proporzione: ${formatNumber(referenceSignature.parameters.proportion, 3)}`);
-          }
-          if (referenceSignature.parameters.inclination !== undefined) {
-            doc.text(`• Inclinazione: ${formatNumber(referenceSignature.parameters.inclination, 1)}°`);
-          }
-          if (referenceSignature.parameters.pressureMean !== undefined) {
-            doc.text(`• Pressione media: ${formatNumber(referenceSignature.parameters.pressureMean, 1)}`);
-          }
-          // Deviazione pressione per firma di riferimento
-          if (referenceSignature.parameters.pressureStd !== undefined) {
-            doc.text(`• Deviazione pressione: ${formatNumber(referenceSignature.parameters.pressureStd, 1)}`);
-          } else {
-            doc.text(`• Deviazione pressione: 21.6`);
-          }
-          if (referenceSignature.parameters.avgCurvature !== undefined) {
-            doc.text(`• Curvatura media: ${formatNumber(referenceSignature.parameters.avgCurvature, 3)}`);
-          }
-          if (referenceSignature.parameters.velocity !== undefined) {
-            doc.text(`• Velocità scrittura: ${referenceSignature.parameters.velocity}/5`);
-          }
-          if (referenceSignature.parameters.writingStyle) {
-            doc.text(`• Stile scrittura: ${referenceSignature.parameters.writingStyle}`);
-          }
-          if (referenceSignature.parameters.readability) {
-            doc.text(`• Leggibilità: ${referenceSignature.parameters.readability}`);
-          } else {
-            doc.text(`• Leggibilità: Bassa`);
-          }
-          if (referenceSignature.parameters.avgAsolaSize !== undefined) {
-            doc.text(`• Dimensione asole medie: ${formatNumber(referenceSignature.parameters.avgAsolaSize, 2)} mm`);
-          }
-          if (referenceSignature.parameters.avgSpacing !== undefined) {
-            doc.text(`• Spaziatura media: ${formatNumber(referenceSignature.parameters.avgSpacing, 2)} mm`);
-          }
-          doc.text(`• Rapporto sovrapposizione: 0.0%`);
-          if (referenceSignature.parameters.connectivity !== undefined) {
-            doc.text(`• Connessioni lettere: ${formatNumber(referenceSignature.parameters.connectivity, 2)}`);
-          }
-          if (referenceSignature.parameters.baselineStdMm !== undefined) {
-            doc.text(`• Deviazione baseline: ${formatNumber(referenceSignature.parameters.baselineStdMm, 2)} mm`);
-          } else if (referenceSignature.parameters.spacingVariance !== undefined) {
-            doc.text(`• Deviazione baseline: ${formatNumber(referenceSignature.parameters.spacingVariance, 2)} mm`);
-          }
-          // Componenti connesse e complessità per firma di riferimento
-          if (referenceSignature.parameters.connectedComponents !== undefined) {
-            doc.text(`• Componenti connesse: ${referenceSignature.parameters.connectedComponents}`);
-          } else {
-            doc.text(`• Componenti connesse: 11`); // Default dal documento originale
-          }
-          if (referenceSignature.parameters.strokeComplexity !== undefined) {
-            doc.text(`• Complessità tratto: ${formatNumber(referenceSignature.parameters.strokeComplexity * 100, 0)}%`);
-          } else {
-            doc.text(`• Complessità tratto: 29%`); // Default dal documento originale
-          }
-        } else {
-          // Solo firma in verifica
-          doc.fontSize(10);
-          doc.text(`• Dimensioni reali: ${formatNumber(signature.parameters.realDimensions?.widthMm, 1)}×${formatNumber(signature.parameters.realDimensions?.heightMm, 1)} mm`);
-          if (signature.parameters.strokeWidth?.meanMm) {
-            doc.text(`• Spessore medio tratto: ${formatNumber(signature.parameters.strokeWidth.meanMm, 2)}mm`);
-          }
-          if (signature.parameters.inclination !== undefined) {
-            doc.text(`• Inclinazione: ${formatNumber(signature.parameters.inclination, 1)}°`);
-          }
-          if (signature.parameters.velocity !== undefined) {
-            doc.text(`• Velocità di scrittura: ${signature.parameters.velocity}/5`);
-          }
-        }
-      }
       
       // GRAFICO DI CONFRONTO
       if (signature.comparisonChart) {
