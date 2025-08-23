@@ -771,7 +771,7 @@ export function registerSignatureRoutes(appRouter: Router) {
           doc.text(`• Inclinazione: ${formatNumber(signatureParams.Inclination, 1)}°`);
         }
         if (signatureParams.PressureStd !== undefined) {
-          doc.text(`• Deviazione pressione: ${formatNumber(signatureParams.PressureStd, 1)}`);
+          doc.text(`• Deviazione intensità: ${formatNumber(signatureParams.PressureStd, 1)}`);
         }
         if (signatureParams.AvgCurvature !== undefined) {
           doc.text(`• Curvatura media: ${formatNumber(signatureParams.AvgCurvature, 3)}`);
@@ -830,7 +830,7 @@ export function registerSignatureRoutes(appRouter: Router) {
           doc.text(`• Inclinazione: ${formatNumber(referenceParams.Inclination, 1)}°`);
         }
         if (referenceParams.PressureStd !== undefined) {
-          doc.text(`• Deviazione pressione: ${formatNumber(referenceParams.PressureStd, 1)}`);
+          doc.text(`• Deviazione intensità: ${formatNumber(referenceParams.PressureStd, 1)}`);
         }
         if (referenceParams.AvgCurvature !== undefined) {
           doc.text(`• Curvatura media: ${formatNumber(referenceParams.AvgCurvature, 3)}`);
@@ -902,7 +902,7 @@ export function registerSignatureRoutes(appRouter: Router) {
           doc.moveDown(0.5);
         }
         
-        // 4. Confronto Pressione Media
+        // 4. Confronto Intensità Media dell'Inchiostro
         if (signatureParams.PressureMean !== undefined && referenceParams.PressureMean !== undefined) {
           const sigPress = signatureParams.PressureMean;
           const refPress = referenceParams.PressureMean;
@@ -911,7 +911,7 @@ export function registerSignatureRoutes(appRouter: Router) {
           doc.moveDown(0.5);
         }
         
-        // 5. Confronto Deviazione Standard Pressione
+        // 5. Confronto Deviazione Standard Intensità
         if (signatureParams.PressureStd !== undefined && referenceParams.PressureStd !== undefined) {
           const sigPressStd = signatureParams.PressureStd;
           const refPressStd = referenceParams.PressureStd;
@@ -1117,11 +1117,11 @@ export function registerSignatureRoutes(appRouter: Router) {
             doc.text(`Le proporzioni tra altezza e larghezza mostrano ${Math.abs(sigProp - refProp) > 0.2 ? 'differenze significative' : 'compatibilità'}.`);
           }
           
-          // Pressione
+          // Intensità
           if (signatureParams.PressureMean !== undefined && referenceParams.PressureMean !== undefined) {
             const sigPress = signatureParams.PressureMean;
             const refPress = referenceParams.PressureMean;
-            doc.text(`La pressione esercitata durante la firma è ${Math.abs(sigPress - refPress) < refPress * 0.3 ? 'compatibile' : 'differente'} tra i due esemplari.`);
+            doc.text(`L'intensità dell'inchiostro nelle firme è ${Math.abs(sigPress - refPress) < refPress * 0.3 ? 'compatibile' : 'differente'} tra i due esemplari.`);
           }
           
           // Inclinazione
@@ -1235,7 +1235,7 @@ export function registerSignatureRoutes(appRouter: Router) {
       doc.fontSize(14).text('METODOLOGIA', { underline: true });
       doc.moveDown(0.5);
       doc.fontSize(10).text(
-        `L'analisi è stata condotta utilizzando algoritmi di computer vision e analisi delle caratteristiche grafologiche. Il sistema estrae e confronta parametri quali spessore del tratto, pressione, curvatura, distribuzione spaziale e connettività. Il punteggio finale deriva dalla media ponderata di questi parametri con accuratezza stimata dell'85% rispetto all'analisi manuale.`,
+        `L'analisi è stata condotta utilizzando algoritmi di computer vision e analisi delle caratteristiche grafologiche. Il sistema estrae e confronta parametri quali intensità dell'inchiostro, curvatura, distribuzione spaziale e connettività. Il punteggio finale deriva dalla media ponderata di questi parametri con accuratezza stimata dell'85% rispetto all'analisi manuale.`,
         { align: 'justify' }
       );
       doc.moveDown(0.5);
