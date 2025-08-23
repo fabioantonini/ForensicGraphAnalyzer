@@ -1203,10 +1203,10 @@ export default function SignaturesPage() {
                                   <div><strong>Spaziatura media:</strong> {signature.parameters.avgSpacing.toFixed(1)}mm</div>
                                 )}
                                 {signature.parameters.pressureStd !== undefined && (
-                                  <div><strong>Dev. pressione:</strong> {signature.parameters.pressureStd.toFixed(1)}</div>
+                                  <div><strong>Dev. intensità:</strong> {signature.parameters.pressureStd.toFixed(1)}</div>
                                 )}
                                 {signature.parameters.pressureMean !== undefined && (
-                                  <div><strong>Pressione media:</strong> {signature.parameters.pressureMean.toFixed(0)}</div>
+                                  <div><strong>Intensità media:</strong> {signature.parameters.pressureMean.toFixed(0)}</div>
                                 )}
                                 {signature.parameters.readability && (
                                   <div><strong>Leggibilità:</strong> {signature.parameters.readability}</div>
@@ -1249,12 +1249,6 @@ export default function SignaturesPage() {
                     </div>
                   )}
                   
-                  {/* Debug: mostra se il grafico esiste */}
-                  {!signature.comparisonChart && (
-                    <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm">
-                      <strong>Debug:</strong> Grafico di confronto non disponibile per questa firma
-                    </div>
-                  )}
                 </div>
               ))
             ) : (
