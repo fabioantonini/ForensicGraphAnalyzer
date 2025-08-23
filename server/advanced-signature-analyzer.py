@@ -373,11 +373,15 @@ def analyze_signature(image_path, dpi=DEFAULT_DPI):
                     sign_width_cm = min(sign_width_cm, 8.0)
                     sign_height_cm = sign_width_cm / aspect_ratio if aspect_ratio > 0 else sign_height_cm
         
-        # Assicura che le dimensioni siano ragionevoli
-        sign_width_cm = max(min(sign_width_cm, 10.0), 3.0)
-        sign_height_cm = max(min(sign_height_cm, 5.0), 1.0)
-        
-        dimensions = (sign_width_cm, sign_height_cm)
+        # Usa le dimensioni reali inserite dall'utente (priorità assoluta)
+        if real_width_mm > 0 and real_height_mm > 0:
+            # Usa le dimensioni reali fornite dall'utente in mm
+            dimensions = (real_width_mm, real_height_mm)
+            print(f"[PYTHON] Utilizzate dimensioni reali utente: {real_width_mm}x{real_height_mm}mm", file=sys.stderr)
+        else:
+            # Fallback: usa le dimensioni calcolate dall'immagine, ma senza limiti artificiali
+            dimensions = (sign_width_cm * 10, sign_height_cm * 10)  # Converti cm a mm
+            print(f"[PYTHON] Utilizzate dimensioni calcolate: {sign_width_cm*10}x{sign_height_cm*10}mm", file=sys.stderr)
         
         # Calcola la proporzione
         proportion = w / h if h > 0 else 0
