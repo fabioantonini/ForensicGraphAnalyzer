@@ -708,13 +708,13 @@ export function registerSignatureRoutes(appRouter: Router) {
         referenceParams = null;
       }
       
+      // Estrai dimensioni prima di usarle (GLOBALI per entrambe le sezioni)
+      let sigWidth = 0, sigHeight = 0, refWidth = 0, refHeight = 0;
+      
       // PARAMETRI ANALIZZATI - Sezione con elenchi puntati dettagliati
       if (referenceParams && signatureParams) {
         doc.fontSize(14).text('PARAMETRI ANALIZZATI', { underline: true });
         doc.moveDown(0.5);
-        
-        // Estrai dimensioni prima di usarle
-        let sigWidth = 0, sigHeight = 0, refWidth = 0, refHeight = 0;
         
         // Estrai dimensioni firma in verifica - USA SEMPRE QUELLE REALI DAL DATABASE
         if (signature.realWidthMm && signature.realHeightMm) {
