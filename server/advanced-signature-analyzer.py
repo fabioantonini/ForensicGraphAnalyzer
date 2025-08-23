@@ -935,6 +935,23 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
             if ref_val is None or ver_val is None:
                 return 0.5  # Compatibilità neutra se mancano dati
                 
+            # Gestione parametri qualitativi (stringhe)
+            if param_name in ['WritingStyle', 'Readability']:
+                if isinstance(ref_val, str) and isinstance(ver_val, str):
+                    if ref_val.lower() == ver_val.lower():
+                        return 1.0  # Identico = 100%
+                    elif param_name == 'Readability':
+                        # Alta-Media-Bassa: compatibilità graduale
+                        levels = {'alta': 3, 'media': 2, 'bassa': 1}
+                        ref_level = levels.get(ref_val.lower(), 2)
+                        ver_level = levels.get(ver_val.lower(), 2)
+                        diff_levels = abs(ref_level - ver_level)
+                        return max(0.3, 1 - (diff_levels * 0.35))  # 65% se diff=1, 30% se diff=2
+                    else:
+                        return 0.5  # WritingStyle diverso = 50%
+                return 0.5
+                
+            # Gestione parametri numerici
             diff = abs(ref_val - ver_val)
             max_val = max(abs(ref_val), abs(ver_val))
             
@@ -955,19 +972,21 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
             else:
                 return 1.0  # Entrambi zero = perfetta compatibilità
         
-        # Lista parametri chiave per il calcolo pesato - privilegia parametri più stabili
+        # Lista parametri chiave per il calcolo pesato - usa TUTTI i parametri disponibili
         key_parameters = [
-            ('PressureMean', 0.20),     # 20% - pressione media (molto stabile)
-            ('Curvature', 0.18),        # 18% - curvatura (caratteristica distintiva)
-            ('AspectRatio', 0.12),      # 12% - proporzioni (meno peso di prima)
+            ('PressureMean', 0.18),     # 18% - pressione media (molto stabile)
+            ('AvgCurvature', 0.16),     # 16% - curvatura (caratteristica distintiva) 
+            ('Proportion', 0.12),       # 12% - proporzioni (aspect ratio)
             ('Velocity', 0.10),         # 10% - velocità 
-            ('StrokeWidth', 0.08),      # 8%  - spessore tratti
-            ('AvgAsolaSize', 0.08),     # 8%  - dimensione asole (aumentato)
+            ('PressureStd', 0.08),      # 8%  - variazione pressione (importante!)
+            ('AvgAsolaSize', 0.08),     # 8%  - dimensione asole
             ('AvgSpacing', 0.06),       # 6%  - spaziatura
-            ('Inclination', 0.05),      # 5%  - inclinazione (ridotto, troppo variabile)
+            ('Inclination', 0.05),      # 5%  - inclinazione
             ('OverlapRatio', 0.05),     # 5%  - sovrapposizioni
             ('LetterConnections', 0.05), # 5%  - connessioni
-            ('BaselineStdMm', 0.03),    # 3%  - baseline (ridotto, molto variabile)
+            ('BaselineStdMm', 0.04),    # 4%  - baseline 
+            ('WritingStyle', 0.02),     # 2%  - stile (qualitativo)
+            ('Readability', 0.01),      # 1%  - leggibilità (qualitativo)
         ]
         
         # Calcola punteggio parametri pesato
