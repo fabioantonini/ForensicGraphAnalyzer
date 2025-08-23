@@ -907,7 +907,7 @@ export function registerSignatureRoutes(appRouter: Router) {
           const sigPress = signatureParams.PressureMean;
           const refPress = referenceParams.PressureMean;
           
-          doc.text(`Pressione Media: La pressione media della firma in verifica è ${formatNumber(sigPress, 1)}, ${sigPress < refPress * 0.8 ? 'significativamente inferiore' : sigPress > refPress * 1.2 ? 'significativamente superiore' : 'compatibile'} rispetto ai ${formatNumber(refPress, 1)} della firma di riferimento. ${Math.abs(sigPress - refPress) > refPress * 0.3 ? 'Questa differenza sostanziale suggerisce un possibile diverso stato emotivo, controllo motorio o strumento di scrittura utilizzato.' : 'Questa compatibilità indica coerenza nella modalità di applicazione della pressione durante l\'esecuzione.'}`, { align: 'justify' });
+          doc.text(`Intensità dell'Inchiostro: L'intensità media dei pixel della firma in verifica è ${formatNumber(sigPress, 1)}, ${sigPress < refPress * 0.8 ? 'significativamente più scura (maggiore pressione)' : sigPress > refPress * 1.2 ? 'significativamente più chiara (minore pressione)' : 'compatibile'} rispetto ai ${formatNumber(refPress, 1)} della firma di riferimento. ${Math.abs(sigPress - refPress) > refPress * 0.3 ? 'Questa differenza nell\'intensità dell\'inchiostro può indicare diversa pressione di scrittura, tipo di penna o qualità dell\'inchiostro utilizzato.' : 'Questa compatibilità nell\'intensità indica coerenza nella pressione di scrittura e nel tipo di strumento utilizzato.'} (scala 0-255: 0=nero/alta pressione, 255=bianco/bassa pressione)`, { align: 'justify' });
           doc.moveDown(0.5);
         }
         
@@ -916,7 +916,7 @@ export function registerSignatureRoutes(appRouter: Router) {
           const sigPressStd = signatureParams.PressureStd;
           const refPressStd = referenceParams.PressureStd;
           
-          doc.text(`Variabilità Pressione: La deviazione standard della pressione nella firma in verifica è ${formatNumber(sigPressStd, 2)}, ${sigPressStd > refPressStd * 1.5 ? 'molto più elevata' : sigPressStd < refPressStd * 0.5 ? 'molto più ridotta' : 'compatibile'} rispetto ai ${formatNumber(refPressStd, 2)} della firma di riferimento. ${sigPressStd > refPressStd * 1.5 ? 'L\'alta variabilità suggerisce irregolarità nel controllo della pressione, possibile indicatore di stress o minor controllo motorio.' : 'La variabilità costante indica controllo uniforme della pressione durante l\'esecuzione.'}`, { align: 'justify' });
+          doc.text(`Variabilità dell'Intensità: La deviazione standard dell'intensità dell'inchiostro nella firma in verifica è ${formatNumber(sigPressStd, 2)}, ${sigPressStd > refPressStd * 1.5 ? 'molto più elevata' : sigPressStd < refPressStd * 0.5 ? 'molto più ridotta' : 'compatibile'} rispetto ai ${formatNumber(refPressStd, 2)} della firma di riferimento. ${sigPressStd > refPressStd * 1.5 ? 'L\'alta variabilità nell\'intensità suggerisce irregolarità nel controllo della pressione o nell\'uniformità dell\'inchiostro, possibile indicatore di stress o diverso controllo motorio.' : 'La variabilità costante indica uniformità nella pressione di scrittura e nell\'applicazione dell\'inchiostro durante l\'esecuzione.'}`, { align: 'justify' });
           doc.moveDown(0.5);
         }
         
