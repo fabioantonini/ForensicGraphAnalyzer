@@ -1185,57 +1185,57 @@ export default function SignaturesPage() {
                               { 
                                 key: 'real_width_mm', 
                                 label: 'Larghezza (mm)', 
-                                format: (v) => v?.toFixed(1) 
+                                format: (v: number) => v?.toFixed(1) 
                               },
                               { 
                                 key: 'real_height_mm', 
                                 label: 'Altezza (mm)', 
-                                format: (v) => v?.toFixed(1) 
+                                format: (v: number) => v?.toFixed(1) 
                               },
                               { 
                                 key: 'Proportion', 
                                 label: 'Proporzione', 
-                                format: (v) => v?.toFixed(2) 
+                                format: (v: number) => v?.toFixed(2) 
                               },
                               { 
                                 key: 'Inclination', 
                                 label: 'Inclinazione (°)', 
-                                format: (v) => v?.toFixed(1) 
+                                format: (v: number) => v?.toFixed(1) 
                               },
                               { 
                                 key: 'PressureMean', 
                                 label: 'Intensità Media (0-255)', 
-                                format: (v) => v?.toFixed(0) 
+                                format: (v: number) => v?.toFixed(0) 
                               },
                               { 
                                 key: 'PressureStd', 
                                 label: 'Dev. Intensità', 
-                                format: (v) => v?.toFixed(1) 
+                                format: (v: number) => v?.toFixed(1) 
                               },
                               { 
                                 key: 'AvgCurvature', 
                                 label: 'Curvatura Media', 
-                                format: (v) => v?.toFixed(2) 
+                                format: (v: number) => v?.toFixed(2) 
                               },
                               { 
                                 key: 'Velocity', 
                                 label: 'Velocità (1-5)', 
-                                format: (v) => v?.toFixed(1) 
+                                format: (v: number) => v?.toFixed(1) 
                               },
                               { 
                                 key: 'AvgSpacing', 
                                 label: 'Spaziatura (mm)', 
-                                format: (v) => v?.toFixed(1) 
+                                format: (v: number) => v?.toFixed(1) 
                               },
                               { 
                                 key: 'AvgAsolaSize', 
                                 label: 'Dim. Asole (mm)', 
-                                format: (v) => v?.toFixed(2) 
+                                format: (v: number) => v?.toFixed(2) 
                               },
                               { 
                                 key: 'BaselineStdMm', 
                                 label: 'Dev. Baseline (mm)', 
-                                format: (v) => v?.toFixed(1) 
+                                format: (v: number) => v?.toFixed(1) 
                               }
                             ];
                             
