@@ -1278,7 +1278,15 @@ if __name__ == "__main__":
             
             print(f"Test analisi singola: {image_path} con dimensioni {width_mm}x{height_mm}mm", file=sys.stderr)
             result = analyze_signature_with_dimensions(image_path, width_mm, height_mm)
-            print(json.dumps(result, indent=2))
+            
+            # Formatta il risultato nel formato che il bridge TypeScript si aspetta
+            if result and "error" not in result:
+                formatted_result = {
+                    "verifica_parameters": result
+                }
+                print(json.dumps(formatted_result))
+            else:
+                print(json.dumps(result))
             sys.exit(0)
         except Exception as e:
             print(f"Errore nell'analisi singola: {str(e)}", file=sys.stderr)
