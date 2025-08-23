@@ -1188,16 +1188,6 @@ export default function SignaturesPage() {
                             
                             const comparisonParams = [
                               { 
-                                key: 'real_width_mm', 
-                                label: t('signatures.comparisonTable.width'), 
-                                format: (v: number) => v?.toFixed(1) 
-                              },
-                              { 
-                                key: 'real_height_mm', 
-                                label: t('signatures.comparisonTable.height'), 
-                                format: (v: number) => v?.toFixed(1) 
-                              },
-                              { 
                                 key: 'Proportion', 
                                 label: t('signatures.comparisonTable.proportion'), 
                                 format: (v: number) => v?.toFixed(2) 
