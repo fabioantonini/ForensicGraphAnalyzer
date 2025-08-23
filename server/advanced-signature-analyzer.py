@@ -388,18 +388,40 @@ def create_comparison_chart(verifica_data, comp_data):
             compatibilita_percentuale.append(0)
             continue
             
-        # Calcola la compatibilità come percentuale basata sulla differenza relativa
-        valore_max = max(abs(valore_v), abs(valore_c))
-        if valore_max == 0:
-            compatibilita_percentuale.append(100)  # Identici
+        # USA LA STESSA LOGICA INTELLIGENTE DEL FRONTEND per la compatibilità
+        parametro_nome = parametri_numerici[i]
+        
+        # Per parametri con valori molto piccoli (es. asole), usa soglie assolute
+        if parametro_nome in ['AvgAsolaSize', 'BaselineStdMm']:
+            if diff <= 0.05:
+                compatibilita = 95  # Entrambi molto piccoli = alta compatibilità  
+            elif diff <= 0.10:
+                compatibilita = 85
+            elif diff <= 0.20:
+                compatibilita = 70
+            else:
+                compatibilita = 50
         else:
-            # Compatibilità = 100% - (differenza_percentuale)
-            diff_percentuale = (diff / valore_max) * 100
-            compatibilita = max(0, 100 - diff_percentuale)
+            # Per altri parametri, usa soglie relative
+            valore_max = max(abs(valore_v), abs(valore_c))
+            if valore_max == 0:
+                compatibilita = 100  # Identici
+            else:
+                diff_percentuale = (diff / valore_max) * 100
+                if diff_percentuale <= 5:
+                    compatibilita = 98
+                elif diff_percentuale <= 10:
+                    compatibilita = 90
+                elif diff_percentuale <= 15:
+                    compatibilita = 80
+                elif diff_percentuale <= 25:
+                    compatibilita = 70
+                elif diff_percentuale <= 40:
+                    compatibilita = 50
+                else:
+                    compatibilita = max(0, 100 - diff_percentuale)
             
-
-            
-            compatibilita_percentuale.append(compatibilita)
+        compatibilita_percentuale.append(compatibilita)
 
     # Crea l'immagine del grafico - dimensioni più grandi per tutti i parametri
     fig = Figure(figsize=(12, max(8, len(parametri_numerici) * 0.5)))
