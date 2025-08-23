@@ -389,7 +389,13 @@
       "similarityScore": "Punteggio di somiglianza"
     },
     "methodology": {
-      "title": "Metodologia di analisi"
+      "title": "Metodologia di analisi",
+      "button": "Metodologia di analisi",
+      "subtitle": "Dettagli sull'algoritmo e sui parametri utilizzati per la verifica delle firme",
+      "overview": "Panoramica del sistema",
+      "unifiedWorkflowTitle": "Workflow Unificato di Elaborazione",
+      "multiReferenceTitle": "Analisi con multiple firme di riferimento",
+      "advancedTechTitle": "Tecnologie Avanzate Integrate"
     },
     "uploadFirstVerify": "Carica prima firma da verificare",
     "compareAll": "Confronta Tutte",

@@ -388,7 +388,13 @@
       "similarityScore": "Similarity score"
     },
     "methodology": {
-      "title": "Analysis Methodology"
+      "title": "Analysis Methodology",
+      "button": "Analysis Methodology",
+      "subtitle": "Details on the algorithm and parameters used for signature verification",
+      "overview": "System Overview",
+      "unifiedWorkflowTitle": "Unified Processing Workflow",
+      "multiReferenceTitle": "Multi-reference signature analysis",
+      "advancedTechTitle": "Integrated Advanced Technologies"
     },
     "comparisonTable": {
       "title": "Detailed Parameter Comparison",

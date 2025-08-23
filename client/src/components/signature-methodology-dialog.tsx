@@ -21,7 +21,7 @@ export function SignatureMethodologyDialog() {
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="flex gap-1 items-center">
           <InfoIcon className="h-4 w-4" />
-          {t('signatures.methodology.button', 'Metodologia di analisi')}
+          {t('signatures.methodology.button')}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl h-[80vh] flex flex-col p-6 overflow-hidden">
