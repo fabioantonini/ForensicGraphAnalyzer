@@ -709,15 +709,50 @@ export function registerSignatureRoutes(appRouter: Router) {
         
         // CONFRONTO PARAMETRI PYTHON COMPLETO
         
-        // 1. Confronto Dimensioni
-        if (signatureParams.Dimensions && referenceParams.Dimensions) {
-          const sigWidth = signatureParams.Dimensions[0] || 0;
-          const sigHeight = signatureParams.Dimensions[1] || 0;
-          const refWidth = referenceParams.Dimensions[0] || 0;
-          const refHeight = referenceParams.Dimensions[1] || 0;
-          
+        // 1. Confronto Dimensioni (gestisce formati diversi)
+        let sigWidth = 0, sigHeight = 0, refWidth = 0, refHeight = 0;
+        
+        // Estrai dimensioni firma in verifica (multipli formati supportati)
+        if (signatureParams.real_width_mm !== undefined && signatureParams.real_height_mm !== undefined) {
+          // Formato diretto con real_width_mm, real_height_mm
+          sigWidth = signatureParams.real_width_mm;
+          sigHeight = signatureParams.real_height_mm;
+        } else if (signatureParams.Dimensions) {
+          if (Array.isArray(signatureParams.Dimensions)) {
+            // Formato array [width, height]
+            sigWidth = signatureParams.Dimensions[0] || 0;
+            sigHeight = signatureParams.Dimensions[1] || 0;
+          } else if (typeof signatureParams.Dimensions === 'object') {
+            // Formato oggetto {width: x, height: y}
+            sigWidth = signatureParams.Dimensions.width || 0;
+            sigHeight = signatureParams.Dimensions.height || 0;
+          }
+        }
+        
+        // Estrai dimensioni firma di riferimento (multipli formati supportati)
+        if (referenceParams.real_width_mm !== undefined && referenceParams.real_height_mm !== undefined) {
+          // Formato diretto con real_width_mm, real_height_mm
+          refWidth = referenceParams.real_width_mm;
+          refHeight = referenceParams.real_height_mm;
+        } else if (referenceParams.Dimensions) {
+          if (Array.isArray(referenceParams.Dimensions)) {
+            // Formato array [width, height]
+            refWidth = referenceParams.Dimensions[0] || 0;
+            refHeight = referenceParams.Dimensions[1] || 0;
+          } else if (typeof referenceParams.Dimensions === 'object') {
+            // Formato oggetto {width: x, height: y}
+            refWidth = referenceParams.Dimensions.width || 0;
+            refHeight = referenceParams.Dimensions.height || 0;
+          }
+        }
+        
+        // Solo se abbiamo dimensioni valide per entrambe
+        if (sigWidth > 0 && sigHeight > 0 && refWidth > 0 && refHeight > 0) {
+          console.log(`[PDF REPORT] Dimensioni estratte - Verifica: ${sigWidth}x${sigHeight}mm, Riferimento: ${refWidth}x${refHeight}mm`);
           doc.text(`Dimensioni: La firma in verifica ha dimensioni di ${formatNumber(sigWidth, 1)}x${formatNumber(sigHeight, 1)} mm rispetto alla firma di riferimento di ${formatNumber(refWidth, 1)}x${formatNumber(refHeight, 1)} mm. ${sigWidth < refWidth * 0.8 ? 'La firma in verifica è significativamente più piccola' : sigWidth > refWidth * 1.2 ? 'La firma in verifica è significativamente più grande' : 'Le dimensioni sono compatibili'}. Questa ${Math.abs(sigWidth - refWidth) > refWidth * 0.2 ? 'differenza potrebbe indicare una variazione nella modalità di esecuzione o una diversa impostazione mentale al momento della firma.' : 'compatibilità indica coerenza dimensionale.'}`, { align: 'justify' });
           doc.moveDown(0.5);
+        } else {
+          console.log(`[PDF REPORT] Dimensioni non disponibili - Verifica: ${sigWidth}x${sigHeight}mm, Riferimento: ${refWidth}x${refHeight}mm`);
         }
         
         // 2. Confronto Proporzione
