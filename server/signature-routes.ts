@@ -1006,27 +1006,27 @@ export function registerSignatureRoutes(appRouter: Router) {
         doc.moveDown(1);
         
         // Confronto Spaziatura (mapping from available fields)
-        if (signature.parameters?.avgSpacing !== undefined && referenceSignature.parameters?.avgSpacing !== undefined) {
-          const sigSpacing = signature.parameters.avgSpacing;
-          const refSpacing = referenceSignature.parameters.avgSpacing;
+        if (signatureParams?.AvgSpacing !== undefined && referenceParams?.AvgSpacing !== undefined) {
+          const sigSpacing = signatureParams.AvgSpacing;
+          const refSpacing = referenceParams.AvgSpacing;
           
           doc.text(`Spaziatura Media: La firma in verifica ha una spaziatura media di ${formatNumber(sigSpacing, 2)} mm ${sigSpacing < refSpacing * 0.7 ? 'molto inferiore' : sigSpacing > refSpacing * 1.3 ? 'superiore' : 'compatibile'} rispetto ai ${formatNumber(refSpacing, 2)} mm della firma di riferimento, ${sigSpacing < refSpacing * 0.7 ? 'indicando maggiore compattezza e potenzialmente diversa velocità di esecuzione.' : 'indicando coerenza nella distribuzione spaziale.'}`, { align: 'justify' });
           doc.moveDown(0.5);
         }
         
         // Confronto Velocità
-        if (signature.parameters?.velocity !== undefined && referenceSignature.parameters?.velocity !== undefined) {
-          const sigVel = signature.parameters.velocity;
-          const refVel = referenceSignature.parameters.velocity;
+        if (signatureParams?.Velocity !== undefined && referenceParams?.Velocity !== undefined) {
+          const sigVel = signatureParams.Velocity;
+          const refVel = referenceParams.Velocity;
           
           doc.text(`Velocità di Scrittura: La velocità di scrittura della firma in verifica è ${sigVel < refVel * 0.8 ? 'inferiore' : sigVel > refVel * 1.2 ? 'superiore' : 'compatibile'} (${formatNumber(sigVel, 2)}/5) rispetto a quella della firma di riferimento (${formatNumber(refVel, 2)}/5), ${sigVel < refVel * 0.8 ? 'suggerendo possibile maggiore attenzione o cautela durante la firma.' : 'indicando modalità di esecuzione coerenti.'}`, { align: 'justify' });
           doc.moveDown(0.5);
         }
         
         // Confronto Proporzione
-        if (signature.parameters?.proportion !== undefined && referenceSignature.parameters?.proportion !== undefined) {
-          const sigProp = signature.parameters.proportion;
-          const refProp = referenceSignature.parameters.proportion;
+        if (signatureParams?.Proportion !== undefined && referenceParams?.Proportion !== undefined) {
+          const sigProp = signatureParams.Proportion;
+          const refProp = referenceParams.Proportion;
           
           doc.text(`Proporzione: La firma in verifica ha una proporzione di ${formatNumber(sigProp, 3)}, mentre la firma di riferimento ha una proporzione di ${formatNumber(refProp, 3)}. ${Math.abs(sigProp - refProp) > 0.2 ? 'Questa differenza indica una diversa distribuzione delle dimensioni tra le componenti della firma.' : 'Questa compatibilità indica coerenza proporzionale.'}`, { align: 'justify' });
           doc.moveDown(0.5);
@@ -1102,47 +1102,47 @@ export function registerSignatureRoutes(appRouter: Router) {
         doc.fontSize(10);
         
         // Analisi automatica basata sui parametri disponibili
-        if (signature.parameters && referenceSignature.parameters) {
+        if (signatureParams && referenceParams) {
           // Velocità (se disponibile)
-          if (signature.parameters.velocity !== undefined && referenceSignature.parameters.velocity !== undefined) {
-            const sigVel = signature.parameters.velocity;
-            const refVel = referenceSignature.parameters.velocity;
+          if (signatureParams.Velocity !== undefined && referenceParams.Velocity !== undefined) {
+            const sigVel = signatureParams.Velocity;
+            const refVel = referenceParams.Velocity;
             doc.text(`La firma in verifica presenta una ${sigVel < refVel * 0.8 ? 'minore' : sigVel > refVel * 1.2 ? 'maggiore' : 'simile'} velocità di esecuzione rispetto alla comparativa.`);
           }
           
-          // Proporzioni (corretto nome proprietà)
-          if (signature.parameters.proportion !== undefined && referenceSignature.parameters.proportion !== undefined) {
-            const sigProp = signature.parameters.proportion;
-            const refProp = referenceSignature.parameters.proportion;
+          // Proporzioni
+          if (signatureParams.Proportion !== undefined && referenceParams.Proportion !== undefined) {
+            const sigProp = signatureParams.Proportion;
+            const refProp = referenceParams.Proportion;
             doc.text(`Le proporzioni tra altezza e larghezza mostrano ${Math.abs(sigProp - refProp) > 0.2 ? 'differenze significative' : 'compatibilità'}.`);
           }
           
-          // Pressione (usando pressurePoints se disponibile)
-          if (signature.parameters.pressurePoints && referenceSignature.parameters.pressurePoints) {
-            const sigPress = signature.parameters.pressurePoints.pressureVariation;
-            const refPress = referenceSignature.parameters.pressurePoints.pressureVariation;
+          // Pressione
+          if (signatureParams.PressureMean !== undefined && referenceParams.PressureMean !== undefined) {
+            const sigPress = signatureParams.PressureMean;
+            const refPress = referenceParams.PressureMean;
             doc.text(`La pressione esercitata durante la firma è ${Math.abs(sigPress - refPress) < refPress * 0.3 ? 'compatibile' : 'differente'} tra i due esemplari.`);
           }
           
           // Inclinazione
-          if (signature.parameters.inclination !== undefined && referenceSignature.parameters.inclination !== undefined) {
-            const sigIncl = signature.parameters.inclination;
-            const refIncl = referenceSignature.parameters.inclination;
+          if (signatureParams.Inclination !== undefined && referenceParams.Inclination !== undefined) {
+            const sigIncl = signatureParams.Inclination;
+            const refIncl = referenceParams.Inclination;
             const angleDiff = Math.abs(sigIncl - refIncl);
             doc.text(`L'inclinazione dei tratti ${angleDiff > 15 ? 'evidenzia differenze stilistiche' : 'risulta simile'}.`);
           }
           
-          // Curvatura (nome proprietà corretto)
-          if (signature.parameters.curvatureMetrics && referenceSignature.parameters.curvatureMetrics) {
-            const sigCurv = signature.parameters.curvatureMetrics.averageCurvature;
-            const refCurv = referenceSignature.parameters.curvatureMetrics.averageCurvature;
-            doc.text(`La curvilineità/angolosità delle firme è ${Math.abs(sigCurv - refCurv) < 0.1 ? 'coerente' : 'variabile'}.`);
+          // Curvatura
+          if (signatureParams.AvgCurvature !== undefined && referenceParams.AvgCurvature !== undefined) {
+            const sigCurv = signatureParams.AvgCurvature;
+            const refCurv = referenceParams.AvgCurvature;
+            doc.text(`La curvilineità/angolosità delle firme è ${Math.abs(sigCurv - refCurv) < 15 ? 'coerente' : 'variabile'}.`);
           }
           
-          // Spaziatura (usando connectivity se disponibile)
-          if (signature.parameters.connectivity && referenceSignature.parameters.connectivity) {
-            const sigSpacing = signature.parameters.connectivity.gaps;
-            const refSpacing = referenceSignature.parameters.connectivity.gaps;
+          // Spaziatura
+          if (signatureParams.AvgSpacing !== undefined && referenceParams.AvgSpacing !== undefined) {
+            const sigSpacing = signatureParams.AvgSpacing;
+            const refSpacing = referenceParams.AvgSpacing;
             doc.text(`La spaziatura tra le lettere appare ${Math.abs(sigSpacing - refSpacing) < refSpacing * 0.3 ? 'omogenea' : 'variabile'}.`);
           }
           
