@@ -213,19 +213,21 @@ export class SignaturePythonAnalyzer {
    * Genera un report comparativo in formato PDF
    * @param verificaPath Percorso della firma da verificare
    * @param referencePath Percorso della firma di riferimento principale
+   * @param verificaDimensions Dimensioni reali della firma da verificare {widthMm, heightMm}
+   * @param referenceDimensions Dimensioni reali della firma di riferimento {widthMm, heightMm}
    * @param caseInfo Informazioni sul caso per il report
    * @param additionalReferencePaths Array opzionale di percorsi di firme di riferimento aggiuntive
    * @param projectId ID del progetto per garantire l'isolamento dei dati
-   * @param dpi Densità di pixel per pollice per calcolare le dimensioni reali (default 300)
    * @returns Promise con il risultato del confronto, incluso il percorso del report
    */
   public static async generateReport(
     verificaPath: string,
     referencePath: string,
+    verificaDimensions: { widthMm: number; heightMm: number },
+    referenceDimensions: { widthMm: number; heightMm: number },
     caseInfo?: CaseInfo,
     additionalReferencePaths?: string[],
-    projectId?: number,
-    dpi: number = 300
+    projectId?: number
   ): Promise<ComparisonResult> {
     try {
       console.log(`[PYTHON BRIDGE] Generazione report per firma verifica: ${verificaPath}`);
@@ -240,7 +242,7 @@ export class SignaturePythonAnalyzer {
       console.log(`[PYTHON BRIDGE] CORREZIONE: Invertendo l'ordine dei parametri per compensare il bug`);
       
       // Forziamo la generazione del report, assicurandoci che il flag sia impostato a true
-      const result = await this.compareSignatures(referencePath, verificaPath, true, caseInfo, projectId, dpi);
+      const result = await this.compareSignatures(referencePath, verificaPath, referenceDimensions, verificaDimensions, true, caseInfo, projectId);
       
       // Verifica approfondita del risultato
       console.log(`[PYTHON BRIDGE] Risultato completo:`, JSON.stringify(result, null, 2));

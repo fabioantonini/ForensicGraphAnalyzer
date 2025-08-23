@@ -1157,35 +1157,13 @@ def analyze_signature_with_dimensions(image_path, real_width_mm, real_height_mm)
         print(f"Errore nell'analisi della firma con dimensioni: {str(e)}", file=sys.stderr)
         return {"error": str(e)}
 
-def compare_signatures(verifica_path, comp_path, generate_report=False, case_info=None, project_id=None, dpi=DEFAULT_DPI):
+def compare_signatures_deprecated(verifica_path, comp_path, generate_report=False, case_info=None, project_id=None, dpi=DEFAULT_DPI):
     """
-    Funzione principale per confrontare firme
-    
-    Args:
-        verifica_path: Percorso della firma da verificare
-        comp_path: Percorso della firma di riferimento
-        generate_report: Se True, genera anche un report PDF
-        case_info: Informazioni sul caso per il report
-        project_id: ID del progetto per garantire l'isolamento dei dati
-        dpi: Densità di pixel per pollice da utilizzare per il calcolo delle dimensioni reali (default 300)
-        
-    Returns:
-        Dizionario con i risultati dell'analisi
+    FUNZIONE DEPRECATA - utilizzare compare_signatures_with_dimensions
+    Questa funzione è mantenuta solo per compatibilità temporanea
     """
-    try:
-        # Carica e analizza le immagini
-        verifica_img = cv2.imread(verifica_path, cv2.IMREAD_GRAYSCALE)
-        comp_img = cv2.imread(comp_path, cv2.IMREAD_GRAYSCALE)
-        
-        if verifica_img is None or comp_img is None:
-            raise ValueError("Impossibile leggere una o entrambe le immagini")
-        
-        # Preprocessa le immagini
-        processed_verifica = preprocess_image(verifica_img)
-        processed_comp = preprocess_image(comp_img)
-        
-        # Calcola le metriche SSIM
-        similarity, _ = ssim(processed_verifica, processed_comp, full=True)
+    print(f"ATTENZIONE: Uso di funzione deprecata che usa DPI. Utilizzare sempre dimensioni reali.", file=sys.stderr)
+    return {"error": "Funzione deprecata - utilizzare sempre dimensioni reali invece di DPI"}
         
         # Analizza le firme
         verifica_data = analyze_signature(verifica_path, dpi)
@@ -1349,24 +1327,13 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"Errore nel parsing delle dimensioni reference: {e}", file=sys.stderr)
     
-    # Fallback al DPI se le dimensioni non sono disponibili (compatibilità)
-    dpi = DEFAULT_DPI
-    if "--dpi" in sys.argv:
-        try:
-            idx = sys.argv.index("--dpi")
-            if idx + 1 < len(sys.argv):
-                dpi = int(sys.argv[idx + 1])
-                print(f"DPI specificato: {dpi}", file=sys.stderr)
-        except Exception as e:
-            print(f"Errore nel parsing del DPI: {e}, usando DPI di default={DEFAULT_DPI}", file=sys.stderr)
-    
-    # Log per debugging
+    # Solo dimensioni reali sono supportate - no fallback ai DPI
     if verifica_dimensions and reference_dimensions:
         print(f"Confronto tra firme con dimensioni reali - verifica={verifica_dimensions[0]}x{verifica_dimensions[1]}mm, reference={reference_dimensions[0]}x{reference_dimensions[1]}mm", file=sys.stderr)
         result = compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dimensions, reference_dimensions, generate_report, case_info, project_id)
     else:
-        print(f"Confronto tra firme con DPI fallback - path1={verifica_path}, path2={comp_path}, dpi={dpi}", file=sys.stderr)
-        result = compare_signatures(verifica_path, comp_path, generate_report, case_info, project_id, dpi)
+        print(f"ERRORE: Dimensioni reali obbligatorie per entrambe le firme - no DPI fallback", file=sys.stderr)
+        result = {"error": "Dimensioni reali obbligatorie per entrambe le firme"}
     
     # Adatta i parametri per JSON
     if "verifica_parameters" in result:

@@ -242,11 +242,19 @@ export function registerSignatureRoutes(appRouter: Router) {
             const verificaPath = path.join('uploads', signature.filename);
             const referencePath = path.join('uploads', referenceSignature.filename);
             
+            // Verifica che entrambe le firme abbiano dimensioni reali - OBBLIGATORIE, no fallback ai DPI
+            if (!signature.realWidthMm || !signature.realHeightMm) {
+              throw new Error(`Firma ${signature.id} non ha dimensioni reali definite`);
+            }
+            if (!referenceSignature.realWidthMm || !referenceSignature.realHeightMm) {
+              throw new Error(`Firma di riferimento ${referenceSignature.id} non ha dimensioni reali definite`);
+            }
+            
             const pythonResult = await SignaturePythonAnalyzer.compareSignatures(
               verificaPath,
               referencePath,
-              signature.parameters?.realDimensions || { widthMm: signature.realWidthMm || 0, heightMm: signature.realHeightMm || 0, pixelsPerMm: signature.dpi / 25.4 || 11.8 },
-              referenceSignature.parameters?.realDimensions || { widthMm: referenceSignature.realWidthMm || 0, heightMm: referenceSignature.realHeightMm || 0, pixelsPerMm: referenceSignature.dpi / 25.4 || 11.8 }
+              { widthMm: signature.realWidthMm, heightMm: signature.realHeightMm },
+              { widthMm: referenceSignature.realWidthMm, heightMm: referenceSignature.realHeightMm }
             );
             
             similarityScore = pythonResult.similarity; // Mantieni come percentuale diretta
@@ -382,7 +390,7 @@ export function registerSignatureRoutes(appRouter: Router) {
         fileType: req.file.mimetype,
         fileSize: req.file.size,
         isReference: true,
-        dpi: 300, // DPI standard per compatibilità
+        // DPI rimosso - usiamo solo dimensioni reali
         realWidthMm: realWidthMm,
         realHeightMm: realHeightMm
       });
@@ -445,7 +453,7 @@ export function registerSignatureRoutes(appRouter: Router) {
         fileType: req.file.mimetype,
         fileSize: req.file.size,
         isReference: false,
-        dpi: 300, // DPI standard per compatibilità
+        // DPI rimosso - usiamo solo dimensioni reali
         realWidthMm: realWidthMm,
         realHeightMm: realHeightMm
       });
