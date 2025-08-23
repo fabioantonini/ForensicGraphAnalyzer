@@ -53,20 +53,20 @@ export class SignaturePythonAnalyzer {
   }
 
   /**
-   * Analizza una singola firma
+   * Analizza una singola firma utilizzando dimensioni reali specifiche
    * @param signaturePath Percorso del file dell'immagine della firma
-   * @param dpi Densità di pixel per pollice per calcolare le dimensioni reali (default 300)
+   * @param realWidthMm Larghezza reale della firma in millimetri
+   * @param realHeightMm Altezza reale della firma in millimetri
    * @returns Promise con i parametri estratti dalla firma
    */
-  public static async analyzeSignature(signaturePath: string, dpi: number = 300): Promise<any> {
+  public static async analyzeSignature(signaturePath: string, realWidthMm: number, realHeightMm: number): Promise<any> {
     return new Promise((resolve, reject) => {
       const process = spawn('python3', [
         this.pythonScript,
+        '--analyze-dimensions',  // Usa la funzione con dimensioni reali
         signaturePath,
-        signaturePath,  // Usiamo lo stesso file due volte per evitare errori
-        '--no-report',  // Non generiamo report per singole analisi
-        '--dpi',        // Parametro per il DPI
-        dpi.toString()  // Valore del DPI specificato
+        realWidthMm.toString(),
+        realHeightMm.toString()
       ]);
 
       let outputData = '';
