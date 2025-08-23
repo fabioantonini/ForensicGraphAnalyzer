@@ -1171,56 +1171,125 @@ export default function SignaturesPage() {
                               )}
                             </div>
                         
-                        {/* Parametri tecnici chiave */}
-                        {signature.parameters && (
-                          <div className="space-y-2">
-                            <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-muted-foreground">
-                              {signature.parameters.strokeWidth?.meanMm && (
-                                <div><strong>Spessore medio:</strong> {signature.parameters.strokeWidth.meanMm.toFixed(2)}mm</div>
-                              )}
-                              {signature.parameters.inclination !== undefined && (
-                                <div><strong>Inclinazione:</strong> {signature.parameters.inclination.toFixed(1)}°</div>
-                              )}
-                              {signature.parameters.connectivity?.totalStrokeLength && (
-                                <div><strong>Lunghezza tratto:</strong> {signature.parameters.connectivity.totalStrokeLength.toFixed(0)}mm</div>
-                              )}
-                              {signature.parameters.connectivity?.strokeComplexity && (
-                                <div><strong>Complessità:</strong> {(signature.parameters.connectivity.strokeComplexity * 100).toFixed(0)}%</div>
-                              )}
-                              {signature.parameters.velocity !== undefined && (
-                                <div><strong>Velocità:</strong> {signature.parameters.velocity}/5</div>
-                              )}
-                              {signature.parameters.writingStyle && (
-                                <div><strong>Stile:</strong> {signature.parameters.writingStyle}</div>
-                              )}
-                            </div>
+                        {/* Tabella di confronto parametri dettagliata */}
+                        {signature.analysisReport && (() => {
+                          try {
+                            const reportData = JSON.parse(signature.analysisReport);
+                            const referenceSignatures = comparisonResults?.filter(s => s.isReference) || [];
+                            const referenceData = referenceSignatures.length > 0 && referenceSignatures[0].analysisReport 
+                              ? JSON.parse(referenceSignatures[0].analysisReport) : null;
                             
-                            {/* Parametri avanzati Python */}
-                            <div className="border-t pt-2">
-                              <h6 className="text-xs font-medium text-muted-foreground mb-1">Parametri Avanzati (Python/OpenCV):</h6>
-                              <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-muted-foreground">
-                                {signature.parameters.avgSpacing !== undefined && (
-                                  <div><strong>Spaziatura media:</strong> {signature.parameters.avgSpacing.toFixed(1)}mm</div>
-                                )}
-                                {signature.parameters.pressureStd !== undefined && (
-                                  <div><strong>Dev. intensità:</strong> {signature.parameters.pressureStd.toFixed(1)}</div>
-                                )}
-                                {signature.parameters.pressureMean !== undefined && (
-                                  <div><strong>Intensità media:</strong> {signature.parameters.pressureMean.toFixed(0)}</div>
-                                )}
-                                {signature.parameters.readability && (
-                                  <div><strong>Leggibilità:</strong> {signature.parameters.readability}</div>
-                                )}
-                                {signature.parameters.avgAsolaSize !== undefined && (
-                                  <div><strong>Dim. asole:</strong> {signature.parameters.avgAsolaSize.toFixed(2)}mm</div>
-                                )}
-                                {signature.parameters.baselineStdMm !== undefined && (
-                                  <div><strong>Dev. baseline:</strong> {signature.parameters.baselineStdMm.toFixed(1)}mm</div>
-                                )}
+                            if (!reportData || !referenceData) return null;
+                            
+                            const comparisonParams = [
+                              { 
+                                key: 'real_width_mm', 
+                                label: 'Larghezza (mm)', 
+                                format: (v) => v?.toFixed(1) 
+                              },
+                              { 
+                                key: 'real_height_mm', 
+                                label: 'Altezza (mm)', 
+                                format: (v) => v?.toFixed(1) 
+                              },
+                              { 
+                                key: 'Proportion', 
+                                label: 'Proporzione', 
+                                format: (v) => v?.toFixed(2) 
+                              },
+                              { 
+                                key: 'Inclination', 
+                                label: 'Inclinazione (°)', 
+                                format: (v) => v?.toFixed(1) 
+                              },
+                              { 
+                                key: 'PressureMean', 
+                                label: 'Intensità Media (0-255)', 
+                                format: (v) => v?.toFixed(0) 
+                              },
+                              { 
+                                key: 'PressureStd', 
+                                label: 'Dev. Intensità', 
+                                format: (v) => v?.toFixed(1) 
+                              },
+                              { 
+                                key: 'AvgCurvature', 
+                                label: 'Curvatura Media', 
+                                format: (v) => v?.toFixed(2) 
+                              },
+                              { 
+                                key: 'Velocity', 
+                                label: 'Velocità (1-5)', 
+                                format: (v) => v?.toFixed(1) 
+                              },
+                              { 
+                                key: 'AvgSpacing', 
+                                label: 'Spaziatura (mm)', 
+                                format: (v) => v?.toFixed(1) 
+                              },
+                              { 
+                                key: 'AvgAsolaSize', 
+                                label: 'Dim. Asole (mm)', 
+                                format: (v) => v?.toFixed(2) 
+                              },
+                              { 
+                                key: 'BaselineStdMm', 
+                                label: 'Dev. Baseline (mm)', 
+                                format: (v) => v?.toFixed(1) 
+                              }
+                            ];
+                            
+                            return (
+                              <div className="mt-3 border rounded-lg p-3 bg-gray-50">
+                                <h6 className="font-medium mb-2 text-sm">Confronto Parametri Dettagliato</h6>
+                                <div className="overflow-x-auto">
+                                  <table className="w-full text-xs">
+                                    <thead>
+                                      <tr className="border-b">
+                                        <th className="text-left py-1 px-2">Parametro</th>
+                                        <th className="text-center py-1 px-2">Riferimento</th>
+                                        <th className="text-center py-1 px-2">Verifica</th>
+                                        <th className="text-center py-1 px-2">Compatibilità</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {comparisonParams.map(param => {
+                                        const refValue = referenceData[param.key];
+                                        const verifyValue = reportData[param.key];
+                                        if (refValue === undefined || verifyValue === undefined) return null;
+                                        
+                                        // Calcola compatibilità come percentuale (100% - differenza percentuale)
+                                        const diff = Math.abs(refValue - verifyValue);
+                                        const maxValue = Math.max(Math.abs(refValue), Math.abs(verifyValue));
+                                        const compatibility = maxValue > 0 ? Math.max(0, 100 - (diff / maxValue * 100)) : 100;
+                                        
+                                        return (
+                                          <tr key={param.key} className="border-b">
+                                            <td className="py-1 px-2 font-medium">{param.label}</td>
+                                            <td className="text-center py-1 px-2">{param.format(refValue)}</td>
+                                            <td className="text-center py-1 px-2">{param.format(verifyValue)}</td>
+                                            <td className="text-center py-1 px-2">
+                                              <span className={`inline-block px-2 py-0.5 rounded text-xs ${
+                                                compatibility >= 85 ? 'bg-green-100 text-green-800' :
+                                                compatibility >= 65 ? 'bg-yellow-100 text-yellow-800' :
+                                                'bg-red-100 text-red-800'
+                                              }`}>
+                                                {compatibility.toFixed(1)}%
+                                              </span>
+                                            </td>
+                                          </tr>
+                                        );
+                                      })}
+                                    </tbody>
+                                  </table>
+                                </div>
                               </div>
-                            </div>
-                          </div>
-                        )}
+                            );
+                          } catch (e) {
+                            console.error('Errore parsing analysisReport:', e);
+                            return null;
+                          }
+                        })()}
                       </div>
                     </div>
                     <Badge variant={
