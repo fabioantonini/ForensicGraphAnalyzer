@@ -29,8 +29,8 @@ export class SignatureAnalyzer {
       // Verifica che il file esista
       await fs.access(imagePath);
       
-      // Carica l'immagine con Sharp
-      const image = sharp(imagePath);
+      // Carica l'immagine con Sharp e applica orientamento EXIF
+      const image = sharp(imagePath).rotate(); // Applica automaticamente orientamento EXIF
       const metadata = await image.metadata();
       const { width: pixelWidth, height: pixelHeight } = metadata;
       

@@ -383,7 +383,7 @@ export class SignatureCropper {
     cropBox?: { left: number; top: number; width: number; height: number }
   ): Promise<{ previewBase64: string; bounds?: any }> {
     try {
-      const image = sharp(inputPath);
+      const image = sharp(inputPath).rotate(); // Applica automaticamente orientamento EXIF
       
       let previewImage;
       let bounds;
