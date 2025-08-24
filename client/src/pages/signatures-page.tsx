@@ -1408,17 +1408,19 @@ export default function SignaturesPage() {
                                           const verifyValue = reportData[param.key];
                                           if (refValue === undefined || verifyValue === undefined) return null;
                                           
-                                          // Calcola compatibilità per naturalezza (scala 0-100)
+                                          // === CORREZIONE: Usa stesso algoritmo della compatibilità principale ===
                                           const diff = Math.abs(refValue - verifyValue);
-                                          const avgValue = (refValue + verifyValue) / 2;
+                                          const maxValue = Math.max(Math.abs(refValue), Math.abs(verifyValue));
                                           let compatibility;
                                           
-                                          if (avgValue > 0) {
-                                            const relativeDiff = diff / avgValue;
-                                            if (relativeDiff <= 0.1) compatibility = 95;
-                                            else if (relativeDiff <= 0.2) compatibility = 85;
-                                            else if (relativeDiff <= 0.3) compatibility = 70;
-                                            else compatibility = Math.max(0, 100 - (relativeDiff * 150));
+                                          if (maxValue > 0) {
+                                            const relativeDiff = diff / maxValue;
+                                            if (relativeDiff <= 0.05) compatibility = 98;
+                                            else if (relativeDiff <= 0.1) compatibility = 90;
+                                            else if (relativeDiff <= 0.15) compatibility = 80;
+                                            else if (relativeDiff <= 0.25) compatibility = 60;
+                                            else if (relativeDiff <= 0.50) compatibility = 30;
+                                            else compatibility = Math.max(10, 100 - (relativeDiff * 100));
                                           } else {
                                             compatibility = 100;
                                           }
@@ -1509,21 +1511,19 @@ export default function SignaturesPage() {
                                       )}
                                     </div>
                                     
-                                    {/* === SOGLIE DI CLASSIFICAZIONE === */}
-                                    <div className="mt-3 p-2 bg-gray-50 rounded text-xs">
-                                      <details className="cursor-pointer">
-                                        <summary className="font-medium text-gray-700 hover:text-gray-900">
-                                          📋 Criteri di Classificazione
-                                        </summary>
-                                        <div className="mt-2 space-y-1 text-gray-600">
-                                          <div><strong>🟢 Autentica:</strong> Similarità ≥85% + Naturalezza ≥80%</div>
-                                          <div><strong>🔵 Autentica Dissimulata:</strong> Similarità &lt;65% + Naturalezza ≥80%</div>
-                                          <div><strong>🟡 Probabilmente Autentica:</strong> Similarità ≥75% + Naturalezza ≥75%</div>
-                                          <div><strong>🟠 Sospetta:</strong> Similarità media + Naturalezza &lt;50%</div>
-                                          <div><strong>🔴 Probabilmente Falsa:</strong> Similarità &lt;65% + Naturalezza &lt;60%</div>
-                                          <div><strong>⚪ Incerta:</strong> Parametri nel range intermedio</div>
-                                        </div>
-                                      </details>
+                                    {/* === SOGLIE DI CLASSIFICAZIONE (SEMPRE VISIBILI) === */}
+                                    <div className="mt-3 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded border-l-4 border-blue-400">
+                                      <div className="font-medium text-sm text-gray-800 mb-2 flex items-center gap-2">
+                                        📋 <span>Criteri di Classificazione (Matrice 2D)</span>
+                                      </div>
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-xs text-gray-700">
+                                        <div><strong className="text-green-700">🟢 Autentica:</strong> Sim≥85% + Nat≥80%</div>
+                                        <div><strong className="text-blue-700">🔵 Autentica Dissimulata:</strong> Sim&lt;65% + Nat≥80%</div>
+                                        <div><strong className="text-green-600">🟡 Prob. Autentica:</strong> Sim≥75% + Nat≥75%</div>
+                                        <div><strong className="text-orange-600">🟠 Sospetta:</strong> Sim media + Nat&lt;50%</div>
+                                        <div><strong className="text-red-600">🔴 Prob. Falsa:</strong> Sim&lt;65% + Nat&lt;60%</div>
+                                        <div><strong className="text-gray-600">⚪ Incerta:</strong> Parametri intermedi</div>
+                                      </div>
                                     </div>
                                     {signature.verdictExplanation && (
                                       <div className="mt-2 text-xs text-gray-600 text-center italic">
