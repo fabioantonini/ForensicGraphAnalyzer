@@ -1164,12 +1164,43 @@ export default function SignaturesPage() {
                               <p className="text-sm text-muted-foreground">
                                 <strong>{t('signatures.comparisonDialog.similarity')}</strong> {signature.comparisonResult ? (signature.comparisonResult * 100).toFixed(1) : '0'}%
                               </p>
+                              
+                              {/* === NUOVI PARAMETRI DI NATURALEZZA === */}
+                              {signature.naturalnessScore !== null && signature.naturalnessScore !== undefined && (
+                                <p className="text-sm text-muted-foreground">
+                                  <strong>🧠 Naturalezza:</strong> {(signature.naturalnessScore * 100).toFixed(1)}%
+                                </p>
+                              )}
+                              
+                              {signature.verdict && (
+                                <span className={`text-xs font-semibold px-2 py-1 rounded ${
+                                  signature.verdict === 'Autentica' ? 'bg-green-100 text-green-800' :
+                                  signature.verdict === 'Autentica dissimulata' ? 'bg-blue-100 text-blue-800' :
+                                  signature.verdict === 'Probabilmente autentica' ? 'bg-green-100 text-green-700' :
+                                  signature.verdict === 'Incerta' ? 'bg-yellow-100 text-yellow-800' :
+                                  signature.verdict === 'Sospetta' ? 'bg-orange-100 text-orange-800' :
+                                  signature.verdict === 'Probabilmente falsa' ? 'bg-red-100 text-red-800' :
+                                  'bg-gray-100 text-gray-800'
+                                }`}>
+                                  🎯 {signature.verdict}
+                                </span>
+                              )}
+                              
                               {signature.parameters?.realDimensions && (
                                 <p className="text-sm text-muted-foreground">
                                   <strong>Dimensioni:</strong> {signature.parameters.realDimensions.widthMm?.toFixed(1)}×{signature.parameters.realDimensions.heightMm?.toFixed(1)}mm
                                 </p>
                               )}
                             </div>
+                            
+                            {/* Spiegazione del verdetto se disponibile */}
+                            {signature.verdictExplanation && (
+                              <div className="mt-1">
+                                <p className="text-xs text-gray-600 italic">
+                                  💡 {signature.verdictExplanation}
+                                </p>
+                              </div>
+                            )}
                         
                         {/* Tabella di confronto parametri dettagliata */}
                         {signature.analysisReport && (() => {
