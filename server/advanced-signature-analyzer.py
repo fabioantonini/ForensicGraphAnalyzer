@@ -15,6 +15,7 @@ import sys
 import tempfile
 from datetime import datetime
 import base64
+import io
 from io import BytesIO
 from skimage.metrics import structural_similarity as ssim
 import matplotlib.pyplot as plt
@@ -304,6 +305,117 @@ def analyze_signature_deprecated_dpi_removed():
     FUNZIONE RIMOSSA - utilizzare analyze_signature_with_dimensions
     """
     return {"error": "Funzione rimossa - utilizzare analyze_signature_with_dimensions con dimensioni reali"}
+
+def create_naturalness_chart(verifica_data, comp_data):
+    """
+    Crea un grafico specifico per i parametri di naturalezza (anti-dissimulazione)
+    
+    Args:
+        verifica_data: Parametri della firma da verificare
+        comp_data: Parametri della firma comparativa (riferimento)
+    
+    Returns:
+        String base64 dell'immagine del grafico di naturalezza
+    """
+    try:
+        # Parametri specifici per la naturalezza
+        naturalness_params = ['FluidityScore', 'PressureConsistency', 'CoordinationIndex']
+        
+        # Estrai i valori per entrambe le firme
+        verifica_values = []
+        comp_values = []
+        labels = []
+        
+        for param in naturalness_params:
+            if param in verifica_data and param in comp_data:
+                verifica_values.append(verifica_data[param])
+                comp_values.append(comp_data[param])
+                
+                # Etichette personalizzate
+                if param == 'FluidityScore':
+                    labels.append('🧠 Fluidità')
+                elif param == 'PressureConsistency':
+                    labels.append('🔄 Consistenza')
+                elif param == 'CoordinationIndex':
+                    labels.append('🎯 Coordinazione')
+                else:
+                    labels.append(param)
+        
+        if not verifica_values or not comp_values:
+            # Crea un grafico vuoto se non ci sono dati
+            fig = Figure(figsize=(10, 6))
+            ax = fig.add_subplot(111)
+            ax.text(0.5, 0.5, 'Dati di naturalezza non disponibili', 
+                   ha='center', va='center', fontsize=16)
+            ax.set_xlim(0, 1)
+            ax.set_ylim(0, 1)
+            ax.axis('off')
+        else:
+            # Crea il grafico a barre per i parametri di naturalezza
+            fig = Figure(figsize=(12, 7))
+            ax = fig.add_subplot(111)
+            
+            x = np.arange(len(labels))
+            width = 0.35
+            
+            # Colori specifici per naturalezza
+            bars1 = ax.bar(x - width/2, verifica_values, width, 
+                          label='Firma in Verifica', color='#3b82f6', alpha=0.8)
+            bars2 = ax.bar(x + width/2, comp_values, width,
+                          label='Firma di Riferimento', color='#10b981', alpha=0.8)
+            
+            # Personalizzazione del grafico
+            ax.set_xlabel('Parametri di Naturalezza', fontweight='bold', fontsize=12)
+            ax.set_ylabel('Punteggio (%)', fontweight='bold', fontsize=12)
+            ax.set_title('🧠 Analisi Naturalezza (Anti-Dissimulazione)', fontweight='bold', fontsize=14)
+            ax.set_xticks(x)
+            ax.set_xticklabels(labels, fontsize=10)
+            ax.legend()
+            ax.grid(True, alpha=0.3, axis='y')
+            ax.set_ylim(0, 100)
+            
+            # Aggiungi valori sulle barre
+            def add_value_labels(bars):
+                for bar in bars:
+                    height = bar.get_height()
+                    ax.annotate(f'{height:.1f}%',
+                               xy=(bar.get_x() + bar.get_width() / 2, height),
+                               xytext=(0, 3),  # offset
+                               textcoords="offset points",
+                               ha='center', va='bottom', fontsize=9)
+            
+            add_value_labels(bars1)
+            add_value_labels(bars2)
+        
+        # Salva in buffer e converti in base64
+        buffer = io.BytesIO()
+        fig.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
+        buffer.seek(0)
+        
+        # Converti in base64
+        image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        buffer.close()
+        
+        return image_base64
+        
+    except Exception as e:
+        print(f"[ERROR] Errore nella creazione del grafico naturalezza: {str(e)}", file=sys.stderr)
+        # Ritorna un grafico di errore
+        fig = Figure(figsize=(10, 6))
+        ax = fig.add_subplot(111)
+        ax.text(0.5, 0.5, f'Errore grafico naturalezza:\n{str(e)}', 
+               ha='center', va='center', fontsize=14, color='red')
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
+        ax.axis('off')
+        
+        buffer = io.BytesIO()
+        fig.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
+        buffer.seek(0)
+        image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        buffer.close()
+        
+        return image_base64
 
 def create_comparison_chart(verifica_data, comp_data):
     """
@@ -833,6 +945,9 @@ def generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, simi
     verifica_data_normalized = normalize_parameter_keys(verifica_data)
     comp_data_normalized = normalize_parameter_keys(comp_data)
     chart_img_base64 = create_comparison_chart(verifica_data_normalized, comp_data_normalized)
+    
+    # === NUOVO: GRAFICO DI NATURALEZZA ===
+    naturalness_chart_base64 = create_naturalness_chart(verifica_data_normalized, comp_data_normalized)
     chart_data = base64.b64decode(chart_img_base64)
     
     # Salva temporaneamente l'immagine del grafico
@@ -925,6 +1040,9 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
         
         # Crea il grafico di confronto con parametri normalizzati
         chart_img = create_comparison_chart(verifica_data_normalized, comp_data_normalized)
+        
+        # === NUOVO: GRAFICO DI NATURALEZZA ===
+        naturalness_chart_img = create_naturalness_chart(verifica_data_normalized, comp_data_normalized)
         
         # Crea il report descrittivo
         description = create_descriptive_report(verifica_data, comp_data)
@@ -1123,6 +1241,7 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
             "verifica_parameters": verifica_data,
             "reference_parameters": comp_data,
             "comparison_chart": chart_img,
+            "naturalness_chart": naturalness_chart_img,  # === NUOVO GRAFICO DI NATURALEZZA ===
             "description": description,
             "report_path": report_path if report_path else None
         }

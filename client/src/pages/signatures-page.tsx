@@ -1295,72 +1295,222 @@ export default function SignaturesPage() {
                                 format: (v: string) => v || 'N/A'
                               }
                             ];
+
+                            // === PARAMETRI DI NATURALEZZA (ANTI-DISSIMULAZIONE) ===
+                            const naturalnessParams = [
+                              { 
+                                key: 'FluidityScore', 
+                                label: '🧠 Fluidità', 
+                                format: (v: number) => `${v?.toFixed(1)}%` 
+                              },
+                              { 
+                                key: 'PressureConsistency', 
+                                label: '🔄 Consistenza Pressione', 
+                                format: (v: number) => `${v?.toFixed(1)}%` 
+                              },
+                              { 
+                                key: 'CoordinationIndex', 
+                                label: '🎯 Coordinazione', 
+                                format: (v: number) => `${v?.toFixed(1)}%` 
+                              },
+                              { 
+                                key: 'NaturalnessIndex', 
+                                label: '✨ Naturalezza Totale', 
+                                format: (v: number) => `${v?.toFixed(1)}%` 
+                              }
+                            ];
                             
                             return (
-                              <div className="mt-3 border rounded-lg p-3 bg-gray-50">
-                                <h6 className="font-medium mb-2 text-sm">{t('signatures.comparisonTable.title')}</h6>
-                                <div className="overflow-x-auto">
-                                  <table className="w-full text-xs">
-                                    <thead>
-                                      <tr className="border-b">
-                                        <th className="text-left py-1 px-2">{t('signatures.comparisonTable.parameter')}</th>
-                                        <th className="text-center py-1 px-2">{t('signatures.comparisonTable.reference')}</th>
-                                        <th className="text-center py-1 px-2">{t('signatures.comparisonTable.verification')}</th>
-                                        <th className="text-center py-1 px-2">{t('signatures.comparisonTable.compatibility')}</th>
-                                      </tr>
-                                    </thead>
-                                    <tbody>
-                                      {comparisonParams.map(param => {
-                                        const refValue = referenceData[param.key];
-                                        const verifyValue = reportData[param.key];
-                                        if (refValue === undefined || verifyValue === undefined) return null;
-                                        
-                                        // Calcola compatibilità con logica migliorata per valori piccoli
-                                        const diff = Math.abs(refValue - verifyValue);
-                                        const maxValue = Math.max(Math.abs(refValue), Math.abs(verifyValue));
-                                        
-                                        let compatibility;
-                                        // Per parametri con valori molto piccoli (es. asole), usa soglie assolute
-                                        if (param.key === 'AvgAsolaSize' || param.key === 'BaselineStdMm') {
-                                          if (diff <= 0.05) compatibility = 95; // Entrambi molto piccoli = alta compatibilità
-                                          else if (diff <= 0.1) compatibility = 80;
-                                          else if (diff <= 0.2) compatibility = 60;
-                                          else compatibility = Math.max(0, 100 - (diff * 200)); // Scala lineare per diff > 0.2
-                                        }
-                                        // Per altri parametri, usa logica relativa migliorata
-                                        else {
-                                          if (maxValue > 0) {
-                                            const relativeDiff = diff / maxValue;
-                                            // Soglia di tolleranza per evitare 0% su piccole differenze
-                                            if (relativeDiff <= 0.05) compatibility = 98;
-                                            else if (relativeDiff <= 0.1) compatibility = 90;
-                                            else if (relativeDiff <= 0.15) compatibility = 80;
-                                            else compatibility = Math.max(0, 100 - (relativeDiff * 100));
-                                          } else {
-                                            compatibility = 100; // Entrambi zero
+                              <div className="mt-3 space-y-4">
+                                {/* === TABELLA 1: PARAMETRI CLASSICI DI GRAFOLOGIA === */}
+                                <div className="border rounded-lg p-3 bg-gray-50">
+                                  <h6 className="font-medium mb-2 text-sm">📊 {t('signatures.comparisonTable.title')}</h6>
+                                  <div className="overflow-x-auto">
+                                    <table className="w-full text-xs">
+                                      <thead>
+                                        <tr className="border-b">
+                                          <th className="text-left py-1 px-2">{t('signatures.comparisonTable.parameter')}</th>
+                                          <th className="text-center py-1 px-2">{t('signatures.comparisonTable.reference')}</th>
+                                          <th className="text-center py-1 px-2">{t('signatures.comparisonTable.verification')}</th>
+                                          <th className="text-center py-1 px-2">{t('signatures.comparisonTable.compatibility')}</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {classicParams.map(param => {
+                                          const refValue = referenceData[param.key];
+                                          const verifyValue = reportData[param.key];
+                                          if (refValue === undefined || verifyValue === undefined) return null;
+                                          
+                                          // Calcola compatibilità con logica migliorata per valori piccoli
+                                          const diff = Math.abs(refValue - verifyValue);
+                                          const maxValue = Math.max(Math.abs(refValue), Math.abs(verifyValue));
+                                          
+                                          let compatibility;
+                                          // Per parametri con valori molto piccoli (es. asole), usa soglie assolute
+                                          if (param.key === 'AvgAsolaSize' || param.key === 'BaselineStdMm') {
+                                            if (diff <= 0.05) compatibility = 95; // Entrambi molto piccoli = alta compatibilità
+                                            else if (diff <= 0.1) compatibility = 80;
+                                            else if (diff <= 0.2) compatibility = 60;
+                                            else compatibility = Math.max(0, 100 - (diff * 200)); // Scala lineare per diff > 0.2
                                           }
-                                        }
-                                        
-                                        return (
-                                          <tr key={param.key} className="border-b">
-                                            <td className="py-1 px-2 font-medium">{param.label}</td>
-                                            <td className="text-center py-1 px-2">{param.format(refValue)}</td>
-                                            <td className="text-center py-1 px-2">{param.format(verifyValue)}</td>
-                                            <td className="text-center py-1 px-2">
-                                              <span className={`inline-block px-2 py-0.5 rounded text-xs ${
-                                                compatibility >= 85 ? 'bg-green-100 text-green-800' :
-                                                compatibility >= 65 ? 'bg-yellow-100 text-yellow-800' :
-                                                'bg-red-100 text-red-800'
-                                              }`}>
-                                                {compatibility.toFixed(1)}%
-                                              </span>
-                                            </td>
-                                          </tr>
-                                        );
+                                          // Per altri parametri, usa logica relativa migliorata
+                                          else {
+                                            if (maxValue > 0) {
+                                              const relativeDiff = diff / maxValue;
+                                              // Soglia di tolleranza per evitare 0% su piccole differenze
+                                              if (relativeDiff <= 0.05) compatibility = 98;
+                                              else if (relativeDiff <= 0.1) compatibility = 90;
+                                              else if (relativeDiff <= 0.15) compatibility = 80;
+                                              else compatibility = Math.max(0, 100 - (relativeDiff * 100));
+                                            } else {
+                                              compatibility = 100; // Entrambi zero
+                                            }
+                                          }
+                                          
+                                          return (
+                                            <tr key={param.key} className="border-b">
+                                              <td className="py-1 px-2 font-medium">{param.label}</td>
+                                              <td className="text-center py-1 px-2">{param.format(refValue)}</td>
+                                              <td className="text-center py-1 px-2">{param.format(verifyValue)}</td>
+                                              <td className="text-center py-1 px-2">
+                                                <span className={`inline-block px-2 py-0.5 rounded text-xs ${
+                                                  compatibility >= 85 ? 'bg-green-100 text-green-800' :
+                                                  compatibility >= 65 ? 'bg-yellow-100 text-yellow-800' :
+                                                  'bg-red-100 text-red-800'
+                                                }`}>
+                                                  {compatibility.toFixed(1)}%
+                                                </span>
+                                              </td>
+                                            </tr>
+                                          );
                                       })}
-                                    </tbody>
-                                  </table>
+                                      </tbody>
+                                    </table>
+                                  </div>
                                 </div>
+
+                                {/* === TABELLA 2: ANALISI DI NATURALEZZA === */}
+                                <div className="border rounded-lg p-3 bg-blue-50">
+                                  <h6 className="font-medium mb-2 text-sm">🧠 Analisi di Naturalezza (Anti-Dissimulazione)</h6>
+                                  <div className="overflow-x-auto">
+                                    <table className="w-full text-xs">
+                                      <thead>
+                                        <tr className="border-b">
+                                          <th className="text-left py-1 px-2">Parametro</th>
+                                          <th className="text-center py-1 px-2">Riferimento</th>
+                                          <th className="text-center py-1 px-2">Verifica</th>
+                                          <th className="text-center py-1 px-2">Compatibilità</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {naturalnessParams.map(param => {
+                                          const refValue = referenceData[param.key];
+                                          const verifyValue = reportData[param.key];
+                                          if (refValue === undefined || verifyValue === undefined) return null;
+                                          
+                                          // Calcola compatibilità per naturalezza (scala 0-100)
+                                          const diff = Math.abs(refValue - verifyValue);
+                                          const avgValue = (refValue + verifyValue) / 2;
+                                          let compatibility;
+                                          
+                                          if (avgValue > 0) {
+                                            const relativeDiff = diff / avgValue;
+                                            if (relativeDiff <= 0.1) compatibility = 95;
+                                            else if (relativeDiff <= 0.2) compatibility = 85;
+                                            else if (relativeDiff <= 0.3) compatibility = 70;
+                                            else compatibility = Math.max(0, 100 - (relativeDiff * 150));
+                                          } else {
+                                            compatibility = 100;
+                                          }
+                                          
+                                          return (
+                                            <tr key={param.key} className="border-b" title={param.description}>
+                                              <td className="py-1 px-2 font-medium">{param.label}</td>
+                                              <td className="text-center py-1 px-2">{param.format(refValue)}</td>
+                                              <td className="text-center py-1 px-2">{param.format(verifyValue)}</td>
+                                              <td className="text-center py-1 px-2">
+                                                <span className={`inline-block px-2 py-0.5 rounded text-xs ${
+                                                  compatibility >= 85 ? 'bg-green-100 text-green-800' :
+                                                  compatibility >= 65 ? 'bg-yellow-100 text-yellow-800' :
+                                                  'bg-red-100 text-red-800'
+                                                }`}>
+                                                  {compatibility.toFixed(1)}%
+                                                </span>
+                                              </td>
+                                            </tr>
+                                          );
+                                        })}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                  <div className="mt-2 text-xs text-gray-600">
+                                    💡 <strong>Naturalezza Totale:</strong> {signature.naturalnessScore ? (signature.naturalnessScore * 100).toFixed(1) : 'N/A'}% 
+                                    | <strong>Verdetto:</strong> {signature.verdict || 'N/A'}
+                                  </div>
+                                </div>
+
+                                {/* === GRAFICI DI CONFRONTO === */}
+                                <div className="border rounded-lg p-3 bg-slate-50">
+                                  <h6 className="font-medium mb-2 text-sm">📊 Grafici di Confronto</h6>
+                                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                    {/* Grafico Classico */}
+                                    {signature.comparisonChart && (
+                                      <div className="text-center">
+                                        <h7 className="text-xs font-medium text-gray-600 mb-1 block">📈 Parametri Grafologici Classici</h7>
+                                        <img 
+                                          src={`data:image/png;base64,${signature.comparisonChart}`} 
+                                          alt="Grafico confronto parametri classici"
+                                          className="max-w-full h-auto rounded border"
+                                        />
+                                      </div>
+                                    )}
+                                    
+                                    {/* Grafico Naturalezza */}
+                                    {signature.naturalnessChart && (
+                                      <div className="text-center">
+                                        <h7 className="text-xs font-medium text-gray-600 mb-1 block">🧠 Analisi Naturalezza (Anti-Dissimulazione)</h7>
+                                        <img 
+                                          src={`data:image/png;base64,${signature.naturalnessChart}`} 
+                                          alt="Grafico analisi naturalezza"
+                                          className="max-w-full h-auto rounded border"
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* === ANALISI COMBINATA SIMILARITÀ + NATURALEZZA === */}
+                                {signature.naturalnessScore && signature.comparisonResult && (
+                                  <div className="border rounded-lg p-3 bg-gradient-to-r from-purple-50 to-indigo-50">
+                                    <h6 className="font-medium mb-2 text-sm">🎯 Analisi Combinata (Matrice 2D)</h6>
+                                    <div className="grid grid-cols-2 gap-4 text-sm">
+                                      <div>
+                                        <span className="font-medium">📈 Similarità:</span> {(signature.comparisonResult * 100).toFixed(1)}%
+                                      </div>
+                                      <div>
+                                        <span className="font-medium">🧠 Naturalezza:</span> {(signature.naturalnessScore * 100).toFixed(1)}%
+                                      </div>
+                                    </div>
+                                    <div className="mt-2 p-2 bg-white rounded text-center">
+                                      <span className={`text-sm font-semibold px-3 py-1 rounded ${
+                                        signature.verdict === 'Autentica' ? 'bg-green-100 text-green-800' :
+                                        signature.verdict === 'Autentica dissimulata' ? 'bg-blue-100 text-blue-800' :
+                                        signature.verdict === 'Probabilmente autentica' ? 'bg-green-100 text-green-700' :
+                                        signature.verdict === 'Incerta' ? 'bg-yellow-100 text-yellow-800' :
+                                        signature.verdict === 'Sospetta' ? 'bg-orange-100 text-orange-800' :
+                                        signature.verdict === 'Probabilmente falsa' ? 'bg-red-100 text-red-800' :
+                                        'bg-gray-100 text-gray-800'
+                                      }`}>
+                                        🎯 {signature.verdict}
+                                      </span>
+                                    </div>
+                                    {signature.verdictExplanation && (
+                                      <div className="mt-2 text-xs text-gray-600 text-center italic">
+                                        💡 {signature.verdictExplanation}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                             );
                           } catch (e) {

@@ -457,6 +457,7 @@ export const signatures = pgTable("signatures", {
   verdictExplanation: text("verdict_explanation"), // Spiegazione dettagliata del verdetto per l'utente
   
   comparisonChart: text("comparison_chart"), // Base64-encoded image of the comparison chart
+  naturalnessChart: text("naturalness_chart"), // === NUOVO: Grafico parametri di naturalezza ===
   analysisReport: text("analysis_report"), // Testo del report descrittivo
   reportPath: text("report_path"), // Percorso al file DOCX del report (se generato)
   // Riferimenti alla firma di confronto usata

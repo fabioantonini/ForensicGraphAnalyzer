@@ -83,6 +83,7 @@ export async function generateSignatureReportPDF(data: {
   signatureImagePath: string,
   similarityScore: number,
   comparisonChart: string | null,
+  naturalnessChart?: string | null,  // === NUOVO: GRAFICO NATURALEZZA ===
   analysisReport: string | null,
   // === NUOVI PARAMETRI DI NATURALEZZA ===
   naturalnessScore?: number | null,
@@ -194,9 +195,9 @@ export async function generateSignatureReportPDF(data: {
       console.error('[PDF] Errore nel caricamento dell\'immagine:', imgErr);
     }
     
-    // Grafico di confronto
+    // Grafico di confronto parametri classici
     if (data.comparisonChart) {
-      doc.fontSize(14).text('Grafico di confronto:', { underline: true });
+      doc.fontSize(14).text('📈 Grafico Parametri Grafologici Classici:', { underline: true });
       doc.moveDown();
       
       // Crea un file temporaneo per l'immagine del grafico
@@ -220,6 +221,36 @@ export async function generateSignatureReportPDF(data: {
         }
       } else {
         doc.text('Grafico di confronto non disponibile', { align: 'center' });
+        doc.moveDown();
+      }
+    }
+    
+    // === NUOVO: GRAFICO DI NATURALEZZA ===
+    if (data.naturalnessChart) {
+      doc.fontSize(14).text('🧠 Grafico Analisi di Naturalezza:', { underline: true });
+      doc.moveDown();
+      
+      // Crea un file temporaneo per l'immagine del grafico di naturalezza
+      const naturalnessChartPath = await createBase64TempFile(data.naturalnessChart);
+      
+      if (naturalnessChartPath) {
+        try {
+          // Aggiungi l'immagine del grafico di naturalezza
+          doc.image(naturalnessChartPath, {
+            width: 500,
+            align: 'center'
+          });
+          doc.moveDown();
+          
+          // Pulisci il file temporaneo
+          await cleanupTempFile(naturalnessChartPath);
+        } catch (chartErr) {
+          doc.text('Errore nel caricamento del grafico naturalezza', { align: 'center' });
+          doc.moveDown();
+          console.error('[PDF] Errore nel caricamento del grafico naturalezza:', chartErr);
+        }
+      } else {
+        doc.text('Grafico di naturalezza non disponibile', { align: 'center' });
         doc.moveDown();
       }
     }

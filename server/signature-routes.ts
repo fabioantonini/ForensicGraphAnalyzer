@@ -228,7 +228,10 @@ export function registerSignatureRoutes(appRouter: Router) {
           console.log(`[COMPARE-ALL] Elaborazione firma ${signature.id}`);
           
           // Cancella grafico cached per forzare rigenerazione
-          await storage.updateSignature(signature.id, { comparisonChart: '' });
+          await storage.updateSignature(signature.id, { 
+            comparisonChart: '', 
+            naturalnessChart: ''  // === NUOVO: CANCELLA ANCHE GRAFICO NATURALEZZA ===
+          });
           
           let similarityScore = 0;
           let comparisonChart = null;
