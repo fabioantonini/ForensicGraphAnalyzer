@@ -19,7 +19,7 @@ export function LanguageSwitcher() {
   
   const languages: Language[] = [
     { code: 'it', name: 'Italiano', flag: '🇮🇹' },
-    { code: 'en', name: 'English', flag: '🇬🇧' },
+    { code: 'en', name: 'English', flag: '🇺🇸' },
   ];
 
   // Simplified language selection
