@@ -147,7 +147,7 @@
     "supportedFormats": "Supporta JPEG, PNG, TIFF, BMP (max 10MB)",
     "overallScore": "Punteggio Generale",
     "suitable": "Adatta per l'Analisi",
-    "needsImprovement": "Necessita Miglioramenti",
+    "needsImprovement": "Qualità Insufficiente",
     "detailedAnalysis": "Analisi Dettagliata",
     "recommendations": "Raccomandazioni",
     "metrics": {
