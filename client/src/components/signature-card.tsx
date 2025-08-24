@@ -94,31 +94,111 @@ export function SignatureCard({
     }
   };
   
-  // Function to render similarity score
-  const renderSimilarityScore = (score: number | null) => {
-    if (score === null) return null;
+  // Function to render similarity score con NUOVA CLASSIFICAZIONE INTELLIGENTE
+  const renderSimilarityScore = (comparisonData: any) => {
+    if (!comparisonData) return null;
     
+    // Supporta sia il vecchio formato (solo score) che il nuovo formato completo
+    let similarity_score: number;
+    let naturalness_score: number | null = null;
+    let verdict: string;
+    let confidence: number | null = null;
+    let explanation: string | null = null;
+    
+    if (typeof comparisonData === 'number') {
+      // Formato vecchio: solo score numerico
+      similarity_score = comparisonData;
+      verdict = similarity_score >= 0.85 ? 'Autentica' : 
+                similarity_score >= 0.65 ? 'Probabilmente autentica' : 'Firma non autentica';
+    } else {
+      // Nuovo formato: oggetto completo con naturalezza
+      similarity_score = comparisonData.similarity || comparisonData;
+      naturalness_score = comparisonData.naturalness;
+      verdict = comparisonData.verdict || 'Analisi in corso';
+      confidence = comparisonData.confidence;
+      explanation = comparisonData.explanation;
+    }
+    
+    // Determina colore e icona basato sulla nuova classificazione
     let color = 'bg-red-500';
-    let textKey = 'signatures.verification.notAuthentic';
-    let defaultText = 'Firma non autentica';
+    let icon = '❌';
     
-    if (score >= 0.85) {
-      color = 'bg-green-500';
-      textKey = 'signatures.verification.authentic';
-      defaultText = 'Firma autentica';
-    } else if (score >= 0.65) {
-      color = 'bg-yellow-500';
-      textKey = 'signatures.verification.probablyAuthentic';
-      defaultText = 'Probabilmente autentica';
+    switch (verdict) {
+      case 'Autentica':
+        color = 'bg-green-500';
+        icon = '✅';
+        break;
+      case 'Autentica dissimulata':
+        color = 'bg-blue-500'; 
+        icon = '🔍';
+        break;
+      case 'Probabilmente autentica':
+        color = 'bg-green-400';
+        icon = '✓';
+        break;
+      case 'Possibile copia abile':
+        color = 'bg-orange-500';
+        icon = '⚠️';
+        break;
+      case 'Sospetta':
+        color = 'bg-yellow-500';
+        icon = '⚠️';
+        break;
+      case 'Incerta':
+        color = 'bg-gray-500';
+        icon = '❓';
+        break;
+      case 'Probabilmente falsa':
+      default:
+        color = 'bg-red-500';
+        icon = '❌';
+        break;
     }
     
     return (
-      <div className="mt-2">
-        <p className="text-sm font-medium">
-          {t('signatures.similarityScore')}: {(score * 100).toFixed(1)}%
-        </p>
-        <Progress value={score * 100} className="h-2 mt-1" />
-        <Badge className={`mt-2 ${color}`}>{t(textKey, defaultText)}</Badge>
+      <div className="mt-2 space-y-2">
+        {/* Punteggio di Similarità */}
+        <div>
+          <p className="text-sm font-medium">
+            {t('signatures.similarityScore', 'Similarità')}: {(similarity_score * 100).toFixed(1)}%
+          </p>
+          <Progress value={similarity_score * 100} className="h-2 mt-1" />
+        </div>
+        
+        {/* Indice di Naturalezza (se disponibile) */}
+        {naturalness_score !== null && (
+          <div>
+            <p className="text-sm font-medium text-blue-700">
+              {t('signatures.naturalnessIndex', 'Naturalezza')}: {(naturalness_score * 100).toFixed(1)}%
+            </p>
+            <Progress value={naturalness_score * 100} className="h-2 mt-1 bg-blue-100" />
+            <div className="text-xs text-blue-600 mt-1">
+              {t('signatures.naturalnessDesc', 'Fluidità e coordinazione dei movimenti')}
+            </div>
+          </div>
+        )}
+        
+        {/* Nuova Classificazione Intelligente */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <Badge className={`${color} text-white flex items-center gap-1`}>
+            <span>{icon}</span>
+            <span className="font-medium">{verdict}</span>
+          </Badge>
+          
+          {/* Livello di Confidenza (se disponibile) */}
+          {confidence !== null && (
+            <Badge variant="outline" className="text-xs">
+              {t('signatures.confidence', 'Confidenza')}: {confidence}%
+            </Badge>
+          )}
+        </div>
+        
+        {/* Spiegazione (se disponibile) */}
+        {explanation && (
+          <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded border-l-2 border-blue-300">
+            {explanation}
+          </div>
+        )}
       </div>
     );
   };

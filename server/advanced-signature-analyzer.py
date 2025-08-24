@@ -1037,12 +1037,89 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
         
         print(f"DEBUG SCORING - SSIM: {similarity:.3f}, Parameters: {parameters_score:.3f}, Final: {final_similarity:.3f}", file=sys.stderr)
 
-        # Prepara il risultato  
+        # ==============================================
+        # NUOVA CLASSIFICAZIONE INTELLIGENTE CON NATURALEZZA
+        # ==============================================
+        
+        # Estrai l'Indice di Naturalezza dalle firme analizzate
+        verifica_naturalness = verifica_data.get('NaturalnessIndex', 50.0)  # Default neutro
+        reference_naturalness = comp_data.get('NaturalnessIndex', 50.0)     # Default neutro
+        
+        # Calcola la naturalezza media (considerando entrambe le firme)
+        avg_naturalness = (verifica_naturalness + reference_naturalness) / 2.0
+        
+        print(f"[CLASSIFICAZIONE] Similarity: {final_similarity*100:.1f}%, Naturalness: {avg_naturalness:.1f}%", file=sys.stderr)
+        
+        # Implementa classificazione a matrice 2D (Similarità vs Naturalezza)
+        def classify_signature_intelligent(similarity_pct, naturalness_pct):
+            """
+            Classificazione intelligente basata su matrice 2D
+            
+            Args:
+                similarity_pct: Percentuale di similarità (0-100)
+                naturalness_pct: Percentuale di naturalezza (0-100)
+                
+            Returns:
+                Tupla (verdict, confidence, explanation)
+            """
+            # Converti in percentuali per chiarezza
+            sim = similarity_pct * 100
+            nat = naturalness_pct
+            
+            # MATRICE DI CLASSIFICAZIONE 2D
+            
+            # Caso 1: Alta similarità + Alta naturalezza = AUTENTICA
+            if sim >= 85 and nat >= 80:
+                return ("Autentica", 95, "Alta similarità e movimenti naturali")
+            
+            # Caso 2: Alta similarità + Bassa naturalezza = POSSIBILE COPIA ABILE
+            elif sim >= 85 and nat < 60:
+                return ("Possibile copia abile", 70, "Alta similarità ma movimenti innaturali")
+            
+            # Caso 3: Bassa similarità + Alta naturalezza = AUTENTICA DISSIMULATA ⭐
+            elif sim < 65 and nat >= 80:
+                return ("Autentica dissimulata", 85, "Modificata intenzionalmente ma autentica")
+                
+            # Caso 4: Bassa similarità + Bassa naturalezza = PROBABILMENTE FALSA
+            elif sim < 65 and nat < 60:
+                return ("Probabilmente falsa", 90, "Bassa similarità e movimenti innaturali")
+            
+            # Casi intermedi: similarità media
+            elif 65 <= sim < 85:
+                if nat >= 75:
+                    return ("Probabilmente autentica", 75, "Similarità accettabile e movimenti naturali")
+                elif nat < 50:
+                    return ("Sospetta", 60, "Similarità media ma movimenti innaturali")
+                else:
+                    return ("Incerta", 50, "Similarità e naturalezza intermedie")
+            
+            # Casi intermedi: naturalezza media
+            elif 60 <= nat < 80:
+                if sim >= 75:
+                    return ("Probabilmente autentica", 75, "Alta similarità e naturalezza accettabile")
+                else:
+                    return ("Sospetta", 65, "Parametri nel range intermedio")
+            
+            # Fallback
+            else:
+                return ("Incerta", 50, "Parametri nel range intermedio")
+        
+        # Applica la nuova classificazione
+        verdict, confidence, explanation = classify_signature_intelligent(final_similarity, avg_naturalness)
+        
+        print(f"[CLASSIFICAZIONE] Risultato: {verdict} (confidenza: {confidence}%) - {explanation}", file=sys.stderr)
+        
+        # ==============================================
+        # FINE NUOVA CLASSIFICAZIONE
+        # ==============================================
+        
+        # Prepara il risultato con la nuova classificazione
         result = {
-            "similarity": final_similarity,  # Nuovo punteggio combinato!
-            "verdict": "Alta probabilità di autenticità" if final_similarity >= 0.8 else 
-                      "Sospetta" if final_similarity >= 0.6 else 
-                      "Bassa probabilità di autenticità",
+            "similarity": final_similarity,  # Punteggio tradizionale per compatibilità
+            "naturalness": avg_naturalness / 100.0,  # Nuovo: Indice di naturalezza (0-1)
+            "verdict": verdict,  # Nuova classificazione intelligente
+            "confidence": confidence,  # Nuovo: Livello di confidenza
+            "explanation": explanation,  # Nuovo: Spiegazione del risultato
             "verifica_parameters": verifica_data,
             "reference_parameters": comp_data,
             "comparison_chart": chart_img,
@@ -1055,6 +1132,237 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
     except Exception as e:
         print(f"Errore durante il confronto delle firme con dimensioni: {str(e)}", file=sys.stderr)
         return {"error": str(e)}
+
+# ==============================================
+# FUNZIONI PER L'INDICE DI NATURALEZZA
+# ==============================================
+
+def calculate_fluidity_score(binary: np.ndarray, contours: list) -> float:
+    """
+    Calcola il punteggio di fluidità basato sulla smoothness dei contorni
+    
+    Args:
+        binary: Immagine binaria della firma
+        contours: Lista dei contorni della firma
+        
+    Returns:
+        Score di fluidità da 0-100 (più alto = più naturale)
+    """
+    try:
+        if not contours:
+            return 0.0
+        
+        # Analizza la smoothness di ogni contorno
+        smoothness_scores = []
+        
+        for contour in contours:
+            if len(contour) < 10:  # Salta contorni troppo piccoli
+                continue
+                
+            # Calcola la derivata seconda per misurare le irregolarità
+            points = contour.reshape(-1, 2)
+            if len(points) < 10:
+                continue
+                
+            # Calcola le differenze tra punti consecutivi (velocità)
+            dx = np.diff(points[:, 0])
+            dy = np.diff(points[:, 1])
+            
+            # Calcola la derivata seconda (accelerazione)
+            ddx = np.diff(dx)
+            ddy = np.diff(dy)
+            
+            # Calcola l'accelerazione totale
+            acceleration = np.sqrt(ddx**2 + ddy**2)
+            
+            # La fluidità è inversamente proporzionale alle variazioni di accelerazione
+            if len(acceleration) > 0:
+                # Normalizza rispetto alla lunghezza del contorno
+                contour_length = cv2.arcLength(contour, False)
+                if contour_length > 0:
+                    irregularity = np.std(acceleration) / contour_length
+                    # Converti in score di fluidità (0-100)
+                    smoothness = max(0, 100 - (irregularity * 1000))
+                    smoothness_scores.append(min(100, smoothness))
+        
+        if not smoothness_scores:
+            return 50.0  # Valore neutro se non ci sono contorni validi
+        
+        # Media pesata dei punteggi di fluidità
+        return float(np.mean(smoothness_scores))
+        
+    except Exception as e:
+        print(f"Errore nel calcolo fluidity score: {str(e)}", file=sys.stderr)
+        return 50.0  # Valore neutro in caso di errore
+
+
+def calculate_pressure_consistency(gray: np.ndarray, binary: np.ndarray) -> float:
+    """
+    Calcola la consistenza della pressione lungo il tracciato
+    
+    Args:
+        gray: Immagine in scala di grigi
+        binary: Immagine binaria della firma
+        
+    Returns:
+        Score di consistenza pressione da 0-100 (più alto = più consistente = più naturale)
+    """
+    try:
+        # Estrae intensità dei pixel della firma
+        ink_pixels = gray[binary > 0]
+        if len(ink_pixels) == 0:
+            return 0.0
+        
+        # Converte in valori di "pressione" (255 - intensità)
+        pressure_values = 255 - ink_pixels
+        
+        if len(pressure_values) < 10:
+            return 0.0
+        
+        # Calcola la variabilità della pressione
+        pressure_mean = np.mean(pressure_values)
+        pressure_std = np.std(pressure_values)
+        
+        # Una pressione naturale ha variabilità moderata ma non eccessiva
+        # Troppo uniforme = artificiale, troppo variabile = nervosismo/controllo
+        if pressure_mean == 0:
+            return 0.0
+            
+        coefficient_variation = pressure_std / pressure_mean
+        
+        # Curve di naturalezza: picco intorno a 0.15-0.25 di CV
+        if 0.10 <= coefficient_variation <= 0.30:
+            # Range naturale - alta consistenza
+            consistency_score = 90 + (10 * (1 - abs(coefficient_variation - 0.20) / 0.10))
+        elif 0.05 <= coefficient_variation <= 0.40:
+            # Range accettabile
+            consistency_score = 70 + (20 * (1 - abs(coefficient_variation - 0.20) / 0.20))
+        else:
+            # Troppo uniforme o troppo variabile = sospetto
+            consistency_score = max(0, 50 - (abs(coefficient_variation - 0.20) * 100))
+        
+        return float(min(100, max(0, consistency_score)))
+        
+    except Exception as e:
+        print(f"Errore nel calcolo pressure consistency: {str(e)}", file=sys.stderr)
+        return 50.0  # Valore neutro in caso di errore
+
+
+def calculate_coordination_index(contours: list, binary: np.ndarray) -> float:
+    """
+    Calcola l'indice di coordinazione basato sulla regolarità delle curve
+    
+    Args:
+        contours: Lista dei contorni della firma
+        binary: Immagine binaria per analisi aggiuntive
+        
+    Returns:
+        Score di coordinazione da 0-100 (più alto = più coordinato = più naturale)
+    """
+    try:
+        if not contours:
+            return 0.0
+        
+        coordination_scores = []
+        
+        for contour in contours:
+            if len(contour) < 20:  # Serve un contorno sufficientemente lungo
+                continue
+                
+            # Analizza la regolarità delle curve
+            points = contour.reshape(-1, 2)
+            
+            # Calcola gli angoli di curvatura
+            angles = []
+            for i in range(2, len(points) - 2):
+                p1 = points[i-2]
+                p2 = points[i]
+                p3 = points[i+2]
+                
+                # Vettori
+                v1 = p1 - p2
+                v2 = p3 - p2
+                
+                # Calcola angolo
+                cos_angle = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2) + 1e-6)
+                cos_angle = np.clip(cos_angle, -1, 1)
+                angle = np.arccos(cos_angle)
+                angles.append(angle)
+            
+            if len(angles) < 5:
+                continue
+            
+            # Analizza la distribuzione degli angoli
+            angles = np.array(angles)
+            
+            # Una scrittura naturale ha angoli che seguono pattern fluidi
+            # Calcola la regolarità (bassa deviazione standard = più regolare)
+            angle_std = np.std(angles)
+            angle_mean = np.mean(angles)
+            
+            # Normalizza rispetto alla lunghezza del contorno
+            contour_length = cv2.arcLength(contour, False)
+            if contour_length > 0:
+                normalized_variation = angle_std / (angle_mean + 1e-6)
+                
+                # Score di coordinazione basato su regolarità ottimale
+                if 0.3 <= normalized_variation <= 0.8:
+                    # Range naturale di variazione
+                    coord_score = 85 + (15 * (1 - abs(normalized_variation - 0.55) / 0.25))
+                elif 0.1 <= normalized_variation <= 1.2:
+                    # Range accettabile
+                    coord_score = 60 + (25 * (1 - abs(normalized_variation - 0.55) / 0.45))
+                else:
+                    # Troppo rigido o troppo caotico
+                    coord_score = max(0, 40 - (abs(normalized_variation - 0.55) * 50))
+                
+                coordination_scores.append(min(100, max(0, coord_score)))
+        
+        if not coordination_scores:
+            return 50.0  # Valore neutro
+        
+        # Media pesata degli score di coordinazione
+        return float(np.mean(coordination_scores))
+        
+    except Exception as e:
+        print(f"Errore nel calcolo coordination index: {str(e)}", file=sys.stderr)
+        return 50.0  # Valore neutro in caso di errore
+
+
+def calculate_naturalness_index(fluidity: float, pressure_consistency: float, coordination: float) -> float:
+    """
+    Calcola l'Indice di Naturalezza combinando i tre componenti
+    
+    Args:
+        fluidity: Punteggio di fluidità (0-100)
+        pressure_consistency: Punteggio di consistenza pressione (0-100)  
+        coordination: Punteggio di coordinazione (0-100)
+        
+    Returns:
+        Indice di Naturalezza finale (0-100)
+    """
+    try:
+        # Pesi per i diversi componenti (somma = 1.0)
+        fluidity_weight = 0.4      # La fluidità è il più importante
+        pressure_weight = 0.3      # La pressione è significativa
+        coordination_weight = 0.3  # La coordinazione completa il quadro
+        
+        # Calcola l'indice combinato
+        naturalness = (
+            fluidity * fluidity_weight + 
+            pressure_consistency * pressure_weight + 
+            coordination * coordination_weight
+        )
+        
+        return float(min(100, max(0, naturalness)))
+        
+    except Exception as e:
+        print(f"Errore nel calcolo naturalness index: {str(e)}", file=sys.stderr)
+        return 50.0  # Valore neutro in caso di errore
+
+# ==============================================
+# FINE FUNZIONI INDICE DI NATURALEZZA  
+# ==============================================
 
 def analyze_signature_with_dimensions(image_path, real_width_mm, real_height_mm):
     """
@@ -1175,6 +1483,32 @@ def analyze_signature_with_dimensions(image_path, real_width_mm, real_height_mm)
         # Calcola il numero di componenti connesse
         num_components = len(contours) if contours else 0
         
+        # ==============================================
+        # CALCOLA PARAMETRI DI NATURALEZZA
+        # ==============================================
+        
+        print(f"[NATURALEZZA] Inizio calcolo parametri di naturalezza...", file=sys.stderr)
+        
+        # 1. Calcola il Fluidity Score (Punteggio di Fluidità)
+        fluidity_score = calculate_fluidity_score(processed, contours)
+        print(f"[NATURALEZZA] Fluidity Score: {fluidity_score:.2f}", file=sys.stderr)
+        
+        # 2. Calcola la Pressure Consistency (Consistenza della Pressione) 
+        pressure_consistency = calculate_pressure_consistency(image, processed)
+        print(f"[NATURALEZZA] Pressure Consistency: {pressure_consistency:.2f}", file=sys.stderr)
+        
+        # 3. Calcola il Coordination Index (Indice di Coordinazione)
+        coordination_index = calculate_coordination_index(contours, processed)
+        print(f"[NATURALEZZA] Coordination Index: {coordination_index:.2f}", file=sys.stderr)
+        
+        # 4. Calcola l'Indice di Naturalezza Combinato
+        naturalness_index = calculate_naturalness_index(fluidity_score, pressure_consistency, coordination_index)
+        print(f"[NATURALEZZA] Naturalness Index FINALE: {naturalness_index:.2f}", file=sys.stderr)
+        
+        # ==============================================
+        # FINE CALCOLI NATURALEZZA
+        # ==============================================
+        
         # Costruisci il risultato con i parametri calibrati alle dimensioni reali
         result = {
             'real_width_mm': real_width_mm,
@@ -1195,7 +1529,15 @@ def analyze_signature_with_dimensions(image_path, real_width_mm, real_height_mm)
             'BaselineStdMm': baseline_std_mm,  # In mm
             'StrokeComplexity': stroke_complexity,  # Densità dei punti del contorno
             'ConnectedComponents': num_components,  # Numero di componenti separate
-            'Dimensions': (actual_width_mm, actual_height_mm)
+            'Dimensions': (actual_width_mm, actual_height_mm),
+            
+            # ==============================================
+            # NUOVI PARAMETRI DI NATURALEZZA
+            # ==============================================
+            'FluidityScore': fluidity_score,          # Punteggio di fluidità (0-100)
+            'PressureConsistency': pressure_consistency,  # Consistenza della pressione (0-100)
+            'CoordinationIndex': coordination_index,   # Indice di coordinazione (0-100)  
+            'NaturalnessIndex': naturalness_index      # Indice di naturalezza finale (0-100)
         }
             
         return result
