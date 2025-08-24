@@ -234,6 +234,12 @@ export function registerSignatureRoutes(appRouter: Router) {
           let comparisonChart = null;
           let analysisReport = null;
           
+          // === DICHIARAZIONE VARIABILI DI NATURALEZZA ===
+          let naturalnessScore = null;
+          let verdict = null;
+          let confidenceLevel = null;
+          let verdictExplanation = null;
+          
           // Usa la prima firma di riferimento disponibile per il confronto
           const referenceSignature = completedReferences[0];
           
@@ -261,10 +267,7 @@ export function registerSignatureRoutes(appRouter: Router) {
             comparisonChart = pythonResult.comparison_chart; // CORRETTO: field name è comparison_chart
             
             // === ESTRAZIONE NUOVI PARAMETRI DI NATURALEZZA ===
-            let naturalnessScore = null;
-            let verdict = pythonResult.verdict || null;
-            let confidenceLevel = null;
-            let verdictExplanation = null;
+            verdict = pythonResult.verdict || null;
             
             // Estrai parametri di naturalezza se disponibili
             if (pythonResult.naturalness !== undefined) {
@@ -315,6 +318,7 @@ export function registerSignatureRoutes(appRouter: Router) {
           }
           
           // Aggiorna la firma con i risultati del confronto
+          
           const updateData: any = {
             comparisonResult: similarityScore,
             analysisReport,

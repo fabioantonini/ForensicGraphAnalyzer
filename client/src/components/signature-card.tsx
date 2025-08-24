@@ -302,7 +302,13 @@ export function SignatureCard({
           </div>
           
           {/* Mostra il punteggio di similarità solo per le firme da verificare */}
-          {showSimilarity && signature.processingStatus === 'completed' && renderSimilarityScore(signature.comparisonResult)}
+          {showSimilarity && signature.processingStatus === 'completed' && renderSimilarityScore({
+            similarity: signature.comparisonResult,
+            naturalness: signature.naturalnessScore,
+            verdict: signature.verdict,
+            confidence: signature.confidenceLevel ? signature.confidenceLevel * 100 : null,
+            explanation: signature.verdictExplanation
+          })}
         </CardContent>
       </Card>
 
