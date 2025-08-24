@@ -1208,6 +1208,12 @@ def calculate_pressure_consistency(gray: np.ndarray, binary: np.ndarray) -> floa
         Score di consistenza pressione da 0-100 (più alto = più consistente = più naturale)
     """
     try:
+        # ===== CORREZIONE: Assicura che gray e binary abbiano le stesse dimensioni =====
+        if gray.shape != binary.shape:
+            # Ridimensiona binary per matchare gray
+            binary = cv2.resize(binary, (gray.shape[1], gray.shape[0]), interpolation=cv2.INTER_NEAREST)
+            print(f"[PRESSURE CONSISTENCY] Ridimensionato binary da {binary.shape} a {gray.shape}", file=sys.stderr)
+        
         # Estrae intensità dei pixel della firma
         ink_pixels = gray[binary > 0]
         if len(ink_pixels) == 0:
