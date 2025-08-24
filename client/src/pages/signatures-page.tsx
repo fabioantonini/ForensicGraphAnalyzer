@@ -1456,7 +1456,7 @@ export default function SignaturesPage() {
                                     {/* Grafico Classico */}
                                     {signature.comparisonChart && (
                                       <div className="text-center">
-                                        <h7 className="text-xs font-medium text-gray-600 mb-1 block">📈 Parametri Grafologici Classici</h7>
+                                        <p className="text-xs font-medium text-gray-600 mb-1">📈 Parametri Grafologici Classici</p>
                                         <img 
                                           src={`data:image/png;base64,${signature.comparisonChart}`} 
                                           alt="Grafico confronto parametri classici"
@@ -1468,7 +1468,7 @@ export default function SignaturesPage() {
                                     {/* Grafico Naturalezza */}
                                     {signature.naturalnessChart && (
                                       <div className="text-center">
-                                        <h7 className="text-xs font-medium text-gray-600 mb-1 block">🧠 Analisi Naturalezza (Anti-Dissimulazione)</h7>
+                                        <p className="text-xs font-medium text-gray-600 mb-1">🧠 Analisi Naturalezza (Anti-Dissimulazione)</p>
                                         <img 
                                           src={`data:image/png;base64,${signature.naturalnessChart}`} 
                                           alt="Grafico analisi naturalezza"
