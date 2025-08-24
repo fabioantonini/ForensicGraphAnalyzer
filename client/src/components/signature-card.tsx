@@ -156,10 +156,6 @@ export function SignatureCard({
         color = 'bg-orange-500';
         icon = '⚠️';
         break;
-      case 'Sospetta':
-        color = 'bg-yellow-500';
-        icon = '⚠️';
-        break;
       case 'Incerta':
         color = 'bg-gray-500';
         icon = '❓';

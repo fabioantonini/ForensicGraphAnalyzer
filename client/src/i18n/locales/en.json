@@ -367,9 +367,10 @@
       "subtitle": "Analysis completed using 16+ advanced parameters for graphological comparison",
       "analysisSummary": "Analysis Summary",
       "signaturesAnalyzed": "Signatures analyzed",
-      "authentic": "Authentic (≥85%)",
-      "probablyAuthentic": "Prob. Authentic (65-84%)",
-      "suspicious": "Suspicious (<65%)",
+      "authentic": "Authentic",
+      "authenticDissimulated": "Authentic Dissimulated", 
+      "probablyAuthentic": "Probably Authentic",
+      "probablyFalse": "Probably False",
       "similarity": "Similarity:",
       "comparisonChart": "Comparison Chart:",
       "refreshStatus": "Refresh Status"

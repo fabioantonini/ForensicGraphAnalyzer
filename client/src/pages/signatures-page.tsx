@@ -1122,7 +1122,7 @@ export default function SignaturesPage() {
               {comparisonResults && comparisonResults.length > 0 && (
                 <div className="bg-muted/30 rounded-lg p-3 mb-3">
                   <h3 className="font-medium mb-2">{t('signatures.comparisonDialog.analysisSummary')}</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
                     <div className="text-center">
                       <div className="text-lg font-semibold text-primary">
                         {comparisonResults.filter(s => !s.isReference).length}
@@ -1131,21 +1131,27 @@ export default function SignaturesPage() {
                     </div>
                     <div className="text-center">
                       <div className="text-lg font-semibold text-green-600">
-                        {comparisonResults.filter(s => !s.isReference && (s.comparisonResult ?? 0) >= 0.85).length}
+                        {comparisonResults.filter(s => !s.isReference && s.verdict === 'Autentica').length}
                       </div>
                       <div className="text-muted-foreground">{t('signatures.comparisonDialog.authentic')}</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-lg font-semibold text-yellow-600">
-                        {comparisonResults.filter(s => !s.isReference && (s.comparisonResult ?? 0) >= 0.65 && (s.comparisonResult ?? 0) < 0.85).length}
+                      <div className="text-lg font-semibold text-blue-600">
+                        {comparisonResults.filter(s => !s.isReference && s.verdict === 'Autentica dissimulata').length}
+                      </div>
+                      <div className="text-muted-foreground">{t('signatures.comparisonDialog.authenticDissimulated')}</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-semibold text-green-400">
+                        {comparisonResults.filter(s => !s.isReference && s.verdict === 'Probabilmente autentica').length}
                       </div>
                       <div className="text-muted-foreground">{t('signatures.comparisonDialog.probablyAuthentic')}</div>
                     </div>
                     <div className="text-center">
                       <div className="text-lg font-semibold text-red-600">
-                        {comparisonResults.filter(s => !s.isReference && (s.comparisonResult ?? 0) < 0.65).length}
+                        {comparisonResults.filter(s => !s.isReference && s.verdict === 'Probabilmente falsa').length}
                       </div>
-                      <div className="text-muted-foreground">{t('signatures.comparisonDialog.suspicious')}</div>
+                      <div className="text-muted-foreground">{t('signatures.comparisonDialog.probablyFalse')}</div>
                     </div>
                   </div>
                 </div>

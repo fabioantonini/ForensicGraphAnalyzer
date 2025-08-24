@@ -368,9 +368,10 @@
       "subtitle": "Analisi completata utilizzando 16+ parametri avanzati per il confronto grafologico",
       "analysisSummary": "Riepilogo Analisi",
       "signaturesAnalyzed": "Firme analizzate",
-      "authentic": "Autentiche (≥85%)",
-      "probablyAuthentic": "Prob. Autentiche (65-84%)",
-      "suspicious": "Sospette (<65%)",
+      "authentic": "Autentiche",
+      "authenticDissimulated": "Autentiche Dissimulate",
+      "probablyAuthentic": "Probabilmente Autentiche",
+      "probablyFalse": "Probabilmente False",
       "similarity": "Similarità:",
       "comparisonChart": "Grafico di Confronto:",
       "refreshStatus": "Aggiorna Status"
