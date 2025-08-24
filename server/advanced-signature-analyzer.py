@@ -503,16 +503,15 @@ def normalize_parameter_keys(data):
     }
     
     # DEBUG: Stampa i dati in ingresso
-    print(f"NORMALIZE INPUT: {data}", file=sys.stderr)
     
     # Applica il mapping
     for key, value in data.items():
         normalized_key = key_mapping.get(key, key)
         normalized[normalized_key] = value
         
-        # DEBUG: Verifica specifica per avgAsolaSize
+        # DEBUG: Verifica specifica per avgAsolaSize rimossa
         if key == 'avgAsolaSize':
-            print(f"DEBUG avgAsolaSize MAPPING: {key} -> {normalized_key} = {value}", file=sys.stderr)
+            pass  # Debug rimosso
         
         # Assicura che abbiamo anche la versione alternativa per retrocompatibilità
         if normalized_key in key_mapping.values():
@@ -521,12 +520,11 @@ def normalize_parameter_keys(data):
                 if norm_key == normalized_key and orig_key != key:
                     normalized[orig_key] = value
     
-    # DEBUG: Verifica che AvgAsolaSize sia presente
+    # DEBUG: Verifica che AvgAsolaSize sia presente - rimossa
     if 'AvgAsolaSize' in normalized:
-        print(f"DEBUG NORMALIZED AvgAsolaSize: {normalized['AvgAsolaSize']}", file=sys.stderr)
+        pass  # Debug rimosso
     else:
-        print(f"DEBUG MISSING AvgAsolaSize in normalized data!", file=sys.stderr)
-        print(f"DEBUG NORMALIZED KEYS: {list(normalized.keys())}", file=sys.stderr)
+        pass  # Debug rimosso
     
     return normalized
 
@@ -586,9 +584,6 @@ def create_descriptive_report(verifica_data, comp_data):
 
 def generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, similarity, output_path, case_info=None, project_id=None, verifica_real_dims=None, reference_real_dims=None):
     # Debug info
-    print(f"DEBUG_REPORT verifica_path={verifica_path}", file=sys.stderr)
-    print(f"DEBUG_REPORT comp_path={comp_path}", file=sys.stderr)
-    print(f"DEBUG_REPORT project_id={project_id}", file=sys.stderr)
     
     """
     Genera un report PDF completo del confronto tra firme usando ReportLab
@@ -826,8 +821,6 @@ def generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, simi
     # Crea una figura temporanea per il grafico e includila nel report
     # CRITICAL: Usa sempre parametri RICALCOLATI (non dal database) per garantire consistenza
     print(f"[CRITICAL] Generazione grafico PDF con parametri ricalcolati", file=sys.stderr)
-    print(f"[DEBUG PDF] Verifica avgAsolaSize: {verifica_data.get('avgAsolaSize', 'MISSING')}", file=sys.stderr)
-    print(f"[DEBUG PDF] Comp avgAsolaSize: {comp_data.get('avgAsolaSize', 'MISSING')}", file=sys.stderr)
     
     # Normalizza i parametri per garantire chiavi corrette nel grafico
     verifica_data_normalized = normalize_parameter_keys(verifica_data)
@@ -903,25 +896,17 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
         similarity, _ = ssim(processed_verifica, processed_comp, full=True)
         
         # Analizza le firme con dimensioni reali specifiche - SEMPRE ricalcola per avere parametri freschi
-        print(f"DEBUG - Ricalcolo parametri da immagini per garantire consistenza", file=sys.stderr)
         verifica_data = analyze_signature_with_dimensions(verifica_path, verifica_dims[0], verifica_dims[1])
         comp_data = analyze_signature_with_dimensions(comp_path, reference_dims[0], reference_dims[1])
         
         if not verifica_data or not comp_data:
             raise ValueError("Errore nell'analisi di una o entrambe le firme")
         
-        print(f"DEBUG - Parametri verifica calcolati: {list(verifica_data.keys())}", file=sys.stderr)
-        print(f"DEBUG - Parametri comp calcolati: {list(comp_data.keys())}", file=sys.stderr)
-        print(f"DEBUG - Inclination verifica: {verifica_data.get('Inclination', 'MISSING')}", file=sys.stderr)
-        print(f"DEBUG - Inclination comp: {comp_data.get('Inclination', 'MISSING')}", file=sys.stderr)
             
         # NORMALIZZA per il grafico - garantisce che le chiavi siano nella forma corretta (maiuscole)
         verifica_data_normalized = normalize_parameter_keys(verifica_data)
         comp_data_normalized = normalize_parameter_keys(comp_data)
         
-        print(f"DEBUG CHART - Prima normalizzazione: inclination={verifica_data.get('inclination', 'MISSING')}", file=sys.stderr)
-        print(f"DEBUG CHART - Dopo normalizzazione: Inclination={verifica_data_normalized.get('Inclination', 'MISSING')}", file=sys.stderr)
-        print(f"DEBUG CHART - Chiavi normalizzate: {list(verifica_data_normalized.keys())}", file=sys.stderr)
         
         # Crea il grafico di confronto con parametri normalizzati
         chart_img = create_comparison_chart(verifica_data_normalized, comp_data_normalized)
@@ -1035,7 +1020,6 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
         # Combina SSIM (60%) + Parametri (40%) per punteggio finale - più peso all'analisi visuale
         final_similarity = (similarity * 0.6) + (parameters_score * 0.4)
         
-        print(f"DEBUG SCORING - SSIM: {similarity:.3f}, Parameters: {parameters_score:.3f}, Final: {final_similarity:.3f}", file=sys.stderr)
 
         # Prepara il risultato  
         result = {
@@ -1130,8 +1114,9 @@ def analyze_signature_with_dimensions(image_path, real_width_mm, real_height_mm)
         inclination = calculate_signature_inclination([main_contour])
         
         # Calcola la pressione media e deviazione standard
-        pressure_mean = float(np.mean(image.flatten()))
-        pressure_std = float(np.std(image.flatten()))
+        image_flat = image.flatten().astype(np.float64)
+        pressure_mean = float(np.mean(image_flat))
+        pressure_std = float(np.std(image_flat))
         
         # Calcola la curvatura
         curvature = calculate_curvature(main_contour) if len(main_contour) >= 3 else 0
@@ -1153,9 +1138,12 @@ def analyze_signature_with_dimensions(image_path, real_width_mm, real_height_mm)
         
         # Calcola la velocità stimata
         total_length = sum([cv2.arcLength(cnt, False) for cnt in contours])
-        if contours_orig:
-            straight_distance = math.hypot(w_orig, h_orig)
-        else:
+        try:
+            if contours_orig and w_orig is not None and h_orig is not None:
+                straight_distance = math.hypot(w_orig, h_orig)
+            else:
+                straight_distance = math.hypot(w, h)
+        except NameError:
             straight_distance = math.hypot(w, h)
         velocity = total_length / (straight_distance + 1e-5)
         
@@ -1224,7 +1212,7 @@ def adapt_parameters_for_json(params):
     """
     result = {}
     for key, value in params.items():
-        if isinstance(value, (list, tuple)) and len(value) == 2 and isinstance(value[0], (int, float)) and isinstance(value[1], (int, float)):
+        if isinstance(value, (list, tuple)) and len(value) == 2:
             # Converte tuple e liste di dimensione 2 in oggetti e arrotonda a 1 decimale per chiarezza
             # Questo è particolarmente importante per le dimensioni
             result[key] = {"width": round(value[0], 1), "height": round(value[1], 1)}

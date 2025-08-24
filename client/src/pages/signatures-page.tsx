@@ -171,7 +171,6 @@ export default function SignaturesPage() {
       );
       
       if (!hasProcessedSignatures && data.length > 0) {
-        console.log("Firme caricate ma elaborazione parametri in corso...");
       }
       
       return data; // Restituisci tutti i dati, dovrebbero già essere filtrati dal server
@@ -212,7 +211,6 @@ export default function SignaturesPage() {
   // Mutation to upload reference signature
   const uploadReference = useMutation({
     mutationFn: async (data: FileFormValues) => {
-      console.log("Caricamento firma di riferimento iniziato");
       const formData = new FormData();
       // Gestisce sia FileList che array
       const file = data.file instanceof FileList ? data.file[0] : data.file[0];
@@ -231,7 +229,6 @@ export default function SignaturesPage() {
         throw new Error(errorData.error || "Errore durante il caricamento della firma");
       }
       
-      console.log("Firma di riferimento caricata con successo");
       return res.json();
     },
     onSuccess: () => {
@@ -252,7 +249,6 @@ export default function SignaturesPage() {
       // Forziamo un refetch immediato delle firme
       setTimeout(() => {
         refetchSignatures();
-        console.log("Refetch forzato delle firme");
       }, 1000);
     },
     onError: (error: Error) => {
@@ -267,7 +263,6 @@ export default function SignaturesPage() {
   // Mutation to upload verification signature
   const uploadVerify = useMutation({
     mutationFn: async (data: FileFormValues) => {
-      console.log("Caricamento firma da verificare iniziato");
       const formData = new FormData();
       // Gestisce sia FileList che array
       const file = data.file instanceof FileList ? data.file[0] : data.file[0];
@@ -286,7 +281,6 @@ export default function SignaturesPage() {
         throw new Error(errorData.error || "Errore durante il caricamento della firma");
       }
       
-      console.log("Firma da verificare caricata con successo");
       return res.json();
     },
     onSuccess: () => {
@@ -305,7 +299,6 @@ export default function SignaturesPage() {
       });
       
       // Forza refetch immediato e ripetuto per garantire aggiornamenti
-      console.log("Refetch forzato delle firme dopo verifica");
       refetchSignatures();
       setTimeout(() => refetchSignatures(), 1000);
       setTimeout(() => refetchSignatures(), 3000);
@@ -447,7 +440,6 @@ export default function SignaturesPage() {
       if (data.successful > 0 && data.results.some((r: any) => r.success)) {
         const firstSuccessfulReport = data.results.find((r: any) => r.success);
         if (firstSuccessfulReport) {
-          console.log('[FRONTEND] Avvio download PDF per firma:', firstSuccessfulReport.id);
           setTimeout(() => {
             window.location.href = `/api/signatures/${firstSuccessfulReport.id}/report`;
           }, 1500);
@@ -1312,8 +1304,8 @@ export default function SignaturesPage() {
                                         return (
                                           <tr key={param.key} className="border-b">
                                             <td className="py-1 px-2 font-medium">{param.label}</td>
-                                            <td className="text-center py-1 px-2">{param.format(refValue)}</td>
-                                            <td className="text-center py-1 px-2">{param.format(verifyValue)}</td>
+                                            <td className="text-center py-1 px-2">{param.format(refValue as number)}</td>
+                                            <td className="text-center py-1 px-2">{param.format(verifyValue as number)}</td>
                                             <td className="text-center py-1 px-2">
                                               <span className={`inline-block px-2 py-0.5 rounded text-xs ${
                                                 compatibility >= 85 ? 'bg-green-100 text-green-800' :

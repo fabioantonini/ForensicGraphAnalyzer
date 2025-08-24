@@ -40,7 +40,6 @@ function chunkText(text: string): string[] {
  */
 export async function addDocumentToVectorStore(document: Document, apiKey?: string): Promise<void> {
   try {
-    console.log(`Aggiunta documento ID ${document.id} al vector store...`);
     // Dividi il testo in chunk
     const chunks = chunkText(document.content);
     
@@ -53,7 +52,6 @@ export async function addDocumentToVectorStore(document: Document, apiKey?: stri
       
       // Genera l'embedding utilizzando OpenAI
       const embedding = await generateEmbedding(chunk, apiKey);
-      console.log(`Embedding generato, dimensione: ${embedding.length}`);
       
       // Salva l'embedding nel database utilizzando una query SQL con parametri
       // poiché Drizzle ORM non supporta nativamente il tipo vector
@@ -76,7 +74,6 @@ export async function addDocumentToVectorStore(document: Document, apiKey?: stri
     // Segna il completamento nel tracker di progresso  
     completeProgress(document.id);
       
-    console.log(`Documento ID ${document.id} aggiunto con successo al vector store (${chunks.length} chunks)`);
   } catch (error: any) {
     console.error(`Errore nell'aggiunta del documento al vector store:`, error);
     
@@ -94,7 +91,6 @@ export async function addDocumentToVectorStore(document: Document, apiKey?: stri
  */
 export async function removeDocumentFromVectorStore(documentId: number, userId: number): Promise<void> {
   try {
-    console.log(`Rimozione documento ID ${documentId} dal vector store...`);
     
     // Elimina tutti gli embedding associati al documento
     await db.execute(
@@ -102,7 +98,6 @@ export async function removeDocumentFromVectorStore(documentId: number, userId: 
           WHERE document_id = ${documentId} AND user_id = ${userId}`
     );
     
-    console.log(`Documento ID ${documentId} rimosso con successo dal vector store`);
   } catch (error: any) {
     console.error(`Errore nella rimozione del documento dal vector store:`, error);
     throw new Error(`Impossibile rimuovere il documento dal vector store: ${error.message}`);
@@ -134,7 +129,6 @@ export async function queryVectorStore(
   limit: number = 5
 ): Promise<QueryResult[]> {
   try {
-    console.log(`Esecuzione query "${query}" nel vector store...`);
     
     // Conta quanti documenti e chunks ha l'utente
     try {
@@ -148,40 +142,30 @@ export async function queryVectorStore(
       
       // Evitiamo di usare JSON.stringify per oggetti complessi
       try {
-        console.log("Tipo countResults:", typeof countResults);
-        console.log("countResults è un array?", Array.isArray(countResults));
         
         if (typeof countResults === 'object' && countResults !== null) {
-          console.log("Proprietà di countResults:", Object.keys(countResults));
         }
         
         if (Array.isArray(countResults) && countResults.length > 0) {
-          console.log("Proprietà del primo elemento:", Object.keys(countResults[0]));
         }
       } catch (logError) {
-        console.log("Errore durante il logging dei risultati di conteggio:", logError);
       }
       
       // Verifica il formato esatto della risposta
       if (Array.isArray(countResults) && countResults.length > 0) {
         const totalItems = countResults[0];
-        console.log(`L'utente ${userId} ha ${totalItems.total_docs || 'unknown'} documenti e ${totalItems.total_chunks || 'unknown'} chunk nel vector store`);
       } else {
-        console.log(`Formato di risposta imprevisto per la count query:`, typeof countResults);
       }
     } catch (countError) {
-      console.log(`Errore durante il conteggio dei documenti: ${countError}`);
     }
     
     // Genera l'embedding della query
     const queryEmbedding = await generateEmbedding(query, apiKey);
-    console.log(`Embedding generato, dimensione: ${queryEmbedding.length}`);
     
     // Prepara la where condition in base ai parametri
     let whereCondition = `WHERE user_id = ${userId}`;
     if (documentIds && documentIds.length > 0) {
       whereCondition += ` AND document_id IN (${documentIds.join(',')})`;
-      console.log(`Query filtrata per i documenti: ${documentIds.join(', ')}`);
     }
     
     // Esegui la query di similarità con tipizzazione corretta e parametri sicuri
@@ -197,38 +181,29 @@ export async function queryVectorStore(
       LIMIT ${limit}
     `;
     
-    console.log(`Esecuzione query SQL nel vector store...`);
     
     try {
       const rawResults = await db.execute(sqlQuery);
-      console.log("Formato risultati SQL:", typeof rawResults);
-      console.log("È un array?", Array.isArray(rawResults));
       
       // Evitiamo di usare JSON.stringify per oggetti complessi
       try {
         const firstResult = Array.isArray(rawResults) && rawResults.length > 0 ? rawResults[0] : null;
-        console.log("Primo risultato:", firstResult);
         
         if (typeof rawResults === 'object' && rawResults !== null) {
-          console.log("Proprietà dell'oggetto risultati:", Object.keys(rawResults));
         }
       } catch (logError) {
-        console.log("Errore durante il logging dei risultati:", logError);
       }
       
       // Vediamo se c'è la proprietà rows, che è comune nei client PostgreSQL
       if (rawResults && typeof rawResults === 'object' && 'rows' in rawResults && Array.isArray(rawResults.rows)) {
-        console.log(`Query completata, trovati ${rawResults.rows.length} risultati nella proprietà 'rows'`);
         return rawResults.rows as Array<QueryResult>;
       }
       
       // In alternativa, controlliamo se è già un array
       if (rawResults && Array.isArray(rawResults)) {
-        console.log(`Query completata, trovati ${rawResults.length} risultati nell'array`);
         return rawResults as Array<QueryResult>;
       }
       
-      console.log(`Query completata, ma risultati non validi:`, rawResults);
       return [];
     } catch (sqlError) {
       console.error("Errore nell'esecuzione della query SQL:", sqlError);

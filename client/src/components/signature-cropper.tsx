@@ -35,8 +35,6 @@ export function SignatureCropper({ signatureId, imagePath, onCropComplete }: Sig
   const [targetHeight, setTargetHeight] = useState([400]);
   const { toast } = useToast();
   
-  // Debug log per stato
-  console.log('SignatureCropper Debug:', { cropResult, previewMode, signatureId });
 
   const handleAutoCrop = async () => {
     setIsProcessing(true);
@@ -48,10 +46,8 @@ export function SignatureCropper({ signatureId, imagePath, onCropComplete }: Sig
       });
 
       const response = await res.json();
-      console.log('API Response JSON:', response);
       
       if (response.success) {
-        console.log('Setting crop result:', response.cropResult);
         setCropResult(response.cropResult);
         onCropComplete?.(response.cropResult);
         
