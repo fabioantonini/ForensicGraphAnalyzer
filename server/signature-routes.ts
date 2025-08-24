@@ -242,6 +242,7 @@ export function registerSignatureRoutes(appRouter: Router) {
           let verdict = null;
           let confidenceLevel = null;
           let verdictExplanation = null;
+          let naturalnessChart = null;  // === NUOVO: GRAFICO NATURALEZZA ===
           
           // Usa la prima firma di riferimento disponibile per il confronto
           const referenceSignature = completedReferences[0];
@@ -268,6 +269,7 @@ export function registerSignatureRoutes(appRouter: Router) {
             
             similarityScore = pythonResult.similarity; // Mantieni come percentuale diretta
             comparisonChart = pythonResult.comparison_chart; // CORRETTO: field name è comparison_chart
+            naturalnessChart = pythonResult.naturalness_chart || null;  // === NUOVO: GRAFICO NATURALEZZA ===
             
             // === ESTRAZIONE NUOVI PARAMETRI DI NATURALEZZA ===
             verdict = pythonResult.verdict || null;
@@ -342,11 +344,17 @@ export function registerSignatureRoutes(appRouter: Router) {
             updateData.comparisonChart = comparisonChart;
           }
           
+          // === NUOVO: SUPPORTA GRAFICO NATURALEZZA ===
+          if (naturalnessChart) {
+            updateData.naturalnessChart = naturalnessChart;
+          }
+          
           // Aggiornamento diretto nel database PostgreSQL per i campi di riferimento
           try {
             await db.update(signatures)
               .set({
                 comparisonChart: updateData.comparisonChart,
+                naturalnessChart: updateData.naturalnessChart,  // === NUOVO: GRAFICO NATURALEZZA ===
                 analysisReport: updateData.analysisReport,
                 reportPath: updateData.reportPath,
                 comparisonResult: updateData.comparisonResult,
