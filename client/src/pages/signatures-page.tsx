@@ -1356,8 +1356,11 @@ export default function SignaturesPage() {
                                           if (param.key === 'AvgAsolaSize' || param.key === 'BaselineStdMm') {
                                             if (diff <= 0.05) compatibility = 95; // Entrambi molto piccoli = alta compatibilità
                                             else if (diff <= 0.1) compatibility = 80;
-                                            else if (diff <= 0.2) compatibility = 60;
-                                            else compatibility = Math.max(0, 100 - (diff * 200)); // Scala lineare per diff > 0.2
+                                            else if (diff <= 0.2) compatibility = 70;
+                                            else if (diff <= 0.5) compatibility = 60;
+                                            else if (diff <= 1.0) compatibility = 50;
+                                            else if (diff <= 2.0) compatibility = 30;
+                                            else compatibility = Math.max(10, 100 - (diff * 40)); // Formula più graduale
                                           }
                                           // Per altri parametri, usa logica relativa migliorata
                                           else {
