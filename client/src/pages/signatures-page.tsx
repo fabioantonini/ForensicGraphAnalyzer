@@ -1444,8 +1444,7 @@ export default function SignaturesPage() {
                                     </table>
                                   </div>
                                   <div className="mt-2 text-xs text-gray-600">
-                                    💡 <strong>Naturalezza Totale:</strong> {signature.naturalnessScore ? (signature.naturalnessScore * 100).toFixed(1) : 'N/A'}% 
-                                    | <strong>Verdetto:</strong> {signature.verdict || 'N/A'}
+                                    💡 <strong>Naturalezza Totale:</strong> {signature.naturalnessScore ? (signature.naturalnessScore * 100).toFixed(1) : 'N/A'}%
                                   </div>
                                 </div>
 
@@ -1503,6 +1502,28 @@ export default function SignaturesPage() {
                                       }`}>
                                         🎯 {signature.verdict}
                                       </span>
+                                      {signature.confidenceLevel && (
+                                        <div className="mt-1 text-xs text-gray-600">
+                                          Confidenza: {signature.confidenceLevel.toFixed(0)}%
+                                        </div>
+                                      )}
+                                    </div>
+                                    
+                                    {/* === SOGLIE DI CLASSIFICAZIONE === */}
+                                    <div className="mt-3 p-2 bg-gray-50 rounded text-xs">
+                                      <details className="cursor-pointer">
+                                        <summary className="font-medium text-gray-700 hover:text-gray-900">
+                                          📋 Criteri di Classificazione
+                                        </summary>
+                                        <div className="mt-2 space-y-1 text-gray-600">
+                                          <div><strong>🟢 Autentica:</strong> Similarità ≥85% + Naturalezza ≥80%</div>
+                                          <div><strong>🔵 Autentica Dissimulata:</strong> Similarità &lt;65% + Naturalezza ≥80%</div>
+                                          <div><strong>🟡 Probabilmente Autentica:</strong> Similarità ≥75% + Naturalezza ≥75%</div>
+                                          <div><strong>🟠 Sospetta:</strong> Similarità media + Naturalezza &lt;50%</div>
+                                          <div><strong>🔴 Probabilmente Falsa:</strong> Similarità &lt;65% + Naturalezza &lt;60%</div>
+                                          <div><strong>⚪ Incerta:</strong> Parametri nel range intermedio</div>
+                                        </div>
+                                      </details>
                                     </div>
                                     {signature.verdictExplanation && (
                                       <div className="mt-2 text-xs text-gray-600 text-center italic">
