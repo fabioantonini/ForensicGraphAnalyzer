@@ -1183,8 +1183,8 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
                 Tupla (verdict, confidence, explanation)
             """
             # Converti in percentuali per chiarezza
-            sim = similarity_pct * 100
-            nat = naturalness_pct
+            sim = similarity_pct * 100  # similarity_pct è 0-1, convertire in 0-100
+            nat = naturalness_pct        # naturalness_pct è già 0-100
             
             # MATRICE DI CLASSIFICAZIONE 2D
             

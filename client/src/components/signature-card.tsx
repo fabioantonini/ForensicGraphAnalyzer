@@ -306,7 +306,7 @@ export function SignatureCard({
             similarity: signature.comparisonResult,
             naturalness: signature.naturalnessScore,
             verdict: signature.verdict,
-            confidence: signature.confidenceLevel ? signature.confidenceLevel * 100 : null,
+            confidence: signature.confidenceLevel || null, // confidenceLevel è già in percentuale (0-100)
             explanation: signature.verdictExplanation
           })}
         </CardContent>
