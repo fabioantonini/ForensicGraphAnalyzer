@@ -1229,14 +1229,6 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
         
         print(f"[CLASSIFICAZIONE] Risultato: {verdict} (confidenza: {confidence}%) - {explanation}", file=sys.stderr)
         
-        # *** DEBUG PER RISOLVERE IL BUG "SOSPETTA" ***
-        if verdict == "Sospetta":
-            sim_debug = final_similarity * 100
-            nat_debug = avg_naturalness
-            print(f"[DEBUG-BUG] SOSPETTA RILEVATA! sim={sim_debug:.1f}%, nat={nat_debug:.1f}%", file=sys.stderr)
-            print(f"[DEBUG-BUG] Condizioni: sim<65={sim_debug<65}, nat>=80={nat_debug>=80}", file=sys.stderr)
-            print(f"[DEBUG-BUG] Dovrebbe essere AUTENTICA DISSIMULATA se sim<65 AND nat>=80", file=sys.stderr)
-        
         # ==============================================
         # FINE NUOVA CLASSIFICAZIONE
         # ==============================================
