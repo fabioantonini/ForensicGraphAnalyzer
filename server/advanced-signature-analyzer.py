@@ -1189,6 +1189,10 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
             
             # MATRICE DI CLASSIFICAZIONE 2D
             
+            # REGOLA PRIORITARIA: Similarità quasi perfetta = Autentica (indipendentemente dalla naturalezza)
+            if sim >= 98:
+                return ("Autentica", 98, "Similarità quasi perfetta - firma identica")
+            
             # Caso 1: Alta similarità + Alta naturalezza = AUTENTICA
             if sim >= 85 and nat >= 80:
                 return ("Autentica", 95, "Alta similarità e movimenti naturali")
