@@ -449,6 +449,13 @@ export const signatures = pgTable("signatures", {
   realHeightMm: real("real_height_mm"), // Altezza reale in millimetri
   processingStatus: text("processing_status").default("pending").notNull(), // pending, processing, completed, failed
   comparisonResult: real("comparison_result"), // null for reference signatures, 0-1 for verification signatures
+  
+  // === NUOVI CAMPI PER INDICE DI NATURALEZZA ===
+  naturalnessScore: real("naturalness_score"), // Indice di naturalezza 0-1 (fluidità + coordinazione)
+  verdict: text("verdict"), // Verdetto intelligente: "Autentica", "Autentica dissimulata", "Probabilmente autentica", "Possibile copia abile", "Sospetta", "Incerta", "Probabilmente falsa"
+  confidenceLevel: real("confidence_level"), // Livello di confidenza 0-1 del verdetto
+  verdictExplanation: text("verdict_explanation"), // Spiegazione dettagliata del verdetto per l'utente
+  
   comparisonChart: text("comparison_chart"), // Base64-encoded image of the comparison chart
   analysisReport: text("analysis_report"), // Testo del report descrittivo
   reportPath: text("report_path"), // Percorso al file DOCX del report (se generato)

@@ -260,6 +260,30 @@ export function registerSignatureRoutes(appRouter: Router) {
             similarityScore = pythonResult.similarity; // Mantieni come percentuale diretta
             comparisonChart = pythonResult.comparison_chart; // CORRETTO: field name è comparison_chart
             
+            // === ESTRAZIONE NUOVI PARAMETRI DI NATURALEZZA ===
+            let naturalnessScore = null;
+            let verdict = pythonResult.verdict || null;
+            let confidenceLevel = null;
+            let verdictExplanation = null;
+            
+            // Estrai parametri di naturalezza se disponibili
+            if (pythonResult.naturalness !== undefined) {
+              naturalnessScore = pythonResult.naturalness;
+              console.log(`[COMPARE-ALL] ✅ NATURALEZZA: ${(naturalnessScore * 100).toFixed(1)}% per firma ${signature.id}`);
+            }
+            
+            if (pythonResult.confidence !== undefined) {
+              confidenceLevel = pythonResult.confidence;
+              console.log(`[COMPARE-ALL] ✅ CONFIDENZA: ${(confidenceLevel * 100).toFixed(1)}% per firma ${signature.id}`);
+            }
+            
+            if (pythonResult.explanation) {
+              verdictExplanation = pythonResult.explanation;
+              console.log(`[COMPARE-ALL] ✅ SPIEGAZIONE: ${verdictExplanation.substring(0, 100)}... per firma ${signature.id}`);
+            }
+            
+            console.log(`[COMPARE-ALL] 🎯 NUOVA CLASSIFICAZIONE: "${verdict}" (Similarità: ${(similarityScore * 100).toFixed(1)}%, Naturalezza: ${naturalnessScore ? (naturalnessScore * 100).toFixed(1) + '%' : 'N/A'})`);
+            
             // CORREZIONE: Salva i parametri strutturati JSON invece della sola descrizione testuale
             // Questo permette al sistema PDF di estrarre tutti i 21+ parametri per l'analisi dettagliata
             if (pythonResult.verifica_parameters) {
@@ -294,6 +318,13 @@ export function registerSignatureRoutes(appRouter: Router) {
           const updateData: any = {
             comparisonResult: similarityScore,
             analysisReport,
+            
+            // === NUOVI CAMPI PER INDICE DI NATURALEZZA ===
+            naturalnessScore: naturalnessScore,
+            verdict: verdict,
+            confidenceLevel: confidenceLevel,
+            verdictExplanation: verdictExplanation,
+            
             referenceSignatureFilename: referenceSignature.filename,
             referenceSignatureOriginalFilename: referenceSignature.originalFilename,
             referenceDpi: referenceSignature.dpi || 300,
@@ -312,6 +343,13 @@ export function registerSignatureRoutes(appRouter: Router) {
                 analysisReport: updateData.analysisReport,
                 reportPath: updateData.reportPath,
                 comparisonResult: updateData.comparisonResult,
+                
+                // === NUOVI CAMPI PER INDICE DI NATURALEZZA ===
+                naturalnessScore: updateData.naturalnessScore,
+                verdict: updateData.verdict,
+                confidenceLevel: updateData.confidenceLevel,
+                verdictExplanation: updateData.verdictExplanation,
+                
                 referenceSignatureFilename: updateData.referenceSignatureFilename,
                 referenceSignatureOriginalFilename: updateData.referenceSignatureOriginalFilename,
                 referenceDpi: updateData.referenceDpi,
