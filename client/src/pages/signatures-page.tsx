@@ -1304,8 +1304,8 @@ export default function SignaturesPage() {
                                         return (
                                           <tr key={param.key} className="border-b">
                                             <td className="py-1 px-2 font-medium">{param.label}</td>
-                                            <td className="text-center py-1 px-2">{param.format(refValue as number)}</td>
-                                            <td className="text-center py-1 px-2">{param.format(verifyValue as number)}</td>
+                                            <td className="text-center py-1 px-2">{param.format(refValue)}</td>
+                                            <td className="text-center py-1 px-2">{param.format(verifyValue)}</td>
                                             <td className="text-center py-1 px-2">
                                               <span className={`inline-block px-2 py-0.5 rounded text-xs ${
                                                 compatibility >= 85 ? 'bg-green-100 text-green-800' :
