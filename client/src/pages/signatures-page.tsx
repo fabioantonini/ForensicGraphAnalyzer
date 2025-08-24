@@ -1532,19 +1532,6 @@ export default function SignaturesPage() {
                   </div>
                   
                   
-                  {signature.comparisonChart && (
-                    <div className="mt-2">
-                      <h5 className="font-medium mb-1">{t('signatures.comparisonDialog.comparisonChart')}</h5>
-                      <div className="border rounded p-2 bg-white">
-                        <img 
-                          src={`data:image/png;base64,${signature.comparisonChart}`} 
-                          alt="Grafico confronto parametri" 
-                          className="max-w-full h-auto mx-auto block"
-                          style={{ maxHeight: '400px' }}
-                        />
-                      </div>
-                    </div>
-                  )}
                   
                 </div>
               ))
