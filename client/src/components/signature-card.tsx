@@ -96,6 +96,7 @@ export function SignatureCard({
   
   // Function to render similarity score con NUOVA CLASSIFICAZIONE INTELLIGENTE
   const renderSimilarityScore = (comparisonData: any) => {
+    // *** CORREZIONE: Non mostrare nulla se non c'è un confronto valido ***
     if (!comparisonData) return null;
     
     // Supporta sia il vecchio formato (solo score) che il nuovo formato completo
@@ -108,13 +109,28 @@ export function SignatureCard({
     if (typeof comparisonData === 'number') {
       // Formato vecchio: solo score numerico
       similarity_score = comparisonData;
+      // *** CORREZIONE: Non mostrare se il punteggio non è valido ***
+      if (isNaN(similarity_score) || similarity_score === null || similarity_score === undefined) {
+        return null;
+      }
       verdict = similarity_score >= 0.85 ? 'Autentica' : 
                 similarity_score >= 0.65 ? 'Probabilmente autentica' : 'Firma non autentica';
     } else {
       // Nuovo formato: oggetto completo con naturalezza
       similarity_score = comparisonData.similarity || comparisonData;
       naturalness_score = comparisonData.naturalness;
-      verdict = comparisonData.verdict || 'Analisi in corso';
+      
+      // *** CORREZIONE: Non mostrare se il punteggio non è valido ***
+      if (isNaN(similarity_score) || similarity_score === null || similarity_score === undefined) {
+        return null;
+      }
+      
+      // *** CORREZIONE: Non mostrare "Analisi in corso" - solo se c'è un vero verdetto ***
+      verdict = comparisonData.verdict;
+      if (!verdict || verdict === 'Analisi in corso') {
+        return null;
+      }
+      
       confidence = comparisonData.confidence;
       explanation = comparisonData.explanation;
     }
@@ -329,7 +345,9 @@ export function SignatureCard({
             <ScrollArea className="max-h-[calc(90vh-140px)] pr-4">
               <div className="grid grid-cols-1 gap-6">
               {/* Punteggio di similarità */}
-              {signature.comparisonResult !== null && (
+              {signature.comparisonResult !== null && 
+               !isNaN(signature.comparisonResult) && 
+               signature.comparisonResult !== undefined && (
                 <div className="bg-muted rounded p-4">
                   <h3 className="font-medium text-lg mb-2">
                     {t('signatures.similarityScore')}: {(signature.comparisonResult * 100).toFixed(1)}%
