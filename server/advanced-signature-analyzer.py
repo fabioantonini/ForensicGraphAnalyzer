@@ -1108,7 +1108,9 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
                 if relative_diff <= 0.05: return 0.98
                 elif relative_diff <= 0.1: return 0.90
                 elif relative_diff <= 0.15: return 0.80
-                else: return max(0, 1 - relative_diff)
+                elif relative_diff <= 0.25: return 0.60  # === NUOVO: soglia intermedia ===
+                elif relative_diff <= 0.50: return 0.30  # === NUOVO: soglia per grandi differenze ===
+                else: return max(0.10, 1 - relative_diff)  # === CORRETTO: minimo 10% invece di 0% ===
             else:
                 return 1.0  # Entrambi zero = perfetta compatibilità
         
