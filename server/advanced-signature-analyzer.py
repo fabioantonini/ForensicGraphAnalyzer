@@ -497,6 +497,7 @@ def create_comparison_chart(verifica_data, comp_data):
         
         # Se entrambi i valori sono 0, assegna 0% (nessun dato disponibile)
         if valore_v == 0 and valore_c == 0:
+            print(f"[WARNING] Parametro {parametro_nome} non trovato nei dati - valore_v: {valore_v}, valore_c: {valore_c}", file=sys.stderr)
             compatibilita_percentuale.append(0)
             continue
             
