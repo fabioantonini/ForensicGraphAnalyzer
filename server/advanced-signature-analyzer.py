@@ -1182,8 +1182,8 @@ def calculate_fluidity_score(binary: np.ndarray, contours: list) -> float:
                 if contour_length > 0:
                     irregularity = np.std(acceleration) / contour_length
                     # Converti in score di fluidità (0-100)
-                    smoothness = max(0, 100 - (irregularity * 1000))
-                    smoothness_scores.append(min(100, smoothness))
+                    smoothness = max(0.0, 100.0 - (irregularity * 1000))
+                    smoothness_scores.append(min(100.0, smoothness))
         
         if not smoothness_scores:
             return 50.0  # Valore neutro se non ci sono contorni validi
@@ -1241,7 +1241,7 @@ def calculate_pressure_consistency(gray: np.ndarray, binary: np.ndarray) -> floa
             # Troppo uniforme o troppo variabile = sospetto
             consistency_score = max(0, 50 - (abs(coefficient_variation - 0.20) * 100))
         
-        return float(min(100, max(0, consistency_score)))
+        return float(min(100.0, max(0.0, consistency_score)))
         
     except Exception as e:
         print(f"Errore nel calcolo pressure consistency: {str(e)}", file=sys.stderr)
@@ -1316,7 +1316,7 @@ def calculate_coordination_index(contours: list, binary: np.ndarray) -> float:
                     # Troppo rigido o troppo caotico
                     coord_score = max(0, 40 - (abs(normalized_variation - 0.55) * 50))
                 
-                coordination_scores.append(min(100, max(0, coord_score)))
+                coordination_scores.append(min(100.0, max(0.0, coord_score)))
         
         if not coordination_scores:
             return 50.0  # Valore neutro
@@ -1354,7 +1354,7 @@ def calculate_naturalness_index(fluidity: float, pressure_consistency: float, co
             coordination * coordination_weight
         )
         
-        return float(min(100, max(0, naturalness)))
+        return float(min(100.0, max(0.0, naturalness)))
         
     except Exception as e:
         print(f"Errore nel calcolo naturalness index: {str(e)}", file=sys.stderr)
