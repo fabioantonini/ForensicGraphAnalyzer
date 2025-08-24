@@ -83,7 +83,12 @@ export async function generateSignatureReportPDF(data: {
   signatureImagePath: string,
   similarityScore: number,
   comparisonChart: string | null,
-  analysisReport: string | null
+  analysisReport: string | null,
+  // === NUOVI PARAMETRI DI NATURALEZZA ===
+  naturalnessScore?: number | null,
+  verdict?: string | null,
+  confidenceLevel?: number | null,
+  verdictExplanation?: string | null
 }): Promise<{ success: boolean, reportPath?: string, error?: string }> {
   try {
     // Utilizziamo PDFDocument già importato globalmente
@@ -132,6 +137,36 @@ export async function generateSignatureReportPDF(data: {
     // Punteggio
     doc.fontSize(14).text(`Punteggio di somiglianza: ${(data.similarityScore * 100).toFixed(1)}%`);
     doc.moveDown();
+    
+    // === NUOVA SEZIONE: PARAMETRI DI NATURALEZZA ===
+    if (data.naturalnessScore !== null && data.naturalnessScore !== undefined) {
+      doc.fontSize(14).text('Analisi di Naturalezza (Anti-Dissimulazione):', { underline: true });
+      doc.moveDown();
+      
+      doc.fontSize(12).text(`🧠 Indice di Naturalezza: ${(data.naturalnessScore * 100).toFixed(1)}%`);
+      
+      if (data.verdict) {
+        doc.fontSize(12).text(`🎯 Verdetto: ${data.verdict}`);
+      }
+      
+      if (data.confidenceLevel) {
+        doc.fontSize(12).text(`⚡ Livello di Confidenza: ${(data.confidenceLevel * 100).toFixed(0)}%`);
+      }
+      
+      if (data.verdictExplanation) {
+        doc.fontSize(10).text(`💡 Spiegazione: ${data.verdictExplanation}`, { align: 'justify' });
+      }
+      
+      // Spiegazione tecnica della naturalezza
+      doc.moveDown();
+      doc.fontSize(10).text(
+        "L'Indice di Naturalezza combina tre parametri avanzati: Fluidità dei tratti (coordinazione motoria), " +
+        "Consistenza della Pressione (controllo dell'intensità), e Coordinazione Generale (regolarità delle curve). " +
+        "Valori bassi possono indicare falsificazione, mentre valori intermedi possono suggerire dissimulazione autentica.",
+        { align: 'justify' }
+      );
+      doc.moveDown();
+    }
     
     // Immagine della firma
     try {

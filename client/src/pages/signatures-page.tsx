@@ -1218,6 +1218,7 @@ export default function SignaturesPage() {
                             }
                             
                             const comparisonParams = [
+                              // === PARAMETRI CLASSICI ===
                               { 
                                 key: 'Proportion', 
                                 label: t('signatures.comparisonTable.proportion'), 
@@ -1262,6 +1263,28 @@ export default function SignaturesPage() {
                                 key: 'OverlapRatio', 
                                 label: t('signatures.comparisonTable.overlapRatio'), 
                                 format: (v: number) => v?.toFixed(2) 
+                              },
+                              
+                              // === NUOVI PARAMETRI DI NATURALEZZA === 
+                              { 
+                                key: 'FluidityScore', 
+                                label: '🧠 Fluidità', 
+                                format: (v: number) => `${v?.toFixed(1)}%` 
+                              },
+                              { 
+                                key: 'PressureConsistency', 
+                                label: '🔄 Consistenza Pressione', 
+                                format: (v: number) => `${v?.toFixed(1)}%` 
+                              },
+                              { 
+                                key: 'CoordinationIndex', 
+                                label: '🎯 Coordinazione', 
+                                format: (v: number) => `${v?.toFixed(1)}%` 
+                              },
+                              { 
+                                key: 'NaturalnessIndex', 
+                                label: '✨ Naturalezza Totale', 
+                                format: (v: number) => `${v?.toFixed(1)}%` 
                               },
                               { 
                                 key: 'LetterConnections', 
