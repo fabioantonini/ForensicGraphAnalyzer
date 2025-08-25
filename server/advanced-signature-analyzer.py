@@ -1201,11 +1201,15 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
             elif sim >= 85 and nat < 60:
                 return ("Possibile copia abile", 70, "Alta similarità ma movimenti innaturali")
             
-            # Caso 3: Bassa similarità + Alta naturalezza = AUTENTICA DISSIMULATA ⭐
-            elif sim < 65 and nat >= 80:
+            # Caso 3: Similarità intermedia + Alta naturalezza = AUTENTICA DISSIMULATA ⭐
+            elif 55 <= sim < 65 and nat >= 80:
                 return ("Autentica dissimulata", 85, "Modificata intenzionalmente ma autentica")
                 
-            # Caso 4: Bassa similarità + Bassa naturalezza = PROBABILMENTE FALSA
+            # Caso 4A: Similarità molto bassa + Alta naturalezza = SOSPETTA (possibile imitazione naturale)
+            elif sim < 55 and nat >= 80:
+                return ("Sospetta", 75, "Similarità troppo bassa - possibile imitazione naturale")
+                
+            # Caso 4B: Bassa similarità + Bassa naturalezza = PROBABILMENTE FALSA
             elif sim < 65 and nat < 60:
                 return ("Probabilmente falsa", 90, "Bassa similarità e movimenti innaturali")
             
