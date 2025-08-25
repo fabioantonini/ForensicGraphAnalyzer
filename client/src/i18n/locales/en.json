@@ -370,6 +370,7 @@
       "authentic": "Authentic",
       "authenticDissimulated": "Authentic Dissimulated", 
       "probablyAuthentic": "Probably Authentic",
+      "suspicious": "Suspicious",
       "probablyFalse": "Probably False",
       "similarity": "Similarity:",
       "comparisonChart": "Comparison Chart:",
