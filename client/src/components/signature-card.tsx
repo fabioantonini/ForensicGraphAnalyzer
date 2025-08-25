@@ -209,10 +209,19 @@ export function SignatureCard({
           )}
         </div>
         
-        {/* Spiegazione (se disponibile) */}
+        {/* Interpretazione AI (se disponibile) */}
         {explanation && (
-          <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded border-l-2 border-blue-300">
-            {explanation}
+          <div className="mt-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-l-4 border-blue-400">
+            <div className="font-medium text-xs text-blue-800 mb-2 flex items-center gap-1">
+              🤖 <span>Interpretazione dell'Analisi</span>
+            </div>
+            <div className="text-xs text-blue-900 leading-relaxed">
+              {explanation.split('\n\n').map((paragraph: string, index: number) => (
+                <p key={index} className="mb-2 last:mb-0">
+                  {paragraph}
+                </p>
+              ))}
+            </div>
           </div>
         )}
       </div>

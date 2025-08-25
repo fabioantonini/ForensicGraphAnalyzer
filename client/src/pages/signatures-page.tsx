@@ -1540,9 +1540,20 @@ export default function SignaturesPage() {
                                         <div><strong className="text-gray-600">⚪ Incerta:</strong> Parametri intermedi</div>
                                       </div>
                                     </div>
+                                    
+                                    {/* === NUOVA SEZIONE: INTERPRETAZIONE DELL'ANALISI === */}
                                     {signature.verdictExplanation && (
-                                      <div className="mt-2 text-xs text-gray-600 text-center italic">
-                                        💡 {signature.verdictExplanation}
+                                      <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-l-4 border-blue-400">
+                                        <div className="font-medium text-sm text-blue-800 mb-2 flex items-center gap-2">
+                                          🤖 <span>Interpretazione dell'Analisi</span>
+                                        </div>
+                                        <div className="text-xs text-blue-900 leading-relaxed">
+                                          {signature.verdictExplanation.split('\n\n').map((paragraph, index) => (
+                                            <p key={index} className="mb-2 last:mb-0">
+                                              {paragraph}
+                                            </p>
+                                          ))}
+                                        </div>
                                       </div>
                                     )}
                                   </div>

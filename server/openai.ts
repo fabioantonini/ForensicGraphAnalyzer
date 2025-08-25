@@ -314,3 +314,91 @@ export async function validateAPIKey(apiKey?: string, userId?: number): Promise<
     return false;
   }
 }
+
+// Generate forensic signature analysis interpretation using AI
+export async function generateSignatureInterpretation(
+  verdict: string,
+  similarityScore: number,
+  naturalnessScore?: number | null,
+  parameters?: any,
+  confidenceLevel?: number,
+  apiKey?: string,
+  userId?: number
+): Promise<string> {
+  try {
+    const openai = await createOpenAIClient(apiKey, userId);
+    
+    // Prepare parameter details if available
+    let parameterSummary = "";
+    if (parameters) {
+      parameterSummary = `
+Parametri tecnici rilevanti:
+- Similarità: ${(similarityScore * 100).toFixed(1)}%
+- Naturalezza: ${naturalnessScore ? (naturalnessScore * 100).toFixed(1) + '%' : 'Non disponibile'}
+- Confidenza: ${confidenceLevel ? confidenceLevel.toFixed(0) + '%' : 'Non disponibile'}`;
+    }
+    
+    const systemMessage = `Sei un esperto perito grafologo forense che deve fornire un'analisi interpretativa professionale dei risultati dell'analisi di firma.
+
+Il tuo compito è spiegare in modo chiaro e professionale il significato del verdetto finale, basandoti sui parametri tecnici calcolati.
+
+REGOLE IMPORTANTI:
+1. Usa un linguaggio professionale ma comprensibile
+2. Spiega PERCHÉ è stato raggiunto questo verdetto specifico
+3. Connetti i parametri numerici al risultato finale
+4. Mantieni un tono oggettivo e scientifico
+5. Includi considerazioni pratiche e forensi
+6. Limita la risposta a 3-4 paragrafi (massimo 300 parole)
+7. Usa terminologia tecnica appropriata per la grafologia forense
+
+Rispondi sempre in italiano con un'analisi strutturata e professionale.`;
+
+    const userPrompt = `
+Analizza e spiega il seguente risultato di verifica firma:
+
+VERDETTO: ${verdict}
+PARAMETRI: ${parameterSummary || 'Parametri base disponibili'}
+
+Fornisci un'analisi interpretativa professionale che spieghi:
+1. Cosa significa questo verdetto in termini pratici
+2. Perché i parametri hanno portato a questa conclusione
+3. Quali aspetti tecnici supportano il risultato
+4. Considerazioni forensi rilevanti`;
+
+    // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        { role: "system", content: systemMessage },
+        { role: "user", content: userPrompt }
+      ],
+      temperature: 0.3, // Low temperature for consistent, professional output
+      max_tokens: 500
+    });
+    
+    return response.choices[0].message.content || "Analisi non disponibile al momento.";
+  } catch (error: any) {
+    console.error("Error generating signature interpretation:", error);
+    return `Analisi interpretativa non disponibile. Il verdetto "${verdict}" indica ${getBasicInterpretation(verdict)}.`;
+  }
+}
+
+// Fallback basic interpretation when AI is not available
+function getBasicInterpretation(verdict: string): string {
+  switch (verdict) {
+    case 'Autentica':
+      return 'un\'elevata compatibilità con le firme di riferimento, suggerendo autenticità del documento';
+    case 'Autentica dissimulata':
+      return 'una firma autentica ma eseguita con dissimulazione intenzionale, mantenendo caratteristiche genuine';
+    case 'Probabilmente autentica':
+      return 'buona compatibilità generale con le firme di riferimento';
+    case 'Sospetta':
+      return 'anomalie significative che richiedono ulteriori verifiche';
+    case 'Probabilmente falsa':
+      return 'incompatibilità significative che suggeriscono possibile falsificazione';
+    case 'Incerta':
+      return 'parametri intermedi che non consentono una classificazione definitiva';
+    default:
+      return 'un risultato che richiede valutazione tecnica approfondita';
+  }
+}

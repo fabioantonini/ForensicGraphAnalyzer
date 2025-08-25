@@ -925,7 +925,99 @@ def generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, simi
     elements.append(Paragraph(methodology_text, normal_style))
     elements.append(Spacer(1, 12))
     
-    # Analisi tecnica
+    # === NUOVO: ANALISI INTERPRETATIVA AI ===
+    try:
+        import subprocess
+        import tempfile
+        
+        # Prepara i parametri per l'interpretazione AI
+        verdict = case_info.get('verdict', 'Non determinato') if case_info else 'Non determinato'
+        similarity = verifica_data.get('similarity', 0)
+        naturalness = verifica_data.get('naturalnessScore', 0)
+        confidence = verifica_data.get('confidenceLevel', 0)
+        
+        # Crea uno script Node.js temporaneo per chiamare l'interpretazione AI
+        node_script = f'''
+const {{ generateSignatureInterpretation }} = require('./server/openai.js');
+
+async function generateInterpretation() {{
+    try {{
+        const interpretation = await generateSignatureInterpretation(
+            "{verdict}",
+            {similarity},
+            {naturalness},
+            null,  // parameters non necessari per interpretazione base
+            {confidence}
+        );
+        console.log("INTERPRETATION_RESULT:" + interpretation);
+    }} catch (error) {{
+        console.log("INTERPRETATION_ERROR:" + error.message);
+    }}
+}}
+
+generateInterpretation();
+'''
+        
+        # Salva lo script temporaneo
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.js', delete=False) as temp_script:
+            temp_script.write(node_script)
+            temp_script_path = temp_script.name
+        
+        try:
+            # Esegui lo script Node.js
+            result = subprocess.run(['node', temp_script_path], 
+                                  capture_output=True, text=True, timeout=30)
+            
+            ai_interpretation = None
+            for line in result.stdout.split('\n'):
+                if line.startswith('INTERPRETATION_RESULT:'):
+                    ai_interpretation = line.replace('INTERPRETATION_RESULT:', '').strip()
+                    break
+            
+            # Aggiungi l'interpretazione AI al report se disponibile
+            if ai_interpretation and ai_interpretation != "Analisi non disponibile al momento.":
+                elements.append(Paragraph("Interpretazione dell'Analisi", heading1_style))
+                elements.append(Spacer(1, 6))
+                
+                # Stile per l'interpretazione AI
+                interpretation_style = ParagraphStyle(
+                    'InterpretationStyle',
+                    fontName='Helvetica',
+                    fontSize=11,
+                    leading=14,
+                    spaceAfter=8,
+                    textColor=colors.HexColor('#2c3e50'),
+                    leftIndent=12,
+                    rightIndent=12,
+                    borderColor=colors.HexColor('#3498db'),
+                    borderWidth=0.5,
+                    borderPadding=8,
+                    backColor=colors.HexColor('#f8f9fa')
+                )
+                
+                # Aggiungi l'interpretazione AI
+                for paragraph in ai_interpretation.split('\n\n'):
+                    if paragraph.strip():
+                        elements.append(Paragraph(paragraph.strip(), interpretation_style))
+                        elements.append(Spacer(1, 6))
+                
+                elements.append(Spacer(1, 12))
+                
+        except subprocess.TimeoutExpired:
+            print("⚠️ Timeout generazione interpretazione AI per PDF", file=sys.stderr)
+        except Exception as node_error:
+            print(f"⚠️ Errore esecuzione script Node.js: {node_error}", file=sys.stderr)
+        finally:
+            # Cleanup script temporaneo
+            try:
+                os.unlink(temp_script_path)
+            except:
+                pass
+                
+    except Exception as ai_error:
+        print(f"⚠️ Errore setup interpretazione AI per PDF: {ai_error}", file=sys.stderr)
+    
+    # Analisi tecnica (sezione originale)
     elements.append(Paragraph("Analisi Tecnica", heading1_style))
     elements.append(Spacer(1, 6))
     

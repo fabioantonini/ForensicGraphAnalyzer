@@ -290,6 +290,29 @@ export function registerSignatureRoutes(appRouter: Router) {
               console.log(`[COMPARE-ALL] ✅ SPIEGAZIONE: ${verdictExplanation.substring(0, 100)}... per firma ${signature.id}`);
             }
             
+            // === NUOVO: GENERA INTERPRETAZIONE AI DELL'ANALISI ===
+            try {
+              const { generateSignatureInterpretation } = await import("./openai");
+              const interpretation = await generateSignatureInterpretation(
+                verdict || 'Non determinato',
+                similarityScore || 0,
+                naturalnessScore,
+                pythonResult,
+                confidenceLevel,
+                req.user?.openaiApiKey,
+                req.user?.id
+              );
+              
+              // Salva l'interpretazione nella spiegazione se non già presente
+              if (!verdictExplanation && interpretation) {
+                verdictExplanation = interpretation;
+                console.log(`[COMPARE-ALL] 🤖 INTERPRETAZIONE AI generata per firma ${signature.id}`);
+              }
+            } catch (aiError) {
+              console.error(`[COMPARE-ALL] ⚠️ Errore generazione interpretazione AI:`, aiError);
+              // Non blocca l'esecuzione, continua senza interpretazione AI
+            }
+            
             console.log(`[COMPARE-ALL] 🎯 NUOVA CLASSIFICAZIONE: "${verdict}" (Similarità: ${(similarityScore * 100).toFixed(1)}%, Naturalezza: ${naturalnessScore ? (naturalnessScore * 100).toFixed(1) + '%' : 'N/A'})`);
             
             // CORREZIONE: Salva i parametri strutturati JSON invece della sola descrizione testuale
