@@ -1527,9 +1527,9 @@ export default function SignaturesPage() {
                                       </div>
                                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-xs text-gray-700">
                                         <div><strong className="text-green-700">🟢 Autentica:</strong> Sim≥85% + Nat≥80%</div>
-                                        <div><strong className="text-blue-700">🔵 Autentica Dissimulata:</strong> Sim&lt;65% + Nat≥80%</div>
+                                        <div><strong className="text-blue-700">🔵 Autentica Dissimulata:</strong> 55%≤Sim&lt;65% + Nat≥80%</div>
                                         <div><strong className="text-green-600">🟡 Prob. Autentica:</strong> Sim≥75% + Nat≥75%</div>
-                                        <div><strong className="text-orange-600">🟠 Sospetta:</strong> Sim media + Nat&lt;50%</div>
+                                        <div><strong className="text-orange-600">🟠 Sospetta:</strong> Sim&lt;55% + Nat≥80% o Sim media + Nat&lt;50%</div>
                                         <div><strong className="text-red-600">🔴 Prob. Falsa:</strong> Sim&lt;65% + Nat&lt;60%</div>
                                         <div><strong className="text-gray-600">⚪ Incerta:</strong> Parametri intermedi</div>
                                       </div>
