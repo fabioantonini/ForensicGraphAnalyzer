@@ -1362,6 +1362,31 @@ export function registerSignatureRoutes(appRouter: Router) {
           doc.moveDown(0.5);
         }
         
+        // === GRAFICO DI NATURALEZZA ===
+        if (signature.naturalnessChart) {
+          console.log('[PDF DEBUG] Adding naturalness chart to PDF');
+          doc.fontSize(12).text('GRAFICO DI COMPARAZIONE NATURALEZZA', { underline: true, align: 'center' });
+          doc.moveDown(0.3);
+          
+          try {
+            // Inserisci il grafico di naturalezza (base64)
+            const chartBuffer = Buffer.from(signature.naturalnessChart.replace(/^data:image\/[a-z]+;base64,/, ''), 'base64');
+            doc.image(chartBuffer, {
+              fit: [450, 300],
+              align: 'center',
+              valign: 'center'
+            });
+            doc.moveDown(0.5);
+            console.log('[PDF DEBUG] Naturalness chart successfully added to PDF');
+          } catch (chartError) {
+            console.error('[PDF DEBUG] Error adding naturalness chart:', chartError);
+            doc.fontSize(10).text('[Grafico di naturalezza non disponibile]', { align: 'center' });
+            doc.moveDown(0.3);
+          }
+        } else {
+          console.log('[PDF DEBUG] No naturalness chart available for signature', signature.id);
+        }
+        
         // Spiegazione tecnica
         doc.fontSize(10).text(
           "L'Indice di Naturalezza combina tre parametri avanzati: Fluidità dei tratti (coordinazione motoria), " +
