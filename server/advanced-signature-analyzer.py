@@ -1104,6 +1104,7 @@ generateInterpretation();
     elements.append(Spacer(1, 6))
     
     # Decodifica e salva il grafico di naturalezza
+    naturalness_chart_temp_path = None
     if naturalness_chart_base64:
         try:
             naturalness_chart_data = base64.b64decode(naturalness_chart_base64)
@@ -1126,6 +1127,7 @@ generateInterpretation();
             
         except Exception as e:
             print(f"Errore nell'aggiunta del grafico di naturalezza: {str(e)}", file=sys.stderr)
+            naturalness_chart_temp_path = None
     
     # === NUOVA SEZIONE: PROSPETTO FINALE ===
     elements.append(Paragraph("Prospetto Finale dell'Analisi", heading1_style))
@@ -1235,7 +1237,7 @@ generateInterpretation();
         # Rimuovi i file temporanei dei grafici
         try:
             os.remove(chart_temp_path)
-            if 'naturalness_chart_temp_path' in locals():
+            if naturalness_chart_temp_path:
                 os.remove(naturalness_chart_temp_path)
         except:
             pass
