@@ -1323,12 +1323,19 @@ export function registerSignatureRoutes(appRouter: Router) {
       // === NUOVE SEZIONI: NATURALEZZA E PROSPETTO FINALE ===
       
       // ANALISI DI NATURALEZZA (se disponibile)
-      if (signature.naturalness !== null && signature.naturalness !== undefined) {
+      console.log('[PDF DEBUG] Checking naturalness data:', {
+        naturalnessScore: signature.naturalnessScore,
+        verdict: signature.verdict,
+        verdictExplanation: signature.verdictExplanation?.substring(0, 50) + '...'
+      });
+      
+      if (signature.naturalnessScore !== null && signature.naturalnessScore !== undefined) {
+        console.log('[PDF DEBUG] Adding naturalness section');
         doc.addPage();
         doc.fontSize(16).text('🧠 ANALISI DI NATURALEZZA (ANTI-DISSIMULAZIONE)', { underline: true, align: 'center' });
         doc.moveDown(0.5);
         
-        doc.fontSize(12).text(`Indice di Naturalezza: ${(signature.naturalness * 100).toFixed(1)}%`, { underline: true });
+        doc.fontSize(12).text(`Indice di Naturalezza: ${(signature.naturalnessScore * 100).toFixed(1)}%`, { underline: true });
         doc.moveDown(0.3);
         
         if (signature.verdict) {
@@ -1356,9 +1363,12 @@ export function registerSignatureRoutes(appRouter: Router) {
           { align: 'justify' }
         );
         doc.moveDown(1);
+      } else {
+        console.log('[PDF DEBUG] Naturalness section SKIPPED - no data available');
       }
       
       // PROSPETTO FINALE DELL'ANALISI
+      console.log('[PDF DEBUG] Adding final analysis section');
       doc.addPage();
       doc.fontSize(16).text('📋 PROSPETTO FINALE DELL\'ANALISI', { underline: true, align: 'center' });
       doc.moveDown(1);
@@ -1370,8 +1380,8 @@ export function registerSignatureRoutes(appRouter: Router) {
       doc.fontSize(12);
       doc.text(`🔍 Punteggio di Somiglianza: ${percentageScore.toFixed(1)}%`);
       
-      if (signature.naturalness !== null && signature.naturalness !== undefined) {
-        doc.text(`🧠 Indice di Naturalezza: ${(signature.naturalness * 100).toFixed(1)}%`);
+      if (signature.naturalnessScore !== null && signature.naturalnessScore !== undefined) {
+        doc.text(`🧠 Indice di Naturalezza: ${(signature.naturalnessScore * 100).toFixed(1)}%`);
         if (signature.verdict) {
           doc.text(`🎯 Verdetto Finale: ${signature.verdict}`);
         }
@@ -1383,7 +1393,7 @@ export function registerSignatureRoutes(appRouter: Router) {
       doc.moveDown(0.3);
       
       doc.fontSize(11);
-      const naturalnessPercent = signature.naturalness ? signature.naturalness * 100 : null;
+      const naturalnessPercent = signature.naturalnessScore ? signature.naturalnessScore * 100 : null;
       
       if (percentageScore >= 85) {
         doc.text('✅ RACCOMANDAZIONE: La firma presenta caratteristiche fortemente compatibili con l\'autenticità. I parametri analizzati supportano l\'ipotesi di genuinità.', { align: 'justify' });
