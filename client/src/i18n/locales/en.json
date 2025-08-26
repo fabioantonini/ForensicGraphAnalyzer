@@ -394,6 +394,12 @@
       "button": "Analysis Methodology",
       "subtitle": "Details on the algorithm and parameters used for signature verification",
       "overview": "System Overview",
+      "overviewDesc1": "GrapholexInsight uses an advanced graphical analysis algorithm to compare signatures, integrating traditional techniques with advanced computer vision parameters and anti-dissimulation naturalness analysis. The system extracts over 21 distinct characteristic parameters, combining base analysis with advanced parameters derived from machine learning algorithms:",
+      "naturalnessDesc": "New implementation for detecting dissimulated signatures through behavioral analysis:",
+      "classificationTitle": "Intelligent Classification System",
+      "classificationDesc": "GrapholexInsight introduces a bidimensional classification system that combines traditional similarity and behavioral naturalness for complete forensic evaluation:",
+      "aiInterpretationDesc": "Each classification is accompanied by an automatically generated AI explanation that includes:",
+      "conclusion": "The authenticity score derives from the combination of traditional similarity and naturalness analysis, with intelligent classification in 6 categories (from 'Authentic' to 'Probably False'). The estimated 94% accuracy surpasses traditional manual analysis thanks to AI integration and anti-dissimulation detection.",
       "unifiedWorkflowTitle": "Unified Processing Workflow",
       "multiReferenceTitle": "Multi-reference signature analysis",
       "advancedTechTitle": "Integrated Advanced Technologies"

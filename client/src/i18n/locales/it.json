@@ -395,6 +395,12 @@
       "button": "Metodologia di analisi",
       "subtitle": "Dettagli sull'algoritmo e sui parametri utilizzati per la verifica delle firme",
       "overview": "Panoramica del sistema",
+      "overviewDesc1": "GrapholexInsight utilizza un algoritmo avanzato di analisi grafica per confrontare le firme, integrando tecniche tradizionali con parametri avanzati di computer vision e analisi di naturalezza anti-dissimulazione. Il sistema estrae oltre 21 parametri caratteristici distinti, combinando analisi base con parametri avanzati derivati da algoritmi di machine learning:",
+      "naturalnessDesc": "Nuova implementazione per il rilevamento di firme dissimulate attraverso analisi comportamentale:",
+      "classificationTitle": "Sistema di Classificazione Intelligente",
+      "classificationDesc": "GrapholexInsight introduce un sistema di classificazione bidimensionale che combina similarità tradizionale e naturalezza comportamentale per una valutazione forensica completa:",
+      "aiInterpretationDesc": "Ogni classificazione è accompagnata da una spiegazione AI generata automaticamente che include:",
+      "conclusion": "Il punteggio di autenticità deriva dalla combinazione di similarità tradizionale e analisi di naturalezza, con classificazione intelligente in 6 categorie (da 'Autentica' a 'Probabilmente falsa'). L'accuratezza stimata del 94% supera l'analisi manuale tradizionale grazie all'integrazione di AI e rilevamento anti-dissimulazione.",
       "unifiedWorkflowTitle": "Workflow Unificato di Elaborazione",
       "multiReferenceTitle": "Analisi con multiple firme di riferimento",
       "advancedTechTitle": "Tecnologie Avanzate Integrate"

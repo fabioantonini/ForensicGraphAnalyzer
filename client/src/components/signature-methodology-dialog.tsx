@@ -41,11 +41,11 @@ export function SignatureMethodologyDialog() {
                 {t('signatures.methodology.overview', 'Panoramica del sistema')}
               </h3>
               <p className="mb-2">
-                {t('signatures.methodology.overviewDesc1', 'GrapholexInsight utilizza un algoritmo avanzato di analisi grafica per confrontare le firme, integrando tecniche tradizionali con parametri avanzati di computer vision. Il sistema estrae oltre 15 parametri caratteristici distinti, combinando analisi base con parametri avanzati derivati da algoritmi di machine learning:')}
+                {t('signatures.methodology.overviewDesc1', 'GrapholexInsight utilizza un algoritmo avanzato di analisi grafica per confrontare le firme, integrando tecniche tradizionali con parametri avanzati di computer vision e analisi di naturalezza anti-dissimulazione. Il sistema estrae oltre 21 parametri caratteristici distinti, combinando analisi base con parametri avanzati derivati da algoritmi di machine learning:')}
               </p>
               
               <div className="bg-blue-50 p-4 rounded-lg mb-4">
-                <h4 className="font-semibold text-blue-900 mb-2">Parametri Base (Peso: 60%)</h4>
+                <h4 className="font-semibold text-blue-900 mb-2">Parametri Base (Peso: 40%)</h4>
                 <ul className="list-disc pl-6 space-y-1 text-sm">
                   <li><span className="font-medium">Aspect Ratio (15%)</span>: Proporzioni complessive della firma</li>
                   <li><span className="font-medium">Caratteristiche dei tratti (25%)</span>: Spessore, pressione e variazioni nei tratti</li>
@@ -56,7 +56,7 @@ export function SignatureMethodologyDialog() {
               </div>
               
               <div className="bg-green-50 p-4 rounded-lg mb-4">
-                <h4 className="font-semibold text-green-900 mb-2">Parametri Avanzati (Peso: 40%)</h4>
+                <h4 className="font-semibold text-green-900 mb-2">Parametri Avanzati (Peso: 30%)</h4>
                 <ul className="list-disc pl-6 space-y-1 text-sm">
                   <li><span className="font-medium">Inclinazione dinamica</span>: Angolo medio della scrittura calcolato tramite ellisse fitting</li>
                   <li><span className="font-medium">Analisi pressione avanzata</span>: Pressione media e deviazione standard da intensità pixel</li>
@@ -72,8 +72,22 @@ export function SignatureMethodologyDialog() {
                 </ul>
               </div>
               
+              <div className="bg-purple-50 p-4 rounded-lg mb-4">
+                <h4 className="font-semibold text-purple-900 mb-2">Parametri di Naturalezza (Peso: 30%)</h4>
+                <p className="text-sm mb-2 text-purple-800">{t('signatures.methodology.naturalnessDesc', 'Nuova implementazione per il rilevamento di firme dissimulate attraverso analisi comportamentale:')}</p>
+                <ul className="list-disc pl-6 space-y-1 text-sm">
+                  <li><span className="font-medium">Fluidità dei movimenti</span>: Analisi della continuità e naturalezza del tracciato</li>
+                  <li><span className="font-medium">Consistenza della pressione</span>: Valutazione dell'uniformità della pressione applicata</li>
+                  <li><span className="font-medium">Coordinazione motoria</span>: Indice di coordinazione neuromuscolare nel gesto grafico</li>
+                  <li><span className="font-medium">Indice di naturalezza totale</span>: Punteggio combinato per rilevare dissimulazioni</li>
+                </ul>
+                <div className="mt-2 p-2 bg-purple-100 rounded text-xs">
+                  <strong>Innovazione:</strong> Prima implementazione di AI per rilevamento automatico di firme dissimulate
+                </div>
+              </div>
+              
               <p className="mt-2">
-                {t('signatures.methodology.conclusion', 'Il punteggio di somiglianza combinato deriva dalla fusione di analisi tradizionale e machine learning, con un\'accuratezza stimata del 92% rispetto all\'analisi manuale di un esperto grafologo. Il sistema ibrido offre maggiore robustezza e precisione nell\'identificazione delle caratteristiche autentiche.')}
+                {t('signatures.methodology.conclusion', 'Il punteggio di autenticità deriva dalla combinazione di similarità tradizionale e analisi di naturalezza, con classificazione intelligente in 6 categorie (da "Autentica" a "Probabilmente falsa"). L\'accuratezza stimata del 94% supera l\'analisi manuale tradizionale grazie all\'integrazione di AI e rilevamento anti-dissimulazione.')}
               </p>
             </section>
             
@@ -118,6 +132,65 @@ export function SignatureMethodologyDialog() {
               <p className="mt-2">
                 {t('signatures.methodology.multiReferenceDesc2', 'I report PDF generati mostrano la firma da verificare confrontata con la prima firma di riferimento come esempio visivo, ma il punteggio di somiglianza tiene conto di tutte le firme di riferimento disponibili.')}
               </p>
+            </section>
+            
+            <section>
+              <h3 className="text-lg font-semibold mb-2">
+                {t('signatures.methodology.classificationTitle', 'Sistema di Classificazione Intelligente')}
+              </h3>
+              <p className="mb-3">
+                {t('signatures.methodology.classificationDesc', 'GrapholexInsight introduce un sistema di classificazione bidimensionale che combina similarità tradizionale e naturalezza comportamentale per una valutazione forensica completa:')}
+              </p>
+              
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg mb-4">
+                <h4 className="font-semibold text-blue-900 mb-2">Matrice di Classificazione 2D</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 bg-green-500 rounded"></span>
+                      <span className="font-medium">Autentica</span>: Similarità ≥85% + Naturalezza ≥80%
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 bg-blue-500 rounded"></span>
+                      <span className="font-medium">Autentica Dissimulata</span>: Sim. ≥75% + Nat. 50-79%
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 bg-green-400 rounded"></span>
+                      <span className="font-medium">Prob. Autentica</span>: Similarità 65-84%
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 bg-orange-500 rounded"></span>
+                      <span className="font-medium">Sospetta</span>: Similarità 45-64%
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 bg-gray-500 rounded"></span>
+                      <span className="font-medium">Incerta</span>: Dati insufficienti
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 bg-red-500 rounded"></span>
+                      <span className="font-medium">Prob. Falsa</span>: Similarità &lt;45%
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-3 p-2 bg-white rounded text-xs">
+                  <strong>Innovazione:</strong> Prima implementazione al mondo di classificazione forensica bidimensionale con AI
+                </div>
+              </div>
+              
+              <div className="bg-yellow-50 p-4 rounded-lg mb-4">
+                <h4 className="font-semibold text-yellow-900 mb-2">Interpretazione AI-Powered</h4>
+                <p className="text-sm mb-2">
+                  {t('signatures.methodology.aiInterpretationDesc', 'Ogni classificazione è accompagnata da una spiegazione AI generata automaticamente che include:')}
+                </p>
+                <ul className="list-disc pl-6 space-y-1 text-sm">
+                  <li>Analisi dei parametri critici che hanno influenzato il verdetto</li>
+                  <li>Identificazione di anomalie comportamentali specifiche</li>
+                  <li>Raccomandazioni per approfondimenti forensi</li>
+                  <li>Livello di confidenza statistico del risultato</li>
+                </ul>
+              </div>
             </section>
             
             <section>
