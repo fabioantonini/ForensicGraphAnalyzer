@@ -140,7 +140,14 @@ export async function generateSignatureReportPDF(data: {
     doc.moveDown();
     
     // === NUOVA SEZIONE: PARAMETRI DI NATURALEZZA ===
+    console.log('[PDF DEBUG] Checking naturalness data:', { 
+      naturalnessScore: data.naturalnessScore, 
+      verdict: data.verdict,
+      verdictExplanation: data.verdictExplanation?.substring(0, 50) + '...'
+    });
+    
     if (data.naturalnessScore !== null && data.naturalnessScore !== undefined) {
+      console.log('[PDF DEBUG] Aggiungendo sezione Analisi di Naturalezza');
       doc.fontSize(14).text('Analisi di Naturalezza (Anti-Dissimulazione):', { underline: true });
       doc.moveDown();
       
@@ -167,6 +174,8 @@ export async function generateSignatureReportPDF(data: {
         { align: 'justify' }
       );
       doc.moveDown();
+    } else {
+      console.log('[PDF DEBUG] Sezione naturalezza SALTATA - dati mancanti');
     }
     
     // Immagine della firma
@@ -262,6 +271,68 @@ export async function generateSignatureReportPDF(data: {
       doc.fontSize(12).text(data.analysisReport);
       doc.moveDown();
     }
+    
+    // === NUOVA SEZIONE: PROSPETTO FINALE DELL'ANALISI ===
+    console.log('[PDF DEBUG] Aggiungendo Prospetto Finale dell\'Analisi');
+    
+    doc.addPage();
+    doc.fontSize(16).text('📋 Prospetto Finale dell\'Analisi', { underline: true, align: 'center' });
+    doc.moveDown();
+    
+    // Tabella riassuntiva dei risultati
+    doc.fontSize(14).text('Riassunto dei Risultati:', { underline: true });
+    doc.moveDown();
+    
+    doc.fontSize(12);
+    doc.text(`🔍 Punteggio di Somiglianza: ${(data.similarityScore * 100).toFixed(1)}%`);
+    
+    if (data.naturalnessScore !== null && data.naturalnessScore !== undefined) {
+      doc.text(`🧠 Indice di Naturalezza: ${(data.naturalnessScore * 100).toFixed(1)}%`);
+      if (data.verdict) {
+        doc.text(`🎯 Verdetto Finale: ${data.verdict}`);
+      }
+      if (data.confidenceLevel) {
+        doc.text(`⚡ Livello di Confidenza: ${(data.confidenceLevel * 100).toFixed(0)}%`);
+      }
+    }
+    doc.moveDown();
+    
+    // Interpretazione finale professionale
+    if (data.verdictExplanation) {
+      doc.fontSize(14).text('Interpretazione Professionale:', { underline: true });
+      doc.moveDown();
+      doc.fontSize(11).text(data.verdictExplanation, { align: 'justify' });
+      doc.moveDown();
+    }
+    
+    // Raccomandazioni basate sui risultati
+    doc.fontSize(14).text('Raccomandazioni:', { underline: true });
+    doc.moveDown();
+    
+    const similarityPercent = data.similarityScore * 100;
+    const naturalnessPercent = data.naturalnessScore ? data.naturalnessScore * 100 : null;
+    
+    doc.fontSize(11);
+    if (similarityPercent >= 85) {
+      doc.text('✅ Raccomandazione: La firma presenta caratteristiche compatibili con l\'autenticità.');
+    } else if (similarityPercent >= 65) {
+      if (naturalnessPercent && naturalnessPercent >= 80) {
+        doc.text('⚠️ Raccomandazione: Possibile dissimulazione autentica - richiedere ulteriori verifiche.');
+      } else {
+        doc.text('⚠️ Raccomandazione: Somiglianza moderata - analisi approfondita consigliata.');
+      }
+    } else {
+      doc.text('🚨 Raccomandazione: Bassa compatibilità - forte sospetto di non autenticità.');
+    }
+    
+    doc.moveDown();
+    doc.fontSize(9).fillColor('gray').text(
+      'Nota: Queste raccomandazioni si basano su algoritmi di analisi computazionale. ' +
+      'Per decisioni definitive in ambito legale, consultare sempre un esperto grafologo certificato.',
+      { align: 'justify' }
+    );
+    doc.fillColor('black');
+    doc.moveDown();
     
     // Metodologia
     doc.fontSize(14).text('Metodologia di analisi:', { underline: true });
