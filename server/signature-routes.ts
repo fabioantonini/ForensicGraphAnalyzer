@@ -755,6 +755,12 @@ export function registerSignatureRoutes(appRouter: Router) {
       }
       
       doc.text(`Punteggio di similarità: ${percentageScore}%`);
+      
+      // Aggiungi naturalezza se disponibile nella sezione principale
+      if (signature.naturalnessScore !== null && signature.naturalnessScore !== undefined) {
+        doc.text(`Indice di naturalezza: ${(signature.naturalnessScore * 100).toFixed(1)}%`);
+      }
+      
       doc.text(`Valutazione: ${verdict}`, { fontSize: 14 });
       doc.moveDown(1.5);
       
@@ -1332,7 +1338,7 @@ export function registerSignatureRoutes(appRouter: Router) {
       if (signature.naturalnessScore !== null && signature.naturalnessScore !== undefined) {
         console.log('[PDF DEBUG] Adding naturalness section');
         doc.addPage();
-        doc.fontSize(16).text('🧠 ANALISI DI NATURALEZZA (ANTI-DISSIMULAZIONE)', { underline: true, align: 'center' });
+        doc.fontSize(16).text('ANALISI DI NATURALEZZA (ANTI-DISSIMULAZIONE)', { underline: true, align: 'center' });
         doc.moveDown(0.5);
         
         doc.fontSize(12).text(`Indice di Naturalezza: ${(signature.naturalnessScore * 100).toFixed(1)}%`, { underline: true });
@@ -1344,7 +1350,8 @@ export function registerSignatureRoutes(appRouter: Router) {
         }
         
         if (signature.confidenceLevel) {
-          doc.fontSize(12).text(`Livello di Confidenza: ${(signature.confidenceLevel * 100).toFixed(0)}%`, { underline: true });
+          const confidencePercent = signature.confidenceLevel < 1 ? signature.confidenceLevel * 100 : signature.confidenceLevel;
+          doc.fontSize(12).text(`Livello di Confidenza: ${confidencePercent.toFixed(1)}%`, { underline: true });
           doc.moveDown(0.3);
         }
         
@@ -1370,7 +1377,7 @@ export function registerSignatureRoutes(appRouter: Router) {
       // PROSPETTO FINALE DELL'ANALISI
       console.log('[PDF DEBUG] Adding final analysis section');
       doc.addPage();
-      doc.fontSize(16).text('📋 PROSPETTO FINALE DELL\'ANALISI', { underline: true, align: 'center' });
+      doc.fontSize(16).text('PROSPETTO FINALE DELL\'ANALISI', { underline: true, align: 'center' });
       doc.moveDown(1);
       
       // Riassunto dei risultati
@@ -1379,12 +1386,12 @@ export function registerSignatureRoutes(appRouter: Router) {
       
       doc.fontSize(12);
       const numPercentageScore = typeof percentageScore === 'string' ? parseFloat(percentageScore) : percentageScore;
-      doc.text(`🔍 Punteggio di Somiglianza: ${numPercentageScore.toFixed(1)}%`);
+      doc.text(`Punteggio di Somiglianza: ${numPercentageScore.toFixed(1)}%`);
       
       if (signature.naturalnessScore !== null && signature.naturalnessScore !== undefined) {
-        doc.text(`🧠 Indice di Naturalezza: ${(signature.naturalnessScore * 100).toFixed(1)}%`);
+        doc.text(`Indice di Naturalezza: ${(signature.naturalnessScore * 100).toFixed(1)}%`);
         if (signature.verdict) {
-          doc.text(`🎯 Verdetto Finale: ${signature.verdict}`);
+          doc.text(`Verdetto Finale: ${signature.verdict}`);
         }
       }
       doc.moveDown(1);
