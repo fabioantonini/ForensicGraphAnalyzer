@@ -45,44 +45,44 @@ export function SignatureMethodologyDialog() {
               </p>
               
               <div className="bg-blue-50 p-4 rounded-lg mb-4">
-                <h4 className="font-semibold text-blue-900 mb-2">Parametri Base (Peso: 40%)</h4>
+                <h4 className="font-semibold text-blue-900 mb-2">{t('signatures.methodology.baseParametersTitle', 'Parametri Base (Peso: 40%)')}</h4>
                 <ul className="list-disc pl-6 space-y-1 text-sm">
-                  <li><span className="font-medium">Aspect Ratio (15%)</span>: Proporzioni complessive della firma</li>
-                  <li><span className="font-medium">Caratteristiche dei tratti (25%)</span>: Spessore, pressione e variazioni nei tratti</li>
-                  <li><span className="font-medium">Curvatura (20%)</span>: Analisi degli angoli e delle curve presenti</li>
-                  <li><span className="font-medium">Distribuzione spaziale (20%)</span>: Occupazione dello spazio e densità grafica</li>
-                  <li><span className="font-medium">Connettività (20%)</span>: Continuità e frammentazione dei tratti</li>
+                  <li><span className="font-medium">{t('signatures.methodology.aspectRatio', 'Aspect Ratio (15%)')}</span>: {t('signatures.methodology.aspectRatioDesc', 'Proporzioni complessive della firma')}</li>
+                  <li><span className="font-medium">{t('signatures.methodology.strokeFeatures', 'Caratteristiche dei tratti (25%)')}</span>: {t('signatures.methodology.strokeFeaturesDesc', 'Spessore, pressione e variazioni nei tratti')}</li>
+                  <li><span className="font-medium">{t('signatures.methodology.curvature', 'Curvatura (20%)')}</span>: {t('signatures.methodology.curvatureDesc', 'Analisi degli angoli e delle curve presenti')}</li>
+                  <li><span className="font-medium">{t('signatures.methodology.spatialDistribution', 'Distribuzione spaziale (20%)')}</span>: {t('signatures.methodology.spatialDistributionDesc', 'Occupazione dello spazio e densità grafica')}</li>
+                  <li><span className="font-medium">{t('signatures.methodology.connectivity', 'Connettività (20%)')}</span>: {t('signatures.methodology.connectivityDesc', 'Continuità e frammentazione dei tratti')}</li>
                 </ul>
               </div>
               
               <div className="bg-green-50 p-4 rounded-lg mb-4">
-                <h4 className="font-semibold text-green-900 mb-2">Parametri Avanzati (Peso: 30%)</h4>
+                <h4 className="font-semibold text-green-900 mb-2">{t('signatures.methodology.advancedParametersTitle', 'Parametri Avanzati (Peso: 30%)')}</h4>
                 <ul className="list-disc pl-6 space-y-1 text-sm">
-                  <li><span className="font-medium">Inclinazione dinamica</span>: Angolo medio della scrittura calcolato tramite ellisse fitting</li>
-                  <li><span className="font-medium">Analisi pressione avanzata</span>: Pressione media e deviazione standard da intensità pixel</li>
-                  <li><span className="font-medium">Curvatura microscala</span>: Analisi dettagliata tramite scheletro morfologico</li>
-                  <li><span className="font-medium">Classificazione stile</span>: Tipologia automatica (Regolare, Corsiva, Inclinata, Mista)</li>
-                  <li><span className="font-medium">Valutazione leggibilità</span>: Uniformità e consistenza dei caratteri</li>
-                  <li><span className="font-medium">Analisi asole</span>: Dimensione e forma delle asole chiuse</li>
-                  <li><span className="font-medium">Spaziatura inter-carattere</span>: Distanze calibrate in millimetri</li>
-                  <li><span className="font-medium">Velocità di esecuzione</span>: Stima della velocità di scrittura</li>
-                  <li><span className="font-medium">Sovrapposizione tratti</span>: Analisi delle intersezioni morfologiche</li>
-                  <li><span className="font-medium">Connessioni lettere</span>: Punti di giunzione tramite scheletro</li>
-                  <li><span className="font-medium">Deviazione baseline</span>: Stabilità della linea di base in mm</li>
+                  <li><span className="font-medium">{t('signatures.methodology.dynamicInclination', 'Inclinazione dinamica')}</span>: {t('signatures.methodology.dynamicInclinationDesc', 'Angolo medio della scrittura calcolato tramite ellisse fitting')}</li>
+                  <li><span className="font-medium">{t('signatures.methodology.advancedPressure', 'Analisi pressione avanzata')}</span>: {t('signatures.methodology.advancedPressureDesc', 'Pressione media e deviazione standard da intensità pixel')}</li>
+                  <li><span className="font-medium">{t('signatures.methodology.microCurvature', 'Curvatura microscala')}</span>: {t('signatures.methodology.microCurvatureDesc', 'Analisi dettagliata tramite scheletro morfologico')}</li>
+                  <li><span className="font-medium">{t('signatures.methodology.styleClassification', 'Classificazione stile')}</span>: {t('signatures.methodology.styleClassificationDesc', 'Tipologia automatica (Regolare, Corsiva, Inclinata, Mista)')}</li>
+                  <li><span className="font-medium">{t('signatures.methodology.readabilityEval', 'Valutazione leggibilità')}</span>: {t('signatures.methodology.readabilityEvalDesc', 'Uniformità e consistenza dei caratteri')}</li>
+                  <li><span className="font-medium">{t('signatures.methodology.loopAnalysis', 'Analisi asole')}</span>: {t('signatures.methodology.loopAnalysisDesc', 'Dimensione e forma delle asole chiuse')}</li>
+                  <li><span className="font-medium">{t('signatures.methodology.interCharSpacing', 'Spaziatura inter-carattere')}</span>: {t('signatures.methodology.interCharSpacingDesc', 'Distanze calibrate in millimetri')}</li>
+                  <li><span className="font-medium">{t('signatures.methodology.executionSpeed', 'Velocità di esecuzione')}</span>: {t('signatures.methodology.executionSpeedDesc', 'Stima della velocità di scrittura')}</li>
+                  <li><span className="font-medium">{t('signatures.methodology.strokeOverlap', 'Sovrapposizione tratti')}</span>: {t('signatures.methodology.strokeOverlapDesc', 'Analisi delle intersezioni morfologiche')}</li>
+                  <li><span className="font-medium">{t('signatures.methodology.letterConnections', 'Connessioni lettere')}</span>: {t('signatures.methodology.letterConnectionsDesc', 'Punti di giunzione tramite scheletro')}</li>
+                  <li><span className="font-medium">{t('signatures.methodology.baselineDeviation', 'Deviazione baseline')}</span>: {t('signatures.methodology.baselineDeviationDesc', 'Stabilità della linea di base in mm')}</li>
                 </ul>
               </div>
               
               <div className="bg-purple-50 p-4 rounded-lg mb-4">
-                <h4 className="font-semibold text-purple-900 mb-2">Parametri di Naturalezza (Peso: 30%)</h4>
+                <h4 className="font-semibold text-purple-900 mb-2">{t('signatures.methodology.naturalnessParametersTitle', 'Parametri di Naturalezza (Peso: 30%)')}</h4>
                 <p className="text-sm mb-2 text-purple-800">{t('signatures.methodology.naturalnessDesc', 'Nuova implementazione per il rilevamento di firme dissimulate attraverso analisi comportamentale:')}</p>
                 <ul className="list-disc pl-6 space-y-1 text-sm">
-                  <li><span className="font-medium">Fluidità dei movimenti</span>: Analisi della continuità e naturalezza del tracciato</li>
-                  <li><span className="font-medium">Consistenza della pressione</span>: Valutazione dell'uniformità della pressione applicata</li>
-                  <li><span className="font-medium">Coordinazione motoria</span>: Indice di coordinazione neuromuscolare nel gesto grafico</li>
-                  <li><span className="font-medium">Indice di naturalezza totale</span>: Punteggio combinato per rilevare dissimulazioni</li>
+                  <li><span className="font-medium">{t('signatures.methodology.fluidity', 'Fluidità dei movimenti')}</span>: {t('signatures.methodology.fluidityDesc', 'Analisi della continuità e naturalezza del tracciato')}</li>
+                  <li><span className="font-medium">{t('signatures.methodology.pressureConsistency', 'Consistenza della pressione')}</span>: {t('signatures.methodology.pressureConsistencyDesc', 'Valutazione dell\'uniformità della pressione applicata')}</li>
+                  <li><span className="font-medium">{t('signatures.methodology.motorCoordination', 'Coordinazione motoria')}</span>: {t('signatures.methodology.motorCoordinationDesc', 'Indice di coordinazione neuromuscolare nel gesto grafico')}</li>
+                  <li><span className="font-medium">{t('signatures.methodology.totalNaturalness', 'Indice di naturalezza totale')}</span>: {t('signatures.methodology.totalNaturalnessDesc', 'Punteggio combinato per rilevare dissimulazioni')}</li>
                 </ul>
                 <div className="mt-2 p-2 bg-purple-100 rounded text-xs">
-                  <strong>Innovazione:</strong> Prima implementazione di AI per rilevamento automatico di firme dissimulate
+                  <strong>{t('signatures.methodology.innovation', 'Innovazione')}:</strong> {t('signatures.methodology.innovationDesc', 'Prima implementazione di AI per rilevamento automatico di firme dissimulate')}
                 </div>
               </div>
               
