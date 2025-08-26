@@ -1320,6 +1320,95 @@ export function registerSignatureRoutes(appRouter: Router) {
         { align: 'center' }
       );
       
+      // === NUOVE SEZIONI: NATURALEZZA E PROSPETTO FINALE ===
+      
+      // ANALISI DI NATURALEZZA (se disponibile)
+      if (signature.naturalness !== null && signature.naturalness !== undefined) {
+        doc.addPage();
+        doc.fontSize(16).text('🧠 ANALISI DI NATURALEZZA (ANTI-DISSIMULAZIONE)', { underline: true, align: 'center' });
+        doc.moveDown(0.5);
+        
+        doc.fontSize(12).text(`Indice di Naturalezza: ${(signature.naturalness * 100).toFixed(1)}%`, { underline: true });
+        doc.moveDown(0.3);
+        
+        if (signature.verdict) {
+          doc.fontSize(12).text(`Verdetto: ${signature.verdict}`, { underline: true });
+          doc.moveDown(0.3);
+        }
+        
+        if (signature.confidenceLevel) {
+          doc.fontSize(12).text(`Livello di Confidenza: ${(signature.confidenceLevel * 100).toFixed(0)}%`, { underline: true });
+          doc.moveDown(0.3);
+        }
+        
+        if (signature.verdictExplanation) {
+          doc.fontSize(12).text('Interpretazione Professionale:', { underline: true });
+          doc.moveDown(0.3);
+          doc.fontSize(10).text(signature.verdictExplanation, { align: 'justify' });
+          doc.moveDown(0.5);
+        }
+        
+        // Spiegazione tecnica
+        doc.fontSize(10).text(
+          "L'Indice di Naturalezza combina tre parametri avanzati: Fluidità dei tratti (coordinazione motoria), " +
+          "Consistenza della Pressione (controllo dell'intensità), e Coordinazione Generale (regolarità delle curve). " +
+          "Valori bassi possono indicare falsificazione, mentre valori intermedi possono suggerire dissimulazione autentica.",
+          { align: 'justify' }
+        );
+        doc.moveDown(1);
+      }
+      
+      // PROSPETTO FINALE DELL'ANALISI
+      doc.addPage();
+      doc.fontSize(16).text('📋 PROSPETTO FINALE DELL\'ANALISI', { underline: true, align: 'center' });
+      doc.moveDown(1);
+      
+      // Riassunto dei risultati
+      doc.fontSize(14).text('RIASSUNTO DEI RISULTATI', { underline: true });
+      doc.moveDown(0.3);
+      
+      doc.fontSize(12);
+      doc.text(`🔍 Punteggio di Somiglianza: ${percentageScore.toFixed(1)}%`);
+      
+      if (signature.naturalness !== null && signature.naturalness !== undefined) {
+        doc.text(`🧠 Indice di Naturalezza: ${(signature.naturalness * 100).toFixed(1)}%`);
+        if (signature.verdict) {
+          doc.text(`🎯 Verdetto Finale: ${signature.verdict}`);
+        }
+      }
+      doc.moveDown(1);
+      
+      // Raccomandazioni professionali
+      doc.fontSize(14).text('RACCOMANDAZIONI PROFESSIONALI', { underline: true });
+      doc.moveDown(0.3);
+      
+      doc.fontSize(11);
+      const naturalnessPercent = signature.naturalness ? signature.naturalness * 100 : null;
+      
+      if (percentageScore >= 85) {
+        doc.text('✅ RACCOMANDAZIONE: La firma presenta caratteristiche fortemente compatibili con l\'autenticità. I parametri analizzati supportano l\'ipotesi di genuinità.', { align: 'justify' });
+      } else if (percentageScore >= 65) {
+        if (naturalnessPercent && naturalnessPercent >= 80) {
+          doc.text('⚠️ RACCOMANDAZIONE: Possibile dissimulazione autentica rilevata. La combinazione di somiglianza moderata con alta naturalezza suggerisce un tentativo volontario dell\'autore di modificare il proprio stile. Richiedere ulteriori verifiche documentali e campioni di confronto.', { align: 'justify' });
+        } else {
+          doc.text('⚠️ RACCOMANDAZIONE: Somiglianza moderata rilevata. Necessaria analisi approfondita da parte di un esperto grafologo forense per valutare il contesto e le circostanze di scrittura.', { align: 'justify' });
+        }
+      } else {
+        doc.text('🚨 RACCOMANDAZIONE: Bassa compatibilità parametrica rilevata. Forte sospetto di non autenticità. Si raccomanda perizia grafologica forense professionale e ulteriori indagini investigative.', { align: 'justify' });
+      }
+      
+      doc.moveDown(1);
+      
+      // Note legali finali
+      doc.fontSize(9).fillColor('gray').text(
+        'IMPORTANTE: Queste raccomandazioni si basano su algoritmi di analisi computazionale avanzata. ' +
+        'Per decisioni definitive in ambito legale, forense o investigativo, è sempre necessario consultare ' +
+        'un esperto grafologo certificato che possa valutare elementi contestuali non rilevabili automaticamente.',
+        { align: 'justify' }
+      );
+      doc.fillColor('black');
+      doc.moveDown(1);
+      
       // Footer
       doc.moveDown(2);
       doc.fontSize(8).text(
