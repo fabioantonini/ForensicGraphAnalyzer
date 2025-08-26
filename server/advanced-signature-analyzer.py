@@ -1017,6 +1017,8 @@ generateInterpretation();
     except Exception as ai_error:
         print(f"⚠️ Errore setup interpretazione AI per PDF: {ai_error}", file=sys.stderr)
     
+    print("🚀 [CRITICAL DEBUG] PUNTO RAGGIUNTO: Dopo sezione AI, ora aggiungo nuove sezioni", file=sys.stderr)
+    
     # === NUOVE SEZIONI INSERITE SUBITO DOPO INTERPRETAZIONE AI ===
     
     # SEZIONE 1: ANALISI DI NATURALEZZA
