@@ -1363,14 +1363,23 @@ export function registerSignatureRoutes(appRouter: Router) {
         }
         
         // === GRAFICO DI NATURALEZZA ===
-        if (signature.naturalnessChart) {
+        console.log('[PDF DEBUG] Checking if naturalness chart exists for signature', signature.id, 'Chart available:', !!signature.naturalnessChart);
+        if (signature.naturalnessChart && signature.naturalnessChart.length > 0) {
           console.log('[PDF DEBUG] Adding naturalness chart to PDF');
           doc.fontSize(12).text('GRAFICO DI COMPARAZIONE NATURALEZZA', { underline: true, align: 'center' });
           doc.moveDown(0.3);
           
           try {
-            // Inserisci il grafico di naturalezza (base64)
-            const chartBuffer = Buffer.from(signature.naturalnessChart.replace(/^data:image\/[a-z]+;base64,/, ''), 'base64');
+            // Debug: controlla formato del base64
+            console.log('[PDF DEBUG] Chart data format:', signature.naturalnessChart.substring(0, 50) + '...');
+            console.log('[PDF DEBUG] Chart data length:', signature.naturalnessChart.length);
+            
+            // Pulisci il base64 e convertilo in buffer
+            const base64Data = signature.naturalnessChart.replace(/^data:image\/[a-z]+;base64,/, '');
+            const chartBuffer = Buffer.from(base64Data, 'base64');
+            
+            console.log('[PDF DEBUG] Buffer created, size:', chartBuffer.length);
+            
             doc.image(chartBuffer, {
               fit: [450, 300],
               align: 'center',
@@ -1380,11 +1389,13 @@ export function registerSignatureRoutes(appRouter: Router) {
             console.log('[PDF DEBUG] Naturalness chart successfully added to PDF');
           } catch (chartError) {
             console.error('[PDF DEBUG] Error adding naturalness chart:', chartError);
-            doc.fontSize(10).text('[Grafico di naturalezza non disponibile]', { align: 'center' });
+            doc.fontSize(10).text('[Errore nel caricamento del grafico di naturalezza]', { align: 'center' });
             doc.moveDown(0.3);
           }
         } else {
           console.log('[PDF DEBUG] No naturalness chart available for signature', signature.id);
+          doc.fontSize(10).text('[Grafico di naturalezza in fase di generazione - riprovare dopo il completamento dell\'analisi]', { align: 'center', style: 'italic' });
+          doc.moveDown(0.3);
         }
         
         // Spiegazione tecnica
@@ -1429,15 +1440,15 @@ export function registerSignatureRoutes(appRouter: Router) {
       const naturalnessPercent = signature.naturalnessScore ? signature.naturalnessScore * 100 : null;
       
       if (numPercentageScore >= 85) {
-        doc.text('✅ RACCOMANDAZIONE: La firma presenta caratteristiche fortemente compatibili con l\'autenticità. I parametri analizzati supportano l\'ipotesi di genuinità.', { align: 'justify' });
+        doc.text('RACCOMANDAZIONE: La firma presenta caratteristiche fortemente compatibili con l\'autenticità. I parametri analizzati supportano l\'ipotesi di genuinità.', { align: 'justify' });
       } else if (numPercentageScore >= 65) {
         if (naturalnessPercent && naturalnessPercent >= 80) {
-          doc.text('⚠️ RACCOMANDAZIONE: Possibile dissimulazione autentica rilevata. La combinazione di somiglianza moderata con alta naturalezza suggerisce un tentativo volontario dell\'autore di modificare il proprio stile. Richiedere ulteriori verifiche documentali e campioni di confronto.', { align: 'justify' });
+          doc.text('ATTENZIONE: Possibile dissimulazione autentica rilevata. La combinazione di somiglianza moderata con alta naturalezza suggerisce un tentativo volontario dell\'autore di modificare il proprio stile. Richiedere ulteriori verifiche documentali e campioni di confronto.', { align: 'justify' });
         } else {
-          doc.text('⚠️ RACCOMANDAZIONE: Somiglianza moderata rilevata. Necessaria analisi approfondita da parte di un esperto grafologo forense per valutare il contesto e le circostanze di scrittura.', { align: 'justify' });
+          doc.text('ATTENZIONE: Somiglianza moderata rilevata. Necessaria analisi approfondita da parte di un esperto grafologo forense per valutare il contesto e le circostanze di scrittura.', { align: 'justify' });
         }
       } else {
-        doc.text('🚨 RACCOMANDAZIONE: Bassa compatibilità parametrica rilevata. Forte sospetto di non autenticità. Si raccomanda perizia grafologica forense professionale e ulteriori indagini investigative.', { align: 'justify' });
+        doc.text('ALLERTA: Bassa compatibilità parametrica rilevata. Forte sospetto di non autenticità. Si raccomanda perizia grafologica forense professionale e ulteriori indagini investigative.', { align: 'justify' });
       }
       
       doc.moveDown(1);
