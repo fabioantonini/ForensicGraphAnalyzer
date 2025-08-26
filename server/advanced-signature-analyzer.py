@@ -1064,6 +1064,7 @@ generateInterpretation();
     elements.append(Spacer(1, 12))
     
     # === NUOVA SEZIONE: ANALISI DI NATURALEZZA ===
+    print("[DEBUG PDF] Aggiungendo sezione Analisi della Naturalezza", file=sys.stderr)
     elements.append(Paragraph("Analisi della Naturalezza", heading1_style))
     elements.append(Spacer(1, 6))
     
@@ -1130,6 +1131,7 @@ generateInterpretation();
             naturalness_chart_temp_path = None
     
     # === NUOVA SEZIONE: PROSPETTO FINALE ===
+    print("[DEBUG PDF] Aggiungendo sezione Prospetto Finale", file=sys.stderr)
     elements.append(Paragraph("Prospetto Finale dell'Analisi", heading1_style))
     elements.append(Spacer(1, 6))
     
