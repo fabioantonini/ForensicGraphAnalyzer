@@ -96,17 +96,17 @@ export function SignatureMethodologyDialog() {
                 {t('signatures.methodology.unifiedWorkflowTitle', 'Workflow Unificato di Elaborazione')}
               </h3>
               <div className="bg-purple-50 p-4 rounded-lg mb-4">
-                <h4 className="font-semibold text-purple-900 mb-2">Ritaglio Automatico e Calibrazione Integrata</h4>
-                <p className="text-sm mb-2">Il sistema implementa un workflow rivoluzionario che unifica ritaglio e calibrazione in un processo semplificato:</p>
+                <h4 className="font-semibold text-purple-900 mb-2">{t('signatures.methodology.automaticCroppingTitle', 'Ritaglio Automatico e Calibrazione Integrata')}</h4>
+                <p className="text-sm mb-2">{t('signatures.methodology.automaticCroppingDesc', 'Il sistema implementa un workflow rivoluzionario che unifica ritaglio e calibrazione in un processo semplificato:')}</p>
                 <ol className="list-decimal pl-6 space-y-2 text-sm">
-                  <li><span className="font-medium">Upload + Dimensioni Reali</span>: L'utente carica l'immagine e specifica le dimensioni fisiche della firma (es. 80x25mm)</li>
-                  <li><span className="font-medium">Ritaglio Automatico Obbligatorio</span>: Computer vision rileva e ritaglia automaticamente la firma, rimuovendo spazi vuoti</li>
-                  <li><span className="font-medium">Calibrazione Diretta</span>: L'immagine ritagliata corrisponde esattamente alle dimensioni utente (px/mm = pixel_ritagliati / mm_utente)</li>
-                  <li><span className="font-medium">Elaborazione Parametri</span>: Tutti i 16+ parametri vengono estratti con calibrazione in millimetri reali</li>
-                  <li><span className="font-medium">Confronto Multi-Dimensionale</span>: Ogni firma è confrontata usando le proprie dimensioni reali specifiche</li>
+                  <li><span className="font-medium">{t('signatures.methodology.uploadRealDimensions', 'Upload + Dimensioni Reali')}</span>: {t('signatures.methodology.uploadRealDimensionsDesc', 'L\'utente carica l\'immagine e specifica le dimensioni fisiche della firma (es. 80x25mm)')}</li>
+                  <li><span className="font-medium">{t('signatures.methodology.mandatoryCropping', 'Ritaglio Automatico Obbligatorio')}</span>: {t('signatures.methodology.mandatoryCroppingDesc', 'Computer vision rileva e ritaglia automaticamente la firma, rimuovendo spazi vuoti')}</li>
+                  <li><span className="font-medium">{t('signatures.methodology.directCalibration', 'Calibrazione Diretta')}</span>: {t('signatures.methodology.directCalibrationDesc', 'L\'immagine ritagliata corrisponde esattamente alle dimensioni utente (px/mm = pixel_ritagliati / mm_utente)')}</li>
+                  <li><span className="font-medium">{t('signatures.methodology.parameterProcessing', 'Elaborazione Parametri')}</span>: {t('signatures.methodology.parameterProcessingDesc', 'Tutti i 16+ parametri vengono estratti con calibrazione in millimetri reali')}</li>
+                  <li><span className="font-medium">{t('signatures.methodology.multiDimensionalComparison', 'Confronto Multi-Dimensionale')}</span>: {t('signatures.methodology.multiDimensionalComparisonDesc', 'Ogni firma è confrontata usando le proprie dimensioni reali specifiche')}</li>
                 </ol>
                 <div className="mt-3 p-2 bg-purple-100 rounded text-xs">
-                  <strong>Vantaggi:</strong> Elimina inconsistenze dimensionali, garantisce precisione forensica, semplifica l'esperienza utente
+                  <strong>{t('signatures.methodology.advantages', 'Vantaggi')}:</strong> {t('signatures.methodology.advantagesDesc', 'Elimina inconsistenze dimensionali, garantisce precisione forensica, semplifica l\'esperienza utente')}
                 </div>
               </div>
             </section>
@@ -143,52 +143,52 @@ export function SignatureMethodologyDialog() {
               </p>
               
               <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg mb-4">
-                <h4 className="font-semibold text-blue-900 mb-2">Matrice di Classificazione 2D</h4>
+                <h4 className="font-semibold text-blue-900 mb-2">{t('signatures.methodology.classificationMatrix', 'Matrice di Classificazione 2D')}</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <span className="w-3 h-3 bg-green-500 rounded"></span>
-                      <span className="font-medium">Autentica</span>: Similarità ≥85% + Naturalezza ≥80%
+                      <span className="font-medium">{t('signatures.methodology.authentic', 'Autentica')}</span>: {t('signatures.methodology.authenticCriteria', 'Similarità ≥85% + Naturalezza ≥80%')}
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="w-3 h-3 bg-blue-500 rounded"></span>
-                      <span className="font-medium">Autentica Dissimulata</span>: Sim. ≥75% + Nat. 50-79%
+                      <span className="font-medium">{t('signatures.methodology.authenticDissimulated', 'Autentica Dissimulata')}</span>: {t('signatures.methodology.authenticDissimulatedCriteria', 'Sim. ≥75% + Nat. 50-79%')}
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="w-3 h-3 bg-green-400 rounded"></span>
-                      <span className="font-medium">Prob. Autentica</span>: Similarità 65-84%
+                      <span className="font-medium">{t('signatures.methodology.probablyAuthentic', 'Prob. Autentica')}</span>: {t('signatures.methodology.probablyAuthenticCriteria', 'Similarità 65-84%')}
                     </div>
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <span className="w-3 h-3 bg-orange-500 rounded"></span>
-                      <span className="font-medium">Sospetta</span>: Similarità 45-64%
+                      <span className="font-medium">{t('signatures.methodology.suspicious', 'Sospetta')}</span>: {t('signatures.methodology.suspiciousCriteria', 'Similarità 45-64%')}
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="w-3 h-3 bg-gray-500 rounded"></span>
-                      <span className="font-medium">Incerta</span>: Dati insufficienti
+                      <span className="font-medium">{t('signatures.methodology.uncertain', 'Incerta')}</span>: {t('signatures.methodology.uncertainCriteria', 'Dati insufficienti')}
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="w-3 h-3 bg-red-500 rounded"></span>
-                      <span className="font-medium">Prob. Falsa</span>: Similarità &lt;45%
+                      <span className="font-medium">{t('signatures.methodology.probablyFalse', 'Prob. Falsa')}</span>: {t('signatures.methodology.probablyFalseCriteria', 'Similarità &lt;45%')}
                     </div>
                   </div>
                 </div>
                 <div className="mt-3 p-2 bg-white rounded text-xs">
-                  <strong>Innovazione:</strong> Prima implementazione al mondo di classificazione forensica bidimensionale con AI
+                  <strong>{t('signatures.methodology.innovation', 'Innovazione')}:</strong> {t('signatures.methodology.worldFirstImplementation', 'Prima implementazione al mondo di classificazione forensica bidimensionale con AI')}
                 </div>
               </div>
               
               <div className="bg-yellow-50 p-4 rounded-lg mb-4">
-                <h4 className="font-semibold text-yellow-900 mb-2">Interpretazione AI-Powered</h4>
+                <h4 className="font-semibold text-yellow-900 mb-2">{t('signatures.methodology.aiInterpretationTitle', 'Interpretazione AI-Powered')}</h4>
                 <p className="text-sm mb-2">
                   {t('signatures.methodology.aiInterpretationDesc', 'Ogni classificazione è accompagnata da una spiegazione AI generata automaticamente che include:')}
                 </p>
                 <ul className="list-disc pl-6 space-y-1 text-sm">
-                  <li>Analisi dei parametri critici che hanno influenzato il verdetto</li>
-                  <li>Identificazione di anomalie comportamentali specifiche</li>
-                  <li>Raccomandazioni per approfondimenti forensi</li>
-                  <li>Livello di confidenza statistico del risultato</li>
+                  <li>{t('signatures.methodology.criticalParamAnalysis', 'Analisi dei parametri critici che hanno influenzato il verdetto')}</li>
+                  <li>{t('signatures.methodology.behavioralAnomalies', 'Identificazione di anomalie comportamentali specifiche')}</li>
+                  <li>{t('signatures.methodology.forensicRecommendations', 'Raccomandazioni per approfondimenti forensi')}</li>
+                  <li>{t('signatures.methodology.confidenceLevel', 'Livello di confidenza statistico del risultato')}</li>
                 </ul>
               </div>
             </section>
@@ -198,14 +198,14 @@ export function SignatureMethodologyDialog() {
                 {t('signatures.methodology.advancedTechTitle', 'Tecnologie Avanzate Integrate')}
               </h3>
               <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                <h4 className="font-semibold text-gray-900 mb-2">Computer Vision e Machine Learning</h4>
+                <h4 className="font-semibold text-gray-900 mb-2">{t('signatures.methodology.computerVisionTitle', 'Computer Vision e Machine Learning')}</h4>
                 <ul className="list-disc pl-6 space-y-1 text-sm">
-                  <li><span className="font-medium">OpenCV</span>: Algoritmi di processamento immagini per estrazione caratteristiche</li>
-                  <li><span className="font-medium">Morphological Skeleton</span>: Analisi della struttura tramite scheletro morfologico</li>
-                  <li><span className="font-medium">Ellipse Fitting</span>: Calcolo preciso dell'inclinazione tramite fit ellittico</li>
-                  <li><span className="font-medium">Connected Components</span>: Segmentazione intelligente per analisi spaziatura</li>
-                  <li><span className="font-medium">Otsu Thresholding</span>: Sogliatura automatica ottimale per separazione ink/sfondo</li>
-                  <li><span className="font-medium">Convex Hull Analysis</span>: Identificazione asole e forme complesse</li>
+                  <li><span className="font-medium">OpenCV</span>: {t('signatures.methodology.opencvDesc', 'Algoritmi di processamento immagini per estrazione caratteristiche')}</li>
+                  <li><span className="font-medium">Morphological Skeleton</span>: {t('signatures.methodology.morphologicalDesc', 'Analisi della struttura tramite scheletro morfologico')}</li>
+                  <li><span className="font-medium">Ellipse Fitting</span>: {t('signatures.methodology.ellipseFittingDesc', 'Calcolo preciso dell\'inclinazione tramite fit ellittico')}</li>
+                  <li><span className="font-medium">Connected Components</span>: {t('signatures.methodology.connectedComponentsDesc', 'Segmentazione intelligente per analisi spaziatura')}</li>
+                  <li><span className="font-medium">Otsu Thresholding</span>: {t('signatures.methodology.otsuDesc', 'Sogliatura automatica ottimale per separazione ink/sfondo')}</li>
+                  <li><span className="font-medium">Convex Hull Analysis</span>: {t('signatures.methodology.convexHullDesc', 'Identificazione asole e forme complesse')}</li>
                 </ul>
               </div>
               
