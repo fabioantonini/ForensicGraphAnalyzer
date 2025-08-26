@@ -1592,8 +1592,6 @@ export default function SignaturesPage() {
           </ScrollArea>
         </DialogContent>
       </Dialog>
-      
-      <SignatureMethodologyDialog />
     </div>
   );
 }
