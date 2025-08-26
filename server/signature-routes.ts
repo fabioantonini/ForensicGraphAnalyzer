@@ -1429,6 +1429,36 @@ export function registerSignatureRoutes(appRouter: Router) {
         if (signature.verdict) {
           doc.text(`Verdetto Finale: ${signature.verdict}`);
         }
+        
+        // === DETTAGLIO PARAMETRI DI NATURALEZZA ===
+        doc.moveDown(0.5);
+        doc.fontSize(12).text('DETTAGLIO PARAMETRI DI NATURALEZZA:', { underline: true });
+        doc.moveDown(0.3);
+        doc.fontSize(10);
+        
+        // Estrai i parametri di naturalezza dai dati della firma
+        if (signatureParams && referenceParams) {
+          try {
+            const sigFluidityScore = signatureParams.FluidityScore || 0;
+            const sigPressureConsistency = signatureParams.PressureConsistency || 0;
+            const sigCoordinationIndex = signatureParams.CoordinationIndex || 0;
+            
+            const refFluidityScore = referenceParams.FluidityScore || 0;
+            const refPressureConsistency = referenceParams.PressureConsistency || 0;
+            const refCoordinationIndex = referenceParams.CoordinationIndex || 0;
+            
+            doc.text(`• Fluidità dei Tratti: Firma in Verifica ${(sigFluidityScore * 100).toFixed(1)}% vs Riferimento ${(refFluidityScore * 100).toFixed(1)}%`);
+            doc.text(`• Consistenza della Pressione: Firma in Verifica ${(sigPressureConsistency * 100).toFixed(1)}% vs Riferimento ${(refPressureConsistency * 100).toFixed(1)}%`);
+            doc.text(`• Coordinazione Generale: Firma in Verifica ${(sigCoordinationIndex * 100).toFixed(1)}% vs Riferimento ${(refCoordinationIndex * 100).toFixed(1)}%`);
+            
+            console.log('[PDF DEBUG] Added naturalness parameter details to final section');
+          } catch (paramError) {
+            console.error('[PDF DEBUG] Error extracting naturalness parameters:', paramError);
+            doc.text('• Parametri dettagliati non disponibili nella sessione corrente');
+          }
+        } else {
+          doc.text('• Parametri dettagliati non disponibili - rigenerare l\'analisi per visualizzarli');
+        }
       }
       doc.moveDown(1);
       
