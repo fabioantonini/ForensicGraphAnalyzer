@@ -926,9 +926,11 @@ def generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, simi
     elements.append(Spacer(1, 12))
     
     # === NUOVO: ANALISI INTERPRETATIVA AI ===
+    print("🔍 [DEBUG] Inizio sezione interpretazione AI", file=sys.stderr)
     try:
         import subprocess
         import tempfile
+        print("🔍 [DEBUG] Import AI completati", file=sys.stderr)
         
         # Prepara i parametri per l'interpretazione AI
         verdict = case_info.get('verdict', 'Non determinato') if case_info else 'Non determinato'
@@ -1013,6 +1015,8 @@ generateInterpretation();
                 os.unlink(temp_script_path)
             except:
                 pass
+        
+        print("🔍 [DEBUG] Fine try block interpretazione AI", file=sys.stderr)
                 
     except Exception as ai_error:
         print(f"⚠️ Errore setup interpretazione AI per PDF: {ai_error}", file=sys.stderr)
