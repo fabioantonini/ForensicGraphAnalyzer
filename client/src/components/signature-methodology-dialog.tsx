@@ -210,13 +210,13 @@ export function SignatureMethodologyDialog() {
               </div>
               
               <div className="bg-yellow-50 p-4 rounded-lg mb-4">
-                <h4 className="font-semibold text-yellow-900 mb-2">Calibrazione di Precisione</h4>
-                <p className="text-sm mb-2">Il sistema utilizza calibrazione basata su dimensioni reali fornite dall'utente, eliminando dipendenze da metadati DPI:</p>
+                <h4 className="font-semibold text-yellow-900 mb-2">{t('signatures.methodology.precisionCalibrationTitle', 'Calibrazione di Precisione')}</h4>
+                <p className="text-sm mb-2">{t('signatures.methodology.precisionCalibrationDesc', 'Il sistema utilizza calibrazione basata su dimensioni reali fornite dall\'utente, eliminando dipendenze da metadati DPI:')}</p>
                 <ul className="list-disc pl-6 space-y-1 text-sm">
-                  <li>Conversione pixel-to-millimeter tramite parametri reali</li>
-                  <li>Compensazione automatica per diverse risoluzioni di scansione</li>
-                  <li>Normalizzazione dimensionale per confronti accurati</li>
-                  <li>Gestione automatica di ridimensionamenti per performance ottimali</li>
+                  <li>{t('signatures.methodology.pixelConversion', 'Conversione pixel-to-millimeter tramite parametri reali')}</li>
+                  <li>{t('signatures.methodology.automaticCompensation', 'Compensazione automatica per diverse risoluzioni di scansione')}</li>
+                  <li>{t('signatures.methodology.dimensionalNormalization', 'Normalizzazione dimensionale per confronti accurati')}</li>
+                  <li>{t('signatures.methodology.automaticResizing', 'Gestione automatica di ridimensionamenti per performance ottimali')}</li>
                 </ul>
               </div>
             </section>
