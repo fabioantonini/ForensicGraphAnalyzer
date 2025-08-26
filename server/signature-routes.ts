@@ -1378,7 +1378,8 @@ export function registerSignatureRoutes(appRouter: Router) {
       doc.moveDown(0.3);
       
       doc.fontSize(12);
-      doc.text(`🔍 Punteggio di Somiglianza: ${percentageScore.toFixed(1)}%`);
+      const numPercentageScore = typeof percentageScore === 'string' ? parseFloat(percentageScore) : percentageScore;
+      doc.text(`🔍 Punteggio di Somiglianza: ${numPercentageScore.toFixed(1)}%`);
       
       if (signature.naturalnessScore !== null && signature.naturalnessScore !== undefined) {
         doc.text(`🧠 Indice di Naturalezza: ${(signature.naturalnessScore * 100).toFixed(1)}%`);
@@ -1395,9 +1396,9 @@ export function registerSignatureRoutes(appRouter: Router) {
       doc.fontSize(11);
       const naturalnessPercent = signature.naturalnessScore ? signature.naturalnessScore * 100 : null;
       
-      if (percentageScore >= 85) {
+      if (numPercentageScore >= 85) {
         doc.text('✅ RACCOMANDAZIONE: La firma presenta caratteristiche fortemente compatibili con l\'autenticità. I parametri analizzati supportano l\'ipotesi di genuinità.', { align: 'justify' });
-      } else if (percentageScore >= 65) {
+      } else if (numPercentageScore >= 65) {
         if (naturalnessPercent && naturalnessPercent >= 80) {
           doc.text('⚠️ RACCOMANDAZIONE: Possibile dissimulazione autentica rilevata. La combinazione di somiglianza moderata con alta naturalezza suggerisce un tentativo volontario dell\'autore di modificare il proprio stile. Richiedere ulteriori verifiche documentali e campioni di confronto.', { align: 'justify' });
         } else {
