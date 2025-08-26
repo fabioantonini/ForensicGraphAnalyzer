@@ -15,6 +15,7 @@ import sys
 import tempfile
 from datetime import datetime
 import base64
+import io
 from io import BytesIO
 from skimage.metrics import structural_similarity as ssim
 import matplotlib.pyplot as plt
@@ -305,6 +306,117 @@ def analyze_signature_deprecated_dpi_removed():
     """
     return {"error": "Funzione rimossa - utilizzare analyze_signature_with_dimensions con dimensioni reali"}
 
+def create_naturalness_chart(verifica_data, comp_data):
+    """
+    Crea un grafico specifico per i parametri di naturalezza (anti-dissimulazione)
+    
+    Args:
+        verifica_data: Parametri della firma da verificare
+        comp_data: Parametri della firma comparativa (riferimento)
+    
+    Returns:
+        String base64 dell'immagine del grafico di naturalezza
+    """
+    try:
+        # Parametri specifici per la naturalezza
+        naturalness_params = ['FluidityScore', 'PressureConsistency', 'CoordinationIndex']
+        
+        # Estrai i valori per entrambe le firme
+        verifica_values = []
+        comp_values = []
+        labels = []
+        
+        for param in naturalness_params:
+            if param in verifica_data and param in comp_data:
+                verifica_values.append(verifica_data[param])
+                comp_values.append(comp_data[param])
+                
+                # Etichette personalizzate
+                if param == 'FluidityScore':
+                    labels.append('🧠 Fluidità')
+                elif param == 'PressureConsistency':
+                    labels.append('🔄 Consistenza')
+                elif param == 'CoordinationIndex':
+                    labels.append('🎯 Coordinazione')
+                else:
+                    labels.append(param)
+        
+        if not verifica_values or not comp_values:
+            # Crea un grafico vuoto se non ci sono dati
+            fig = Figure(figsize=(10, 6))
+            ax = fig.add_subplot(111)
+            ax.text(0.5, 0.5, 'Dati di naturalezza non disponibili', 
+                   ha='center', va='center', fontsize=16)
+            ax.set_xlim(0, 1)
+            ax.set_ylim(0, 1)
+            ax.axis('off')
+        else:
+            # Crea il grafico a barre per i parametri di naturalezza
+            fig = Figure(figsize=(12, 7))
+            ax = fig.add_subplot(111)
+            
+            x = np.arange(len(labels))
+            width = 0.35
+            
+            # Colori specifici per naturalezza
+            bars1 = ax.bar(x - width/2, verifica_values, width, 
+                          label='Firma in Verifica', color='#3b82f6', alpha=0.8)
+            bars2 = ax.bar(x + width/2, comp_values, width,
+                          label='Firma di Riferimento', color='#10b981', alpha=0.8)
+            
+            # Personalizzazione del grafico
+            ax.set_xlabel('Parametri di Naturalezza', fontweight='bold', fontsize=12)
+            ax.set_ylabel('Punteggio (%)', fontweight='bold', fontsize=12)
+            ax.set_title('🧠 Analisi Naturalezza (Anti-Dissimulazione)', fontweight='bold', fontsize=14)
+            ax.set_xticks(x)
+            ax.set_xticklabels(labels, fontsize=10)
+            ax.legend()
+            ax.grid(True, alpha=0.3, axis='y')
+            ax.set_ylim(0, 100)
+            
+            # Aggiungi valori sulle barre
+            def add_value_labels(bars):
+                for bar in bars:
+                    height = bar.get_height()
+                    ax.annotate(f'{height:.1f}%',
+                               xy=(bar.get_x() + bar.get_width() / 2, height),
+                               xytext=(0, 3),  # offset
+                               textcoords="offset points",
+                               ha='center', va='bottom', fontsize=9)
+            
+            add_value_labels(bars1)
+            add_value_labels(bars2)
+        
+        # Salva in buffer e converti in base64
+        buffer = io.BytesIO()
+        fig.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
+        buffer.seek(0)
+        
+        # Converti in base64
+        image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        buffer.close()
+        
+        return image_base64
+        
+    except Exception as e:
+        print(f"[ERROR] Errore nella creazione del grafico naturalezza: {str(e)}", file=sys.stderr)
+        # Ritorna un grafico di errore
+        fig = Figure(figsize=(10, 6))
+        ax = fig.add_subplot(111)
+        ax.text(0.5, 0.5, f'Errore grafico naturalezza:\n{str(e)}', 
+               ha='center', va='center', fontsize=14, color='red')
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
+        ax.axis('off')
+        
+        buffer = io.BytesIO()
+        fig.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
+        buffer.seek(0)
+        image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        buffer.close()
+        
+        return image_base64
+
 def create_comparison_chart(verifica_data, comp_data):
     """
     Crea un grafico di confronto tra i parametri di due firme
@@ -385,6 +497,7 @@ def create_comparison_chart(verifica_data, comp_data):
         
         # Se entrambi i valori sono 0, assegna 0% (nessun dato disponibile)
         if valore_v == 0 and valore_c == 0:
+            print(f"[WARNING] Parametro {parametro_nome} non trovato nei dati - valore_v: {valore_v}, valore_c: {valore_c}", file=sys.stderr)
             compatibilita_percentuale.append(0)
             continue
             
@@ -807,7 +920,237 @@ def generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, simi
     elements.append(Paragraph(methodology_text, normal_style))
     elements.append(Spacer(1, 12))
     
-    # Analisi tecnica
+    # === NUOVO: ANALISI INTERPRETATIVA AI ===
+    print("🔍 [DEBUG] Inizio sezione interpretazione AI", file=sys.stderr)
+    try:
+        import subprocess
+        import tempfile
+        print("🔍 [DEBUG] Import AI completati", file=sys.stderr)
+        
+        # Prepara i parametri per l'interpretazione AI
+        verdict = case_info.get('verdict', 'Non determinato') if case_info else 'Non determinato'
+        similarity = verifica_data.get('similarity', 0)
+        naturalness = verifica_data.get('naturalnessScore', 0)
+        confidence = verifica_data.get('confidenceLevel', 0)
+        
+        # Crea uno script Node.js temporaneo per chiamare l'interpretazione AI
+        node_script = f'''
+const {{ generateSignatureInterpretation }} = require('./server/openai.js');
+
+async function generateInterpretation() {{
+    try {{
+        const interpretation = await generateSignatureInterpretation(
+            "{verdict}",
+            {similarity},
+            {naturalness},
+            null,  // parameters non necessari per interpretazione base
+            {confidence}
+        );
+        console.log("INTERPRETATION_RESULT:" + interpretation);
+    }} catch (error) {{
+        console.log("INTERPRETATION_ERROR:" + error.message);
+    }}
+}}
+
+generateInterpretation();
+'''
+        
+        # Salva lo script temporaneo
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.js', delete=False) as temp_script:
+            temp_script.write(node_script)
+            temp_script_path = temp_script.name
+        
+        try:
+            # Esegui lo script Node.js
+            result = subprocess.run(['node', temp_script_path], 
+                                  capture_output=True, text=True, timeout=30)
+            
+            ai_interpretation = None
+            for line in result.stdout.split('\n'):
+                if line.startswith('INTERPRETATION_RESULT:'):
+                    ai_interpretation = line.replace('INTERPRETATION_RESULT:', '').strip()
+                    break
+            
+            # Aggiungi l'interpretazione AI al report se disponibile
+            if ai_interpretation and ai_interpretation != "Analisi non disponibile al momento.":
+                elements.append(Paragraph("Interpretazione dell'Analisi", heading1_style))
+                elements.append(Spacer(1, 6))
+                
+                # Stile per l'interpretazione AI
+                interpretation_style = ParagraphStyle(
+                    'InterpretationStyle',
+                    fontName='Helvetica',
+                    fontSize=11,
+                    leading=14,
+                    spaceAfter=8,
+                    textColor=colors.HexColor('#2c3e50'),
+                    leftIndent=12,
+                    rightIndent=12,
+                    borderColor=colors.HexColor('#3498db'),
+                    borderWidth=0.5,
+                    borderPadding=8,
+                    backColor=colors.HexColor('#f8f9fa')
+                )
+                
+                # Aggiungi l'interpretazione AI
+                for paragraph in ai_interpretation.split('\n\n'):
+                    if paragraph.strip():
+                        elements.append(Paragraph(paragraph.strip(), interpretation_style))
+                        elements.append(Spacer(1, 6))
+                
+                elements.append(Spacer(1, 12))
+                
+        except subprocess.TimeoutExpired:
+            print("⚠️ Timeout generazione interpretazione AI per PDF", file=sys.stderr)
+        except Exception as node_error:
+            print(f"⚠️ Errore esecuzione script Node.js: {node_error}", file=sys.stderr)
+        finally:
+            # Cleanup script temporaneo
+            try:
+                os.unlink(temp_script_path)
+            except:
+                pass
+        
+        print("🔍 [DEBUG] Fine try block interpretazione AI", file=sys.stderr)
+                
+    except Exception as ai_error:
+        print(f"⚠️ Errore setup interpretazione AI per PDF: {ai_error}", file=sys.stderr)
+    
+    print("🚀 [CRITICAL DEBUG] PUNTO RAGGIUNTO: Dopo sezione AI, ora aggiungo nuove sezioni", file=sys.stderr)
+    
+    # === NUOVE SEZIONI INSERITE SUBITO DOPO INTERPRETAZIONE AI ===
+    
+    # SEZIONE 1: ANALISI DI NATURALEZZA
+    print("[DEBUG PDF] Aggiungendo sezione Analisi della Naturalezza DOPO AI", file=sys.stderr)
+    elements.append(Paragraph("Analisi della Naturalezza", heading1_style))
+    elements.append(Spacer(1, 6))
+    
+    # Dati di naturalezza
+    naturalness_verifica = verifica_data.get('naturalnessScore', verifica_data.get('NaturalnessIndex', 0))
+    naturalness_comp = comp_data.get('naturalnessScore', comp_data.get('NaturalnessIndex', 0))
+    fluidity_verifica = verifica_data.get('fluidityScore', verifica_data.get('FluidityScore', 0))
+    fluidity_comp = comp_data.get('fluidityScore', comp_data.get('FluidityScore', 0))
+    pressure_consistency_verifica = verifica_data.get('pressureConsistency', verifica_data.get('PressureConsistency', 0))
+    pressure_consistency_comp = comp_data.get('pressureConsistency', comp_data.get('PressureConsistency', 0))
+    coordination_verifica = verifica_data.get('coordinationIndex', verifica_data.get('CoordinationIndex', 0))
+    coordination_comp = comp_data.get('coordinationIndex', comp_data.get('CoordinationIndex', 0))
+    
+    naturalness_text = f"""
+    La naturalezza rappresenta quanto la scrittura appare spontanea e fluida, considerando la fluidità del tratto, 
+    la consistenza della pressione e l'indice di coordinamento motorio.
+    
+    <b>Firma da verificare:</b>
+    • Naturalezza complessiva: {naturalness_verifica:.1f}%
+    • Fluidità del tratto: {fluidity_verifica:.1f}%
+    • Consistenza pressione: {pressure_consistency_verifica:.1f}%
+    • Coordinamento motorio: {coordination_verifica:.1f}%
+    
+    <b>Firma di riferimento:</b>
+    • Naturalezza complessiva: {naturalness_comp:.1f}%
+    • Fluidità del tratto: {fluidity_comp:.1f}%
+    • Consistenza pressione: {pressure_consistency_comp:.1f}%
+    • Coordinamento motorio: {coordination_comp:.1f}%
+    
+    <b>Differenza naturalezza:</b> {abs(naturalness_verifica - naturalness_comp):.1f}%
+    """
+    
+    elements.append(Paragraph(naturalness_text, normal_style))
+    elements.append(Spacer(1, 12))
+    
+    # SEZIONE 2: PROSPETTO FINALE
+    print("[DEBUG PDF] Aggiungendo sezione Prospetto Finale DOPO AI", file=sys.stderr)
+    elements.append(Paragraph("Prospetto Finale dell'Analisi", heading1_style))
+    elements.append(Spacer(1, 6))
+    
+    # Calcola il verdetto finale  
+    similarity_raw = verifica_data.get('similarity', 0)
+    if isinstance(similarity_raw, (int, float)):
+        similarity_percentage = similarity_raw * 100 if similarity_raw <= 1 else similarity_raw
+    else:
+        similarity_percentage = 0
+    
+    verdict = "Non determinato"
+    verdict_color = colors.gray
+    verdict_icon = "⚪"
+    
+    if similarity_percentage >= 85 and naturalness_verifica >= 80:
+        verdict = "Autentica"
+        verdict_color = colors.green
+        verdict_icon = "✅"
+    elif similarity_percentage >= 65 and naturalness_verifica >= 60:
+        verdict = "Probabilmente Autentica"
+        verdict_color = colors.HexColor('#28a745')
+        verdict_icon = "🟢"
+    elif similarity_percentage < 55 and naturalness_verifica >= 80:
+        verdict = "Sospetta"
+        verdict_color = colors.orange
+        verdict_icon = "🟠"
+    elif similarity_percentage < 65 and naturalness_verifica < 60:
+        verdict = "Probabilmente Falsa"
+        verdict_color = colors.red
+        verdict_icon = "🔴"
+    else:
+        verdict = "Incerta"
+        verdict_color = colors.gray
+        verdict_icon = "⚪"
+    
+    # Usa il verdetto dal case_info se disponibile
+    if case_info and 'verdict' in case_info:
+        verdict = case_info['verdict']
+    
+    # Stile per il prospetto finale
+    final_verdict_style = ParagraphStyle(
+        'FinalVerdictStyle',
+        fontName='Helvetica-Bold',
+        fontSize=14,
+        leading=18,
+        alignment=1,  # Centrato
+        spaceAfter=12,
+        textColor=verdict_color,
+        borderColor=verdict_color,
+        borderWidth=2,
+        borderPadding=12,
+        backColor=colors.HexColor('#f8f9fa')
+    )
+    
+    # Prospetto finale
+    elements.append(Paragraph(f"{verdict_icon} <b>ESITO FINALE: {verdict.upper()}</b>", final_verdict_style))
+    elements.append(Spacer(1, 12))
+    
+    # Dettagli numerici
+    elements.append(Paragraph("Risultati numerici dell'analisi:", heading2_style))
+    elements.append(Spacer(1, 6))
+    
+    results_text = f"""
+    <b>• Similarità visiva (SSIM):</b> {similarity_percentage:.1f}%
+    
+    <b>• Naturalezza della scrittura:</b> {naturalness_verifica:.1f}%
+    
+    <b>• Compatibilità parametrica:</b> {verifica_data.get('compatibilityScore', 0):.1f}%
+    
+    <b>• Livello di confidenza:</b> {verifica_data.get('confidenceLevel', 0):.1f}%
+    
+    <b>Soglie di riferimento:</b>
+    • Autentica: Similarità ≥ 85% + Naturalezza ≥ 80%
+    • Probabilmente Autentica: Similarità ≥ 65% + Naturalezza ≥ 60%
+    • Sospetta: Similarità < 55% + Naturalezza ≥ 80%
+    • Probabilmente Falsa: Similarità < 65% + Naturalezza < 60%
+    """
+    
+    elements.append(Paragraph(results_text, normal_style))
+    elements.append(Spacer(1, 12))
+    
+    # Note conclusive
+    elements.append(Paragraph("Note:", heading2_style))
+    note_text = """
+    Questa analisi è stata condotta utilizzando algoritmi avanzati di computer vision e analisi grafologica. 
+    I risultati devono essere sempre interpretati da un esperto grafologo qualificato per una valutazione 
+    definitiva in ambito forense o legale.
+    """
+    elements.append(Paragraph(note_text, normal_style))
+    elements.append(Spacer(1, 20))
+    
+    # Analisi tecnica (sezione originale)
     elements.append(Paragraph("Analisi Tecnica", heading1_style))
     elements.append(Spacer(1, 6))
     
@@ -826,6 +1169,9 @@ def generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, simi
     verifica_data_normalized = normalize_parameter_keys(verifica_data)
     comp_data_normalized = normalize_parameter_keys(comp_data)
     chart_img_base64 = create_comparison_chart(verifica_data_normalized, comp_data_normalized)
+    
+    # === NUOVO: GRAFICO DI NATURALEZZA ===
+    naturalness_chart_base64 = create_naturalness_chart(verifica_data_normalized, comp_data_normalized)
     chart_data = base64.b64decode(chart_img_base64)
     
     # Salva temporaneamente l'immagine del grafico
@@ -846,6 +1192,178 @@ def generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, simi
     img_height = min(max_height, img_width * aspect)
     
     elements.append(ReportlabImage(chart_temp_path, width=img_width, height=img_height))
+    elements.append(Spacer(1, 12))
+    
+    # === NUOVA SEZIONE: ANALISI DI NATURALEZZA ===
+    print("[DEBUG PDF] Aggiungendo sezione Analisi della Naturalezza", file=sys.stderr)
+    elements.append(Paragraph("Analisi della Naturalezza", heading1_style))
+    elements.append(Spacer(1, 6))
+    
+    # Dati di naturalezza
+    naturalness_verifica = verifica_data.get('naturalnessScore', verifica_data.get('NaturalnessIndex', 0))
+    naturalness_comp = comp_data.get('naturalnessScore', comp_data.get('NaturalnessIndex', 0))
+    fluidity_verifica = verifica_data.get('fluidityScore', verifica_data.get('FluidityScore', 0))
+    fluidity_comp = comp_data.get('fluidityScore', comp_data.get('FluidityScore', 0))
+    pressure_consistency_verifica = verifica_data.get('pressureConsistency', verifica_data.get('PressureConsistency', 0))
+    pressure_consistency_comp = comp_data.get('pressureConsistency', comp_data.get('PressureConsistency', 0))
+    coordination_verifica = verifica_data.get('coordinationIndex', verifica_data.get('CoordinationIndex', 0))
+    coordination_comp = comp_data.get('coordinationIndex', comp_data.get('CoordinationIndex', 0))
+    
+    naturalness_text = f"""
+    La naturalezza rappresenta quanto la scrittura appare spontanea e fluida, considerando la fluidità del tratto, 
+    la consistenza della pressione e l'indice di coordinamento motorio.
+    
+    <b>Firma da verificare:</b>
+    • Naturalezza complessiva: {naturalness_verifica:.1f}%
+    • Fluidità del tratto: {fluidity_verifica:.1f}%
+    • Consistenza pressione: {pressure_consistency_verifica:.1f}%
+    • Coordinamento motorio: {coordination_verifica:.1f}%
+    
+    <b>Firma di riferimento:</b>
+    • Naturalezza complessiva: {naturalness_comp:.1f}%
+    • Fluidità del tratto: {fluidity_comp:.1f}%
+    • Consistenza pressione: {pressure_consistency_comp:.1f}%
+    • Coordinamento motorio: {coordination_comp:.1f}%
+    
+    <b>Differenza naturalezza:</b> {abs(naturalness_verifica - naturalness_comp):.1f}%
+    """
+    
+    elements.append(Paragraph(naturalness_text, normal_style))
+    elements.append(Spacer(1, 12))
+    
+    # Grafico di naturalezza
+    elements.append(Paragraph("Grafico della naturalezza", heading2_style))
+    elements.append(Spacer(1, 6))
+    
+    # Decodifica e salva il grafico di naturalezza
+    naturalness_chart_temp_path = None
+    if naturalness_chart_base64:
+        try:
+            naturalness_chart_data = base64.b64decode(naturalness_chart_base64)
+            naturalness_chart_temp_path = os.path.join(tempfile.gettempdir(), f"naturalness_chart_{os.path.basename(pdf_output_path)}.png")
+            
+            with open(naturalness_chart_temp_path, 'wb') as f:
+                f.write(naturalness_chart_data)
+            
+            # Aggiungi il grafico di naturalezza
+            img_nat = Image.open(naturalness_chart_temp_path)
+            img_nat_width, img_nat_height = img_nat.size
+            aspect_nat = img_nat_height / float(img_nat_width)
+            max_width_nat = 450  # Massima larghezza in punti
+            max_height_nat = 250  # Massima altezza
+            img_nat_width = min(max_width_nat, img_nat_width)
+            img_nat_height = min(max_height_nat, img_nat_width * aspect_nat)
+            
+            elements.append(ReportlabImage(naturalness_chart_temp_path, width=img_nat_width, height=img_nat_height))
+            elements.append(Spacer(1, 12))
+            
+        except Exception as e:
+            print(f"Errore nell'aggiunta del grafico di naturalezza: {str(e)}", file=sys.stderr)
+            naturalness_chart_temp_path = None
+    
+    # === NUOVA SEZIONE: PROSPETTO FINALE ===
+    print("[DEBUG PDF] Aggiungendo sezione Prospetto Finale", file=sys.stderr)
+    elements.append(Paragraph("Prospetto Finale dell'Analisi", heading1_style))
+    elements.append(Spacer(1, 6))
+    
+    # Calcola il verdetto finale  
+    similarity_raw = verifica_data.get('similarity', 0)
+    if isinstance(similarity_raw, (int, float)):
+        similarity_percentage = similarity_raw * 100 if similarity_raw <= 1 else similarity_raw
+    else:
+        similarity_percentage = 0
+    
+    verdict = "Non determinato"
+    verdict_color = colors.gray
+    verdict_icon = "⚪"
+    
+    if similarity_percentage >= 85 and naturalness_verifica >= 80:
+        verdict = "Autentica"
+        verdict_color = colors.green
+        verdict_icon = "✅"
+    elif similarity_percentage >= 65 and naturalness_verifica >= 60:
+        verdict = "Probabilmente Autentica"
+        verdict_color = colors.HexColor('#28a745')
+        verdict_icon = "🟢"
+    elif similarity_percentage < 55 and naturalness_verifica >= 80:
+        verdict = "Sospetta"
+        verdict_color = colors.orange
+        verdict_icon = "🟠"
+    elif similarity_percentage < 65 and naturalness_verifica < 60:
+        verdict = "Probabilmente Falsa"
+        verdict_color = colors.red
+        verdict_icon = "🔴"
+    else:
+        verdict = "Incerta"
+        verdict_color = colors.gray
+        verdict_icon = "⚪"
+    
+    # Usa il verdetto dal case_info se disponibile
+    if case_info and 'verdict' in case_info:
+        verdict = case_info['verdict']
+    
+    # Stile per il prospetto finale
+    final_verdict_style = ParagraphStyle(
+        'FinalVerdictStyle',
+        fontName='Helvetica-Bold',
+        fontSize=14,
+        leading=18,
+        alignment=1,  # Centrato
+        spaceAfter=12,
+        textColor=verdict_color,
+        borderColor=verdict_color,
+        borderWidth=2,
+        borderPadding=12,
+        backColor=colors.HexColor('#f8f9fa')
+    )
+    
+    # Stile per i risultati numerici
+    results_style = ParagraphStyle(
+        'ResultsStyle',
+        fontName='Helvetica',
+        fontSize=12,
+        leading=16,
+        spaceAfter=8,
+        leftIndent=20,
+        bulletIndent=10
+    )
+    
+    # Prospetto finale
+    elements.append(Paragraph(f"{verdict_icon} <b>ESITO FINALE: {verdict.upper()}</b>", final_verdict_style))
+    elements.append(Spacer(1, 12))
+    
+    # Dettagli numerici
+    elements.append(Paragraph("Risultati numerici dell'analisi:", heading2_style))
+    elements.append(Spacer(1, 6))
+    
+    results_text = f"""
+    <b>• Similarità visiva (SSIM):</b> {similarity_percentage:.1f}%
+    
+    <b>• Naturalezza della scrittura:</b> {naturalness_verifica:.1f}%
+    
+    <b>• Compatibilità parametrica:</b> {verifica_data.get('compatibilityScore', 0):.1f}%
+    
+    <b>• Livello di confidenza:</b> {verifica_data.get('confidenceLevel', 0):.1f}%
+    
+    <b>Soglie di riferimento:</b>
+    • Autentica: Similarità ≥ 85% + Naturalezza ≥ 80%
+    • Probabilmente Autentica: Similarità ≥ 65% + Naturalezza ≥ 60%
+    • Sospetta: Similarità < 55% + Naturalezza ≥ 80%
+    • Probabilmente Falsa: Similarità < 65% + Naturalezza < 60%
+    """
+    
+    elements.append(Paragraph(results_text, results_style))
+    elements.append(Spacer(1, 12))
+    
+    # Note conclusive
+    elements.append(Paragraph("Note:", heading2_style))
+    note_text = """
+    Questa analisi è stata condotta utilizzando algoritmi avanzati di computer vision e analisi grafologica. 
+    I risultati devono essere sempre interpretati da un esperto grafologo qualificato per una valutazione 
+    definitiva in ambito forense o legale.
+    """
+    elements.append(Paragraph(note_text, normal_style))
+    elements.append(Spacer(1, 20))
     
     # Genera il documento PDF
     try:
@@ -853,9 +1371,11 @@ def generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, simi
         # Rimuoviamo questa stampa per evitare problemi con l'output JSON
         # print(f"Report PDF generato con successo: {pdf_output_path}")
         
-        # Rimuovi il file temporaneo del grafico
+        # Rimuovi i file temporanei dei grafici
         try:
             os.remove(chart_temp_path)
+            if naturalness_chart_temp_path:
+                os.remove(naturalness_chart_temp_path)
         except:
             pass
             
@@ -910,6 +1430,9 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
         
         # Crea il grafico di confronto con parametri normalizzati
         chart_img = create_comparison_chart(verifica_data_normalized, comp_data_normalized)
+        
+        # === NUOVO: GRAFICO DI NATURALEZZA ===
+        naturalness_chart_img = create_naturalness_chart(verifica_data_normalized, comp_data_normalized)
         
         # Crea il report descrittivo
         description = create_descriptive_report(verifica_data, comp_data)
@@ -975,7 +1498,9 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
                 if relative_diff <= 0.05: return 0.98
                 elif relative_diff <= 0.1: return 0.90
                 elif relative_diff <= 0.15: return 0.80
-                else: return max(0, 1 - relative_diff)
+                elif relative_diff <= 0.25: return 0.60  # === NUOVO: soglia intermedia ===
+                elif relative_diff <= 0.50: return 0.30  # === NUOVO: soglia per grandi differenze ===
+                else: return max(0.10, 1 - relative_diff)  # === CORRETTO: minimo 10% invece di 0% ===
             else:
                 return 1.0  # Entrambi zero = perfetta compatibilità
         
@@ -1021,15 +1546,101 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
         final_similarity = (similarity * 0.6) + (parameters_score * 0.4)
         
 
-        # Prepara il risultato  
+        # ==============================================
+        # NUOVA CLASSIFICAZIONE INTELLIGENTE CON NATURALEZZA
+        # ==============================================
+        
+        # Estrai l'Indice di Naturalezza dalle firme analizzate
+        verifica_naturalness = verifica_data.get('NaturalnessIndex', 50.0)  # Default neutro
+        reference_naturalness = comp_data.get('NaturalnessIndex', 50.0)     # Default neutro
+        
+        # Calcola la naturalezza media (considerando entrambe le firme)
+        avg_naturalness = (verifica_naturalness + reference_naturalness) / 2.0
+        
+        print(f"[CLASSIFICAZIONE] Similarity: {final_similarity*100:.1f}%, Naturalness: {avg_naturalness:.1f}%", file=sys.stderr)
+        
+        # Implementa classificazione a matrice 2D (Similarità vs Naturalezza)
+        def classify_signature_intelligent(similarity_pct, naturalness_pct):
+            """
+            Classificazione intelligente basata su matrice 2D
+            
+            Args:
+                similarity_pct: Percentuale di similarità (0-100)
+                naturalness_pct: Percentuale di naturalezza (0-100)
+                
+            Returns:
+                Tupla (verdict, confidence, explanation)
+            """
+            # Converti in percentuali per chiarezza
+            sim = similarity_pct * 100  # similarity_pct è 0-1, convertire in 0-100
+            nat = naturalness_pct        # naturalness_pct è già 0-100
+            
+            # MATRICE DI CLASSIFICAZIONE 2D
+            
+            # REGOLA PRIORITARIA: Similarità quasi perfetta = Autentica (indipendentemente dalla naturalezza)
+            if sim >= 98:
+                return ("Autentica", 98, "Similarità quasi perfetta - firma identica")
+            
+            # Caso 1: Alta similarità + Alta naturalezza = AUTENTICA
+            if sim >= 85 and nat >= 80:
+                return ("Autentica", 95, "Alta similarità e movimenti naturali")
+            
+            # Caso 2: Alta similarità + Bassa naturalezza = POSSIBILE COPIA ABILE
+            elif sim >= 85 and nat < 60:
+                return ("Possibile copia abile", 70, "Alta similarità ma movimenti innaturali")
+            
+            # Caso 3: Similarità intermedia + Alta naturalezza = AUTENTICA DISSIMULATA ⭐
+            elif 55 <= sim < 65 and nat >= 80:
+                return ("Autentica dissimulata", 85, "Modificata intenzionalmente ma autentica")
+                
+            # Caso 4A: Similarità molto bassa + Alta naturalezza = SOSPETTA (possibile imitazione naturale)
+            elif sim < 55 and nat >= 80:
+                return ("Sospetta", 75, "Similarità troppo bassa - possibile imitazione naturale")
+                
+            # Caso 4B: Bassa similarità + Bassa naturalezza = PROBABILMENTE FALSA
+            elif sim < 65 and nat < 60:
+                return ("Probabilmente falsa", 90, "Bassa similarità e movimenti innaturali")
+            
+            # Casi intermedi: similarità media
+            elif 65 <= sim < 85:
+                if nat >= 75:
+                    return ("Probabilmente autentica", 75, "Similarità accettabile e movimenti naturali")
+                elif nat < 50:
+                    return ("Sospetta", 60, "Similarità media ma movimenti innaturali")
+                else:
+                    return ("Incerta", 50, "Similarità e naturalezza intermedie")
+            
+            # Casi intermedi: naturalezza media
+            elif 60 <= nat < 80:
+                if sim >= 75:
+                    return ("Probabilmente autentica", 75, "Alta similarità e naturalezza accettabile")
+                else:
+                    return ("Sospetta", 65, "Parametri nel range intermedio")
+            
+            # Fallback
+            else:
+                return ("Incerta", 50, "Parametri nel range intermedio")
+        
+        # Applica la nuova classificazione
+        verdict, confidence, explanation = classify_signature_intelligent(final_similarity, avg_naturalness)
+        
+        print(f"[CLASSIFICAZIONE] Risultato: {verdict} (confidenza: {confidence}%) - {explanation}", file=sys.stderr)
+        
+        # ==============================================
+        # FINE NUOVA CLASSIFICAZIONE
+        # ==============================================
+        
+        # Prepara il risultato con la nuova classificazione
         result = {
-            "similarity": final_similarity,  # Nuovo punteggio combinato!
-            "verdict": "Alta probabilità di autenticità" if final_similarity >= 0.8 else 
-                      "Sospetta" if final_similarity >= 0.6 else 
-                      "Bassa probabilità di autenticità",
+            "similarity": final_similarity,  # Punteggio tradizionale per compatibilità
+            "naturalness": avg_naturalness / 100.0,  # Nuovo: Indice di naturalezza (0-1)
+            "verdict": verdict,  # Nuova classificazione intelligente
+            "confidence": confidence,  # Nuovo: Livello di confidenza
+            "explanation": explanation,  # Nuovo: Spiegazione del risultato
             "verifica_parameters": verifica_data,
             "reference_parameters": comp_data,
             "comparison_chart": chart_img,
+            "naturalness_chart": naturalness_chart_img,  # === NUOVO GRAFICO DI NATURALEZZA ===
             "description": description,
             "report_path": report_path if report_path else None
         }
@@ -1039,6 +1650,243 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
     except Exception as e:
         print(f"Errore durante il confronto delle firme con dimensioni: {str(e)}", file=sys.stderr)
         return {"error": str(e)}
+
+# ==============================================
+# FUNZIONI PER L'INDICE DI NATURALEZZA
+# ==============================================
+
+def calculate_fluidity_score(binary: np.ndarray, contours: list) -> float:
+    """
+    Calcola il punteggio di fluidità basato sulla smoothness dei contorni
+    
+    Args:
+        binary: Immagine binaria della firma
+        contours: Lista dei contorni della firma
+        
+    Returns:
+        Score di fluidità da 0-100 (più alto = più naturale)
+    """
+    try:
+        if not contours:
+            return 0.0
+        
+        # Analizza la smoothness di ogni contorno
+        smoothness_scores = []
+        
+        for contour in contours:
+            if len(contour) < 10:  # Salta contorni troppo piccoli
+                continue
+                
+            # Calcola la derivata seconda per misurare le irregolarità
+            points = contour.reshape(-1, 2)
+            if len(points) < 10:
+                continue
+                
+            # Calcola le differenze tra punti consecutivi (velocità)
+            dx = np.diff(points[:, 0])
+            dy = np.diff(points[:, 1])
+            
+            # Calcola la derivata seconda (accelerazione)
+            ddx = np.diff(dx)
+            ddy = np.diff(dy)
+            
+            # Calcola l'accelerazione totale
+            acceleration = np.sqrt(ddx**2 + ddy**2)
+            
+            # La fluidità è inversamente proporzionale alle variazioni di accelerazione
+            if len(acceleration) > 0:
+                # Normalizza rispetto alla lunghezza del contorno
+                contour_length = cv2.arcLength(contour, False)
+                if contour_length > 0:
+                    irregularity = np.std(acceleration) / contour_length
+                    # Converti in score di fluidità (0-100)
+                    smoothness = max(0.0, 100.0 - (irregularity * 1000))
+                    smoothness_scores.append(min(100.0, smoothness))
+        
+        if not smoothness_scores:
+            return 50.0  # Valore neutro se non ci sono contorni validi
+        
+        # Media pesata dei punteggi di fluidità
+        return float(np.mean(smoothness_scores))
+        
+    except Exception as e:
+        print(f"Errore nel calcolo fluidity score: {str(e)}", file=sys.stderr)
+        return 50.0  # Valore neutro in caso di errore
+
+
+def calculate_pressure_consistency(gray: np.ndarray, binary: np.ndarray) -> float:
+    """
+    Calcola la consistenza della pressione lungo il tracciato
+    
+    Args:
+        gray: Immagine in scala di grigi
+        binary: Immagine binaria della firma
+        
+    Returns:
+        Score di consistenza pressione da 0-100 (più alto = più consistente = più naturale)
+    """
+    try:
+        # ===== CORREZIONE: Assicura che gray e binary abbiano le stesse dimensioni =====
+        if gray.shape != binary.shape:
+            # Ridimensiona binary per matchare gray
+            binary = cv2.resize(binary, (gray.shape[1], gray.shape[0]), interpolation=cv2.INTER_NEAREST)
+            print(f"[PRESSURE CONSISTENCY] Ridimensionato binary da {binary.shape} a {gray.shape}", file=sys.stderr)
+        
+        # Estrae intensità dei pixel della firma
+        ink_pixels = gray[binary > 0]
+        if len(ink_pixels) == 0:
+            return 0.0
+        
+        # Converte in valori di "pressione" (255 - intensità)
+        pressure_values = 255 - ink_pixels
+        
+        if len(pressure_values) < 10:
+            return 0.0
+        
+        # Calcola la variabilità della pressione
+        pressure_mean = np.mean(pressure_values)
+        pressure_std = np.std(pressure_values)
+        
+        # Una pressione naturale ha variabilità moderata ma non eccessiva
+        # Troppo uniforme = artificiale, troppo variabile = nervosismo/controllo
+        if pressure_mean == 0:
+            return 0.0
+            
+        coefficient_variation = pressure_std / pressure_mean
+        
+        # Curve di naturalezza: picco intorno a 0.15-0.25 di CV
+        if 0.10 <= coefficient_variation <= 0.30:
+            # Range naturale - alta consistenza
+            consistency_score = 90 + (10 * (1 - abs(coefficient_variation - 0.20) / 0.10))
+        elif 0.05 <= coefficient_variation <= 0.40:
+            # Range accettabile
+            consistency_score = 70 + (20 * (1 - abs(coefficient_variation - 0.20) / 0.20))
+        else:
+            # Troppo uniforme o troppo variabile = sospetto
+            consistency_score = max(0, 50 - (abs(coefficient_variation - 0.20) * 100))
+        
+        return float(min(100.0, max(0.0, consistency_score)))
+        
+    except Exception as e:
+        print(f"Errore nel calcolo pressure consistency: {str(e)}", file=sys.stderr)
+        return 50.0  # Valore neutro in caso di errore
+
+
+def calculate_coordination_index(contours: list, binary: np.ndarray) -> float:
+    """
+    Calcola l'indice di coordinazione basato sulla regolarità delle curve
+    
+    Args:
+        contours: Lista dei contorni della firma
+        binary: Immagine binaria per analisi aggiuntive
+        
+    Returns:
+        Score di coordinazione da 0-100 (più alto = più coordinato = più naturale)
+    """
+    try:
+        if not contours:
+            return 0.0
+        
+        coordination_scores = []
+        
+        for contour in contours:
+            if len(contour) < 20:  # Serve un contorno sufficientemente lungo
+                continue
+                
+            # Analizza la regolarità delle curve
+            points = contour.reshape(-1, 2)
+            
+            # Calcola gli angoli di curvatura
+            angles = []
+            for i in range(2, len(points) - 2):
+                p1 = points[i-2]
+                p2 = points[i]
+                p3 = points[i+2]
+                
+                # Vettori
+                v1 = p1 - p2
+                v2 = p3 - p2
+                
+                # Calcola angolo
+                cos_angle = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2) + 1e-6)
+                cos_angle = np.clip(cos_angle, -1, 1)
+                angle = np.arccos(cos_angle)
+                angles.append(angle)
+            
+            if len(angles) < 5:
+                continue
+            
+            # Analizza la distribuzione degli angoli
+            angles = np.array(angles)
+            
+            # Una scrittura naturale ha angoli che seguono pattern fluidi
+            # Calcola la regolarità (bassa deviazione standard = più regolare)
+            angle_std = np.std(angles)
+            angle_mean = np.mean(angles)
+            
+            # Normalizza rispetto alla lunghezza del contorno
+            contour_length = cv2.arcLength(contour, False)
+            if contour_length > 0:
+                normalized_variation = angle_std / (angle_mean + 1e-6)
+                
+                # Score di coordinazione basato su regolarità ottimale
+                if 0.3 <= normalized_variation <= 0.8:
+                    # Range naturale di variazione
+                    coord_score = 85 + (15 * (1 - abs(normalized_variation - 0.55) / 0.25))
+                elif 0.1 <= normalized_variation <= 1.2:
+                    # Range accettabile
+                    coord_score = 60 + (25 * (1 - abs(normalized_variation - 0.55) / 0.45))
+                else:
+                    # Troppo rigido o troppo caotico
+                    coord_score = max(0, 40 - (abs(normalized_variation - 0.55) * 50))
+                
+                coordination_scores.append(min(100.0, max(0.0, coord_score)))
+        
+        if not coordination_scores:
+            return 50.0  # Valore neutro
+        
+        # Media pesata degli score di coordinazione
+        return float(np.mean(coordination_scores))
+        
+    except Exception as e:
+        print(f"Errore nel calcolo coordination index: {str(e)}", file=sys.stderr)
+        return 50.0  # Valore neutro in caso di errore
+
+
+def calculate_naturalness_index(fluidity: float, pressure_consistency: float, coordination: float) -> float:
+    """
+    Calcola l'Indice di Naturalezza combinando i tre componenti
+    
+    Args:
+        fluidity: Punteggio di fluidità (0-100)
+        pressure_consistency: Punteggio di consistenza pressione (0-100)  
+        coordination: Punteggio di coordinazione (0-100)
+        
+    Returns:
+        Indice di Naturalezza finale (0-100)
+    """
+    try:
+        # Pesi per i diversi componenti (somma = 1.0)
+        fluidity_weight = 0.4      # La fluidità è il più importante
+        pressure_weight = 0.3      # La pressione è significativa
+        coordination_weight = 0.3  # La coordinazione completa il quadro
+        
+        # Calcola l'indice combinato
+        naturalness = (
+            fluidity * fluidity_weight + 
+            pressure_consistency * pressure_weight + 
+            coordination * coordination_weight
+        )
+        
+        return float(min(100.0, max(0.0, naturalness)))
+        
+    except Exception as e:
+        print(f"Errore nel calcolo naturalness index: {str(e)}", file=sys.stderr)
+        return 50.0  # Valore neutro in caso di errore
+
+# ==============================================
+# FINE FUNZIONI INDICE DI NATURALEZZA  
+# ==============================================
 
 def analyze_signature_with_dimensions(image_path, real_width_mm, real_height_mm):
     """
@@ -1163,6 +2011,32 @@ def analyze_signature_with_dimensions(image_path, real_width_mm, real_height_mm)
         # Calcola il numero di componenti connesse
         num_components = len(contours) if contours else 0
         
+        # ==============================================
+        # CALCOLA PARAMETRI DI NATURALEZZA
+        # ==============================================
+        
+        print(f"[NATURALEZZA] Inizio calcolo parametri di naturalezza...", file=sys.stderr)
+        
+        # 1. Calcola il Fluidity Score (Punteggio di Fluidità)
+        fluidity_score = calculate_fluidity_score(processed, contours)
+        print(f"[NATURALEZZA] Fluidity Score: {fluidity_score:.2f}", file=sys.stderr)
+        
+        # 2. Calcola la Pressure Consistency (Consistenza della Pressione) 
+        pressure_consistency = calculate_pressure_consistency(image, processed)
+        print(f"[NATURALEZZA] Pressure Consistency: {pressure_consistency:.2f}", file=sys.stderr)
+        
+        # 3. Calcola il Coordination Index (Indice di Coordinazione)
+        coordination_index = calculate_coordination_index(contours, processed)
+        print(f"[NATURALEZZA] Coordination Index: {coordination_index:.2f}", file=sys.stderr)
+        
+        # 4. Calcola l'Indice di Naturalezza Combinato
+        naturalness_index = calculate_naturalness_index(fluidity_score, pressure_consistency, coordination_index)
+        print(f"[NATURALEZZA] Naturalness Index FINALE: {naturalness_index:.2f}", file=sys.stderr)
+        
+        # ==============================================
+        # FINE CALCOLI NATURALEZZA
+        # ==============================================
+        
         # Costruisci il risultato con i parametri calibrati alle dimensioni reali
         result = {
             'real_width_mm': real_width_mm,
@@ -1183,7 +2057,15 @@ def analyze_signature_with_dimensions(image_path, real_width_mm, real_height_mm)
             'BaselineStdMm': baseline_std_mm,  # In mm
             'StrokeComplexity': stroke_complexity,  # Densità dei punti del contorno
             'ConnectedComponents': num_components,  # Numero di componenti separate
-            'Dimensions': (actual_width_mm, actual_height_mm)
+            'Dimensions': (actual_width_mm, actual_height_mm),
+            
+            # ==============================================
+            # NUOVI PARAMETRI DI NATURALEZZA
+            # ==============================================
+            'FluidityScore': fluidity_score,          # Punteggio di fluidità (0-100)
+            'PressureConsistency': pressure_consistency,  # Consistenza della pressione (0-100)
+            'CoordinationIndex': coordination_index,   # Indice di coordinazione (0-100)  
+            'NaturalnessIndex': naturalness_index      # Indice di naturalezza finale (0-100)
         }
             
         return result

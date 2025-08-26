@@ -66,7 +66,7 @@ export async function analyzeImageQuality(imagePath: string): Promise<ImageQuali
       throw new Error('Image file is empty');
     }
 
-    const image = sharp(imagePath);
+    const image = sharp(imagePath).rotate(); // Applica automaticamente orientamento EXIF
     const metadata = await image.metadata();
     
     // Validate metadata

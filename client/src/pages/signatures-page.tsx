@@ -1114,7 +1114,7 @@ export default function SignaturesPage() {
               {comparisonResults && comparisonResults.length > 0 && (
                 <div className="bg-muted/30 rounded-lg p-3 mb-3">
                   <h3 className="font-medium mb-2">{t('signatures.comparisonDialog.analysisSummary')}</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div className="grid grid-cols-2 md:grid-cols-6 gap-4 text-sm">
                     <div className="text-center">
                       <div className="text-lg font-semibold text-primary">
                         {comparisonResults.filter(s => !s.isReference).length}
@@ -1123,21 +1123,33 @@ export default function SignaturesPage() {
                     </div>
                     <div className="text-center">
                       <div className="text-lg font-semibold text-green-600">
-                        {comparisonResults.filter(s => !s.isReference && (s.comparisonResult ?? 0) >= 0.85).length}
+                        {comparisonResults.filter(s => !s.isReference && s.verdict === 'Autentica').length}
                       </div>
                       <div className="text-muted-foreground">{t('signatures.comparisonDialog.authentic')}</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-lg font-semibold text-yellow-600">
-                        {comparisonResults.filter(s => !s.isReference && (s.comparisonResult ?? 0) >= 0.65 && (s.comparisonResult ?? 0) < 0.85).length}
+                      <div className="text-lg font-semibold text-blue-600">
+                        {comparisonResults.filter(s => !s.isReference && s.verdict === 'Autentica dissimulata').length}
+                      </div>
+                      <div className="text-muted-foreground">{t('signatures.comparisonDialog.authenticDissimulated')}</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-semibold text-green-400">
+                        {comparisonResults.filter(s => !s.isReference && s.verdict === 'Probabilmente autentica').length}
                       </div>
                       <div className="text-muted-foreground">{t('signatures.comparisonDialog.probablyAuthentic')}</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-lg font-semibold text-red-600">
-                        {comparisonResults.filter(s => !s.isReference && (s.comparisonResult ?? 0) < 0.65).length}
+                      <div className="text-lg font-semibold text-orange-600">
+                        {comparisonResults.filter(s => !s.isReference && s.verdict === 'Sospetta').length}
                       </div>
                       <div className="text-muted-foreground">{t('signatures.comparisonDialog.suspicious')}</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-semibold text-red-600">
+                        {comparisonResults.filter(s => !s.isReference && s.verdict === 'Probabilmente falsa').length}
+                      </div>
+                      <div className="text-muted-foreground">{t('signatures.comparisonDialog.probablyFalse')}</div>
                     </div>
                   </div>
                 </div>
@@ -1156,12 +1168,43 @@ export default function SignaturesPage() {
                               <p className="text-sm text-muted-foreground">
                                 <strong>{t('signatures.comparisonDialog.similarity')}</strong> {signature.comparisonResult ? (signature.comparisonResult * 100).toFixed(1) : '0'}%
                               </p>
+                              
+                              {/* === NUOVI PARAMETRI DI NATURALEZZA === */}
+                              {signature.naturalnessScore !== null && signature.naturalnessScore !== undefined && (
+                                <p className="text-sm text-muted-foreground">
+                                  <strong>🧠 Naturalezza:</strong> {(signature.naturalnessScore * 100).toFixed(1)}%
+                                </p>
+                              )}
+                              
+                              {signature.verdict && (
+                                <span className={`text-xs font-semibold px-2 py-1 rounded ${
+                                  signature.verdict === 'Autentica' ? 'bg-green-100 text-green-800' :
+                                  signature.verdict === 'Autentica dissimulata' ? 'bg-blue-100 text-blue-800' :
+                                  signature.verdict === 'Probabilmente autentica' ? 'bg-green-100 text-green-700' :
+                                  signature.verdict === 'Incerta' ? 'bg-yellow-100 text-yellow-800' :
+                                  signature.verdict === 'Sospetta' ? 'bg-orange-100 text-orange-800' :
+                                  signature.verdict === 'Probabilmente falsa' ? 'bg-red-100 text-red-800' :
+                                  'bg-gray-100 text-gray-800'
+                                }`}>
+                                  🎯 {signature.verdict}
+                                </span>
+                              )}
+                              
                               {signature.parameters?.realDimensions && (
                                 <p className="text-sm text-muted-foreground">
                                   <strong>Dimensioni:</strong> {signature.parameters.realDimensions.widthMm?.toFixed(1)}×{signature.parameters.realDimensions.heightMm?.toFixed(1)}mm
                                 </p>
                               )}
                             </div>
+                            
+                            {/* Spiegazione del verdetto se disponibile */}
+                            {signature.verdictExplanation && (
+                              <div className="mt-1">
+                                <p className="text-xs text-gray-600 italic">
+                                  💡 {signature.verdictExplanation}
+                                </p>
+                              </div>
+                            )}
                         
                         {/* Tabella di confronto parametri dettagliata */}
                         {signature.analysisReport && (() => {
@@ -1178,7 +1221,8 @@ export default function SignaturesPage() {
                               return null;
                             }
                             
-                            const comparisonParams = [
+                            // === PARAMETRI CLASSICI DI GRAFOLOGIA ===
+                            const classicParams = [
                               { 
                                 key: 'Proportion', 
                                 label: t('signatures.comparisonTable.proportion'), 
@@ -1255,72 +1299,257 @@ export default function SignaturesPage() {
                                 format: (v: string) => v || 'N/A'
                               }
                             ];
+
+                            // === PARAMETRI DI NATURALEZZA (ANTI-DISSIMULAZIONE) ===
+                            const naturalnessParams = [
+                              { 
+                                key: 'FluidityScore', 
+                                label: '🧠 Fluidità', 
+                                format: (v: number) => `${v?.toFixed(1)}%` 
+                              },
+                              { 
+                                key: 'PressureConsistency', 
+                                label: '🔄 Consistenza Pressione', 
+                                format: (v: number) => `${v?.toFixed(1)}%` 
+                              },
+                              { 
+                                key: 'CoordinationIndex', 
+                                label: '🎯 Coordinazione', 
+                                format: (v: number) => `${v?.toFixed(1)}%` 
+                              },
+                              { 
+                                key: 'NaturalnessIndex', 
+                                label: '✨ Naturalezza Totale', 
+                                format: (v: number) => `${v?.toFixed(1)}%` 
+                              }
+                            ];
                             
                             return (
-                              <div className="mt-3 border rounded-lg p-3 bg-gray-50">
-                                <h6 className="font-medium mb-2 text-sm">{t('signatures.comparisonTable.title')}</h6>
-                                <div className="overflow-x-auto">
-                                  <table className="w-full text-xs">
-                                    <thead>
-                                      <tr className="border-b">
-                                        <th className="text-left py-1 px-2">{t('signatures.comparisonTable.parameter')}</th>
-                                        <th className="text-center py-1 px-2">{t('signatures.comparisonTable.reference')}</th>
-                                        <th className="text-center py-1 px-2">{t('signatures.comparisonTable.verification')}</th>
-                                        <th className="text-center py-1 px-2">{t('signatures.comparisonTable.compatibility')}</th>
-                                      </tr>
-                                    </thead>
-                                    <tbody>
-                                      {comparisonParams.map(param => {
-                                        const refValue = referenceData[param.key];
-                                        const verifyValue = reportData[param.key];
-                                        if (refValue === undefined || verifyValue === undefined) return null;
-                                        
-                                        // Calcola compatibilità con logica migliorata per valori piccoli
-                                        const diff = Math.abs(refValue - verifyValue);
-                                        const maxValue = Math.max(Math.abs(refValue), Math.abs(verifyValue));
-                                        
-                                        let compatibility;
-                                        // Per parametri con valori molto piccoli (es. asole), usa soglie assolute
-                                        if (param.key === 'AvgAsolaSize' || param.key === 'BaselineStdMm') {
-                                          if (diff <= 0.05) compatibility = 95; // Entrambi molto piccoli = alta compatibilità
-                                          else if (diff <= 0.1) compatibility = 80;
-                                          else if (diff <= 0.2) compatibility = 60;
-                                          else compatibility = Math.max(0, 100 - (diff * 200)); // Scala lineare per diff > 0.2
-                                        }
-                                        // Per altri parametri, usa logica relativa migliorata
-                                        else {
+                              <div className="mt-3 space-y-4">
+                                {/* === TABELLA 1: PARAMETRI CLASSICI DI GRAFOLOGIA === */}
+                                <div className="border rounded-lg p-3 bg-gray-50">
+                                  <h6 className="font-medium mb-2 text-sm">📊 {t('signatures.comparisonTable.title')}</h6>
+                                  <div className="overflow-x-auto">
+                                    <table className="w-full text-xs">
+                                      <thead>
+                                        <tr className="border-b">
+                                          <th className="text-left py-1 px-2">{t('signatures.comparisonTable.parameter')}</th>
+                                          <th className="text-center py-1 px-2">{t('signatures.comparisonTable.reference')}</th>
+                                          <th className="text-center py-1 px-2">{t('signatures.comparisonTable.verification')}</th>
+                                          <th className="text-center py-1 px-2">{t('signatures.comparisonTable.compatibility')}</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {classicParams.map(param => {
+                                          const refValue = referenceData[param.key];
+                                          const verifyValue = reportData[param.key];
+                                          if (refValue === undefined || verifyValue === undefined) return null;
+                                          
+                                          // Calcola compatibilità con logica migliorata per valori piccoli
+                                          const diff = Math.abs(refValue - verifyValue);
+                                          const maxValue = Math.max(Math.abs(refValue), Math.abs(verifyValue));
+                                          
+                                          let compatibility;
+                                          // Per parametri con valori molto piccoli (es. asole), usa soglie assolute
+                                          if (param.key === 'AvgAsolaSize' || param.key === 'BaselineStdMm') {
+                                            if (diff <= 0.05) compatibility = 95; // Entrambi molto piccoli = alta compatibilità
+                                            else if (diff <= 0.1) compatibility = 80;
+                                            else if (diff <= 0.2) compatibility = 70;
+                                            else if (diff <= 0.5) compatibility = 60;
+                                            else if (diff <= 1.0) compatibility = 50;
+                                            else if (diff <= 2.0) compatibility = 30;
+                                            else compatibility = Math.max(10, 100 - (diff * 40)); // Formula più graduale
+                                          }
+                                          // Per altri parametri, usa logica relativa migliorata
+                                          else {
+                                            if (maxValue > 0) {
+                                              const relativeDiff = diff / maxValue;
+                                              // Soglia di tolleranza per evitare 0% su piccole differenze
+                                              if (relativeDiff <= 0.05) compatibility = 98;
+                                              else if (relativeDiff <= 0.1) compatibility = 90;
+                                              else if (relativeDiff <= 0.15) compatibility = 80;
+                                              else compatibility = Math.max(0, 100 - (relativeDiff * 100));
+                                            } else {
+                                              compatibility = 100; // Entrambi zero
+                                            }
+                                          }
+                                          
+                                          return (
+                                            <tr key={param.key} className="border-b">
+                                              <td className="py-1 px-2 font-medium">{param.label}</td>
+                                              <td className="text-center py-1 px-2">{(param as any).format(refValue)}</td>
+                                              <td className="text-center py-1 px-2">{(param as any).format(verifyValue)}</td>
+                                              <td className="text-center py-1 px-2">
+                                                <span className={`inline-block px-2 py-0.5 rounded text-xs ${
+                                                  compatibility >= 85 ? 'bg-green-100 text-green-800' :
+                                                  compatibility >= 65 ? 'bg-yellow-100 text-yellow-800' :
+                                                  'bg-red-100 text-red-800'
+                                                }`}>
+                                                  {compatibility.toFixed(1)}%
+                                                </span>
+                                              </td>
+                                            </tr>
+                                          );
+                                      })}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </div>
+
+                                {/* === TABELLA 2: ANALISI DI NATURALEZZA === */}
+                                <div className="border rounded-lg p-3 bg-blue-50">
+                                  <h6 className="font-medium mb-2 text-sm">🧠 Analisi di Naturalezza (Anti-Dissimulazione)</h6>
+                                  <div className="overflow-x-auto">
+                                    <table className="w-full text-xs">
+                                      <thead>
+                                        <tr className="border-b">
+                                          <th className="text-left py-1 px-2">Parametro</th>
+                                          <th className="text-center py-1 px-2">Riferimento</th>
+                                          <th className="text-center py-1 px-2">Verifica</th>
+                                          <th className="text-center py-1 px-2">Compatibilità</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {naturalnessParams.map(param => {
+                                          const refValue = referenceData[param.key];
+                                          const verifyValue = reportData[param.key];
+                                          if (refValue === undefined || verifyValue === undefined) return null;
+                                          
+                                          // === CORREZIONE: Usa stesso algoritmo della compatibilità principale ===
+                                          const diff = Math.abs(refValue - verifyValue);
+                                          const maxValue = Math.max(Math.abs(refValue), Math.abs(verifyValue));
+                                          let compatibility;
+                                          
                                           if (maxValue > 0) {
                                             const relativeDiff = diff / maxValue;
-                                            // Soglia di tolleranza per evitare 0% su piccole differenze
                                             if (relativeDiff <= 0.05) compatibility = 98;
                                             else if (relativeDiff <= 0.1) compatibility = 90;
                                             else if (relativeDiff <= 0.15) compatibility = 80;
-                                            else compatibility = Math.max(0, 100 - (relativeDiff * 100));
+                                            else if (relativeDiff <= 0.25) compatibility = 60;
+                                            else if (relativeDiff <= 0.50) compatibility = 30;
+                                            else compatibility = Math.max(10, 100 - (relativeDiff * 100));
                                           } else {
-                                            compatibility = 100; // Entrambi zero
+                                            compatibility = 100;
                                           }
-                                        }
-                                        
-                                        return (
-                                          <tr key={param.key} className="border-b">
-                                            <td className="py-1 px-2 font-medium">{param.label}</td>
-                                            <td className="text-center py-1 px-2">{param.format(refValue)}</td>
-                                            <td className="text-center py-1 px-2">{param.format(verifyValue)}</td>
-                                            <td className="text-center py-1 px-2">
-                                              <span className={`inline-block px-2 py-0.5 rounded text-xs ${
-                                                compatibility >= 85 ? 'bg-green-100 text-green-800' :
-                                                compatibility >= 65 ? 'bg-yellow-100 text-yellow-800' :
-                                                'bg-red-100 text-red-800'
-                                              }`}>
-                                                {compatibility.toFixed(1)}%
-                                              </span>
-                                            </td>
-                                          </tr>
-                                        );
-                                      })}
-                                    </tbody>
-                                  </table>
+                                          
+                                          return (
+                                            <tr key={param.key} className="border-b">
+                                              <td className="py-1 px-2 font-medium">{param.label}</td>
+                                              <td className="text-center py-1 px-2">{(param as any).format(refValue)}</td>
+                                              <td className="text-center py-1 px-2">{(param as any).format(verifyValue)}</td>
+                                              <td className="text-center py-1 px-2">
+                                                <span className={`inline-block px-2 py-0.5 rounded text-xs ${
+                                                  compatibility >= 85 ? 'bg-green-100 text-green-800' :
+                                                  compatibility >= 65 ? 'bg-yellow-100 text-yellow-800' :
+                                                  'bg-red-100 text-red-800'
+                                                }`}>
+                                                  {compatibility.toFixed(1)}%
+                                                </span>
+                                              </td>
+                                            </tr>
+                                          );
+                                        })}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                  <div className="mt-2 text-xs text-gray-600">
+                                    💡 <strong>Naturalezza Totale:</strong> {signature.naturalnessScore ? (signature.naturalnessScore * 100).toFixed(1) : 'N/A'}%
+                                  </div>
                                 </div>
+
+                                {/* === GRAFICI DI CONFRONTO === */}
+                                <div className="border rounded-lg p-3 bg-slate-50">
+                                  <h6 className="font-medium mb-2 text-sm">📊 Grafici di Confronto</h6>
+                                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                    {/* Grafico Classico */}
+                                    {signature.comparisonChart && (
+                                      <div className="text-center">
+                                        <p className="text-xs font-medium text-gray-600 mb-1">📈 Parametri Grafologici Classici</p>
+                                        <img 
+                                          src={`data:image/png;base64,${signature.comparisonChart}`} 
+                                          alt="Grafico confronto parametri classici"
+                                          className="max-w-full h-auto rounded border"
+                                        />
+                                      </div>
+                                    )}
+                                    
+                                    {/* Grafico Naturalezza */}
+                                    {signature.naturalnessChart && (
+                                      <div className="text-center">
+                                        <p className="text-xs font-medium text-gray-600 mb-1">🧠 Analisi Naturalezza (Anti-Dissimulazione)</p>
+                                        <img 
+                                          src={`data:image/png;base64,${signature.naturalnessChart}`} 
+                                          alt="Grafico analisi naturalezza"
+                                          className="max-w-full h-auto rounded border"
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* === ANALISI COMBINATA SIMILARITÀ + NATURALEZZA === */}
+                                {signature.naturalnessScore && signature.comparisonResult && (
+                                  <div className="border rounded-lg p-3 bg-gradient-to-r from-purple-50 to-indigo-50">
+                                    <h6 className="font-medium mb-2 text-sm">🎯 Analisi Combinata (Matrice 2D)</h6>
+                                    <div className="grid grid-cols-2 gap-4 text-sm">
+                                      <div>
+                                        <span className="font-medium">📈 Similarità:</span> {(signature.comparisonResult * 100).toFixed(1)}%
+                                      </div>
+                                      <div>
+                                        <span className="font-medium">🧠 Naturalezza:</span> {(signature.naturalnessScore * 100).toFixed(1)}%
+                                      </div>
+                                    </div>
+                                    <div className="mt-2 p-2 bg-white rounded text-center">
+                                      <span className={`text-sm font-semibold px-3 py-1 rounded ${
+                                        signature.verdict === 'Autentica' ? 'bg-green-100 text-green-800' :
+                                        signature.verdict === 'Autentica dissimulata' ? 'bg-blue-100 text-blue-800' :
+                                        signature.verdict === 'Probabilmente autentica' ? 'bg-green-100 text-green-700' :
+                                        signature.verdict === 'Incerta' ? 'bg-yellow-100 text-yellow-800' :
+                                        signature.verdict === 'Sospetta' ? 'bg-orange-100 text-orange-800' :
+                                        signature.verdict === 'Probabilmente falsa' ? 'bg-red-100 text-red-800' :
+                                        'bg-gray-100 text-gray-800'
+                                      }`}>
+                                        🎯 {signature.verdict}
+                                      </span>
+                                      {signature.confidenceLevel && (
+                                        <div className="mt-1 text-xs text-gray-600">
+                                          Confidenza: {signature.confidenceLevel.toFixed(0)}%
+                                        </div>
+                                      )}
+                                    </div>
+                                    
+                                    {/* === SOGLIE DI CLASSIFICAZIONE (SEMPRE VISIBILI) === */}
+                                    <div className="mt-3 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded border-l-4 border-blue-400">
+                                      <div className="font-medium text-sm text-gray-800 mb-2 flex items-center gap-2">
+                                        📋 <span>Criteri di Classificazione (Matrice 2D)</span>
+                                      </div>
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-xs text-gray-700">
+                                        <div><strong className="text-green-700">🟢 Autentica:</strong> Sim≥85% + Nat≥80%</div>
+                                        <div><strong className="text-blue-700">🔵 Autentica Dissimulata:</strong> 55%≤Sim&lt;65% + Nat≥80%</div>
+                                        <div><strong className="text-green-600">🟡 Prob. Autentica:</strong> Sim≥75% + Nat≥75%</div>
+                                        <div><strong className="text-orange-600">🟠 Sospetta:</strong> Sim&lt;55% + Nat≥80% o Sim media + Nat&lt;50%</div>
+                                        <div><strong className="text-red-600">🔴 Prob. Falsa:</strong> Sim&lt;65% + Nat&lt;60%</div>
+                                        <div><strong className="text-gray-600">⚪ Incerta:</strong> Parametri intermedi</div>
+                                      </div>
+                                    </div>
+                                    
+                                    {/* === NUOVA SEZIONE: INTERPRETAZIONE DELL'ANALISI === */}
+                                    {signature.verdictExplanation && (
+                                      <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-l-4 border-blue-400">
+                                        <div className="font-medium text-sm text-blue-800 mb-2 flex items-center gap-2">
+                                          🤖 <span>Interpretazione dell'Analisi</span>
+                                        </div>
+                                        <div className="text-xs text-blue-900 leading-relaxed">
+                                          {signature.verdictExplanation.split('\n\n').map((paragraph, index) => (
+                                            <p key={index} className="mb-2 last:mb-0">
+                                              {paragraph}
+                                            </p>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                             );
                           } catch (e) {
@@ -1342,19 +1571,6 @@ export default function SignaturesPage() {
                   </div>
                   
                   
-                  {signature.comparisonChart && (
-                    <div className="mt-2">
-                      <h5 className="font-medium mb-1">{t('signatures.comparisonDialog.comparisonChart')}</h5>
-                      <div className="border rounded p-2 bg-white">
-                        <img 
-                          src={`data:image/png;base64,${signature.comparisonChart}`} 
-                          alt="Grafico confronto parametri" 
-                          className="max-w-full h-auto mx-auto block"
-                          style={{ maxHeight: '400px' }}
-                        />
-                      </div>
-                    </div>
-                  )}
                   
                 </div>
               ))
@@ -1368,8 +1584,6 @@ export default function SignaturesPage() {
           </ScrollArea>
         </DialogContent>
       </Dialog>
-      
-      <SignatureMethodologyDialog />
     </div>
   );
 }

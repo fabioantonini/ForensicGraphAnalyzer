@@ -94,31 +94,136 @@ export function SignatureCard({
     }
   };
   
-  // Function to render similarity score
-  const renderSimilarityScore = (score: number | null) => {
-    if (score === null) return null;
+  // Function to render similarity score con NUOVA CLASSIFICAZIONE INTELLIGENTE
+  const renderSimilarityScore = (comparisonData: any) => {
+    // *** CORREZIONE: Non mostrare nulla se non c'è un confronto valido ***
+    if (!comparisonData) return null;
     
+    // Supporta sia il vecchio formato (solo score) che il nuovo formato completo
+    let similarity_score: number;
+    let naturalness_score: number | null = null;
+    let verdict: string;
+    let confidence: number | null = null;
+    let explanation: string | null = null;
+    
+    if (typeof comparisonData === 'number') {
+      // Formato vecchio: solo score numerico
+      similarity_score = comparisonData;
+      // *** CORREZIONE: Non mostrare se il punteggio non è valido ***
+      if (isNaN(similarity_score) || similarity_score === null || similarity_score === undefined) {
+        return null;
+      }
+      verdict = similarity_score >= 0.85 ? 'Autentica' : 
+                similarity_score >= 0.65 ? 'Probabilmente autentica' : 'Firma non autentica';
+    } else {
+      // Nuovo formato: oggetto completo con naturalezza
+      similarity_score = comparisonData.similarity || comparisonData;
+      naturalness_score = comparisonData.naturalness;
+      
+      // *** CORREZIONE: Non mostrare se il punteggio non è valido ***
+      if (isNaN(similarity_score) || similarity_score === null || similarity_score === undefined) {
+        return null;
+      }
+      
+      // *** CORREZIONE: Non mostrare "Analisi in corso" - solo se c'è un vero verdetto ***
+      verdict = comparisonData.verdict;
+      if (!verdict || verdict === 'Analisi in corso') {
+        return null;
+      }
+      
+      confidence = comparisonData.confidence;
+      explanation = comparisonData.explanation;
+    }
+    
+    // Determina colore e icona basato sulla nuova classificazione
     let color = 'bg-red-500';
-    let textKey = 'signatures.verification.notAuthentic';
-    let defaultText = 'Firma non autentica';
+    let icon = '❌';
     
-    if (score >= 0.85) {
-      color = 'bg-green-500';
-      textKey = 'signatures.verification.authentic';
-      defaultText = 'Firma autentica';
-    } else if (score >= 0.65) {
-      color = 'bg-yellow-500';
-      textKey = 'signatures.verification.probablyAuthentic';
-      defaultText = 'Probabilmente autentica';
+    switch (verdict) {
+      case 'Autentica':
+        color = 'bg-green-500';
+        icon = '✅';
+        break;
+      case 'Autentica dissimulata':
+        color = 'bg-blue-500'; 
+        icon = '🔍';
+        break;
+      case 'Probabilmente autentica':
+        color = 'bg-green-400';
+        icon = '✓';
+        break;
+      case 'Possibile copia abile':
+        color = 'bg-orange-500';
+        icon = '⚠️';
+        break;
+      case 'Sospetta':
+        color = 'bg-orange-500';
+        icon = '⚠️';
+        break;
+      case 'Incerta':
+        color = 'bg-gray-500';
+        icon = '❓';
+        break;
+      case 'Probabilmente falsa':
+      default:
+        color = 'bg-red-500';
+        icon = '❌';
+        break;
     }
     
     return (
-      <div className="mt-2">
-        <p className="text-sm font-medium">
-          {t('signatures.similarityScore')}: {(score * 100).toFixed(1)}%
-        </p>
-        <Progress value={score * 100} className="h-2 mt-1" />
-        <Badge className={`mt-2 ${color}`}>{t(textKey, defaultText)}</Badge>
+      <div className="mt-2 space-y-2">
+        {/* Punteggio di Similarità */}
+        <div>
+          <p className="text-sm font-medium">
+            {t('signatures.similarityScore', 'Similarità')}: {(similarity_score * 100).toFixed(1)}%
+          </p>
+          <Progress value={similarity_score * 100} className="h-2 mt-1" />
+        </div>
+        
+        {/* Indice di Naturalezza (se disponibile) */}
+        {naturalness_score !== null && (
+          <div>
+            <p className="text-sm font-medium text-blue-700">
+              {t('signatures.naturalnessIndex', 'Naturalezza')}: {(naturalness_score * 100).toFixed(1)}%
+            </p>
+            <Progress value={naturalness_score * 100} className="h-2 mt-1 bg-blue-100" />
+            <div className="text-xs text-blue-600 mt-1">
+              {t('signatures.naturalnessDesc', 'Fluidità e coordinazione dei movimenti')}
+            </div>
+          </div>
+        )}
+        
+        {/* Nuova Classificazione Intelligente */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <Badge className={`${color} text-white flex items-center gap-1`}>
+            <span>{icon}</span>
+            <span className="font-medium">{verdict}</span>
+          </Badge>
+          
+          {/* Livello di Confidenza (se disponibile) */}
+          {confidence !== null && (
+            <Badge variant="outline" className="text-xs">
+              {t('signatures.confidence', 'Confidenza')}: {confidence}%
+            </Badge>
+          )}
+        </div>
+        
+        {/* Interpretazione AI (se disponibile) */}
+        {explanation && (
+          <div className="mt-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-l-4 border-blue-400">
+            <div className="font-medium text-xs text-blue-800 mb-2 flex items-center gap-1">
+              🤖 <span>Interpretazione dell'Analisi</span>
+            </div>
+            <div className="text-xs text-blue-900 leading-relaxed">
+              {explanation.split('\n\n').map((paragraph: string, index: number) => (
+                <p key={index} className="mb-2 last:mb-0">
+                  {paragraph}
+                </p>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -222,7 +327,13 @@ export function SignatureCard({
           </div>
           
           {/* Mostra il punteggio di similarità solo per le firme da verificare */}
-          {showSimilarity && signature.processingStatus === 'completed' && renderSimilarityScore(signature.comparisonResult)}
+          {showSimilarity && signature.processingStatus === 'completed' && renderSimilarityScore({
+            similarity: signature.comparisonResult,
+            naturalness: signature.naturalnessScore,
+            verdict: signature.verdict,
+            confidence: signature.confidenceLevel || null, // confidenceLevel è già in percentuale (0-100)
+            explanation: signature.verdictExplanation
+          })}
         </CardContent>
       </Card>
 
@@ -243,7 +354,9 @@ export function SignatureCard({
             <ScrollArea className="max-h-[calc(90vh-140px)] pr-4">
               <div className="grid grid-cols-1 gap-6">
               {/* Punteggio di similarità */}
-              {signature.comparisonResult !== null && (
+              {signature.comparisonResult !== null && 
+               !isNaN(signature.comparisonResult) && 
+               signature.comparisonResult !== undefined && (
                 <div className="bg-muted rounded p-4">
                   <h3 className="font-medium text-lg mb-2">
                     {t('signatures.similarityScore')}: {(signature.comparisonResult * 100).toFixed(1)}%

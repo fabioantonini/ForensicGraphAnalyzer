@@ -11,6 +11,19 @@ import { log } from './vite';
 interface ComparisonResult {
   similarity: number;
   verdict: string;
+  
+  // === NUOVI CAMPI PER INDICE DI NATURALEZZA ===
+  naturalness?: number;        // Indice di naturalezza 0-1 (fluidità + coordinazione)
+  confidence?: number;         // Livello di confidenza 0-1 del verdetto
+  explanation?: string;        // Spiegazione dettagliata del verdetto
+  
+  // === DETTAGLI NATURALEZZA ===
+  naturalness_details?: {
+    fluidity_score?: number;      // Punteggio fluidità 0-100
+    pressure_consistency?: number; // Consistenza pressione 0-100
+    coordination_index?: number;   // Indice coordinazione 0-100
+  };
+  
   verifica_parameters: any;
   reference_parameters: any;
   verifica_data?: any;  // Parametri Python della firma da verificare

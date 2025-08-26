@@ -32,8 +32,8 @@ export class SignatureCropper {
     try {
       console.log(`[CROP] Inizio ritaglio per: ${inputPath}`);
       
-      // Carica l'immagine con Sharp
-      const image = sharp(inputPath);
+      // Carica l'immagine con Sharp e applica orientamento EXIF
+      const image = sharp(inputPath).rotate(); // Applica automaticamente orientamento EXIF
       const metadata = await image.metadata();
       
       console.log(`[CROP] Metadata immagine: ${metadata.width}x${metadata.height}, formato: ${metadata.format}`);
@@ -47,7 +47,7 @@ export class SignatureCropper {
         height: metadata.height
       };
 
-      // Converti in scala di grigi per analisi
+      // Converti in scala di grigi per analisi (orientamento già applicato)
       console.log(`[CROP] Conversione in scala di grigi...`);
       const grayscaleBuffer = await image
         .greyscale()
@@ -162,7 +162,7 @@ export class SignatureCropper {
     targetSize?: { width: number; height: number }
   ): Promise<CropResult> {
     try {
-      const image = sharp(inputPath);
+      const image = sharp(inputPath).rotate(); // Applica automaticamente orientamento EXIF
       const metadata = await image.metadata();
       
       if (!metadata.width || !metadata.height) {
@@ -184,7 +184,7 @@ export class SignatureCropper {
 
       const finalOutputPath = outputPath || this.generateCroppedPath(inputPath);
       
-      // Esegui il ritaglio manuale
+      // Esegui il ritaglio manuale (orientamento EXIF già applicato)
       let croppedImage = image.extract({
         left: Math.round(validatedCropBox.left),
         top: Math.round(validatedCropBox.top),
@@ -383,7 +383,7 @@ export class SignatureCropper {
     cropBox?: { left: number; top: number; width: number; height: number }
   ): Promise<{ previewBase64: string; bounds?: any }> {
     try {
-      const image = sharp(inputPath);
+      const image = sharp(inputPath).rotate(); // Applica automaticamente orientamento EXIF
       
       let previewImage;
       let bounds;

@@ -228,11 +228,21 @@ export function registerSignatureRoutes(appRouter: Router) {
           console.log(`[COMPARE-ALL] Elaborazione firma ${signature.id}`);
           
           // Cancella grafico cached per forzare rigenerazione
-          await storage.updateSignature(signature.id, { comparisonChart: '' });
+          await storage.updateSignature(signature.id, { 
+            comparisonChart: '', 
+            naturalnessChart: ''  // === NUOVO: CANCELLA ANCHE GRAFICO NATURALEZZA ===
+          });
           
           let similarityScore = 0;
           let comparisonChart = null;
           let analysisReport = null;
+          
+          // === DICHIARAZIONE VARIABILI DI NATURALEZZA ===
+          let naturalnessScore = null;
+          let verdict = null;
+          let confidenceLevel = null;
+          let verdictExplanation = null;
+          let naturalnessChart = null;  // === NUOVO: GRAFICO NATURALEZZA ===
           
           // Usa la prima firma di riferimento disponibile per il confronto
           const referenceSignature = completedReferences[0];
@@ -259,6 +269,51 @@ export function registerSignatureRoutes(appRouter: Router) {
             
             similarityScore = pythonResult.similarity; // Mantieni come percentuale diretta
             comparisonChart = pythonResult.comparison_chart; // CORRETTO: field name è comparison_chart
+            naturalnessChart = pythonResult.naturalness_chart || null;  // === NUOVO: GRAFICO NATURALEZZA ===
+            
+            // === ESTRAZIONE NUOVI PARAMETRI DI NATURALEZZA ===
+            verdict = pythonResult.verdict || null;
+            
+            // Estrai parametri di naturalezza se disponibili
+            if (pythonResult.naturalness !== undefined) {
+              naturalnessScore = pythonResult.naturalness;
+              console.log(`[COMPARE-ALL] ✅ NATURALEZZA: ${(naturalnessScore * 100).toFixed(1)}% per firma ${signature.id}`);
+            }
+            
+            if (pythonResult.confidence !== undefined) {
+              confidenceLevel = pythonResult.confidence;
+              console.log(`[COMPARE-ALL] ✅ CONFIDENZA: ${(confidenceLevel * 100).toFixed(1)}% per firma ${signature.id}`);
+            }
+            
+            if (pythonResult.explanation) {
+              verdictExplanation = pythonResult.explanation;
+              console.log(`[COMPARE-ALL] ✅ SPIEGAZIONE: ${verdictExplanation.substring(0, 100)}... per firma ${signature.id}`);
+            }
+            
+            // === NUOVO: GENERA INTERPRETAZIONE AI DELL'ANALISI ===
+            try {
+              const { generateSignatureInterpretation } = await import("./openai");
+              const interpretation = await generateSignatureInterpretation(
+                verdict || 'Non determinato',
+                similarityScore || 0,
+                naturalnessScore,
+                pythonResult,
+                confidenceLevel,
+                req.user?.openaiApiKey,
+                req.user?.id
+              );
+              
+              // Salva l'interpretazione nella spiegazione se non già presente
+              if (!verdictExplanation && interpretation) {
+                verdictExplanation = interpretation;
+                console.log(`[COMPARE-ALL] 🤖 INTERPRETAZIONE AI generata per firma ${signature.id}`);
+              }
+            } catch (aiError) {
+              console.error(`[COMPARE-ALL] ⚠️ Errore generazione interpretazione AI:`, aiError);
+              // Non blocca l'esecuzione, continua senza interpretazione AI
+            }
+            
+            console.log(`[COMPARE-ALL] 🎯 NUOVA CLASSIFICAZIONE: "${verdict}" (Similarità: ${(similarityScore * 100).toFixed(1)}%, Naturalezza: ${naturalnessScore ? (naturalnessScore * 100).toFixed(1) + '%' : 'N/A'})`);
             
             // CORREZIONE: Salva i parametri strutturati JSON invece della sola descrizione testuale
             // Questo permette al sistema PDF di estrarre tutti i 21+ parametri per l'analisi dettagliata
@@ -291,9 +346,17 @@ export function registerSignatureRoutes(appRouter: Router) {
           }
           
           // Aggiorna la firma con i risultati del confronto
+          
           const updateData: any = {
             comparisonResult: similarityScore,
             analysisReport,
+            
+            // === NUOVI CAMPI PER INDICE DI NATURALEZZA ===
+            naturalnessScore: naturalnessScore,
+            verdict: verdict,
+            confidenceLevel: confidenceLevel,
+            verdictExplanation: verdictExplanation,
+            
             referenceSignatureFilename: referenceSignature.filename,
             referenceSignatureOriginalFilename: referenceSignature.originalFilename,
             referenceDpi: referenceSignature.dpi || 300,
@@ -304,14 +367,27 @@ export function registerSignatureRoutes(appRouter: Router) {
             updateData.comparisonChart = comparisonChart;
           }
           
+          // === NUOVO: SUPPORTA GRAFICO NATURALEZZA ===
+          if (naturalnessChart) {
+            updateData.naturalnessChart = naturalnessChart;
+          }
+          
           // Aggiornamento diretto nel database PostgreSQL per i campi di riferimento
           try {
             await db.update(signatures)
               .set({
                 comparisonChart: updateData.comparisonChart,
+                naturalnessChart: updateData.naturalnessChart,  // === NUOVO: GRAFICO NATURALEZZA ===
                 analysisReport: updateData.analysisReport,
                 reportPath: updateData.reportPath,
                 comparisonResult: updateData.comparisonResult,
+                
+                // === NUOVI CAMPI PER INDICE DI NATURALEZZA ===
+                naturalnessScore: updateData.naturalnessScore,
+                verdict: updateData.verdict,
+                confidenceLevel: updateData.confidenceLevel,
+                verdictExplanation: updateData.verdictExplanation,
+                
                 referenceSignatureFilename: updateData.referenceSignatureFilename,
                 referenceSignatureOriginalFilename: updateData.referenceSignatureOriginalFilename,
                 referenceDpi: updateData.referenceDpi,
@@ -679,6 +755,12 @@ export function registerSignatureRoutes(appRouter: Router) {
       }
       
       doc.text(`Punteggio di similarità: ${percentageScore}%`);
+      
+      // Aggiungi naturalezza se disponibile nella sezione principale
+      if (signature.naturalnessScore !== null && signature.naturalnessScore !== undefined) {
+        doc.text(`Indice di naturalezza: ${(signature.naturalnessScore * 100).toFixed(1)}%`);
+      }
+      
       doc.text(`Valutazione: ${verdict}`, { fontSize: 14 });
       doc.moveDown(1.5);
       
@@ -1243,6 +1325,173 @@ export function registerSignatureRoutes(appRouter: Router) {
         'LEGENDA PUNTEGGI: 85-100% Autentica, 65-84% Probabile Autentica, 0-64% Sospetta',
         { align: 'center' }
       );
+      
+      // === NUOVE SEZIONI: NATURALEZZA E PROSPETTO FINALE ===
+      
+      // ANALISI DI NATURALEZZA (se disponibile)
+      console.log('[PDF DEBUG] Checking naturalness data:', {
+        naturalnessScore: signature.naturalnessScore,
+        verdict: signature.verdict,
+        verdictExplanation: signature.verdictExplanation?.substring(0, 50) + '...'
+      });
+      
+      if (signature.naturalnessScore !== null && signature.naturalnessScore !== undefined) {
+        console.log('[PDF DEBUG] Adding naturalness section');
+        doc.addPage();
+        doc.fontSize(16).text('ANALISI DI NATURALEZZA (ANTI-DISSIMULAZIONE)', { underline: true, align: 'center' });
+        doc.moveDown(0.5);
+        
+        doc.fontSize(12).text(`Indice di Naturalezza: ${(signature.naturalnessScore * 100).toFixed(1)}%`, { underline: true });
+        doc.moveDown(0.3);
+        
+        if (signature.verdict) {
+          doc.fontSize(12).text(`Verdetto: ${signature.verdict}`, { underline: true });
+          doc.moveDown(0.3);
+        }
+        
+        if (signature.confidenceLevel) {
+          const confidencePercent = signature.confidenceLevel < 1 ? signature.confidenceLevel * 100 : signature.confidenceLevel;
+          doc.fontSize(12).text(`Livello di Confidenza: ${confidencePercent.toFixed(1)}%`, { underline: true });
+          doc.moveDown(0.3);
+        }
+        
+        if (signature.verdictExplanation) {
+          doc.fontSize(12).text('Interpretazione Professionale:', { underline: true });
+          doc.moveDown(0.3);
+          doc.fontSize(10).text(signature.verdictExplanation, { align: 'justify' });
+          doc.moveDown(0.5);
+        }
+        
+        // === GRAFICO DI NATURALEZZA ===
+        console.log('[PDF DEBUG] Checking if naturalness chart exists for signature', signature.id, 'Chart available:', !!signature.naturalnessChart);
+        if (signature.naturalnessChart && signature.naturalnessChart.length > 0) {
+          console.log('[PDF DEBUG] Adding naturalness chart to PDF');
+          doc.fontSize(12).text('GRAFICO DI COMPARAZIONE NATURALEZZA', { underline: true, align: 'center' });
+          doc.moveDown(0.3);
+          
+          try {
+            // Debug: controlla formato del base64
+            console.log('[PDF DEBUG] Chart data format:', signature.naturalnessChart.substring(0, 50) + '...');
+            console.log('[PDF DEBUG] Chart data length:', signature.naturalnessChart.length);
+            
+            // Pulisci il base64 e convertilo in buffer
+            const base64Data = signature.naturalnessChart.replace(/^data:image\/[a-z]+;base64,/, '');
+            const chartBuffer = Buffer.from(base64Data, 'base64');
+            
+            console.log('[PDF DEBUG] Buffer created, size:', chartBuffer.length);
+            
+            doc.image(chartBuffer, {
+              fit: [450, 300],
+              align: 'center',
+              valign: 'center'
+            });
+            doc.moveDown(0.5);
+            console.log('[PDF DEBUG] Naturalness chart successfully added to PDF');
+          } catch (chartError) {
+            console.error('[PDF DEBUG] Error adding naturalness chart:', chartError);
+            doc.fontSize(10).text('[Errore nel caricamento del grafico di naturalezza]', { align: 'center' });
+            doc.moveDown(0.3);
+          }
+        } else {
+          console.log('[PDF DEBUG] No naturalness chart available for signature', signature.id);
+          doc.fontSize(10).text('[Grafico di naturalezza in fase di generazione - riprovare dopo il completamento dell\'analisi]', { align: 'center', style: 'italic' });
+          doc.moveDown(0.3);
+        }
+        
+        // Spiegazione tecnica
+        doc.fontSize(10).text(
+          "L'Indice di Naturalezza combina tre parametri avanzati: Fluidità dei tratti (coordinazione motoria), " +
+          "Consistenza della Pressione (controllo dell'intensità), e Coordinazione Generale (regolarità delle curve). " +
+          "Valori bassi possono indicare falsificazione, mentre valori intermedi possono suggerire dissimulazione autentica.",
+          { align: 'justify' }
+        );
+        doc.moveDown(1);
+      } else {
+        console.log('[PDF DEBUG] Naturalness section SKIPPED - no data available');
+      }
+      
+      // PROSPETTO FINALE DELL'ANALISI
+      console.log('[PDF DEBUG] Adding final analysis section');
+      doc.addPage();
+      doc.fontSize(16).text('PROSPETTO FINALE DELL\'ANALISI', { underline: true, align: 'center' });
+      doc.moveDown(1);
+      
+      // Riassunto dei risultati
+      doc.fontSize(14).text('RIASSUNTO DEI RISULTATI', { underline: true });
+      doc.moveDown(0.3);
+      
+      doc.fontSize(12);
+      const numPercentageScore = typeof percentageScore === 'string' ? parseFloat(percentageScore) : percentageScore;
+      doc.text(`Punteggio di Somiglianza: ${numPercentageScore.toFixed(1)}%`);
+      
+      if (signature.naturalnessScore !== null && signature.naturalnessScore !== undefined) {
+        doc.text(`Indice di Naturalezza: ${(signature.naturalnessScore * 100).toFixed(1)}%`);
+        if (signature.verdict) {
+          doc.text(`Verdetto Finale: ${signature.verdict}`);
+        }
+        
+        // === DETTAGLIO PARAMETRI DI NATURALEZZA ===
+        doc.moveDown(0.5);
+        doc.fontSize(12).text('DETTAGLIO PARAMETRI DI NATURALEZZA:', { underline: true });
+        doc.moveDown(0.3);
+        doc.fontSize(10);
+        
+        // Estrai i parametri di naturalezza dai dati della firma
+        if (signatureParams && referenceParams) {
+          try {
+            const sigFluidityScore = signatureParams.FluidityScore || 0;
+            const sigPressureConsistency = signatureParams.PressureConsistency || 0;
+            const sigCoordinationIndex = signatureParams.CoordinationIndex || 0;
+            
+            const refFluidityScore = referenceParams.FluidityScore || 0;
+            const refPressureConsistency = referenceParams.PressureConsistency || 0;
+            const refCoordinationIndex = referenceParams.CoordinationIndex || 0;
+            
+            doc.text(`• Fluidità dei Tratti: Firma in Verifica ${(sigFluidityScore * 100).toFixed(1)}% vs Riferimento ${(refFluidityScore * 100).toFixed(1)}%`);
+            doc.text(`• Consistenza della Pressione: Firma in Verifica ${(sigPressureConsistency * 100).toFixed(1)}% vs Riferimento ${(refPressureConsistency * 100).toFixed(1)}%`);
+            doc.text(`• Coordinazione Generale: Firma in Verifica ${(sigCoordinationIndex * 100).toFixed(1)}% vs Riferimento ${(refCoordinationIndex * 100).toFixed(1)}%`);
+            
+            console.log('[PDF DEBUG] Added naturalness parameter details to final section');
+          } catch (paramError) {
+            console.error('[PDF DEBUG] Error extracting naturalness parameters:', paramError);
+            doc.text('• Parametri dettagliati non disponibili nella sessione corrente');
+          }
+        } else {
+          doc.text('• Parametri dettagliati non disponibili - rigenerare l\'analisi per visualizzarli');
+        }
+      }
+      doc.moveDown(1);
+      
+      // Raccomandazioni professionali
+      doc.fontSize(14).text('RACCOMANDAZIONI PROFESSIONALI', { underline: true });
+      doc.moveDown(0.3);
+      
+      doc.fontSize(11);
+      const naturalnessPercent = signature.naturalnessScore ? signature.naturalnessScore * 100 : null;
+      
+      if (numPercentageScore >= 85) {
+        doc.text('RACCOMANDAZIONE: La firma presenta caratteristiche fortemente compatibili con l\'autenticità. I parametri analizzati supportano l\'ipotesi di genuinità.', { align: 'justify' });
+      } else if (numPercentageScore >= 65) {
+        if (naturalnessPercent && naturalnessPercent >= 80) {
+          doc.text('ATTENZIONE: Possibile dissimulazione autentica rilevata. La combinazione di somiglianza moderata con alta naturalezza suggerisce un tentativo volontario dell\'autore di modificare il proprio stile. Richiedere ulteriori verifiche documentali e campioni di confronto.', { align: 'justify' });
+        } else {
+          doc.text('ATTENZIONE: Somiglianza moderata rilevata. Necessaria analisi approfondita da parte di un esperto grafologo forense per valutare il contesto e le circostanze di scrittura.', { align: 'justify' });
+        }
+      } else {
+        doc.text('ALLERTA: Bassa compatibilità parametrica rilevata. Forte sospetto di non autenticità. Si raccomanda perizia grafologica forense professionale e ulteriori indagini investigative.', { align: 'justify' });
+      }
+      
+      doc.moveDown(1);
+      
+      // Note legali finali
+      doc.fontSize(9).fillColor('gray').text(
+        'IMPORTANTE: Queste raccomandazioni si basano su algoritmi di analisi computazionale avanzata. ' +
+        'Per decisioni definitive in ambito legale, forense o investigativo, è sempre necessario consultare ' +
+        'un esperto grafologo certificato che possa valutare elementi contestuali non rilevabili automaticamente.',
+        { align: 'justify' }
+      );
+      doc.fillColor('black');
+      doc.moveDown(1);
       
       // Footer
       doc.moveDown(2);
