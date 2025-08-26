@@ -1017,6 +1017,138 @@ generateInterpretation();
     except Exception as ai_error:
         print(f"⚠️ Errore setup interpretazione AI per PDF: {ai_error}", file=sys.stderr)
     
+    # === NUOVE SEZIONI INSERITE SUBITO DOPO INTERPRETAZIONE AI ===
+    
+    # SEZIONE 1: ANALISI DI NATURALEZZA
+    print("[DEBUG PDF] Aggiungendo sezione Analisi della Naturalezza DOPO AI", file=sys.stderr)
+    elements.append(Paragraph("Analisi della Naturalezza", heading1_style))
+    elements.append(Spacer(1, 6))
+    
+    # Dati di naturalezza
+    naturalness_verifica = verifica_data.get('naturalnessScore', verifica_data.get('NaturalnessIndex', 0))
+    naturalness_comp = comp_data.get('naturalnessScore', comp_data.get('NaturalnessIndex', 0))
+    fluidity_verifica = verifica_data.get('fluidityScore', verifica_data.get('FluidityScore', 0))
+    fluidity_comp = comp_data.get('fluidityScore', comp_data.get('FluidityScore', 0))
+    pressure_consistency_verifica = verifica_data.get('pressureConsistency', verifica_data.get('PressureConsistency', 0))
+    pressure_consistency_comp = comp_data.get('pressureConsistency', comp_data.get('PressureConsistency', 0))
+    coordination_verifica = verifica_data.get('coordinationIndex', verifica_data.get('CoordinationIndex', 0))
+    coordination_comp = comp_data.get('coordinationIndex', comp_data.get('CoordinationIndex', 0))
+    
+    naturalness_text = f"""
+    La naturalezza rappresenta quanto la scrittura appare spontanea e fluida, considerando la fluidità del tratto, 
+    la consistenza della pressione e l'indice di coordinamento motorio.
+    
+    <b>Firma da verificare:</b>
+    • Naturalezza complessiva: {naturalness_verifica:.1f}%
+    • Fluidità del tratto: {fluidity_verifica:.1f}%
+    • Consistenza pressione: {pressure_consistency_verifica:.1f}%
+    • Coordinamento motorio: {coordination_verifica:.1f}%
+    
+    <b>Firma di riferimento:</b>
+    • Naturalezza complessiva: {naturalness_comp:.1f}%
+    • Fluidità del tratto: {fluidity_comp:.1f}%
+    • Consistenza pressione: {pressure_consistency_comp:.1f}%
+    • Coordinamento motorio: {coordination_comp:.1f}%
+    
+    <b>Differenza naturalezza:</b> {abs(naturalness_verifica - naturalness_comp):.1f}%
+    """
+    
+    elements.append(Paragraph(naturalness_text, normal_style))
+    elements.append(Spacer(1, 12))
+    
+    # SEZIONE 2: PROSPETTO FINALE
+    print("[DEBUG PDF] Aggiungendo sezione Prospetto Finale DOPO AI", file=sys.stderr)
+    elements.append(Paragraph("Prospetto Finale dell'Analisi", heading1_style))
+    elements.append(Spacer(1, 6))
+    
+    # Calcola il verdetto finale  
+    similarity_raw = verifica_data.get('similarity', 0)
+    if isinstance(similarity_raw, (int, float)):
+        similarity_percentage = similarity_raw * 100 if similarity_raw <= 1 else similarity_raw
+    else:
+        similarity_percentage = 0
+    
+    verdict = "Non determinato"
+    verdict_color = colors.gray
+    verdict_icon = "⚪"
+    
+    if similarity_percentage >= 85 and naturalness_verifica >= 80:
+        verdict = "Autentica"
+        verdict_color = colors.green
+        verdict_icon = "✅"
+    elif similarity_percentage >= 65 and naturalness_verifica >= 60:
+        verdict = "Probabilmente Autentica"
+        verdict_color = colors.HexColor('#28a745')
+        verdict_icon = "🟢"
+    elif similarity_percentage < 55 and naturalness_verifica >= 80:
+        verdict = "Sospetta"
+        verdict_color = colors.orange
+        verdict_icon = "🟠"
+    elif similarity_percentage < 65 and naturalness_verifica < 60:
+        verdict = "Probabilmente Falsa"
+        verdict_color = colors.red
+        verdict_icon = "🔴"
+    else:
+        verdict = "Incerta"
+        verdict_color = colors.gray
+        verdict_icon = "⚪"
+    
+    # Usa il verdetto dal case_info se disponibile
+    if case_info and 'verdict' in case_info:
+        verdict = case_info['verdict']
+    
+    # Stile per il prospetto finale
+    final_verdict_style = ParagraphStyle(
+        'FinalVerdictStyle',
+        fontName='Helvetica-Bold',
+        fontSize=14,
+        leading=18,
+        alignment=1,  # Centrato
+        spaceAfter=12,
+        textColor=verdict_color,
+        borderColor=verdict_color,
+        borderWidth=2,
+        borderPadding=12,
+        backColor=colors.HexColor('#f8f9fa')
+    )
+    
+    # Prospetto finale
+    elements.append(Paragraph(f"{verdict_icon} <b>ESITO FINALE: {verdict.upper()}</b>", final_verdict_style))
+    elements.append(Spacer(1, 12))
+    
+    # Dettagli numerici
+    elements.append(Paragraph("Risultati numerici dell'analisi:", heading2_style))
+    elements.append(Spacer(1, 6))
+    
+    results_text = f"""
+    <b>• Similarità visiva (SSIM):</b> {similarity_percentage:.1f}%
+    
+    <b>• Naturalezza della scrittura:</b> {naturalness_verifica:.1f}%
+    
+    <b>• Compatibilità parametrica:</b> {verifica_data.get('compatibilityScore', 0):.1f}%
+    
+    <b>• Livello di confidenza:</b> {verifica_data.get('confidenceLevel', 0):.1f}%
+    
+    <b>Soglie di riferimento:</b>
+    • Autentica: Similarità ≥ 85% + Naturalezza ≥ 80%
+    • Probabilmente Autentica: Similarità ≥ 65% + Naturalezza ≥ 60%
+    • Sospetta: Similarità < 55% + Naturalezza ≥ 80%
+    • Probabilmente Falsa: Similarità < 65% + Naturalezza < 60%
+    """
+    
+    elements.append(Paragraph(results_text, normal_style))
+    elements.append(Spacer(1, 12))
+    
+    # Note conclusive
+    elements.append(Paragraph("Note:", heading2_style))
+    note_text = """
+    Questa analisi è stata condotta utilizzando algoritmi avanzati di computer vision e analisi grafologica. 
+    I risultati devono essere sempre interpretati da un esperto grafologo qualificato per una valutazione 
+    definitiva in ambito forense o legale.
+    """
+    elements.append(Paragraph(note_text, normal_style))
+    elements.append(Spacer(1, 20))
+    
     # Analisi tecnica (sezione originale)
     elements.append(Paragraph("Analisi Tecnica", heading1_style))
     elements.append(Spacer(1, 6))
@@ -1135,8 +1267,12 @@ generateInterpretation();
     elements.append(Paragraph("Prospetto Finale dell'Analisi", heading1_style))
     elements.append(Spacer(1, 6))
     
-    # Calcola il verdetto finale
-    similarity_percentage = verifica_data.get('similarity', 0) * 100 if verifica_data.get('similarity', 0) <= 1 else verifica_data.get('similarity', 0)
+    # Calcola il verdetto finale  
+    similarity_raw = verifica_data.get('similarity', 0)
+    if isinstance(similarity_raw, (int, float)):
+        similarity_percentage = similarity_raw * 100 if similarity_raw <= 1 else similarity_raw
+    else:
+        similarity_percentage = 0
     
     verdict = "Non determinato"
     verdict_color = colors.gray
