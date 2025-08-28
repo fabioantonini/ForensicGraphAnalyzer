@@ -831,10 +831,10 @@ export function registerSignatureRoutes(appRouter: Router) {
         doc.moveDown(0.3);
         doc.fontSize(10);
         
-        // Calcola dimensioni in pixel dalle dimensioni reali + pixels_per_mm
+        // Usa le dimensioni originali dell'immagine invece di ricostruirle matematicamente
         const sigPixelsPerMm = signatureParams.pixels_per_mm || 1;
-        const sigWidthPx = Math.round(sigWidth * sigPixelsPerMm);
-        const sigHeightPx = Math.round(sigHeight * sigPixelsPerMm);
+        const sigWidthPx = signatureParams.original_width || Math.round(sigWidth * sigPixelsPerMm);
+        const sigHeightPx = signatureParams.original_height || Math.round(sigHeight * sigPixelsPerMm);
         
         doc.text(`• Dimensioni: ${sigWidthPx}x${sigHeightPx} px`);
         doc.text(`• Dimensioni reali: ${formatNumber(sigWidth, 1)}x${formatNumber(sigHeight, 1)} mm`);
@@ -890,10 +890,10 @@ export function registerSignatureRoutes(appRouter: Router) {
         doc.moveDown(0.3);
         doc.fontSize(10);
         
-        // Calcola dimensioni in pixel dalle dimensioni reali + pixels_per_mm
+        // Usa le dimensioni originali dell'immagine invece di ricostruirle matematicamente
         const refPixelsPerMm = referenceParams.pixels_per_mm || 1;
-        const refWidthPx = Math.round(refWidth * refPixelsPerMm);
-        const refHeightPx = Math.round(refHeight * refPixelsPerMm);
+        const refWidthPx = referenceParams.original_width || Math.round(refWidth * refPixelsPerMm);
+        const refHeightPx = referenceParams.original_height || Math.round(refHeight * refPixelsPerMm);
         
         doc.text(`• Dimensioni: ${refWidthPx}x${refHeightPx} px`);
         doc.text(`• Dimensioni reali: ${formatNumber(refWidth, 1)}x${formatNumber(refHeight, 1)} mm`);
