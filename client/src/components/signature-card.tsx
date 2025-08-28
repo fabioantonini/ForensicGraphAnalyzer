@@ -306,13 +306,20 @@ export function SignatureCard({
             )}
             
             <div className="flex flex-col gap-1 ml-1">
-              {/* Rimosso il controllo DPI - ora utilizziamo solo le dimensioni reali inserite dall'utente */}
-              
+              {/* Dimensioni reali inserite dall'utente */}
               {signature.realWidth && signature.realHeight && (
                 <span className="text-xs text-gray-600">
                   <span title={t('signatures.dimensionsInfo', 'Dimensioni reali della firma (inserite dall\'utente)')}>
-                    {/* Mostra le dimensioni reali inserite dall'utente */}
-                    {(signature.realWidth / 10).toFixed(1)} × {(signature.realHeight / 10).toFixed(1)} cm
+                    📏 {(signature.realWidth / 10).toFixed(1)} × {(signature.realHeight / 10).toFixed(1)} cm
+                  </span>
+                </span>
+              )}
+              
+              {/* Dimensioni in pixel dell'immagine processata */}
+              {signature.parameters?.original_width && signature.parameters?.original_height && (
+                <span className="text-xs text-blue-600">
+                  <span title={t('signatures.pixelDimensionsInfo', 'Dimensioni in pixel dell\'immagine processata (post auto-crop se applicato)')}>
+                    🖼️ {signature.parameters.original_width} × {signature.parameters.original_height} px
                   </span>
                 </span>
               )}
