@@ -2068,7 +2068,30 @@ def analyze_signature_with_dimensions(image_path, real_width_mm, real_height_mm)
             'FluidityScore': fluidity_score,          # Punteggio di fluidità (0-100)
             'PressureConsistency': pressure_consistency,  # Consistenza della pressione (0-100)
             'CoordinationIndex': coordination_index,   # Indice di coordinazione (0-100)  
-            'NaturalnessIndex': naturalness_index      # Indice di naturalezza finale (0-100)
+            'NaturalnessIndex': naturalness_index,     # Indice di naturalezza finale (0-100)
+            
+            # ==============================================
+            # VALORI PRE-FORMATTATI PER IL DISPLAY PDF
+            # ==============================================
+            'display': {
+                'dimensions_px': f"{original_width}x{original_height} px",
+                'dimensions_mm': f"{real_width_mm:.1f}x{real_height_mm:.1f} mm",
+                'pressure_mean': f"{pressure_mean:.1f}",
+                'pressure_std': f"{pressure_std:.2f}",
+                'proportion': f"{proportion:.3f}",
+                'inclination': f"{inclination:.1f}°",
+                'curvature': f"{curvature:.3f}",
+                'velocity': f"{velocity:.2f}/5",
+                'asola_size': f"{avg_asola_size_mm:.2f} mm²",
+                'spacing': f"{avg_spacing_mm:.2f} mm",
+                'overlap_ratio': f"{overlap_ratio * 100:.1f}%",
+                'letter_connections': f"{letter_connections:.2f}",
+                'baseline_std': f"{baseline_std_mm:.2f} mm",
+                'fluidity_score': f"{fluidity_score:.1f}%",
+                'pressure_consistency': f"{pressure_consistency:.1f}%",
+                'coordination_index': f"{coordination_index:.1f}%",
+                'naturalness_index': f"{naturalness_index:.1f}%"
+            }
         }
             
         return result

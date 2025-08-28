@@ -836,30 +836,30 @@ export function registerSignatureRoutes(appRouter: Router) {
         const sigWidthPx = signatureParams.original_width || Math.round(sigWidth * sigPixelsPerMm);
         const sigHeightPx = signatureParams.original_height || Math.round(sigHeight * sigPixelsPerMm);
         
-        doc.text(`• Dimensioni: ${sigWidthPx}x${sigHeightPx} px`);
-        doc.text(`• Dimensioni reali: ${formatNumber(sigWidth, 1)}x${formatNumber(sigHeight, 1)} mm`);
+        doc.text(`• Dimensioni: ${signatureParams.display?.dimensions_px || `${sigWidthPx}x${sigHeightPx} px`}`);
+        doc.text(`• Dimensioni reali: ${signatureParams.display?.dimensions_mm || `${formatNumber(sigWidth, 1)}x${formatNumber(sigHeight, 1)} mm`}`);
         
         // Parametri disponibili dal JSON
         if (signatureParams.PressureMean !== undefined) {
-          doc.text(`• Intensità pixel media: ${formatNumber(signatureParams.PressureMean, 1)} (0=nero/alta pressione, 255=bianco/bassa pressione)`);
+          doc.text(`• Intensità pixel media: ${signatureParams.display?.pressure_mean || formatNumber(signatureParams.PressureMean, 1)} (0=nero/alta pressione, 255=bianco/bassa pressione)`);
         }
         if (signatureParams.PressureStd !== undefined) {
-          doc.text(`• Varianza spessore: ${formatNumber(signatureParams.PressureStd, 2)}`);
+          doc.text(`• Varianza spessore: ${signatureParams.display?.pressure_std || formatNumber(signatureParams.PressureStd, 2)}`);
         }
         if (signatureParams.Proportion !== undefined) {
-          doc.text(`• Proporzione: ${formatNumber(signatureParams.Proportion, 3)}`);
+          doc.text(`• Proporzione: ${signatureParams.display?.proportion || formatNumber(signatureParams.Proportion, 3)}`);
         }
         if (signatureParams.Inclination !== undefined) {
-          doc.text(`• Inclinazione: ${formatNumber(signatureParams.Inclination, 1)}°`);
+          doc.text(`• Inclinazione: ${signatureParams.display?.inclination || formatNumber(signatureParams.Inclination, 1) + '°'}`);
         }
         if (signatureParams.PressureStd !== undefined) {
           doc.text(`• Deviazione intensità: ${formatNumber(signatureParams.PressureStd, 1)}`);
         }
         if (signatureParams.AvgCurvature !== undefined) {
-          doc.text(`• Curvatura media: ${formatNumber(signatureParams.AvgCurvature, 3)}`);
+          doc.text(`• Curvatura media: ${signatureParams.display?.curvature || formatNumber(signatureParams.AvgCurvature, 3)}`);
         }
         if (signatureParams.Velocity !== undefined) {
-          doc.text(`• Velocità scrittura: ${formatNumber(signatureParams.Velocity, 2)}/5`);
+          doc.text(`• Velocità scrittura: ${signatureParams.display?.velocity || formatNumber(signatureParams.Velocity, 2) + '/5'}`);
         }
         if (signatureParams.WritingStyle !== undefined) {
           doc.text(`• Stile scrittura: ${signatureParams.WritingStyle}`);
@@ -868,19 +868,19 @@ export function registerSignatureRoutes(appRouter: Router) {
           doc.text(`• Leggibilità: ${signatureParams.Readability}`);
         }
         if (signatureParams.AvgAsolaSize !== undefined) {
-          doc.text(`• Dimensione asole medie: ${formatNumber(signatureParams.AvgAsolaSize, 2)} mm²`);
+          doc.text(`• Dimensione asole medie: ${signatureParams.display?.asola_size || formatNumber(signatureParams.AvgAsolaSize, 2) + ' mm²'}`);
         }
         if (signatureParams.AvgSpacing !== undefined) {
-          doc.text(`• Spaziatura media: ${formatNumber(signatureParams.AvgSpacing, 2)} mm`);
+          doc.text(`• Spaziatura media: ${signatureParams.display?.spacing || formatNumber(signatureParams.AvgSpacing, 2) + ' mm'}`);
         }
         if (signatureParams.OverlapRatio !== undefined) {
-          doc.text(`• Rapporto sovrapposizione: ${formatNumber(signatureParams.OverlapRatio * 100, 1)}%`);
+          doc.text(`• Rapporto sovrapposizione: ${signatureParams.display?.overlap_ratio || formatNumber(signatureParams.OverlapRatio * 100, 1) + '%'}`);
         }
         if (signatureParams.LetterConnections !== undefined) {
-          doc.text(`• Connessioni lettere: ${formatNumber(signatureParams.LetterConnections, 2)}`);
+          doc.text(`• Connessioni lettere: ${signatureParams.display?.letter_connections || formatNumber(signatureParams.LetterConnections, 2)}`);
         }
         if (signatureParams.BaselineStdMm !== undefined) {
-          doc.text(`• Deviazione baseline: ${formatNumber(signatureParams.BaselineStdMm, 2)} mm`);
+          doc.text(`• Deviazione baseline: ${signatureParams.display?.baseline_std || formatNumber(signatureParams.BaselineStdMm, 2) + ' mm'}`);
         }
         
         doc.moveDown(1);
@@ -895,30 +895,30 @@ export function registerSignatureRoutes(appRouter: Router) {
         const refWidthPx = referenceParams.original_width || Math.round(refWidth * refPixelsPerMm);
         const refHeightPx = referenceParams.original_height || Math.round(refHeight * refPixelsPerMm);
         
-        doc.text(`• Dimensioni: ${refWidthPx}x${refHeightPx} px`);
-        doc.text(`• Dimensioni reali: ${formatNumber(refWidth, 1)}x${formatNumber(refHeight, 1)} mm`);
+        doc.text(`• Dimensioni: ${referenceParams.display?.dimensions_px || `${refWidthPx}x${refHeightPx} px`}`);
+        doc.text(`• Dimensioni reali: ${referenceParams.display?.dimensions_mm || `${formatNumber(refWidth, 1)}x${formatNumber(refHeight, 1)} mm`}`);
         
         // Parametri disponibili dal JSON
         if (referenceParams.PressureMean !== undefined) {
-          doc.text(`• Intensità pixel media: ${formatNumber(referenceParams.PressureMean, 1)} (0=nero/alta pressione, 255=bianco/bassa pressione)`);
+          doc.text(`• Intensità pixel media: ${referenceParams.display?.pressure_mean || formatNumber(referenceParams.PressureMean, 1)} (0=nero/alta pressione, 255=bianco/bassa pressione)`);
         }
         if (referenceParams.PressureStd !== undefined) {
-          doc.text(`• Varianza spessore: ${formatNumber(referenceParams.PressureStd, 2)}`);
+          doc.text(`• Varianza spessore: ${referenceParams.display?.pressure_std || formatNumber(referenceParams.PressureStd, 2)}`);
         }
         if (referenceParams.Proportion !== undefined) {
-          doc.text(`• Proporzione: ${formatNumber(referenceParams.Proportion, 3)}`);
+          doc.text(`• Proporzione: ${referenceParams.display?.proportion || formatNumber(referenceParams.Proportion, 3)}`);
         }
         if (referenceParams.Inclination !== undefined) {
-          doc.text(`• Inclinazione: ${formatNumber(referenceParams.Inclination, 1)}°`);
+          doc.text(`• Inclinazione: ${referenceParams.display?.inclination || formatNumber(referenceParams.Inclination, 1) + '°'}`);
         }
         if (referenceParams.PressureStd !== undefined) {
           doc.text(`• Deviazione intensità: ${formatNumber(referenceParams.PressureStd, 1)}`);
         }
         if (referenceParams.AvgCurvature !== undefined) {
-          doc.text(`• Curvatura media: ${formatNumber(referenceParams.AvgCurvature, 3)}`);
+          doc.text(`• Curvatura media: ${referenceParams.display?.curvature || formatNumber(referenceParams.AvgCurvature, 3)}`);
         }
         if (referenceParams.Velocity !== undefined) {
-          doc.text(`• Velocità scrittura: ${formatNumber(referenceParams.Velocity, 0)}/5`);
+          doc.text(`• Velocità scrittura: ${referenceParams.display?.velocity || formatNumber(referenceParams.Velocity, 0) + '/5'}`);
         }
         if (referenceParams.WritingStyle !== undefined) {
           doc.text(`• Stile scrittura: ${referenceParams.WritingStyle}`);
@@ -927,19 +927,19 @@ export function registerSignatureRoutes(appRouter: Router) {
           doc.text(`• Leggibilità: ${referenceParams.Readability}`);
         }
         if (referenceParams.AvgAsolaSize !== undefined) {
-          doc.text(`• Dimensione asole medie: ${formatNumber(referenceParams.AvgAsolaSize, 2)} mm²`);
+          doc.text(`• Dimensione asole medie: ${referenceParams.display?.asola_size || formatNumber(referenceParams.AvgAsolaSize, 2) + ' mm²'}`);
         }
         if (referenceParams.AvgSpacing !== undefined) {
-          doc.text(`• Spaziatura media: ${formatNumber(referenceParams.AvgSpacing, 2)} mm`);
+          doc.text(`• Spaziatura media: ${referenceParams.display?.spacing || formatNumber(referenceParams.AvgSpacing, 2) + ' mm'}`);
         }
         if (referenceParams.OverlapRatio !== undefined) {
-          doc.text(`• Rapporto sovrapposizione: ${formatNumber(referenceParams.OverlapRatio * 100, 1)}%`);
+          doc.text(`• Rapporto sovrapposizione: ${referenceParams.display?.overlap_ratio || formatNumber(referenceParams.OverlapRatio * 100, 1) + '%'}`);
         }
         if (referenceParams.LetterConnections !== undefined) {
-          doc.text(`• Connessioni lettere: ${formatNumber(referenceParams.LetterConnections, 2)}`);
+          doc.text(`• Connessioni lettere: ${referenceParams.display?.letter_connections || formatNumber(referenceParams.LetterConnections, 2)}`);
         }
         if (referenceParams.BaselineStdMm !== undefined) {
-          doc.text(`• Deviazione baseline: ${formatNumber(referenceParams.BaselineStdMm, 2)} mm`);
+          doc.text(`• Deviazione baseline: ${referenceParams.display?.baseline_std || formatNumber(referenceParams.BaselineStdMm, 2) + ' mm'}`);
         }
         
         doc.moveDown(1.5);
