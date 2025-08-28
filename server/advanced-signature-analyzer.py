@@ -807,8 +807,9 @@ def generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, simi
             height_mm = data.get('real_height_mm', data.get('Dimensions', (0, 0))[1] if isinstance(data.get('Dimensions'), tuple) else 0)
         
         pixels_per_mm = data.get('pixels_per_mm', 1)
-        width_px = int(width_mm * pixels_per_mm) if width_mm and pixels_per_mm else 0
-        height_px = int(height_mm * pixels_per_mm) if height_mm and pixels_per_mm else 0
+        # Usa le dimensioni originali dell'immagine invece di ricostruirle matematicamente
+        width_px = data.get('original_width', int(width_mm * pixels_per_mm) if width_mm and pixels_per_mm else 0)
+        height_px = data.get('original_height', int(height_mm * pixels_per_mm) if height_mm and pixels_per_mm else 0)
         
         # Lista parametri formattata
         param_lines = [
@@ -2042,6 +2043,8 @@ def analyze_signature_with_dimensions(image_path, real_width_mm, real_height_mm)
             'real_width_mm': real_width_mm,
             'real_height_mm': real_height_mm,
             'pixels_per_mm': pixels_per_mm,
+            'original_width': original_width,
+            'original_height': original_height,
             'Proportion': proportion,
             'Inclination': inclination,
             'PressureMean': pressure_mean,
