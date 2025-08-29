@@ -495,10 +495,10 @@ def create_comparison_chart(verifica_data, comp_data):
         valore_v = verifica_data.get(parametri_numerici[i], 0)
         valore_c = comp_data.get(parametri_numerici[i], 0)
         
-        # Se entrambi i valori sono 0, assegna 0% (nessun dato disponibile)
+        # Se entrambi i valori sono 0, assegna 50% (nessun dato disponibile)
         if valore_v == 0 and valore_c == 0:
-            print(f"[WARNING] Parametro {parametro_nome} non trovato nei dati - valore_v: {valore_v}, valore_c: {valore_c}", file=sys.stderr)
-            compatibilita_percentuale.append(0)
+            print(f"[WARNING] Parametro {parametri_numerici[i]} non trovato nei dati - valore_v: {valore_v}, valore_c: {valore_c}", file=sys.stderr)
+            compatibilita_percentuale.append(50)  # Compatibilità neutra per dati mancanti
             continue
             
         # USA LA STESSA LOGICA INTELLIGENTE DEL FRONTEND per la compatibilità
@@ -513,7 +513,7 @@ def create_comparison_chart(verifica_data, comp_data):
             elif diff <= 0.20:
                 compatibilita = 70
             else:
-                compatibilita = 50
+                compatibilita = max(20, 70 - (diff * 100))  # Graduale invece di fisso 50%
         else:
             # Per altri parametri, usa soglie relative
             valore_max = max(abs(valore_v), abs(valore_c))
@@ -537,7 +537,7 @@ def create_comparison_chart(verifica_data, comp_data):
         compatibilita_percentuale.append(compatibilita)
 
     # Crea l'immagine del grafico - dimensioni più grandi per tutti i parametri
-    fig = Figure(figsize=(12, max(8, len(parametri_numerici) * 0.5)))
+    fig = Figure(figsize=(14, max(10, len(parametri_numerici) * 0.6)))
     ax = fig.add_subplot(111)
     
     bars = ax.barh(etichette, compatibilita_percentuale, color='skyblue')

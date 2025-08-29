@@ -1313,7 +1313,8 @@ export function registerSignatureRoutes(appRouter: Router) {
           // Crea un'immagine temporanea dal base64
           const chartBuffer = Buffer.from(signature.comparisonChart, 'base64');
           doc.image(chartBuffer, {
-            width: 500,
+            width: 520,
+            height: 300,
             align: 'center'
           });
           doc.moveDown(1);
