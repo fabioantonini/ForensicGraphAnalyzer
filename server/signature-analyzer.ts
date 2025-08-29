@@ -157,6 +157,9 @@ export class SignatureAnalyzer {
       };
       
       console.log(`[ANALYZER] Analisi completata con ${Object.keys(finalParameters).length} parametri`);
+      console.log(`[DEBUG-PARAMS] inclination:`, finalParameters.inclination);
+      console.log(`[DEBUG-PARAMS] sharpCorners:`, finalParameters.sharpCorners);
+      console.log(`[DEBUG-PARAMS] loopPoints:`, finalParameters.loopPoints);
       return finalParameters;
     } catch (error: any) {
       console.error(`[ANALYZER] Errore nell'analisi della firma ${imagePath}:`, error);
