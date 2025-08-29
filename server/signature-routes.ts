@@ -1623,7 +1623,11 @@ async function processSignatureParameters(signatureId: number): Promise<void> {
       id: updatedSignature?.id,
       processingStatus: updatedSignature?.processingStatus,
       hasAnalysisReport: !!updatedSignature?.analysisReport,
-      analysisReportLength: updatedSignature?.analysisReport?.length
+      analysisReportLength: updatedSignature?.analysisReport?.length,
+      hasParameters: !!updatedSignature?.parameters,
+      parametersCount: updatedSignature?.parameters ? Object.keys(updatedSignature.parameters).length : 0,
+      realWidth: updatedSignature?.realWidthMm,
+      realHeight: updatedSignature?.realHeightMm
     });
     
     console.log(`[PROCESS PARAMS] Elaborazione completata per firma ${signatureId}`);

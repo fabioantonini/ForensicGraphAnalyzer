@@ -1387,11 +1387,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateSignatureParameters(id: number, parameters: SignatureParameters): Promise<Signature> {
+    console.log(`[STORAGE] updateSignatureParameters per firma ${id}: ${Object.keys(parameters).length} parametri`);
     const [signature] = await db
       .update(signatures)
       .set({ parameters })
       .where(eq(signatures.id, id))
       .returning();
+    console.log(`[STORAGE] Parameters salvati correttamente per firma ${id}: hasParams=${!!signature.parameters}`);
     return signature;
   }
 
