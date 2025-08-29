@@ -1376,7 +1376,19 @@ export default function SignaturesPage() {
                                         {classicParams.map(param => {
                                           const refValue = normalizedReferenceData[param.key];
                                           const verifyValue = reportData[param.key];
-                                          if (refValue === undefined || verifyValue === undefined) return null;
+                                          
+                                          // DEBUG DETTAGLIATO
+                                          console.log(`[PARAM DEBUG] ${param.key}:`, {
+                                            refValue,
+                                            verifyValue,
+                                            refUndefined: refValue === undefined,
+                                            verifyUndefined: verifyValue === undefined
+                                          });
+                                          
+                                          if (refValue === undefined || verifyValue === undefined) {
+                                            console.log(`[PARAM DEBUG] SKIPPING ${param.key} - ref:${refValue} verify:${verifyValue}`);
+                                            return null;
+                                          }
                                           
                                           // Calcola compatibilità con logica migliorata per valori piccoli
                                           const diff = Math.abs(refValue - verifyValue);
