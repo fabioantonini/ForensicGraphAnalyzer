@@ -598,7 +598,7 @@ export function registerSignatureRoutes(appRouter: Router) {
       // Ottieni tutte le firme da verificare completate
       const verificationSignatures = await storage.getProjectSignatures(projectId, false);
       const completedVerifications = verificationSignatures.filter(
-        sig => sig.processingStatus === 'completed' && sig.analysisReport && sig.comparisonResult
+        sig => sig.processingStatus === 'completed' && sig.parameters && sig.comparisonResult
       );
       
       if (completedVerifications.length === 0) {
@@ -610,7 +610,7 @@ export function registerSignatureRoutes(appRouter: Router) {
       // Ottieni le firme di riferimento completate
       const referenceSignatures = await storage.getProjectSignatures(projectId, true);
       const completedReferences = referenceSignatures.filter(
-        sig => sig.processingStatus === 'completed' && sig.analysisReport
+        sig => sig.processingStatus === 'completed' && sig.parameters
       );
       
       if (completedReferences.length === 0) {
@@ -766,7 +766,7 @@ export function registerSignatureRoutes(appRouter: Router) {
       
       // Ottieni la firma di riferimento per l'analisi AI
       const referenceSignatures = await storage.getProjectSignatures(signature.projectId, true);
-      const referenceSignature = referenceSignatures.find(ref => ref.processingStatus === 'completed' && ref.analysisReport);
+      const referenceSignature = referenceSignatures.find(ref => ref.processingStatus === 'completed' && ref.parameters);
       
       // Parse dei parametri dalle analysisReport
       let signatureParams = null;
