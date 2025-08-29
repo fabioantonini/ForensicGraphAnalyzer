@@ -96,6 +96,8 @@ export class SignatureAnalyzer {
       
       // === FASE 3: INTEGRAZIONE DEI RISULTATI ===
       console.log(`[ANALYZER] Integrazione parametri esistenti + avanzati`);
+      console.log(`[DEBUG] spatialDistribution:`, existingAnalysis.spatialDistribution);
+      console.log(`[DEBUG] featurePoints:`, existingAnalysis.featurePoints);
       
       // Combina i parametri esistenti con quelli avanzati
       const finalParameters = {
