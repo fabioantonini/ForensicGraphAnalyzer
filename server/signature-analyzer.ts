@@ -80,7 +80,6 @@ export class SignatureAnalyzer {
       
       try {
         const pythonCommand = `python3 server/advanced-signature-analyzer.py analyze "${imagePath}" ${realWidthMm} ${realHeightMm}`;
-        console.log(`[ANALYZER] Comando Python: ${pythonCommand}`);
         const result = execSync(pythonCommand, { 
           encoding: 'utf-8',
           timeout: 30000, // 30 secondi timeout
@@ -112,25 +111,30 @@ export class SignatureAnalyzer {
           heightMm: realHeightMm
         },
         
-        // Parametri avanzati integrati se disponibili
-        ...(advancedAnalysis.proportion !== undefined && {
-          proportion: advancedAnalysis.proportion,
-          inclination: advancedAnalysis.inclination || 0,
-          pressureMean: advancedAnalysis.pressureMean || 0,
-          pressureStd: advancedAnalysis.pressureStd || 0,
-          avgCurvature: advancedAnalysis.avgCurvature || 0,
-          writingStyle: advancedAnalysis.writingStyle || 'Sconosciuto',
-          readability: advancedAnalysis.readability || 'Media',
-          avgAsolaSize: advancedAnalysis.avgAsolaSize || 0,
-          avgSpacing: advancedAnalysis.avgSpacing || 0,
-          velocity: advancedAnalysis.velocity || 1,
-          overlapRatio: advancedAnalysis.overlapRatio || 0,
-          letterConnections: advancedAnalysis.letterConnections || 1,
-          baselineStdMm: advancedAnalysis.baselineStdMm || 0,
-          // Parametri mancanti aggiunti
-          pressureDeviation: advancedAnalysis.pressureStd || 0, // map pressureStd to pressureDeviation  
-          connectedComponents: advancedAnalysis.connectedComponents || 1,
-          strokeComplexity: advancedAnalysis.strokeComplexity || 0
+        // Parametri avanzati integrati con nomi corretti dal Python
+        ...(advancedAnalysis.Proportion !== undefined && {
+          proportion: advancedAnalysis.Proportion,
+          inclination: advancedAnalysis.Inclination || 0,
+          pressureMean: advancedAnalysis.PressureMean || 0,
+          pressureStd: advancedAnalysis.PressureStd || 0,
+          avgCurvature: advancedAnalysis.AvgCurvature || 0,
+          writingStyle: advancedAnalysis.WritingStyle || 'Sconosciuto',
+          readability: advancedAnalysis.Readability || 'Media',
+          avgAsolaSize: advancedAnalysis.AvgAsolaSize || 0,
+          avgSpacing: advancedAnalysis.AvgSpacing || 0,
+          velocity: advancedAnalysis.Velocity || 1,
+          overlapRatio: advancedAnalysis.OverlapRatio || 0,
+          letterConnections: advancedAnalysis.LetterConnections || 1,
+          baselineStdMm: advancedAnalysis.BaselineStdMm || 0,
+          // Parametri mancanti aggiunti con nomi corretti
+          pressureDeviation: advancedAnalysis.PressureStd || 0,
+          connectedComponents: advancedAnalysis.ConnectedComponents || 1,
+          strokeComplexity: advancedAnalysis.StrokeComplexity || 0,
+          // Nuovi parametri di naturalezza
+          fluidityScore: advancedAnalysis.FluidityScore || 0,
+          pressureConsistency: advancedAnalysis.PressureConsistency || 0,
+          coordinationIndex: advancedAnalysis.CoordinationIndex || 0,
+          naturalnessIndex: advancedAnalysis.NaturalnessIndex || 0
         })
       };
       
