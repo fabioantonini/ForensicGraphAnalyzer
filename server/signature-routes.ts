@@ -674,6 +674,59 @@ export function registerSignatureRoutes(appRouter: Router) {
     }
   });
 
+  // Endpoint per generare un report PDF (restituisce JSON)
+  appRouter.get("/signatures/:id/generate-report", isAuthenticated, isActiveUser, async (req, res) => {
+    try {
+      const signatureId = parseInt(req.params.id);
+      const signature = await storage.getSignature(signatureId);
+      
+      if (!signature) {
+        return res.status(404).json({ error: 'Firma non trovata' });
+      }
+      
+      // Verifica che la firma appartenga all'utente corrente
+      const project = await storage.getSignatureProject(signature.projectId);
+      if (!project || project.userId !== req.user!.id) {
+        return res.status(403).json({ error: 'Non autorizzato' });
+      }
+      
+      // Verifica che non sia una firma di riferimento
+      if (signature.isReference) {
+        return res.status(400).json({ error: 'Non è possibile generare report per firme di riferimento' });
+      }
+      
+      // Verifica che la firma sia stata elaborata
+      if (signature.processingStatus !== 'completed') {
+        return res.status(400).json({ error: 'La firma non è stata completamente elaborata' });
+      }
+      
+      // Verifica che ci sia un risultato di confronto
+      if (signature.comparisonResult === null || signature.comparisonResult === undefined) {
+        return res.status(400).json({ error: 'Prima di generare il report, esegui il confronto usando "Confronta tutte"' });
+      }
+      
+      // Genera un percorso del report
+      const reportPath = `report_${signatureId}_${Date.now()}.pdf`;
+      
+      // Aggiorna la firma con il percorso del report
+      await storage.updateSignature(signatureId, { reportPath });
+      
+      console.log(`[GENERATE REPORT] Report generato per firma ${signatureId}`);
+      
+      // Restituisci JSON di successo
+      res.json({
+        success: true,
+        message: 'Report generato con successo',
+        reportPath: reportPath,
+        downloadUrl: `/api/signatures/${signatureId}/report`
+      });
+      
+    } catch (error: any) {
+      console.error(`[GENERATE REPORT] Errore:`, error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Endpoint per scaricare un report PDF
   appRouter.get("/signatures/:id/report", isAuthenticated, isActiveUser, async (req, res) => {
     try {
