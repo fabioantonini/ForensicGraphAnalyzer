@@ -111,11 +111,11 @@ export class SignatureAnalyzer {
           heightMm: realHeightMm
         },
         
-        // MAPPING CORRETTO dall'analisi esistente per i campi che mostrano N/A
+        // MAPPING CORRETTO con i nomi esatti che l'UI si aspetta
         centerX: existingAnalysis.spatialDistribution?.centerOfMassX || 0,
         centerY: existingAnalysis.spatialDistribution?.centerOfMassY || 0,
-        asole: existingAnalysis.featurePoints?.loopPoints || 0,
-        angoliNetti: existingAnalysis.featurePoints?.crossPoints || 0,
+        loopPoints: existingAnalysis.featurePoints?.loopPoints || 0,
+        sharpCorners: existingAnalysis.featurePoints?.crossPoints || 0,
         density: existingAnalysis.spatialDistribution?.inkDensity || 0,
         
         // Parametri avanzati integrati con nomi corretti dal Python
