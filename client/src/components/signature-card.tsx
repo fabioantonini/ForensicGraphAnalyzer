@@ -436,24 +436,6 @@ export function SignatureCard({
                         </div>
                       </div>
                       
-                      {/* Distribuzione spaziale */}
-                      <div className="col-span-2">
-                        <h4 className="font-medium">{t('signatures.parameters.spatialDistribution', 'Distribuzione spaziale')}</h4>
-                        <div className="grid grid-cols-3 gap-2 mt-1 text-sm">
-                          <div className="flex justify-between">
-                            <span>{t('signatures.parameters.density', 'Densità')}:</span>
-                            <span>{signature.parameters.overlapRatio ? (signature.parameters.overlapRatio * 100).toFixed(1) : 'N/A'}%</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>{t('signatures.parameters.centerX', 'Centro X')}:</span>
-                            <span>{signature.parameters.centerX ? (signature.parameters.centerX * 100).toFixed(1) + '%' : 'N/A'}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>{t('signatures.parameters.centerY', 'Centro Y')}:</span>
-                            <span>{signature.parameters.centerY ? (signature.parameters.centerY * 100).toFixed(1) + '%' : 'N/A'}</span>
-                          </div>
-                        </div>
-                      </div>
                       
                       {/* Punti caratteristici */}
                       <div className="col-span-2">
