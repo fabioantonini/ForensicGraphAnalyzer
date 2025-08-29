@@ -307,10 +307,10 @@ export function SignatureCard({
             
             <div className="flex flex-col gap-1 ml-1">
               {/* Dimensioni reali inserite dall'utente */}
-              {signature.realWidth && signature.realHeight && (
+              {(signature.realWidth || signature.realWidthMm) && (signature.realHeight || signature.realHeightMm) && (
                 <span className="text-xs text-gray-600">
                   <span title={t('signatures.dimensionsInfo', 'Dimensioni reali della firma (inserite dall\'utente)')}>
-                    📏 {(signature.realWidth / 10).toFixed(1)} × {(signature.realHeight / 10).toFixed(1)} cm
+                    📏 {((signature.realWidth || signature.realWidthMm) / 10).toFixed(1)} × {((signature.realHeight || signature.realHeightMm) / 10).toFixed(1)} cm
                   </span>
                 </span>
               )}
