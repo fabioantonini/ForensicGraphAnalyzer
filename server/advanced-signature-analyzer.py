@@ -1961,6 +1961,7 @@ def analyze_signature_with_dimensions(image_path, real_width_mm, real_height_mm)
     Returns:
         Dizionario con i parametri estratti dalla firma
     """
+    print(f"[DEBUG-START] Inizio analyze_signature_with_dimensions: {image_path}", file=sys.stderr)
     try:
         # Carica l'immagine
         image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
