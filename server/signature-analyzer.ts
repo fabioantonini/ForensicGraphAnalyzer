@@ -79,7 +79,7 @@ export class SignatureAnalyzer {
       let advancedAnalysis: any = {};
       
       try {
-        const pythonCommand = `python3 advanced_signature_analyzer.py analyze "${imagePath}" ${realWidthMm} ${realHeightMm}`;
+        const pythonCommand = `python3 server/advanced-signature-analyzer.py analyze "${imagePath}" ${realWidthMm} ${realHeightMm}`;
         console.log(`[ANALYZER] Comando Python: ${pythonCommand}`);
         const result = execSync(pythonCommand, { 
           encoding: 'utf-8',
