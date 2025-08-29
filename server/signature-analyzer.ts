@@ -277,57 +277,187 @@ export class SignatureAnalyzer {
   }
 
   /**
-   * Misura gli spessori del tratto usando distance transform
+   * Misura gli spessori reali del tratto usando distance transform
+   * Calcola la distanza dal centro del tratto alle pareti per ottenere lo spessore effettivo
    */
   private static measureStrokeWidths(binaryMatrix: boolean[][]) {
     const height = binaryMatrix.length;
     const width = binaryMatrix[0].length;
+    
+    // Calcola distance transform per trovare la distanza da ogni pixel ai bordi
+    const distanceMap = this.computeDistanceTransform(binaryMatrix);
+    
+    // Trova lo scheletro del tratto (medial axis)
+    const skeleton = this.extractSkeleton(binaryMatrix, distanceMap);
+    
+    // Estrai le misure di spessore dai punti dello scheletro
     const widths: number[] = [];
+    const maxSamples = 5000;
     
-    // Limita il numero di campioni per evitare overflow dello stack
-    const maxSamples = 10000;
-    const step = Math.max(1, Math.floor(height / 100)); // Campiona massimo 100 righe
-    
-    for (let y = 0; y < height && widths.length < maxSamples; y += step) {
-      let currentWidth = 0;
-      for (let x = 0; x < width; x++) {
-        if (binaryMatrix[y][x]) {
-          currentWidth++;
-        } else {
-          if (currentWidth > 0) {
-            widths.push(currentWidth);
-            currentWidth = 0;
-            if (widths.length >= maxSamples) break;
+    for (let y = 0; y < height && widths.length < maxSamples; y++) {
+      for (let x = 0; x < width && widths.length < maxSamples; x++) {
+        if (skeleton[y][x]) {
+          // Lo spessore in questo punto è 2 volte la distanza al bordo
+          const thickness = distanceMap[y][x] * 2;
+          if (thickness > 0.5) { // Filtro rumore (spessori sotto 0.5 pixel)
+            widths.push(thickness);
           }
         }
       }
-      if (currentWidth > 0 && widths.length < maxSamples) {
-        widths.push(currentWidth);
+    }
+    
+    if (widths.length === 0) {
+      // Fallback: calcolo approssimativo basato su area
+      const strokeArea = this.calculateStrokeArea(binaryMatrix);
+      const strokeLength = this.estimateStrokeLength(binaryMatrix);
+      const avgWidth = strokeLength > 0 ? strokeArea / strokeLength : 1;
+      return { min: avgWidth * 0.7, max: avgWidth * 1.3, mean: avgWidth, variance: 0.1 };
+    }
+    
+    // Filtra outliers (rimuove il 5% più alto e più basso)
+    widths.sort((a, b) => a - b);
+    const startIdx = Math.floor(widths.length * 0.05);
+    const endIdx = Math.floor(widths.length * 0.95);
+    const filteredWidths = widths.slice(startIdx, endIdx);
+    
+    if (filteredWidths.length === 0) {
+      return { min: 1, max: 1, mean: 1, variance: 0 };
+    }
+    
+    const min = filteredWidths[0];
+    const max = filteredWidths[filteredWidths.length - 1];
+    const sum = filteredWidths.reduce((a, b) => a + b, 0);
+    const mean = sum / filteredWidths.length;
+    
+    const varianceSum = filteredWidths.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0);
+    const variance = varianceSum / filteredWidths.length;
+    
+    return { min, max, mean, variance };
+  }
+
+  /**
+   * Calcola la distance transform (distanza euclidea ai bordi)
+   */
+  private static computeDistanceTransform(binaryMatrix: boolean[][]): number[][] {
+    const height = binaryMatrix.length;
+    const width = binaryMatrix[0].length;
+    const distanceMap: number[][] = Array.from({ length: height }, () => Array(width).fill(0));
+    
+    // Inizializza: INF per pixel di inchiostro, 0 per background
+    const INF = Math.max(width, height);
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        distanceMap[y][x] = binaryMatrix[y][x] ? INF : 0;
       }
     }
     
-    if (widths.length === 0) return { min: 1, max: 1, mean: 1, variance: 0 };
-    
-    // Uso iterativo per trovare min/max invece di spread operator per evitare stack overflow
-    let min = widths[0];
-    let max = widths[0];
-    let sum = 0;
-    
-    for (const width of widths) {
-      if (width < min) min = width;
-      if (width > max) max = width;
-      sum += width;
+    // Forward pass (da top-left a bottom-right)
+    for (let y = 1; y < height - 1; y++) {
+      for (let x = 1; x < width - 1; x++) {
+        if (binaryMatrix[y][x]) {
+          distanceMap[y][x] = Math.min(
+            distanceMap[y][x],
+            distanceMap[y-1][x] + 1,
+            distanceMap[y][x-1] + 1,
+            distanceMap[y-1][x-1] + 1.414,
+            distanceMap[y-1][x+1] + 1.414
+          );
+        }
+      }
     }
     
-    const mean = sum / widths.length;
-    
-    let varianceSum = 0;
-    for (const width of widths) {
-      varianceSum += Math.pow(width - mean, 2);
+    // Backward pass (da bottom-right a top-left)
+    for (let y = height - 2; y > 0; y--) {
+      for (let x = width - 2; x > 0; x--) {
+        if (binaryMatrix[y][x]) {
+          distanceMap[y][x] = Math.min(
+            distanceMap[y][x],
+            distanceMap[y+1][x] + 1,
+            distanceMap[y][x+1] + 1,
+            distanceMap[y+1][x+1] + 1.414,
+            distanceMap[y+1][x-1] + 1.414
+          );
+        }
+      }
     }
-    const variance = varianceSum / widths.length;
     
-    return { min, max, mean, variance };
+    return distanceMap;
+  }
+
+  /**
+   * Estrae lo scheletro del tratto (medial axis)
+   */
+  private static extractSkeleton(binaryMatrix: boolean[][], distanceMap: number[][]): boolean[][] {
+    const height = binaryMatrix.length;
+    const width = binaryMatrix[0].length;
+    const skeleton: boolean[][] = Array.from({ length: height }, () => Array(width).fill(false));
+    
+    for (let y = 1; y < height - 1; y++) {
+      for (let x = 1; x < width - 1; x++) {
+        if (binaryMatrix[y][x] && distanceMap[y][x] > 1) {
+          // Un punto appartiene allo scheletro se è un massimo locale della distance map
+          const currentDist = distanceMap[y][x];
+          let isLocalMax = true;
+          
+          // Controlla i 8 vicini
+          for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+              if (dy === 0 && dx === 0) continue;
+              if (distanceMap[y + dy][x + dx] > currentDist) {
+                isLocalMax = false;
+                break;
+              }
+            }
+            if (!isLocalMax) break;
+          }
+          
+          skeleton[y][x] = isLocalMax;
+        }
+      }
+    }
+    
+    return skeleton;
+  }
+
+  /**
+   * Calcola l'area approssimativa del tratto
+   */
+  private static calculateStrokeArea(binaryMatrix: boolean[][]): number {
+    let area = 0;
+    for (let y = 0; y < binaryMatrix.length; y++) {
+      for (let x = 0; x < binaryMatrix[0].length; x++) {
+        if (binaryMatrix[y][x]) area++;
+      }
+    }
+    return area;
+  }
+
+  /**
+   * Stima la lunghezza del tratto
+   */
+  private static estimateStrokeLength(binaryMatrix: boolean[][]): number {
+    const height = binaryMatrix.length;
+    const width = binaryMatrix[0].length;
+    let length = 0;
+    
+    for (let y = 1; y < height - 1; y++) {
+      for (let x = 1; x < width - 1; x++) {
+        if (binaryMatrix[y][x]) {
+          // Conta connessioni ai vicini
+          let connections = 0;
+          for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+              if (dy === 0 && dx === 0) continue;
+              if (binaryMatrix[y + dy][x + dx]) connections++;
+            }
+          }
+          // Punti con poche connessioni contribuiscono di più alla lunghezza
+          if (connections <= 3) length += 1;
+        }
+      }
+    }
+    
+    return length;
   }
 
   /**
