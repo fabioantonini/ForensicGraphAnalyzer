@@ -1295,13 +1295,10 @@ export function registerSignatureRoutes(appRouter: Router) {
         doc.moveDown(0.5);
         doc.fontSize(10);
         
-        const analysisLines = signature.analysisReport.split('\n');
-        for (const line of analysisLines) {
-          if (line.trim()) {
-            doc.text(line.trim(), { align: 'justify' });
-            doc.moveDown(0.3);
-          }
-        }
+        // Non mostrare il JSON grezzo - i parametri sono già formattati sopra
+        doc.text('I parametri dettagliati sono stati analizzati singolarmente nella sezione precedente.', { align: 'justify' });
+        doc.text('Il confronto quantitativo ha prodotto il punteggio di similarità e l\'indice di naturalezza riportati.', { align: 'justify' });
+        doc.moveDown(0.5);
         doc.moveDown(1);
       }
       
