@@ -598,7 +598,7 @@ export function registerSignatureRoutes(appRouter: Router) {
       // Ottieni tutte le firme da verificare completate
       const verificationSignatures = await storage.getProjectSignatures(projectId, false);
       const completedVerifications = verificationSignatures.filter(
-        sig => sig.processingStatus === 'completed' && sig.parameters && sig.comparisonResult
+        sig => sig.processingStatus === 'completed' && sig.parameters && sig.comparisonResult !== null && sig.comparisonResult !== undefined
       );
       
       if (completedVerifications.length === 0) {
@@ -627,7 +627,7 @@ export function registerSignatureRoutes(appRouter: Router) {
           console.log(`[GENERATE ALL REPORTS] Generazione report per firma ${signature.id}`);
           
           // Verifica che la firma abbia un risultato di confronto
-          if (!signature.comparisonResult || signature.comparisonResult === 0) {
+          if (signature.comparisonResult === null || signature.comparisonResult === undefined) {
             results.push({
               id: signature.id,
               success: false,
