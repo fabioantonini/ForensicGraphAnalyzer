@@ -1212,10 +1212,10 @@ export default function SignaturesPage() {
                             const reportData = JSON.parse(signature.analysisReport);
                             
                             // Usa le firme di riferimento dall'array signatures originale invece che da comparisonResults
-                            const referenceSignatures = signatures.filter((s: any) => s.isReference && s.analysisReport) || [];
+                            const referenceSignatures = signatures.filter((s: any) => s.isReference && s.parameters) || [];
                             
-                            const referenceData = referenceSignatures.length > 0 && referenceSignatures[0].analysisReport 
-                              ? JSON.parse(referenceSignatures[0].analysisReport) : null;
+                            const referenceData = referenceSignatures.length > 0 && referenceSignatures[0].parameters 
+                              ? referenceSignatures[0].parameters : null;
                             
                             if (!reportData || !referenceData) {
                               return null;
