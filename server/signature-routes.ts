@@ -1602,22 +1602,17 @@ async function processSignatureParameters(signatureId: number): Promise<void> {
       console.warn(`[AUTO-CROP] Errore durante ritaglio automatico (continuo con originale):`, cropError);
     }
     
-    // Verifica che le dimensioni reali siano presenti - OBBLIGATORIE
-    if (!signature.realWidthMm || !signature.realHeightMm || signature.realWidthMm <= 0 || signature.realHeightMm <= 0) {
-      throw new Error(`Firma ${signatureId} non ha dimensioni reali valide: ${signature.realWidthMm}x${signature.realHeightMm}mm`);
-    }
-    
-    // Usa l'analizzatore Python per elaborare i parametri con dimensioni reali
-    const parameters = await SignaturePythonAnalyzer.analyzeSignature(
+    // Elabora i parametri usando SignatureAnalyzer (supporta sia con che senza dimensioni reali)
+    const parameters = await SignatureAnalyzer.processSignature(
       originalFilePath, // Usa sempre il file originale (eventualmente sostituito)
-      signature.realWidthMm, 
-      signature.realHeightMm
+      signature.realWidthMm || 0, 
+      signature.realHeightMm || 0
     );
     
-    // Aggiorna la firma con i parametri elaborati e imposta lo stato come completato
-    console.log(`[PROCESS PARAMS] Aggiornamento firma ${signatureId} con status 'completed'`);
+    // Salva i parametri nel campo corretto e imposta lo stato come completato
+    console.log(`[PROCESS PARAMS] Aggiornamento firma ${signatureId} con parametri`);
+    await storage.updateSignatureParameters(signatureId, parameters);
     await storage.updateSignature(signatureId, {
-      analysisReport: JSON.stringify(parameters),
       processingStatus: 'completed'
     });
     console.log(`[PROCESS PARAMS] Status aggiornato con successo per firma ${signatureId}`);
