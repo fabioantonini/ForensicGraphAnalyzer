@@ -183,15 +183,15 @@ export function registerSignatureRoutes(appRouter: Router) {
       // Ottieni tutte le firme di riferimento
       const referenceSignatures = await storage.getProjectSignatures(projectId, true);
       
-      // Filtra le firme di riferimento complete (con analysisReport)
+      // Filtra le firme di riferimento complete (con parameters)
       const completedReferences = referenceSignatures.filter(
-        ref => ref.processingStatus === 'completed' && ref.analysisReport
+        ref => ref.processingStatus === 'completed' && ref.parameters
       );
       
       console.log(`[COMPARE-ALL] Reference signatures found: ${referenceSignatures.length}`);
       console.log(`[COMPARE-ALL] Completed references: ${completedReferences.length}`);
       referenceSignatures.forEach(ref => {
-        console.log(`[COMPARE-ALL] Ref ${ref.id}: status=${ref.processingStatus}, hasAnalysisReport=${!!ref.analysisReport}`);
+        console.log(`[COMPARE-ALL] Ref ${ref.id}: status=${ref.processingStatus}, hasParameters=${!!ref.parameters}`);
       });
       
       if (completedReferences.length === 0) {
@@ -203,15 +203,15 @@ export function registerSignatureRoutes(appRouter: Router) {
       // Ottieni tutte le firme da verificare
       const verificationSignatures = await storage.getProjectSignatures(projectId, false);
       
-      // Filtra le firme da verificare complete (con analysisReport)
+      // Filtra le firme da verificare complete (con parameters)
       const completedVerifications = verificationSignatures.filter(
-        sig => sig.processingStatus === 'completed' && sig.analysisReport
+        sig => sig.processingStatus === 'completed' && sig.parameters
       );
       
       console.log(`[COMPARE-ALL] Verification signatures found: ${verificationSignatures.length}`);
       console.log(`[COMPARE-ALL] Completed verifications: ${completedVerifications.length}`);
       verificationSignatures.forEach(ver => {
-        console.log(`[COMPARE-ALL] Ver ${ver.id}: status=${ver.processingStatus}, hasAnalysisReport=${!!ver.analysisReport}`);
+        console.log(`[COMPARE-ALL] Ver ${ver.id}: status=${ver.processingStatus}, hasParameters=${!!ver.parameters}`);
       });
       
       if (completedVerifications.length === 0) {
