@@ -1217,13 +1217,40 @@ export default function SignaturesPage() {
                             const referenceData = referenceSignatures.length > 0 && referenceSignatures[0].parameters 
                               ? referenceSignatures[0].parameters : null;
                             
-                            // DEBUG: Mostra cosa contengono i dati
-                            console.log('[TABLE DEBUG] reportData keys:', Object.keys(reportData || {}));
-                            console.log('[TABLE DEBUG] referenceData keys:', Object.keys(referenceData || {}));
-                            console.log('[TABLE DEBUG] referenceSignatures found:', referenceSignatures.length);
+                            // NORMALIZZA le chiavi dei parametri per compatibilità
+                            const normalizeKey = (key: string) => {
+                              const keyMap: Record<string, string> = {
+                                'proportion': 'Proportion',
+                                'inclination': 'Inclination', 
+                                'pressureMean': 'PressureMean',
+                                'pressureStd': 'PressureStd',
+                                'avgCurvature': 'AvgCurvature',
+                                'velocity': 'Velocity',
+                                'avgSpacing': 'AvgSpacing',
+                                'avgAsolaSize': 'AvgAsolaSize',
+                                'overlapRatio': 'OverlapRatio',
+                                'letterConnections': 'LetterConnections',
+                                'baselineStdMm': 'BaselineStdMm',
+                                'strokeComplexity': 'StrokeComplexity',
+                                'connectedComponents': 'ConnectedComponents',
+                                'writingStyle': 'WritingStyle',
+                                'readability': 'Readability',
+                                'pressureConsistency': 'PressureConsistency',
+                                'coordinationIndex': 'CoordinationIndex',
+                                'naturalnessIndex': 'NaturalnessIndex',
+                                'fluidityScore': 'FluidityScore'
+                              };
+                              return keyMap[key] || key;
+                            };
                             
-                            if (!reportData || !referenceData) {
-                              console.log('[TABLE DEBUG] Missing data - reportData:', !!reportData, 'referenceData:', !!referenceData);
+                            // Normalizza referenceData per compatibilità
+                            const normalizedReferenceData: Record<string, any> = {};
+                            Object.keys(referenceData).forEach(key => {
+                              const normalizedKey = normalizeKey(key);
+                              normalizedReferenceData[normalizedKey] = referenceData[key];
+                            });
+                            
+                            if (!reportData || !normalizedReferenceData) {
                               return null;
                             }
                             
@@ -1347,7 +1374,7 @@ export default function SignaturesPage() {
                                       </thead>
                                       <tbody>
                                         {classicParams.map(param => {
-                                          const refValue = referenceData[param.key];
+                                          const refValue = normalizedReferenceData[param.key];
                                           const verifyValue = reportData[param.key];
                                           if (refValue === undefined || verifyValue === undefined) return null;
                                           
@@ -1417,7 +1444,7 @@ export default function SignaturesPage() {
                                       </thead>
                                       <tbody>
                                         {naturalnessParams.map(param => {
-                                          const refValue = referenceData[param.key];
+                                          const refValue = normalizedReferenceData[param.key];
                                           const verifyValue = reportData[param.key];
                                           if (refValue === undefined || verifyValue === undefined) return null;
                                           
