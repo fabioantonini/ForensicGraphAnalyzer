@@ -43,7 +43,7 @@ interface SignatureCardProps {
   onDelete?: (id: number) => void;
 }
 
-export default function SignatureCard({ 
+export function SignatureCard({ 
   signature, 
   projectId, 
   showSimilarity = false, 
