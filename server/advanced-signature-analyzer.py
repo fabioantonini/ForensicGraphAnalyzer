@@ -2018,7 +2018,8 @@ def analyze_signature_with_dimensions(image_path, real_width_mm, real_height_mm)
         # Non richiamare analyze_signature che usa DPI - implementa l'analisi diretta
         
         # Calcola tutti i parametri usando le dimensioni reali calibrate
-        proportion = actual_width_mm / actual_height_mm if actual_height_mm > 0 else 1
+        # IMPORTANTE: Usa le dimensioni reali dell'immagine (calibrate dall'utente), non del bounding box della firma
+        proportion = real_width_mm / real_height_mm if real_height_mm > 0 else 1
         
         # Calcola l'inclinazione usando l'algoritmo robusto
         print(f"[DEBUG] Chiamando calculate_signature_inclination con contorno principale", file=sys.stderr)
