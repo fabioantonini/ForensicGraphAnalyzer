@@ -410,7 +410,7 @@ def create_naturalness_chart(verifica_data, comp_data):
         ax.axis('off')
         
         buffer = io.BytesIO()
-        fig.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
+        fig.savefig(buffer, format='png', dpi=150, bbox_inches='tight', facecolor='white')
         buffer.seek(0)
         image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
         buffer.close()
@@ -553,9 +553,9 @@ def create_comparison_chart(verifica_data, comp_data):
                 f'{compatibilita_percentuale[i]:.1f}%', 
                 va='center')
     
-    # Converti il grafico in base64
+    # Converti il grafico in base64 - DPI più alto per migliore qualità
     buf = BytesIO()
-    fig.savefig(buf, format='png', dpi=100)
+    fig.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='white')
     buf.seek(0)
     img_base64 = base64.b64encode(buf.read()).decode('utf-8')
     

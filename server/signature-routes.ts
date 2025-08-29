@@ -1313,8 +1313,7 @@ export function registerSignatureRoutes(appRouter: Router) {
           // Crea un'immagine temporanea dal base64
           const chartBuffer = Buffer.from(signature.comparisonChart, 'base64');
           doc.image(chartBuffer, {
-            width: 520,
-            height: 300,
+            width: 500,
             align: 'center'
           });
           doc.moveDown(1);
@@ -1432,9 +1431,8 @@ export function registerSignatureRoutes(appRouter: Router) {
             console.log('[PDF DEBUG] Buffer created, size:', chartBuffer.length);
             
             doc.image(chartBuffer, {
-              fit: [450, 300],
-              align: 'center',
-              valign: 'center'
+              width: 500,
+              align: 'center'
             });
             doc.moveDown(0.5);
             console.log('[PDF DEBUG] Naturalness chart successfully added to PDF');
