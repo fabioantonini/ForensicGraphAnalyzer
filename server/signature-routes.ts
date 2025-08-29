@@ -191,7 +191,7 @@ export function registerSignatureRoutes(appRouter: Router) {
       console.log(`[COMPARE-ALL] Reference signatures found: ${referenceSignatures.length}`);
       console.log(`[COMPARE-ALL] Completed references: ${completedReferences.length}`);
       referenceSignatures.forEach(ref => {
-        console.log(`[COMPARE-ALL] Ref ${ref.id}: status=${ref.processingStatus}, hasParameters=${!!ref.parameters}`);
+        console.log(`[COMPARE-ALL] Ref ${ref.id}: status=${ref.processingStatus}, hasParameters=${!!ref.parameters}, parametersCount=${ref.parameters ? Object.keys(ref.parameters).length : 0}`);
       });
       
       if (completedReferences.length === 0) {
@@ -211,7 +211,7 @@ export function registerSignatureRoutes(appRouter: Router) {
       console.log(`[COMPARE-ALL] Verification signatures found: ${verificationSignatures.length}`);
       console.log(`[COMPARE-ALL] Completed verifications: ${completedVerifications.length}`);
       verificationSignatures.forEach(ver => {
-        console.log(`[COMPARE-ALL] Ver ${ver.id}: status=${ver.processingStatus}, hasParameters=${!!ver.parameters}`);
+        console.log(`[COMPARE-ALL] Ver ${ver.id}: status=${ver.processingStatus}, hasParameters=${!!ver.parameters}, parametersCount=${ver.parameters ? Object.keys(ver.parameters).length : 0}`);
       });
       
       if (completedVerifications.length === 0) {
