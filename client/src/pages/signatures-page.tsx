@@ -167,7 +167,7 @@ export default function SignaturesPage() {
       
       // Verifica se qualcuna delle firme ha parametri (elaborazione completata)
       const hasProcessedSignatures = data.some(
-        sig => sig.analysisReport && sig.analysisReport.trim() !== ''
+        sig => sig.parameters && Object.keys(sig.parameters).length > 0
       );
       
       if (!hasProcessedSignatures && data.length > 0) {
@@ -1040,9 +1040,9 @@ export default function SignaturesPage() {
                 {/* Messaggio se ci sono firme da verificare in elaborazione */}
                 {Array.isArray(signatures) && 
                   signatures.length > 0 && 
-                  signatures.some((s: any) => !s.isReference && !s.analysisReport) && (
+                  signatures.some((s: any) => !s.isReference && !s.parameters) && (
                     <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-800 text-sm">
-                      Ci sono {signatures.filter((s: any) => !s.isReference && !s.analysisReport).length} firme da verificare in elaborazione. 
+                      Ci sono {signatures.filter((s: any) => !s.isReference && !s.parameters).length} firme da verificare in elaborazione. 
                       Attendere il completamento per visualizzare il risultato della verifica.
                     </div>
                   )

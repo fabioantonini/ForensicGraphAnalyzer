@@ -230,9 +230,9 @@ export function SignatureCard({
   
   // Verifica se dobbiamo mostrare il pulsante per il rapporto di analisi dettagliato
   const hasAdvancedDetails = showSimilarity && 
-    signature.analysisReport && signature.analysisReport.trim() !== '' && 
+    signature.parameters && Object.keys(signature.parameters).length > 0 && 
     signature.comparisonResult !== null && 
-    (signature.comparisonChart || signature.analysisReport || signature.parameters);
+    (signature.comparisonChart || signature.parameters);
     
 
   
@@ -262,7 +262,7 @@ export function SignatureCard({
                 <Eye className="h-4 w-4" />
               </Button>
             )}
-            {signature.analysisReport && signature.analysisReport.trim() !== '' && (
+            {signature.parameters && Object.keys(signature.parameters).length > 0 && (
               <Button
                 variant="outline"
                 size="icon"
