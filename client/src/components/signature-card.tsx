@@ -423,7 +423,7 @@ export function SignatureCard({
                         <div className="space-y-2 mt-1 text-sm">
                           <div className="flex justify-between">
                             <span>{t('signatures.parameters.sharpCorners', 'Angoli netti')}:</span>
-                            <span>N/A</span>
+                            <span>{signature.parameters.sharpCorners || 'N/A'}</span>
                           </div>
                           <div className="flex justify-between">
                             <span>{t('signatures.parameters.smoothCurves', 'Curve fluide')}:</span>
@@ -446,11 +446,11 @@ export function SignatureCard({
                           </div>
                           <div className="flex justify-between">
                             <span>{t('signatures.parameters.centerX', 'Centro X')}:</span>
-                            <span>N/A</span>
+                            <span>{signature.parameters.centerX ? (signature.parameters.centerX * 100).toFixed(1) + '%' : 'N/A'}</span>
                           </div>
                           <div className="flex justify-between">
                             <span>{t('signatures.parameters.centerY', 'Centro Y')}:</span>
-                            <span>N/A</span>
+                            <span>{signature.parameters.centerY ? (signature.parameters.centerY * 100).toFixed(1) + '%' : 'N/A'}</span>
                           </div>
                         </div>
                       </div>
@@ -461,7 +461,7 @@ export function SignatureCard({
                         <div className="grid grid-cols-2 gap-2 mt-1 text-sm">
                           <div className="flex justify-between">
                             <span>{t('signatures.parameters.loopPoints', 'Asole')}:</span>
-                            <span>{signature.parameters.avgAsolaSize > 0 ? signature.parameters.avgAsolaSize.toFixed(2) + 'mm²' : 'N/A'}</span>
+                            <span>{signature.parameters.loopPoints || 'N/A'}</span>
                           </div>
                           <div className="flex justify-between">
                             <span>{t('signatures.parameters.crossPoints', 'Incroci')}:</span>
