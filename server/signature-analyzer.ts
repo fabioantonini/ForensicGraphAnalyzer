@@ -104,6 +104,8 @@ export class SignatureAnalyzer {
         // Aggiungi le dimensioni originali dell'immagine
         width: pixelWidth,
         height: pixelHeight,
+        original_width: pixelWidth,
+        original_height: pixelHeight,
         realDimensions: {
           widthMm: realWidthMm,
           heightMm: realHeightMm

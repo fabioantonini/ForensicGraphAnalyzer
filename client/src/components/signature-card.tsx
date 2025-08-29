@@ -306,11 +306,6 @@ export function SignatureCard({
             )}
             
             <div className="flex flex-col gap-1 ml-1">
-              {/* DEBUG - mostra sempre le informazioni disponibili per debugging */}
-              <div className="text-xs text-gray-500 italic">
-                Debug: realW={signature.realWidth || 'N/A'}, realH={signature.realHeight || 'N/A'}, params={signature.parameters ? 'present' : 'missing'}, origW={signature.parameters?.original_width || 'N/A'}, origH={signature.parameters?.original_height || 'N/A'}
-              </div>
-              
               {/* Dimensioni reali inserite dall'utente */}
               {signature.realWidth && signature.realHeight && (
                 <span className="text-xs text-gray-600">
