@@ -1603,10 +1603,10 @@ async function processSignatureParameters(signatureId: number): Promise<void> {
     }
     
     // Elabora i parametri usando SignatureAnalyzer (supporta sia con che senza dimensioni reali)
-    const parameters = await SignatureAnalyzer.processSignature(
+    const parameters = await SignatureAnalyzer.extractParameters(
       originalFilePath, // Usa sempre il file originale (eventualmente sostituito)
-      signature.realWidthMm || 0, 
-      signature.realHeightMm || 0
+      signature.realWidthMm || 120, // Default se mancanti
+      signature.realHeightMm || 40   // Default se mancanti
     );
     
     // Salva i parametri nel campo corretto e imposta lo stato come completato
