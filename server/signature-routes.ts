@@ -1622,9 +1622,8 @@ async function processSignatureParameters(signatureId: number): Promise<void> {
     console.log(`[PROCESS PARAMS] Status verificato nel database:`, {
       id: updatedSignature?.id,
       processingStatus: updatedSignature?.processingStatus,
-      hasAnalysisReport: !!updatedSignature?.analysisReport,
-      analysisReportLength: updatedSignature?.analysisReport?.length,
       hasParameters: !!updatedSignature?.parameters,
+      analysisReportLength: updatedSignature?.analysisReport?.length,
       parametersCount: updatedSignature?.parameters ? Object.keys(updatedSignature.parameters).length : 0,
       realWidth: updatedSignature?.realWidthMm,
       realHeight: updatedSignature?.realHeightMm
