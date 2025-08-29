@@ -2202,6 +2202,23 @@ def adapt_parameters_for_json(params):
 
 # Funzione principale per l'esecuzione come script
 if __name__ == "__main__":
+    # Supporto per analisi singola chiamata dal TypeScript
+    if len(sys.argv) >= 4 and sys.argv[1] == "analyze":
+        try:
+            image_path = sys.argv[2]
+            width_mm = float(sys.argv[3])
+            height_mm = float(sys.argv[4])
+            
+            print(f"[PYTHON] Analisi: {image_path} -> {width_mm}x{height_mm}mm", file=sys.stderr)
+            result = analyze_signature_with_dimensions(image_path, width_mm, height_mm)
+            
+            print(f"[PYTHON] Analisi completata con {len(result) if result and 'error' not in result else 0} parametri", file=sys.stderr)
+            print(json.dumps(result))
+            sys.exit(0)
+        except Exception as e:
+            print(f"[ERROR] Errore nell'analisi: {str(e)}", file=sys.stderr)
+            sys.exit(1)
+    
     # Supporto per test di analisi singola con dimensioni
     if len(sys.argv) >= 4 and sys.argv[1] == "--analyze-dimensions":
         try:
