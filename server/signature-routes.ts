@@ -327,12 +327,18 @@ export function registerSignatureRoutes(appRouter: Router) {
             }
 
             // ✅ NUOVO: Salva anche i parametri della firma di riferimento per il PDF
-            if (pythonResult.reference_parameters && !referenceSignature.analysisReport) {
+            console.log(`[DEBUG REF] reference_parameters esistono: ${!!pythonResult.reference_parameters}`);
+            console.log(`[DEBUG REF] referenceSignature.analysisReport esistente: ${!!referenceSignature.analysisReport}`);
+            console.log(`[DEBUG REF] referenceSignature.id: ${referenceSignature.id}`);
+            
+            if (pythonResult.reference_parameters) {
               const referenceAnalysisReport = JSON.stringify(pythonResult.reference_parameters);
               await storage.updateSignature(referenceSignature.id, { 
                 analysisReport: referenceAnalysisReport 
               });
-              console.log(`[COMPARE-ALL] ✅ Salvati parametri JSON per firma di riferimento ${referenceSignature.id} con ${Object.keys(pythonResult.reference_parameters).length} parametri`);
+              console.log(`[COMPARE-ALL] ✅ FORZATO salvataggio parametri JSON per firma di riferimento ${referenceSignature.id} con ${Object.keys(pythonResult.reference_parameters).length} parametri`);
+            } else {
+              console.log(`[COMPARE-ALL] ❌ reference_parameters NON TROVATI in pythonResult`);
             }
             
           } catch (pythonError) {
