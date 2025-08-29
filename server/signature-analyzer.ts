@@ -108,15 +108,13 @@ export class SignatureAnalyzer {
         original_height: pixelHeight,
         realDimensions: {
           widthMm: realWidthMm,
-          heightMm: realHeightMm
+          heightMm: realHeightMm,
+          pixelsPerMm: pixelWidth / realWidthMm
         },
         
         // MAPPING CORRETTO con i nomi esatti che l'UI si aspetta
-        centerX: existingAnalysis.spatialDistribution?.centerOfMassX || 0,
-        centerY: existingAnalysis.spatialDistribution?.centerOfMassY || 0,
         loopPoints: existingAnalysis.featurePoints?.loopPoints || 0,
         sharpCorners: existingAnalysis.featurePoints?.crossPoints || 0,
-        density: existingAnalysis.spatialDistribution?.inkDensity || 0,
         
         // Parametri avanzati integrati con nomi corretti dal Python
         ...(advancedAnalysis.Proportion !== undefined && {
@@ -142,7 +140,20 @@ export class SignatureAnalyzer {
           pressureConsistency: advancedAnalysis.PressureConsistency || 0,
           coordinationIndex: advancedAnalysis.CoordinationIndex || 0,
           naturalnessIndex: advancedAnalysis.NaturalnessIndex || 0
-        })
+        }),
+        
+        // Parametri obbligatori per il tipo SignatureParameters
+        aspectRatio: realWidthMm && realHeightMm ? realWidthMm / realHeightMm : 1.0,
+        imageMetadata: {
+          originalWidth: pixelWidth,
+          originalHeight: pixelHeight,
+          format: 'processed',
+          originalDpi: Math.round(pixelWidth / realWidthMm * 25.4), // Calcola DPI dai mm
+          detectedInkColor: 'black',
+          backgroundNoise: 0.1,
+          imageQuality: 0.8,
+          contrastLevel: 0.7
+        }
       };
       
       console.log(`[ANALYZER] Analisi completata con ${Object.keys(finalParameters).length} parametri`);
@@ -926,13 +937,11 @@ export class SignatureAnalyzer {
       const strokeLengthSim = (maxLength > 0) ? 
         1 - Math.min(1, Math.abs(targetLength - refLength) / maxLength) : 0.5;
       
-      // Similitudine della distribuzione spaziale - con protezione
-      const targetCenterX = targetParameters.spatialDistribution?.centerOfMassX || 0;
-      const targetCenterY = targetParameters.spatialDistribution?.centerOfMassY || 0;
-      const refCenterX = refParams.spatialDistribution?.centerOfMassX || 0;
-      const refCenterY = refParams.spatialDistribution?.centerOfMassY || 0;
-      const spatialDiff = Math.abs(targetCenterX - refCenterX) + Math.abs(targetCenterY - refCenterY);
-      const spatialSim = 1 - Math.min(1, spatialDiff / 2);
+      // Similitudine dell'inclinazione - parametro forense significativo
+      const targetInclination = targetParameters.inclination || 0;
+      const refInclination = refParams.inclination || 0;
+      const inclinationDiff = Math.abs(targetInclination - refInclination);
+      const inclinationSim = 1 - Math.min(1, inclinationDiff / 45); // Normalizza su 45° max
       
       // Similitudine della complessità - con protezione
       const targetComplexity = targetParameters.connectivity?.strokeComplexity || 0;
@@ -950,22 +959,20 @@ export class SignatureAnalyzer {
       const geometricSim = 1 - Math.min(1, Math.abs(targetSlope - refSlope));
       
       // Calcola il punteggio totale (media ponderata basata su importanza forense)
-      let similarity = (
+      let similarity = 
         aspectRatioSim * 0.10 +      // Forma generale
-        strokeWidthSim * 0.20 +      // Spessore tratto (molto importante)
+        strokeWidthSim * 0.25 +      // Spessore tratto (molto importante)
         strokeLengthSim * 0.15 +     // Lunghezza complessiva
-        spatialSim * 0.15 +          // Distribuzione spaziale
+        inclinationSim * 0.20 +      // Inclinazione (parametro forense chiave)
         complexitySim * 0.15 +       // Complessità del movimento
-        featureSim * 0.15 +          // Caratteristiche specifiche
-        geometricSim * 0.10          // Variazioni geometriche
-      );
+        featureSim * 0.15;           // Caratteristiche specifiche
       
       // Protezione finale contro NaN
       if (isNaN(similarity) || !isFinite(similarity)) {
         similarity = 0.5; // Valore neutro se c'è un problema nel calcolo
       }
       
-      console.log(`Similitudine componenti: aspetto=${aspectRatioSim.toFixed(3)}, spessore=${strokeWidthSim.toFixed(3)}, lunghezza=${strokeLengthSim.toFixed(3)}, spaziale=${spatialSim.toFixed(3)}, complessità=${complexitySim.toFixed(3)}, caratteristiche=${featureSim.toFixed(3)}, geometria=${geometricSim.toFixed(3)} -> totale=${similarity.toFixed(3)}`);
+      console.log(`Similitudine componenti: aspetto=${aspectRatioSim.toFixed(3)}, spessore=${strokeWidthSim.toFixed(3)}, lunghezza=${strokeLengthSim.toFixed(3)}, inclinazione=${inclinationSim.toFixed(3)}, complessità=${complexitySim.toFixed(3)}, caratteristiche=${featureSim.toFixed(3)} -> totale=${similarity.toFixed(3)}`);
       
       return similarity;
     });
