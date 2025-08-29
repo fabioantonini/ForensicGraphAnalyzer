@@ -2218,6 +2218,9 @@ if __name__ == "__main__":
             sys.exit(0)
         except Exception as e:
             print(f"[ERROR] Errore nell'analisi: {str(e)}", file=sys.stderr)
+            print(f"[ERROR] Stack trace: {repr(e)}", file=sys.stderr)
+            # Invece di uscire, restituisco un errore JSON
+            print(json.dumps({"error": str(e)}))
             sys.exit(1)
     
     # Supporto per test di analisi singola con dimensioni

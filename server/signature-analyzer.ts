@@ -80,6 +80,7 @@ export class SignatureAnalyzer {
       
       try {
         const pythonCommand = `python3 advanced_signature_analyzer.py analyze "${imagePath}" ${realWidthMm} ${realHeightMm}`;
+        console.log(`[ANALYZER] Comando Python: ${pythonCommand}`);
         const result = execSync(pythonCommand, { 
           encoding: 'utf-8',
           timeout: 30000, // 30 secondi timeout
