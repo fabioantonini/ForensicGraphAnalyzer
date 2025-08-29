@@ -410,7 +410,7 @@ def create_naturalness_chart(verifica_data, comp_data):
         ax.axis('off')
         
         buffer = io.BytesIO()
-        fig.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
+        fig.savefig(buffer, format='png', dpi=150, bbox_inches='tight', facecolor='white')
         buffer.seek(0)
         image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
         buffer.close()
@@ -495,10 +495,10 @@ def create_comparison_chart(verifica_data, comp_data):
         valore_v = verifica_data.get(parametri_numerici[i], 0)
         valore_c = comp_data.get(parametri_numerici[i], 0)
         
-        # Se entrambi i valori sono 0, assegna 0% (nessun dato disponibile)
+        # Se entrambi i valori sono 0, assegna 50% (nessun dato disponibile)
         if valore_v == 0 and valore_c == 0:
-            print(f"[WARNING] Parametro {parametro_nome} non trovato nei dati - valore_v: {valore_v}, valore_c: {valore_c}", file=sys.stderr)
-            compatibilita_percentuale.append(0)
+            print(f"[WARNING] Parametro {parametri_numerici[i]} non trovato nei dati - valore_v: {valore_v}, valore_c: {valore_c}", file=sys.stderr)
+            compatibilita_percentuale.append(50)  # Compatibilità neutra per dati mancanti
             continue
             
         # USA LA STESSA LOGICA INTELLIGENTE DEL FRONTEND per la compatibilità
@@ -513,7 +513,7 @@ def create_comparison_chart(verifica_data, comp_data):
             elif diff <= 0.20:
                 compatibilita = 70
             else:
-                compatibilita = 50
+                compatibilita = max(20, 70 - (diff * 100))  # Graduale invece di fisso 50%
         else:
             # Per altri parametri, usa soglie relative
             valore_max = max(abs(valore_v), abs(valore_c))
@@ -537,7 +537,7 @@ def create_comparison_chart(verifica_data, comp_data):
         compatibilita_percentuale.append(compatibilita)
 
     # Crea l'immagine del grafico - dimensioni più grandi per tutti i parametri
-    fig = Figure(figsize=(12, max(8, len(parametri_numerici) * 0.5)))
+    fig = Figure(figsize=(14, max(10, len(parametri_numerici) * 0.6)))
     ax = fig.add_subplot(111)
     
     bars = ax.barh(etichette, compatibilita_percentuale, color='skyblue')
@@ -553,9 +553,9 @@ def create_comparison_chart(verifica_data, comp_data):
                 f'{compatibilita_percentuale[i]:.1f}%', 
                 va='center')
     
-    # Converti il grafico in base64
+    # Converti il grafico in base64 - DPI più alto per migliore qualità
     buf = BytesIO()
-    fig.savefig(buf, format='png', dpi=100)
+    fig.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='white')
     buf.seek(0)
     img_base64 = base64.b64encode(buf.read()).decode('utf-8')
     
@@ -807,8 +807,9 @@ def generate_pdf_report(verifica_path, comp_path, verifica_data, comp_data, simi
             height_mm = data.get('real_height_mm', data.get('Dimensions', (0, 0))[1] if isinstance(data.get('Dimensions'), tuple) else 0)
         
         pixels_per_mm = data.get('pixels_per_mm', 1)
-        width_px = int(width_mm * pixels_per_mm) if width_mm and pixels_per_mm else 0
-        height_px = int(height_mm * pixels_per_mm) if height_mm and pixels_per_mm else 0
+        # Usa le dimensioni originali dell'immagine invece di ricostruirle matematicamente
+        width_px = data.get('original_width', int(width_mm * pixels_per_mm) if width_mm and pixels_per_mm else 0)
+        height_px = data.get('original_height', int(height_mm * pixels_per_mm) if height_mm and pixels_per_mm else 0)
         
         # Lista parametri formattata
         param_lines = [
@@ -2042,6 +2043,8 @@ def analyze_signature_with_dimensions(image_path, real_width_mm, real_height_mm)
             'real_width_mm': real_width_mm,
             'real_height_mm': real_height_mm,
             'pixels_per_mm': pixels_per_mm,
+            'original_width': original_width,
+            'original_height': original_height,
             'Proportion': proportion,
             'Inclination': inclination,
             'PressureMean': pressure_mean,
@@ -2065,7 +2068,30 @@ def analyze_signature_with_dimensions(image_path, real_width_mm, real_height_mm)
             'FluidityScore': fluidity_score,          # Punteggio di fluidità (0-100)
             'PressureConsistency': pressure_consistency,  # Consistenza della pressione (0-100)
             'CoordinationIndex': coordination_index,   # Indice di coordinazione (0-100)  
-            'NaturalnessIndex': naturalness_index      # Indice di naturalezza finale (0-100)
+            'NaturalnessIndex': naturalness_index,     # Indice di naturalezza finale (0-100)
+            
+            # ==============================================
+            # VALORI PRE-FORMATTATI PER IL DISPLAY PDF
+            # ==============================================
+            'display': {
+                'dimensions_px': f"{original_width}x{original_height} px",
+                'dimensions_mm': f"{real_width_mm:.1f}x{real_height_mm:.1f} mm",
+                'pressure_mean': f"{pressure_mean:.1f}",
+                'pressure_std': f"{pressure_std:.2f}",
+                'proportion': f"{proportion:.3f}",
+                'inclination': f"{inclination:.1f}°",
+                'curvature': f"{curvature:.3f}",
+                'velocity': f"{velocity:.2f}/5",
+                'asola_size': f"{avg_asola_size_mm:.2f} mm²",
+                'spacing': f"{avg_spacing_mm:.2f} mm",
+                'overlap_ratio': f"{overlap_ratio * 100:.1f}%",
+                'letter_connections': f"{letter_connections:.2f}",
+                'baseline_std': f"{baseline_std_mm:.2f} mm",
+                'fluidity_score': f"{fluidity_score:.1f}%",
+                'pressure_consistency': f"{pressure_consistency:.1f}%",
+                'coordination_index': f"{coordination_index:.1f}%",
+                'naturalness_index': f"{naturalness_index:.1f}%"
+            }
         }
             
         return result

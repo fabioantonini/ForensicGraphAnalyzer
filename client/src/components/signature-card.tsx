@@ -1,213 +1,147 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Trash2, Edit2, ZoomIn, ZoomOut, RotateCw, Search, Crop } from "lucide-react";
-import { SignatureImage } from "./signature-image";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { useTranslation } from "react-i18next";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useState, useEffect, useRef } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { SignatureCropper } from "./signature-cropper";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-
-// Schema per la modifica del DPI rimosso - ora utilizziamo solo dimensioni reali inserite dall'utente
+import { Eye, Settings, Trash2, ZoomIn, ZoomOut, RotateCcw, Search } from "lucide-react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+import { SignatureImage } from "./signature-image";
+import CropCalibrationDialog from "./crop-calibration-dialog";
 
 interface SignatureCardProps {
-  signature: any; 
-  onDelete: (id: number) => void;
+  signature: {
+    id: number;
+    filename: string;
+    originalFilename: string;
+    realWidth?: number;
+    realHeight?: number;
+    realWidthMm?: number;
+    realHeightMm?: number;
+    dpi?: number;
+    processingStatus?: string;
+    parameters?: any;
+    comparisonResult?: number;
+    comparisonChart?: string;
+    naturalnessScore?: number;
+    verdict?: string;
+    confidenceLevel?: number;
+    verdictExplanation?: string;
+    reportPath?: string;
+    isReference?: boolean;
+    referenceSignatureFilename?: string;
+    referenceSignatureOriginalFilename?: string;
+    referenceDpi?: number;
+  };
+  projectId?: string;
   showSimilarity?: boolean;
-  projectId?: number;
+  onDelete?: (id: number) => void;
 }
 
 export function SignatureCard({ 
   signature, 
-  onDelete,
-  showSimilarity = false,
-  projectId
+  projectId, 
+  showSimilarity = false, 
+  onDelete 
 }: SignatureCardProps) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
-  const queryClient = useQueryClient();
-  
-  // Mutation per riprocessare firma fallita
-  const reprocessSignature = useMutation({
-    mutationFn: (signatureId: number) => 
-      apiRequest('POST', `/api/signatures/${signatureId}/reprocess`),
-    onSuccess: () => {
-      toast({ title: t('signatures.reprocessStarted', 'Riprocessamento avviato') });
-      queryClient.invalidateQueries({ queryKey: ['signatures', projectId] });
-    },
-    onError: (error: any) => {
-      toast({ 
-        title: t('signatures.reprocessFailed', 'Riprocessamento fallito'), 
-        description: error.message,
-        variant: 'destructive'
-      });
-    }
-  });
 
-  const handleReprocess = () => {
-    reprocessSignature.mutate(signature.id);
-  };
+  // Calcola il punteggio di similarità
+  const similarity = signature.comparisonResult;
   
-  // Rimosso tutto il codice per la gestione del DPI - ora utilizziamo solo dimensioni reali
-  
-  // Function to get status badge color based on processing status
-  const getStatusColor = () => {
-    // Debug rimosso per produzione
-    switch (signature.processingStatus) {
-      case 'completed':
-        return 'bg-green-500'; // Completato
-      case 'failed':
-        return 'bg-red-500'; // Fallito
-      case 'processing':
-      case 'pending':
-      default:
-        return 'bg-yellow-500'; // In elaborazione/attesa
-    }
-  };
-  
-  // Function to get status translation based on processing status
-  const getStatusTranslation = () => {
-    switch (signature.processingStatus) {
-      case 'completed':
-        return t('signatures.completed');
-      case 'failed':
-        return t('signatures.status.failed', 'Fallito');
-      case 'pending':
-        return t('signatures.status.pending', 'In attesa');
-      case 'processing':
-      default:
-        return t('signatures.status.processing', 'In elaborazione');
-    }
-  };
-  
-  // Function to render similarity score con NUOVA CLASSIFICAZIONE INTELLIGENTE
-  const renderSimilarityScore = (comparisonData: any) => {
-    // *** CORREZIONE: Non mostrare nulla se non c'è un confronto valido ***
-    if (!comparisonData) return null;
+  // Verifica se dobbiamo mostrare il pulsante per i parametri dettagliati
+  const hasAdvancedDetails = signature.parameters && Object.keys(signature.parameters).length > 0;
+
+  // Rendering del punteggio di similarità
+  const renderSimilarityScore = ({ similarity, naturalness, verdict, confidence, explanation }: {
+    similarity: number | null | undefined;
+    naturalness?: number | null;
+    verdict?: string | null;
+    confidence?: number | null;
+    explanation?: string | null;
+  }) => {
+    if (similarity === null || similarity === undefined || isNaN(similarity)) return null;
+
+    const score = Math.round(similarity * 100);
     
-    // Supporta sia il vecchio formato (solo score) che il nuovo formato completo
-    let similarity_score: number;
-    let naturalness_score: number | null = null;
-    let verdict: string;
-    let confidence: number | null = null;
-    let explanation: string | null = null;
+    let verdictText = '';
+    let verdictColor = '';
+    let bgColor = '';
     
-    if (typeof comparisonData === 'number') {
-      // Formato vecchio: solo score numerico
-      similarity_score = comparisonData;
-      // *** CORREZIONE: Non mostrare se il punteggio non è valido ***
-      if (isNaN(similarity_score) || similarity_score === null || similarity_score === undefined) {
-        return null;
+    if (verdict) {
+      verdictText = verdict;
+      switch (verdict.toLowerCase()) {
+        case 'autentica':
+        case 'authentic':
+          verdictColor = 'text-green-700';
+          bgColor = 'bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-400';
+          break;
+        case 'probabilmente autentica':
+        case 'probably authentic':
+          verdictColor = 'text-blue-700';
+          bgColor = 'bg-gradient-to-r from-blue-50 to-sky-50 border-l-4 border-blue-400';
+          break;
+        case 'sospetta':
+        case 'suspicious':
+          verdictColor = 'text-red-700';
+          bgColor = 'bg-gradient-to-r from-red-50 to-rose-50 border-l-4 border-red-400';
+          break;
+        default:
+          verdictColor = 'text-gray-700';
+          bgColor = 'bg-gradient-to-r from-gray-50 to-slate-50 border-l-4 border-gray-400';
       }
-      verdict = similarity_score >= 0.85 ? 'Autentica' : 
-                similarity_score >= 0.65 ? 'Probabilmente autentica' : 'Firma non autentica';
     } else {
-      // Nuovo formato: oggetto completo con naturalezza
-      similarity_score = comparisonData.similarity || comparisonData;
-      naturalness_score = comparisonData.naturalness;
-      
-      // *** CORREZIONE: Non mostrare se il punteggio non è valido ***
-      if (isNaN(similarity_score) || similarity_score === null || similarity_score === undefined) {
-        return null;
+      if (score >= 85) {
+        verdictText = t('signatures.verdicts.authentic', 'Autentica');
+        verdictColor = 'text-green-700';
+        bgColor = 'bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-400';
+      } else if (score >= 65) {
+        verdictText = t('signatures.verdicts.probablyAuthentic', 'Probabilmente autentica');
+        verdictColor = 'text-blue-700';
+        bgColor = 'bg-gradient-to-r from-blue-50 to-sky-50 border-l-4 border-blue-400';
+      } else {
+        verdictText = t('signatures.verdicts.suspicious', 'Sospetta');
+        verdictColor = 'text-red-700';
+        bgColor = 'bg-gradient-to-r from-red-50 to-rose-50 border-l-4 border-red-400';
       }
-      
-      // *** CORREZIONE: Non mostrare "Analisi in corso" - solo se c'è un vero verdetto ***
-      verdict = comparisonData.verdict;
-      if (!verdict || verdict === 'Analisi in corso') {
-        return null;
-      }
-      
-      confidence = comparisonData.confidence;
-      explanation = comparisonData.explanation;
     }
-    
-    // Determina colore e icona basato sulla nuova classificazione
-    let color = 'bg-red-500';
-    let icon = '❌';
-    
-    switch (verdict) {
-      case 'Autentica':
-        color = 'bg-green-500';
-        icon = '✅';
-        break;
-      case 'Autentica dissimulata':
-        color = 'bg-blue-500'; 
-        icon = '🔍';
-        break;
-      case 'Probabilmente autentica':
-        color = 'bg-green-400';
-        icon = '✓';
-        break;
-      case 'Possibile copia abile':
-        color = 'bg-orange-500';
-        icon = '⚠️';
-        break;
-      case 'Sospetta':
-        color = 'bg-orange-500';
-        icon = '⚠️';
-        break;
-      case 'Incerta':
-        color = 'bg-gray-500';
-        icon = '❓';
-        break;
-      case 'Probabilmente falsa':
-      default:
-        color = 'bg-red-500';
-        icon = '❌';
-        break;
-    }
-    
+
     return (
-      <div className="mt-2 space-y-2">
-        {/* Punteggio di Similarità */}
-        <div>
-          <p className="text-sm font-medium">
-            {t('signatures.similarityScore', 'Similarità')}: {(similarity_score * 100).toFixed(1)}%
-          </p>
-          <Progress value={similarity_score * 100} className="h-2 mt-1" />
+      <div className={`mt-3 p-3 rounded-lg ${bgColor}`}>
+        <div className="flex justify-between items-center mb-2">
+          <span className={`font-medium text-sm ${verdictColor}`}>
+            {verdictText}
+          </span>
+          <Badge variant="outline" className="text-xs">
+            {t('signatures.similarity', 'Similarità')}: {score}%
+          </Badge>
         </div>
+        <Progress value={score} className="h-2" />
         
-        {/* Indice di Naturalezza (se disponibile) */}
-        {naturalness_score !== null && (
-          <div>
-            <p className="text-sm font-medium text-blue-700">
-              {t('signatures.naturalnessIndex', 'Naturalezza')}: {(naturalness_score * 100).toFixed(1)}%
-            </p>
-            <Progress value={naturalness_score * 100} className="h-2 mt-1 bg-blue-100" />
-            <div className="text-xs text-blue-600 mt-1">
-              {t('signatures.naturalnessDesc', 'Fluidità e coordinazione dei movimenti')}
-            </div>
+        {naturalness && (
+          <div className="mt-2 flex justify-between items-center">
+            <span className="text-xs text-gray-600">
+              {t('signatures.naturalness', 'Naturalezza')}:
+            </span>
+            <span className="text-xs font-medium">
+              {(naturalness * 100).toFixed(1)}%
+            </span>
           </div>
         )}
         
-        {/* Nuova Classificazione Intelligente */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <Badge className={`${color} text-white flex items-center gap-1`}>
-            <span>{icon}</span>
-            <span className="font-medium">{verdict}</span>
+        {confidence !== null && (
+          <Badge variant="outline" className="text-xs">
+            {t('signatures.confidence', 'Confidenza')}: {confidence}%
           </Badge>
-          
-          {/* Livello di Confidenza (se disponibile) */}
-          {confidence !== null && (
-            <Badge variant="outline" className="text-xs">
-              {t('signatures.confidence', 'Confidenza')}: {confidence}%
-            </Badge>
-          )}
-        </div>
+        )}
         
         {/* Interpretazione AI (se disponibile) */}
         {explanation && (
@@ -227,15 +161,7 @@ export function SignatureCard({
       </div>
     );
   };
-  
-  // Verifica se dobbiamo mostrare il pulsante per il rapporto di analisi dettagliato
-  const hasAdvancedDetails = showSimilarity && 
-    signature.analysisReport && signature.analysisReport.trim() !== '' && 
-    signature.comparisonResult !== null && 
-    (signature.comparisonChart || signature.analysisReport || signature.parameters);
-    
 
-  
   return (
     <>
       <Card className="overflow-hidden">
@@ -247,7 +173,6 @@ export function SignatureCard({
             className="w-full h-full"
             dpi={signature.dpi || 300}
             onLineLengthChange={(length) => {
-              // In futuro puoi implementare qui il salvataggio della lunghezza
               console.log("Lunghezza della linea:", length, "cm");
             }}
           />
@@ -262,177 +187,88 @@ export function SignatureCard({
                 <Eye className="h-4 w-4" />
               </Button>
             )}
-            {signature.analysisReport && signature.analysisReport.trim() !== '' && (
+            {signature.parameters && Object.keys(signature.parameters).length > 0 && (
               <Button
                 variant="outline"
                 size="icon"
                 className="h-7 w-7 opacity-80 hover:opacity-100 bg-white"
                 onClick={() => setCropDialogOpen(true)}
-                title="Ritaglio automatico"
               >
-                <Crop className="h-4 w-4" />
+                <Settings className="h-4 w-4" />
               </Button>
             )}
-            <Button
-              variant="destructive"
-              size="icon"
-              className="h-7 w-7 opacity-80 hover:opacity-100"
-              onClick={() => onDelete(signature.id)}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            {onDelete && (
+              <Button
+                variant="destructive"
+                size="icon"
+                className="h-7 w-7 opacity-80 hover:opacity-100"
+                onClick={() => onDelete(signature.id)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
-        <CardContent className="p-3">
-          <p className="text-sm truncate" title={signature.originalFilename}>
-            {signature.originalFilename || 'Unknown File'}
-          </p>
-          <div className="flex flex-wrap items-center gap-1 mt-1">
-            <Badge className={getStatusColor()}>
-              {getStatusTranslation()}
-            </Badge>
-            
-            {/* Pulsante per riprocessare firme fallite - attualmente non usato */}
-            {false && (
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={handleReprocess}
-                disabled={reprocessSignature.isPending}
-                className="h-6 px-2 text-xs ml-1"
-              >
-                {reprocessSignature.isPending ? t('signatures.reprocessing', 'Riprocessando...') : t('signatures.retry', 'Riprova')}
-              </Button>
-            )}
-            
-            <div className="flex flex-col gap-1 ml-1">
-              {/* Rimosso il controllo DPI - ora utilizziamo solo le dimensioni reali inserite dall'utente */}
+
+        <CardContent className="p-4">
+          <div className="flex justify-between items-start">
+            <div className="flex-1">
+              <h3 className="font-medium text-sm truncate" title={signature.originalFilename}>
+                {signature.originalFilename}
+              </h3>
               
-              {signature.realWidth && signature.realHeight && (
-                <span className="text-xs text-gray-600">
-                  <span title={t('signatures.dimensionsInfo', 'Dimensioni reali della firma (inserite dall\'utente)')}>
-                    {/* Mostra le dimensioni reali inserite dall'utente */}
-                    {(signature.realWidth / 10).toFixed(1)} × {(signature.realHeight / 10).toFixed(1)} cm
+              <div className="flex flex-col gap-1 ml-1">
+                {/* Dimensioni reali inserite dall'utente */}
+                {(signature.realWidth || signature.realWidthMm) && (signature.realHeight || signature.realHeightMm) && (
+                  <span className="text-xs text-gray-600">
+                    <span title={t('signatures.dimensionsInfo', 'Dimensioni reali della firma (inserite dall\'utente)')}>
+                      📏 {((signature.realWidth || signature.realWidthMm || 0) / 10).toFixed(1)} × {((signature.realHeight || signature.realHeightMm || 0) / 10).toFixed(1)} cm
+                    </span>
                   </span>
-                </span>
-              )}
+                )}
+                
+                {/* Dimensioni in pixel dell'immagine processata */}
+                {signature.parameters?.original_width && signature.parameters?.original_height && (
+                  <span className="text-xs text-blue-600">
+                    <span title={t('signatures.pixelDimensionsInfo', 'Dimensioni in pixel dell\'immagine processata (post auto-crop se applicato)')}>
+                      🖼️ {signature.parameters.original_width} × {signature.parameters.original_height} px
+                    </span>
+                  </span>
+                )}
+              </div>
+              
+              <Badge className={signature.isReference ? "bg-blue-500 ml-auto" : "bg-purple-500 ml-auto"}>
+                {signature.isReference 
+                  ? t('signatures.referenceSignature', 'Firma di riferimento')
+                  : t('signatures.verificationSignature', 'Firma da verificare')
+                }
+              </Badge>
             </div>
             
-            <Badge className={signature.isReference ? "bg-blue-500 ml-auto" : "bg-purple-500 ml-auto"}>
-              {signature.isReference 
-                ? t('signatures.referenceSignature', 'Firma di riferimento')
-                : t('signatures.verificationSignature', 'Firma da verificare')
-              }
-            </Badge>
           </div>
-          
-          {/* Mostra il punteggio di similarità solo per le firme da verificare */}
-          {showSimilarity && signature.processingStatus === 'completed' && renderSimilarityScore({
-            similarity: signature.comparisonResult,
-            naturalness: signature.naturalnessScore,
-            verdict: signature.verdict,
-            confidence: signature.confidenceLevel || null, // confidenceLevel è già in percentuale (0-100)
-            explanation: signature.verdictExplanation
-          })}
         </CardContent>
       </Card>
 
-      {/* Dialog per la modifica del DPI rimosso - ora utilizziamo solo le dimensioni reali inserite dall'utente */}
-
+      {/* Dialog per visualizzazione parametri dettagliati */}
       {hasAdvancedDetails && (
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogContent className="max-w-3xl max-h-[90vh]">
             <DialogHeader>
               <DialogTitle>
-                {t('signatures.analysisReport.title', 'Rapporto di analisi firma')} - {signature.originalFilename}
+                {t('signatures.parametersView.title', 'Parametri firma')} - {signature.originalFilename}
               </DialogTitle>
               <DialogDescription>
-                {t('signatures.analysisReport.subtitle', 'Dettagli del confronto con la firma di riferimento')}
+                {t('signatures.parametersView.subtitle', 'Visualizzazione dettagliata dei parametri calcolati per questa firma')}
               </DialogDescription>
             </DialogHeader>
             
             <ScrollArea className="max-h-[calc(90vh-140px)] pr-4">
               <div className="grid grid-cols-1 gap-6">
-              {/* Punteggio di similarità */}
-              {signature.comparisonResult !== null && 
-               !isNaN(signature.comparisonResult) && 
-               signature.comparisonResult !== undefined && (
-                <div className="bg-muted rounded p-4">
-                  <h3 className="font-medium text-lg mb-2">
-                    {t('signatures.similarityScore')}: {(signature.comparisonResult * 100).toFixed(1)}%
-                  </h3>
-                  <Progress value={signature.comparisonResult * 100} className="h-3" />
-                </div>
-              )}
               
-              {/* Visualizza entrambe le firme con zoom */}
-              <div className="grid grid-cols-2 gap-4">
+                {/* Immagine della firma corrente con zoom */}
                 <div>
-                  <h3 className="font-medium mb-2">{t('signatures.verification.verifiedSignature', 'Firma da verificare')}</h3>
-                  <div className="bg-muted rounded h-96 relative">
-                    <SignatureImage 
-                      filename={signature.filename}
-                      originalFilename={signature.originalFilename}
-                      className="w-full h-full"
-                      dpi={signature.dpi || 300}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <h3 className="font-medium mb-2">{t('signatures.verification.referenceSignature', 'Firma di riferimento')}</h3>
-                  <div className="bg-muted rounded h-96 relative">
-                    <SignatureImage 
-                      filename={signature.referenceSignatureFilename || ''}
-                      originalFilename={signature.referenceSignatureOriginalFilename || ''}
-                      className="w-full h-full"
-                      dpi={signature.referenceDpi || 300}
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              {/* Metodologia di analisi */}
-              <div className="bg-muted rounded p-4 border-l-4 border-primary">
-                <h3 className="font-medium text-lg mb-2">
-                  {t('signatures.analysisMethodology')}
-                </h3>
-                <div className="text-sm space-y-3">
-                  <p>
-                    {t('signatures.methodology.description', 'L\'analisi integra parametri tradizionali con algoritmi avanzati di computer vision, utilizzando oltre 15 parametri distinti per massima precisione:')}
-                  </p>
-                  
-                  <div className="bg-blue-50 p-3 rounded">
-                    <p className="font-medium text-blue-900 text-xs mb-1">PARAMETRI BASE (60%)</p>
-                    <ul className="list-disc pl-4 space-y-1 text-xs">
-                      <li>Proporzioni (15%): Rapporto dimensionale</li>
-                      <li>Caratteristiche tratti (25%): Spessore, pressione</li>
-                      <li>Curvatura (20%): Angoli e fluidità</li>
-                      <li>Distribuzione spaziale (20%): Densità area</li>
-                      <li>Connettività (20%): Continuità tratti</li>
-                    </ul>
-                  </div>
-                  
-                  <div className="bg-green-50 p-3 rounded">
-                    <p className="font-medium text-green-900 text-xs mb-1">PARAMETRI AVANZATI (40%)</p>
-                    <ul className="list-disc pl-4 space-y-1 text-xs">
-                      <li>Inclinazione dinamica, pressione multi-livello</li>
-                      <li>Curvatura microscala, classificazione stile</li>
-                      <li>Analisi asole, spaziatura calibrata</li>
-                      <li>Velocità esecuzione, connessioni morfologiche</li>
-                    </ul>
-                  </div>
-                  
-                  <p className="text-xs">
-                    {t('signatures.methodology.conclusion', 'Sistema ibrido con accuratezza stimata del 92% - combina analisi tradizionale e machine learning per identificazione precisa delle caratteristiche autentiche.')}
-                  </p>
-                </div>
-              </div>
-              
-              {/* Visualizza il grafico di confronto se disponibile */}
-              {signature.comparisonChart && (
-                <div>
-                  <h3 className="font-medium mb-2 text-lg">{t('signatures.analysisReport.comparisonChart', 'Grafico di confronto')}</h3>
-                  <div className="bg-white rounded border p-2 relative h-64 group">
+                  <h3 className="font-medium mb-2 text-lg">{signature.isReference ? 'Firma di riferimento' : 'Firma da verificare'}</h3>
+                  <div className="bg-muted rounded h-96 relative group">
                     <TransformWrapper
                       initialScale={1}
                       minScale={0.5}
@@ -443,25 +279,26 @@ export function SignatureCard({
                       {({ zoomIn, zoomOut, resetTransform }) => (
                         <>
                           <TransformComponent wrapperClass="!w-full !h-full">
-                            <img 
-                              src={`data:image/png;base64,${signature.comparisonChart}`} 
-                              alt="Comparison Chart" 
-                              className="max-w-full h-auto"
+                            <SignatureImage 
+                              filename={signature.filename}
+                              originalFilename={signature.originalFilename}
+                              className="w-full h-full"
+                              dpi={signature.dpi || 300}
                             />
                           </TransformComponent>
                           
-                          {/* Zoom controls */}
-                          <div className="absolute bottom-2 right-2 flex-col gap-1 hidden group-hover:flex">
+                          {/* Controlli zoom */}
+                          <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <Button 
-                                    variant="secondary" 
-                                    size="icon" 
-                                    className="h-7 w-7 opacity-90 hover:opacity-100 shadow" 
+                                  <Button
+                                    variant="secondary"
+                                    size="icon"
+                                    className="h-6 w-6"
                                     onClick={() => zoomIn()}
                                   >
-                                    <ZoomIn className="h-4 w-4" />
+                                    <ZoomIn className="h-3 w-3" />
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
@@ -473,13 +310,13 @@ export function SignatureCard({
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <Button 
-                                    variant="secondary" 
-                                    size="icon" 
-                                    className="h-7 w-7 opacity-90 hover:opacity-100 shadow" 
+                                  <Button
+                                    variant="secondary"
+                                    size="icon"
+                                    className="h-6 w-6"
                                     onClick={() => zoomOut()}
                                   >
-                                    <ZoomOut className="h-4 w-4" />
+                                    <ZoomOut className="h-3 w-3" />
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
@@ -491,13 +328,13 @@ export function SignatureCard({
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <Button 
-                                    variant="secondary" 
-                                    size="icon" 
-                                    className="h-7 w-7 opacity-90 hover:opacity-100 shadow" 
+                                  <Button
+                                    variant="secondary"
+                                    size="icon"
+                                    className="h-6 w-6"
                                     onClick={() => resetTransform()}
                                   >
-                                    <RotateCw className="h-4 w-4" />
+                                    <RotateCcw className="h-3 w-3" />
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
@@ -517,282 +354,198 @@ export function SignatureCard({
                     </TransformWrapper>
                   </div>
                 </div>
-              )}
-              
-              
-              {/* Visualizzazione dettagliata dei parametri di confronto */}
-              {signature.parameters && (
-                <div className="mt-4">
-                  <h3 className="font-medium mb-2 text-lg">{t('signatures.analysisReport.detailedParams', 'Parametri dettagliati')}</h3>
-                  <div className="grid grid-cols-2 gap-4 bg-muted p-4 rounded">
-                    {/* Dimensioni e proporzioni */}
-                    <div>
-                      <h4 className="font-medium">{t('signatures.parameters.dimensions', 'Dimensioni e proporzioni')}</h4>
-                      <div className="space-y-2 mt-1 text-sm">
-                        <div className="flex justify-between">
-                          <span>{t('signatures.parameters.width', 'Larghezza')}:</span>
-                          <span>{((signature.parameters.width || 0) / 10).toFixed(1)} cm</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>{t('signatures.parameters.height', 'Altezza')}:</span>
-                          <span>{((signature.parameters.height || 0) / 10).toFixed(1)} cm</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>{t('signatures.parameters.aspectRatio', 'Proporzione')}:</span>
-                          <span>{signature.parameters.proportion?.toFixed(2) || signature.parameters.aspectRatio?.toFixed(2) || 'N/A'}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Inclinazione:</span>
-                          <span>{signature.parameters.inclination ? signature.parameters.inclination.toFixed(1) + '°' : 'N/A'}</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Tratti */}
-                    <div>
-                      <h4 className="font-medium">{t('signatures.parameters.strokes', 'Caratteristiche dei tratti')}</h4>
-                      <div className="space-y-2 mt-1 text-sm">
-                        <div className="flex justify-between">
-                          <span>{t('signatures.parameters.minWidth', 'Spessore min')}:</span>
-                          <span>{signature.parameters.strokeWidth.minMm?.toFixed(2) || 'N/A'} mm</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>{t('signatures.parameters.maxWidth', 'Spessore max')}:</span>
-                          <span>{signature.parameters.strokeWidth.maxMm?.toFixed(2) || 'N/A'} mm</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>{t('signatures.parameters.meanWidth', 'Spessore medio')}:</span>
-                          <span>{signature.parameters.strokeWidth.meanMm?.toFixed(2) || 'N/A'} mm</span>
+                
+                {/* Visualizzazione dettagliata dei parametri */}
+                {signature.parameters && (
+                  <div>
+                    <h3 className="font-medium mb-2 text-lg">{t('signatures.analysisReport.detailedParams', 'Parametri dettagliati')}</h3>
+                    <div className="grid grid-cols-2 gap-4 bg-muted p-4 rounded">
+                      {/* Dimensioni e proporzioni */}
+                      <div>
+                        <h4 className="font-medium">{t('signatures.parameters.dimensions', 'Dimensioni e proporzioni')}</h4>
+                        <div className="space-y-2 mt-1 text-sm">
+                          <div className="flex justify-between">
+                            <span>{t('signatures.parameters.width', 'Larghezza')}:</span>
+                            <span>{((signature.realWidthMm || signature.parameters.realWidthMm || 0) / 10).toFixed(1)} cm</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>{t('signatures.parameters.height', 'Altezza')}:</span>
+                            <span>{((signature.realHeightMm || signature.parameters.realHeightMm || 0) / 10).toFixed(1)} cm</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>{t('signatures.parameters.aspectRatio', 'Proporzione')}:</span>
+                            <span>{signature.parameters.proportion?.toFixed(2) || signature.parameters.aspectRatio?.toFixed(2) || 'N/A'}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Inclinazione:</span>
+                            <span>{signature.parameters.inclination ? signature.parameters.inclination.toFixed(1) + '°' : 'N/A'}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    
-                    {/* Connettività */}
-                    <div>
-                      <h4 className="font-medium">{t('signatures.parameters.connectivity', 'Connettività')}</h4>
-                      <div className="space-y-2 mt-1 text-sm">
-                        <div className="flex justify-between">
-                          <span>{t('signatures.parameters.components', 'Componenti')}:</span>
-                          <span>{signature.parameters.connectivity?.connectedComponents || 'N/A'}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>{t('signatures.parameters.gaps', 'Interruzioni')}:</span>
-                          <span>{signature.parameters.connectivity?.gaps ?? signature.parameters.letterConnections ?? 'N/A'}</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Curvatura */}
-                    <div>
-                      <h4 className="font-medium">{t('signatures.parameters.curvature', 'Curvatura')}</h4>
-                      <div className="space-y-2 mt-1 text-sm">
-                        <div className="flex justify-between">
-                          <span>{t('signatures.parameters.sharpCorners', 'Angoli netti')}:</span>
-                          <span>{signature.parameters.curvatureMetrics?.sharpCorners || 'N/A'}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>{t('signatures.parameters.smoothCurves', 'Curve fluide')}:</span>
-                          <span>{signature.parameters.curvatureMetrics?.smoothCurves || signature.parameters.avgCurvature?.toFixed(2) || 'N/A'}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>{t('signatures.parameters.angleChanges', 'Variazioni angolari')}:</span>
-                          <span>{signature.parameters.curvatureMetrics?.totalAngleChanges?.toFixed(2) || signature.parameters.baselineStdMm?.toFixed(2) || 'N/A'}°</span>
+                      
+                      {/* Tratti */}
+                      <div>
+                        <h4 className="font-medium">{t('signatures.parameters.strokes', 'Caratteristiche dei tratti')}</h4>
+                        <div className="space-y-2 mt-1 text-sm">
+                          <div className="flex justify-between">
+                            <span>{t('signatures.parameters.minWidth', 'Spessore min')}:</span>
+                            <span>{signature.parameters.strokeWidth?.minMm?.toFixed(2) || 'N/A'} mm</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>{t('signatures.parameters.maxWidth', 'Spessore max')}:</span>
+                            <span>{signature.parameters.strokeWidth?.maxMm?.toFixed(2) || 'N/A'} mm</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>{t('signatures.parameters.meanWidth', 'Spessore medio')}:</span>
+                            <span>{signature.parameters.strokeWidth?.meanMm?.toFixed(2) || 'N/A'} mm</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    
-                    {/* Distribuzione spaziale */}
-                    <div className="col-span-2">
-                      <h4 className="font-medium">{t('signatures.parameters.spatialDistribution', 'Distribuzione spaziale')}</h4>
-                      <div className="grid grid-cols-3 gap-2 mt-1 text-sm">
-                        <div className="flex justify-between">
-                          <span>{t('signatures.parameters.density', 'Densità')}:</span>
-                          <span>{(signature.parameters.spatialDistribution?.density ? (signature.parameters.spatialDistribution.density * 100).toFixed(0) : signature.parameters.strokeWidth?.pixelCoverage ? (signature.parameters.strokeWidth.pixelCoverage * 100).toFixed(1) : 'N/A')}%</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>{t('signatures.parameters.centerX', 'Centro X')}:</span>
-                          <span>{(signature.parameters.spatialDistribution?.centerOfMassX ? (signature.parameters.spatialDistribution.centerOfMassX * 100).toFixed(0) : 'N/A')}%</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>{t('signatures.parameters.centerY', 'Centro Y')}:</span>
-                          <span>{(signature.parameters.spatialDistribution?.centerOfMassY ? (signature.parameters.spatialDistribution.centerOfMassY * 100).toFixed(0) : 'N/A')}%</span>
+                      
+                      {/* Connettività */}
+                      <div>
+                        <h4 className="font-medium">{t('signatures.parameters.connectivity', 'Connettività')}</h4>
+                        <div className="space-y-2 mt-1 text-sm">
+                          <div className="flex justify-between">
+                            <span>{t('signatures.parameters.components', 'Componenti')}:</span>
+                            <span>{signature.parameters.connectedComponents || 'N/A'}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>{t('signatures.parameters.gaps', 'Interruzioni')}:</span>
+                            <span>{signature.parameters.letterConnections || 'N/A'}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    
-                    {/* Punti caratteristici */}
-                    <div className="col-span-2">
-                      <h4 className="font-medium">{t('signatures.parameters.featurePoints', 'Punti caratteristici')}</h4>
-                      <div className="grid grid-cols-2 gap-2 mt-1 text-sm">
-                        <div className="flex justify-between">
-                          <span>{t('signatures.parameters.loopPoints', 'Asole')}:</span>
-                          <span>{signature.parameters.featurePoints?.loopPoints || signature.parameters.avgAsolaSize?.toFixed(2) + 'mm' || 'N/A'}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>{t('signatures.parameters.crossPoints', 'Incroci')}:</span>
-                          <span>{signature.parameters.featurePoints?.crossPoints || signature.parameters.overlapRatio?.toFixed(2) || 'N/A'}</span>
+                      
+                      {/* Curvatura */}
+                      <div>
+                        <h4 className="font-medium">{t('signatures.parameters.curvature', 'Curvatura')}</h4>
+                        <div className="space-y-2 mt-1 text-sm">
+                          <div className="flex justify-between">
+                            <span>{t('signatures.parameters.sharpCorners', 'Angoli netti')}:</span>
+                            <span>N/A</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>{t('signatures.parameters.smoothCurves', 'Curve fluide')}:</span>
+                            <span>{signature.parameters.avgCurvature?.toFixed(2) || 'N/A'}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>{t('signatures.parameters.angleChanges', 'Variazioni angolari')}:</span>
+                            <span>{signature.parameters.baselineStdMm?.toFixed(2) || 'N/A'}°</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    
-                    {/* Parametri avanzati aggiuntivi dal Python analyzer */}
-                    {(signature.parameters.avgSpacing || signature.parameters.pressureStd || signature.parameters.pressureMean || 
-                      signature.parameters.velocity || signature.parameters.writingStyle || signature.parameters.readability) && (
-                      <div className="col-span-2 border-t pt-3">
-                        <h4 className="font-medium text-green-700">Parametri Avanzati (Python/OpenCV)</h4>
+                      
+                      {/* Distribuzione spaziale */}
+                      <div className="col-span-2">
+                        <h4 className="font-medium">{t('signatures.parameters.spatialDistribution', 'Distribuzione spaziale')}</h4>
+                        <div className="grid grid-cols-3 gap-2 mt-1 text-sm">
+                          <div className="flex justify-between">
+                            <span>{t('signatures.parameters.density', 'Densità')}:</span>
+                            <span>{signature.parameters.overlapRatio ? (signature.parameters.overlapRatio * 100).toFixed(1) : 'N/A'}%</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>{t('signatures.parameters.centerX', 'Centro X')}:</span>
+                            <span>N/A</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>{t('signatures.parameters.centerY', 'Centro Y')}:</span>
+                            <span>N/A</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Punti caratteristici */}
+                      <div className="col-span-2">
+                        <h4 className="font-medium">{t('signatures.parameters.featurePoints', 'Punti caratteristici')}</h4>
                         <div className="grid grid-cols-2 gap-2 mt-1 text-sm">
-                          {signature.parameters.avgSpacing && (
-                            <div className="flex justify-between">
-                              <span>Spaziatura media:</span>
-                              <span>{signature.parameters.avgSpacing.toFixed(1)}mm</span>
-                            </div>
-                          )}
-                          {signature.parameters.pressureStd && (
-                            <div className="flex justify-between">
-                              <span>Dev. pressione:</span>
-                              <span>{signature.parameters.pressureStd.toFixed(1)}</span>
-                            </div>
-                          )}
-                          {signature.parameters.pressureMean && (
-                            <div className="flex justify-between">
-                              <span>Pressione media:</span>
-                              <span>{signature.parameters.pressureMean.toFixed(0)}</span>
-                            </div>
-                          )}
-                          {signature.parameters.velocity && (
-                            <div className="flex justify-between">
-                              <span>Velocità:</span>
-                              <span>{signature.parameters.velocity.toFixed(1)}/5</span>
-                            </div>
-                          )}
-                          {signature.parameters.writingStyle && (
-                            <div className="flex justify-between">
-                              <span>Stile scrittura:</span>
-                              <span>{signature.parameters.writingStyle}</span>
-                            </div>
-                          )}
-                          {signature.parameters.readability && (
-                            <div className="flex justify-between">
-                              <span>Leggibilità:</span>
-                              <span>{signature.parameters.readability}</span>
-                            </div>
-                          )}
+                          <div className="flex justify-between">
+                            <span>{t('signatures.parameters.loopPoints', 'Asole')}:</span>
+                            <span>{signature.parameters.avgAsolaSize > 0 ? signature.parameters.avgAsolaSize.toFixed(2) + 'mm²' : 'N/A'}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>{t('signatures.parameters.crossPoints', 'Incroci')}:</span>
+                            <span>{signature.parameters.overlapRatio ? (signature.parameters.overlapRatio * 100).toFixed(1) + '%' : 'N/A'}</span>
+                          </div>
                         </div>
                       </div>
-                    )}
+                      
+                      {/* Parametri avanzati aggiuntivi dal Python analyzer */}
+                      {(signature.parameters.avgSpacing || signature.parameters.pressureStd || signature.parameters.pressureMean || 
+                        signature.parameters.velocity || signature.parameters.writingStyle || signature.parameters.readability) && (
+                        <div className="col-span-2 border-t pt-3">
+                          <h4 className="font-medium text-green-700">Parametri Avanzati (Python/OpenCV)</h4>
+                          <div className="grid grid-cols-2 gap-2 mt-1 text-sm">
+                            {signature.parameters.avgSpacing && (
+                              <div className="flex justify-between">
+                                <span>Spaziatura media:</span>
+                                <span>{signature.parameters.avgSpacing.toFixed(1)}mm</span>
+                              </div>
+                            )}
+                            {signature.parameters.pressureStd && (
+                              <div className="flex justify-between">
+                                <span>Dev. pressione:</span>
+                                <span>{signature.parameters.pressureStd.toFixed(1)}</span>
+                              </div>
+                            )}
+                            {signature.parameters.pressureMean && (
+                              <div className="flex justify-between">
+                                <span>Pressione media:</span>
+                                <span>{signature.parameters.pressureMean.toFixed(0)}</span>
+                              </div>
+                            )}
+                            {signature.parameters.velocity && (
+                              <div className="flex justify-between">
+                                <span>Velocità:</span>
+                                <span>{signature.parameters.velocity.toFixed(1)}/5</span>
+                              </div>
+                            )}
+                            {signature.parameters.writingStyle && (
+                              <div className="flex justify-between">
+                                <span>Stile scrittura:</span>
+                                <span>{signature.parameters.writingStyle}</span>
+                              </div>
+                            )}
+                            {signature.parameters.readability && (
+                              <div className="flex justify-between">
+                                <span>Leggibilità:</span>
+                                <span>{signature.parameters.readability}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
-              
-              {/* Generazione report PDF */}
-              <div className="mt-6 flex justify-between space-x-4">
-                {signature.reportPath ? (
-                  <Button asChild className="flex-1">
-                    <a 
-                      href={`/api/signatures/${signature.id}/report`} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                    >
-                      {t('signatures.analysisReport.downloadPdf', 'Scarica report PDF')}
-                    </a>
-                  </Button>
-                ) : (
-                  !signature.isReference && signature.processingStatus === 'completed' && (
-                    <Button 
-                      className="flex-1"
-                      onClick={async () => {
-                        try {
-                          // Mostra un toast di avvio processo
-                          toast({
-                            title: t('signatures.analysisReport.generating', 'Generazione report in corso...'),
-                            description: t('signatures.analysisReport.pleaseWait', 'Potrebbero essere necessari alcuni secondi'),
-                            duration: 2000
-                          });
-                          
-                          const response = await fetch(`/api/signatures/${signature.id}/generate-report`);
-                          
-                          if (response.ok) {
-                            const data = await response.json();
-                            console.log('Report generato:', data);
-                                
-                            // Aggiorna la firma corrente con il nuovo percorso del report
-                            if (data.reportPath && onDelete) {
-                              // Qui utilizziamo onDelete come hack per forzare il ricaricamento delle firme
-                              // Non sta realmente eliminando nulla, ma fa in modo che il parent ricarichi
-                              setTimeout(() => {
-                                onDelete(-1); // Un ID impossibile per segnalare che non è una cancellazione ma un aggiornamento
-                              }, 500);
-                            }
-                            
-                            // Avvisare l'utente che il report è stato generato
-                            toast({
-                              title: t('signatures.analysisReport.generationSuccess', 'Report generato con successo'),
-                              description: t('signatures.analysisReport.downloadStarting', 'Il download inizierà a breve...'),
-                              duration: 3000
-                            });
-                            
-                            // Attendere un attimo e poi richiedere il download
-                            setTimeout(() => {
-                              window.location.href = `/api/signatures/${signature.id}/report`;
-                            }, 1500);
-                          } else {
-                            // Mostrare messaggio di errore
-                            const errorData = await response.json();
-                            const errorMessage = errorData.details || errorData.error || t('signatures.analysisReport.unknownError', 'Si è verificato un errore inaspettato');
-                            
-                            toast({
-                              title: t('signatures.analysisReport.generationFailed', 'Errore nella generazione del report'),
-                              description: errorMessage,
-                              duration: 5000,
-                              variant: "destructive"
-                            });
-                          }
-                        } catch (error) {
-                          console.error('Errore nella generazione del report:', error);
-                          toast({
-                            title: t('signatures.analysisReport.generationFailed', 'Errore nella generazione del report'),
-                            description: t('signatures.analysisReport.connectionError', 'Errore di connessione al server'),
-                            duration: 5000,
-                            variant: "destructive"
-                          });
-                        }
-                      }}
-                    >
-                      {t('signatures.analysisReport.generatePdf', 'Genera report PDF')}
-                    </Button>
-                  )
                 )}
+                
               </div>
-            </div>
             </ScrollArea>
           </DialogContent>
         </Dialog>
       )}
 
-      {/* Dialog per il ritaglio automatico */}
+      {/* Dialog per crop manuale */}
       <Dialog open={cropDialogOpen} onOpenChange={setCropDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh]">
           <DialogHeader>
-            <DialogTitle>Ritaglio Automatico Firma</DialogTitle>
+            <DialogTitle>Modifica Crop Manuale</DialogTitle>
             <DialogDescription>
-              Ottimizza la firma rimuovendo spazi vuoti e normalizzando le dimensioni per confronti più accurati.
+              Seleziona l'area della firma da analizzare trascinando i bordi dell'area evidenziata.
             </DialogDescription>
           </DialogHeader>
-          
-          <SignatureCropper 
+          <CropCalibrationDialog
             signatureId={signature.id}
-            imagePath={signature.filename}
-            onCropComplete={(result) => {
-              if (result.success) {
-                // Ricarica le firme per mostrare la versione ritagliata
-                queryClient.invalidateQueries({ queryKey: ['signatures', projectId] });
-                setCropDialogOpen(false);
-                
-                toast({
-                  title: "Ritaglio completato",
-                  description: `Firma ottimizzata con confidenza ${(result.confidence * 100).toFixed(1)}%`,
-                });
-              }
+            originalFilename={signature.originalFilename}
+            onClose={() => {
+              queryClient.invalidateQueries({ queryKey: ['/api/signature-projects', projectId, 'signatures'] });
+              setCropDialogOpen(false);
+            }}
+            onUpdate={() => {
+              toast({
+                title: "Crop aggiornato",
+                description: "L'area di crop è stata aggiornata con successo",
+              });
             }}
           />
         </DialogContent>

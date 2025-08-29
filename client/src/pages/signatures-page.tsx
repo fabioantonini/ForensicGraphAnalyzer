@@ -167,7 +167,7 @@ export default function SignaturesPage() {
       
       // Verifica se qualcuna delle firme ha parametri (elaborazione completata)
       const hasProcessedSignatures = data.some(
-        sig => sig.analysisReport && sig.analysisReport.trim() !== ''
+        sig => sig.parameters && Object.keys(sig.parameters).length > 0
       );
       
       if (!hasProcessedSignatures && data.length > 0) {
@@ -1040,9 +1040,9 @@ export default function SignaturesPage() {
                 {/* Messaggio se ci sono firme da verificare in elaborazione */}
                 {Array.isArray(signatures) && 
                   signatures.length > 0 && 
-                  signatures.some((s: any) => !s.isReference && !s.analysisReport) && (
+                  signatures.some((s: any) => !s.isReference && !s.parameters) && (
                     <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-yellow-800 text-sm">
-                      Ci sono {signatures.filter((s: any) => !s.isReference && !s.analysisReport).length} firme da verificare in elaborazione. 
+                      Ci sono {signatures.filter((s: any) => !s.isReference && !s.parameters).length} firme da verificare in elaborazione. 
                       Attendere il completamento per visualizzare il risultato della verifica.
                     </div>
                   )
@@ -1212,12 +1212,45 @@ export default function SignaturesPage() {
                             const reportData = JSON.parse(signature.analysisReport);
                             
                             // Usa le firme di riferimento dall'array signatures originale invece che da comparisonResults
-                            const referenceSignatures = signatures.filter((s: any) => s.isReference && s.analysisReport) || [];
+                            const referenceSignatures = signatures.filter((s: any) => s.isReference && s.parameters) || [];
                             
-                            const referenceData = referenceSignatures.length > 0 && referenceSignatures[0].analysisReport 
-                              ? JSON.parse(referenceSignatures[0].analysisReport) : null;
+                            const referenceData = referenceSignatures.length > 0 && referenceSignatures[0].parameters 
+                              ? referenceSignatures[0].parameters : null;
                             
-                            if (!reportData || !referenceData) {
+                            // NORMALIZZA le chiavi dei parametri per compatibilità
+                            const normalizeKey = (key: string) => {
+                              const keyMap: Record<string, string> = {
+                                'proportion': 'Proportion',
+                                'inclination': 'Inclination', 
+                                'pressureMean': 'PressureMean',
+                                'pressureStd': 'PressureStd',
+                                'avgCurvature': 'AvgCurvature',
+                                'velocity': 'Velocity',
+                                'avgSpacing': 'AvgSpacing',
+                                'avgAsolaSize': 'AvgAsolaSize',
+                                'overlapRatio': 'OverlapRatio',
+                                'letterConnections': 'LetterConnections',
+                                'baselineStdMm': 'BaselineStdMm',
+                                'strokeComplexity': 'StrokeComplexity',
+                                'connectedComponents': 'ConnectedComponents',
+                                'writingStyle': 'WritingStyle',
+                                'readability': 'Readability',
+                                'pressureConsistency': 'PressureConsistency',
+                                'coordinationIndex': 'CoordinationIndex',
+                                'naturalnessIndex': 'NaturalnessIndex',
+                                'fluidityScore': 'FluidityScore'
+                              };
+                              return keyMap[key] || key;
+                            };
+                            
+                            // Normalizza referenceData per compatibilità
+                            const normalizedReferenceData: Record<string, any> = {};
+                            Object.keys(referenceData).forEach(key => {
+                              const normalizedKey = normalizeKey(key);
+                              normalizedReferenceData[normalizedKey] = referenceData[key];
+                            });
+                            
+                            if (!reportData || !normalizedReferenceData) {
                               return null;
                             }
                             
@@ -1341,9 +1374,21 @@ export default function SignaturesPage() {
                                       </thead>
                                       <tbody>
                                         {classicParams.map(param => {
-                                          const refValue = referenceData[param.key];
+                                          const refValue = normalizedReferenceData[param.key];
                                           const verifyValue = reportData[param.key];
-                                          if (refValue === undefined || verifyValue === undefined) return null;
+                                          
+                                          // DEBUG DETTAGLIATO
+                                          console.log(`[PARAM DEBUG] ${param.key}:`, {
+                                            refValue,
+                                            verifyValue,
+                                            refUndefined: refValue === undefined,
+                                            verifyUndefined: verifyValue === undefined
+                                          });
+                                          
+                                          if (refValue === undefined || verifyValue === undefined) {
+                                            console.log(`[PARAM DEBUG] SKIPPING ${param.key} - ref:${refValue} verify:${verifyValue}`);
+                                            return null;
+                                          }
                                           
                                           // Calcola compatibilità con logica migliorata per valori piccoli
                                           const diff = Math.abs(refValue - verifyValue);
@@ -1411,7 +1456,7 @@ export default function SignaturesPage() {
                                       </thead>
                                       <tbody>
                                         {naturalnessParams.map(param => {
-                                          const refValue = referenceData[param.key];
+                                          const refValue = normalizedReferenceData[param.key];
                                           const verifyValue = reportData[param.key];
                                           if (refValue === undefined || verifyValue === undefined) return null;
                                           

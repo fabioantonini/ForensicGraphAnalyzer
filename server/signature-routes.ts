@@ -183,15 +183,15 @@ export function registerSignatureRoutes(appRouter: Router) {
       // Ottieni tutte le firme di riferimento
       const referenceSignatures = await storage.getProjectSignatures(projectId, true);
       
-      // Filtra le firme di riferimento complete (con analysisReport)
+      // Filtra le firme di riferimento complete (con parameters)
       const completedReferences = referenceSignatures.filter(
-        ref => ref.processingStatus === 'completed' && ref.analysisReport
+        ref => ref.processingStatus === 'completed' && ref.parameters
       );
       
       console.log(`[COMPARE-ALL] Reference signatures found: ${referenceSignatures.length}`);
       console.log(`[COMPARE-ALL] Completed references: ${completedReferences.length}`);
       referenceSignatures.forEach(ref => {
-        console.log(`[COMPARE-ALL] Ref ${ref.id}: status=${ref.processingStatus}, hasAnalysisReport=${!!ref.analysisReport}`);
+        console.log(`[COMPARE-ALL] Ref ${ref.id}: status=${ref.processingStatus}, hasParameters=${!!ref.parameters}, parametersCount=${ref.parameters ? Object.keys(ref.parameters).length : 0}`);
       });
       
       if (completedReferences.length === 0) {
@@ -203,15 +203,15 @@ export function registerSignatureRoutes(appRouter: Router) {
       // Ottieni tutte le firme da verificare
       const verificationSignatures = await storage.getProjectSignatures(projectId, false);
       
-      // Filtra le firme da verificare complete (con analysisReport)
+      // Filtra le firme da verificare complete (con parameters)
       const completedVerifications = verificationSignatures.filter(
-        sig => sig.processingStatus === 'completed' && sig.analysisReport
+        sig => sig.processingStatus === 'completed' && sig.parameters
       );
       
       console.log(`[COMPARE-ALL] Verification signatures found: ${verificationSignatures.length}`);
       console.log(`[COMPARE-ALL] Completed verifications: ${completedVerifications.length}`);
       verificationSignatures.forEach(ver => {
-        console.log(`[COMPARE-ALL] Ver ${ver.id}: status=${ver.processingStatus}, hasAnalysisReport=${!!ver.analysisReport}`);
+        console.log(`[COMPARE-ALL] Ver ${ver.id}: status=${ver.processingStatus}, hasParameters=${!!ver.parameters}, parametersCount=${ver.parameters ? Object.keys(ver.parameters).length : 0}`);
       });
       
       if (completedVerifications.length === 0) {
@@ -229,8 +229,7 @@ export function registerSignatureRoutes(appRouter: Router) {
           
           // Cancella grafico cached per forzare rigenerazione
           await storage.updateSignature(signature.id, { 
-            comparisonChart: '', 
-            naturalnessChart: ''  // === NUOVO: CANCELLA ANCHE GRAFICO NATURALEZZA ===
+            comparisonChart: ''
           });
           
           let similarityScore = 0;
@@ -269,7 +268,7 @@ export function registerSignatureRoutes(appRouter: Router) {
             
             similarityScore = pythonResult.similarity; // Mantieni come percentuale diretta
             comparisonChart = pythonResult.comparison_chart; // CORRETTO: field name è comparison_chart
-            naturalnessChart = pythonResult.naturalness_chart || null;  // === NUOVO: GRAFICO NATURALEZZA ===
+            naturalnessChart = (pythonResult as any).naturalness_chart || null;  // === NUOVO: GRAFICO NATURALEZZA ===
             
             // === ESTRAZIONE NUOVI PARAMETRI DI NATURALEZZA ===
             verdict = pythonResult.verdict || null;
@@ -296,9 +295,9 @@ export function registerSignatureRoutes(appRouter: Router) {
               const interpretation = await generateSignatureInterpretation(
                 verdict || 'Non determinato',
                 similarityScore || 0,
-                naturalnessScore,
+                naturalnessScore ?? undefined,
                 pythonResult,
-                confidenceLevel,
+                confidenceLevel ?? undefined,
                 req.user?.openaiApiKey,
                 req.user?.id
               );
@@ -324,6 +323,21 @@ export function registerSignatureRoutes(appRouter: Router) {
               // Fallback alla descrizione testuale se i parametri non sono disponibili
               analysisReport = pythonResult.description;
               console.log(`[COMPARE-ALL] Fallback a descrizione testuale per firma ${signature.id}`);
+            }
+
+            // ✅ NUOVO: Salva anche i parametri della firma di riferimento per il PDF
+            console.log(`[DEBUG REF] reference_parameters esistono: ${!!pythonResult.reference_parameters}`);
+            console.log(`[DEBUG REF] referenceSignature.analysisReport esistente: ${!!referenceSignature.analysisReport}`);
+            console.log(`[DEBUG REF] referenceSignature.id: ${referenceSignature.id}`);
+            
+            if (pythonResult.reference_parameters) {
+              const referenceAnalysisReport = JSON.stringify(pythonResult.reference_parameters);
+              await storage.updateSignature(referenceSignature.id, { 
+                analysisReport: referenceAnalysisReport 
+              });
+              console.log(`[COMPARE-ALL] ✅ FORZATO salvataggio parametri JSON per firma di riferimento ${referenceSignature.id} con ${Object.keys(pythonResult.reference_parameters).length} parametri`);
+            } else {
+              console.log(`[COMPARE-ALL] ❌ reference_parameters NON TROVATI in pythonResult`);
             }
             
           } catch (pythonError) {
@@ -598,7 +612,7 @@ export function registerSignatureRoutes(appRouter: Router) {
       // Ottieni tutte le firme da verificare completate
       const verificationSignatures = await storage.getProjectSignatures(projectId, false);
       const completedVerifications = verificationSignatures.filter(
-        sig => sig.processingStatus === 'completed' && sig.analysisReport && sig.comparisonResult
+        sig => sig.processingStatus === 'completed' && sig.parameters && sig.comparisonResult !== null && sig.comparisonResult !== undefined
       );
       
       if (completedVerifications.length === 0) {
@@ -610,7 +624,7 @@ export function registerSignatureRoutes(appRouter: Router) {
       // Ottieni le firme di riferimento completate
       const referenceSignatures = await storage.getProjectSignatures(projectId, true);
       const completedReferences = referenceSignatures.filter(
-        sig => sig.processingStatus === 'completed' && sig.analysisReport
+        sig => sig.processingStatus === 'completed' && sig.parameters
       );
       
       if (completedReferences.length === 0) {
@@ -627,7 +641,7 @@ export function registerSignatureRoutes(appRouter: Router) {
           console.log(`[GENERATE ALL REPORTS] Generazione report per firma ${signature.id}`);
           
           // Verifica che la firma abbia un risultato di confronto
-          if (!signature.comparisonResult || signature.comparisonResult === 0) {
+          if (signature.comparisonResult === null || signature.comparisonResult === undefined) {
             results.push({
               id: signature.id,
               success: false,
@@ -670,6 +684,59 @@ export function registerSignatureRoutes(appRouter: Router) {
       });
     } catch (error: any) {
       console.error('[GENERATE ALL REPORTS] Errore:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Endpoint per generare un report PDF (restituisce JSON)
+  appRouter.get("/signatures/:id/generate-report", isAuthenticated, isActiveUser, async (req, res) => {
+    try {
+      const signatureId = parseInt(req.params.id);
+      const signature = await storage.getSignature(signatureId);
+      
+      if (!signature) {
+        return res.status(404).json({ error: 'Firma non trovata' });
+      }
+      
+      // Verifica che la firma appartenga all'utente corrente
+      const project = await storage.getSignatureProject(signature.projectId);
+      if (!project || project.userId !== req.user!.id) {
+        return res.status(403).json({ error: 'Non autorizzato' });
+      }
+      
+      // Verifica che non sia una firma di riferimento
+      if (signature.isReference) {
+        return res.status(400).json({ error: 'Non è possibile generare report per firme di riferimento' });
+      }
+      
+      // Verifica che la firma sia stata elaborata
+      if (signature.processingStatus !== 'completed') {
+        return res.status(400).json({ error: 'La firma non è stata completamente elaborata' });
+      }
+      
+      // Verifica che ci sia un risultato di confronto
+      if (signature.comparisonResult === null || signature.comparisonResult === undefined) {
+        return res.status(400).json({ error: 'Prima di generare il report, esegui il confronto usando "Confronta tutte"' });
+      }
+      
+      // Genera un percorso del report
+      const reportPath = `report_${signatureId}_${Date.now()}.pdf`;
+      
+      // Aggiorna la firma con il percorso del report
+      await storage.updateSignature(signatureId, { reportPath });
+      
+      console.log(`[GENERATE REPORT] Report generato per firma ${signatureId}`);
+      
+      // Restituisci JSON di successo
+      res.json({
+        success: true,
+        message: 'Report generato con successo',
+        reportPath: reportPath,
+        downloadUrl: `/api/signatures/${signatureId}/report`
+      });
+      
+    } catch (error: any) {
+      console.error(`[GENERATE REPORT] Errore:`, error);
       res.status(500).json({ error: error.message });
     }
   });
@@ -766,7 +833,7 @@ export function registerSignatureRoutes(appRouter: Router) {
       
       // Ottieni la firma di riferimento per l'analisi AI
       const referenceSignatures = await storage.getProjectSignatures(signature.projectId, true);
-      const referenceSignature = referenceSignatures.find(ref => ref.processingStatus === 'completed' && ref.analysisReport);
+      const referenceSignature = referenceSignatures.find(ref => ref.processingStatus === 'completed' && ref.parameters);
       
       // Parse dei parametri dalle analysisReport
       let signatureParams = null;
@@ -831,35 +898,35 @@ export function registerSignatureRoutes(appRouter: Router) {
         doc.moveDown(0.3);
         doc.fontSize(10);
         
-        // Calcola dimensioni in pixel dalle dimensioni reali + pixels_per_mm
+        // Usa le dimensioni originali dell'immagine invece di ricostruirle matematicamente
         const sigPixelsPerMm = signatureParams.pixels_per_mm || 1;
-        const sigWidthPx = Math.round(sigWidth * sigPixelsPerMm);
-        const sigHeightPx = Math.round(sigHeight * sigPixelsPerMm);
+        const sigWidthPx = signatureParams.original_width || Math.round(sigWidth * sigPixelsPerMm);
+        const sigHeightPx = signatureParams.original_height || Math.round(sigHeight * sigPixelsPerMm);
         
-        doc.text(`• Dimensioni: ${sigWidthPx}x${sigHeightPx} px`);
-        doc.text(`• Dimensioni reali: ${formatNumber(sigWidth, 1)}x${formatNumber(sigHeight, 1)} mm`);
+        doc.text(`• Dimensioni: ${signatureParams.display?.dimensions_px || `${sigWidthPx}x${sigHeightPx} px`}`);
+        doc.text(`• Dimensioni reali: ${signatureParams.display?.dimensions_mm || `${formatNumber(sigWidth, 1)}x${formatNumber(sigHeight, 1)} mm`}`);
         
         // Parametri disponibili dal JSON
         if (signatureParams.PressureMean !== undefined) {
-          doc.text(`• Intensità pixel media: ${formatNumber(signatureParams.PressureMean, 1)} (0=nero/alta pressione, 255=bianco/bassa pressione)`);
+          doc.text(`• Intensità pixel media: ${signatureParams.display?.pressure_mean || formatNumber(signatureParams.PressureMean, 1)} (0=nero/alta pressione, 255=bianco/bassa pressione)`);
         }
         if (signatureParams.PressureStd !== undefined) {
-          doc.text(`• Varianza spessore: ${formatNumber(signatureParams.PressureStd, 2)}`);
+          doc.text(`• Varianza spessore: ${signatureParams.display?.pressure_std || formatNumber(signatureParams.PressureStd, 2)}`);
         }
         if (signatureParams.Proportion !== undefined) {
-          doc.text(`• Proporzione: ${formatNumber(signatureParams.Proportion, 3)}`);
+          doc.text(`• Proporzione: ${signatureParams.display?.proportion || formatNumber(signatureParams.Proportion, 3)}`);
         }
         if (signatureParams.Inclination !== undefined) {
-          doc.text(`• Inclinazione: ${formatNumber(signatureParams.Inclination, 1)}°`);
+          doc.text(`• Inclinazione: ${signatureParams.display?.inclination || formatNumber(signatureParams.Inclination, 1) + '°'}`);
         }
         if (signatureParams.PressureStd !== undefined) {
           doc.text(`• Deviazione intensità: ${formatNumber(signatureParams.PressureStd, 1)}`);
         }
         if (signatureParams.AvgCurvature !== undefined) {
-          doc.text(`• Curvatura media: ${formatNumber(signatureParams.AvgCurvature, 3)}`);
+          doc.text(`• Curvatura media: ${signatureParams.display?.curvature || formatNumber(signatureParams.AvgCurvature, 3)}`);
         }
         if (signatureParams.Velocity !== undefined) {
-          doc.text(`• Velocità scrittura: ${formatNumber(signatureParams.Velocity, 2)}/5`);
+          doc.text(`• Velocità scrittura: ${signatureParams.display?.velocity || formatNumber(signatureParams.Velocity, 2) + '/5'}`);
         }
         if (signatureParams.WritingStyle !== undefined) {
           doc.text(`• Stile scrittura: ${signatureParams.WritingStyle}`);
@@ -868,19 +935,19 @@ export function registerSignatureRoutes(appRouter: Router) {
           doc.text(`• Leggibilità: ${signatureParams.Readability}`);
         }
         if (signatureParams.AvgAsolaSize !== undefined) {
-          doc.text(`• Dimensione asole medie: ${formatNumber(signatureParams.AvgAsolaSize, 2)} mm²`);
+          doc.text(`• Dimensione asole medie: ${signatureParams.display?.asola_size || formatNumber(signatureParams.AvgAsolaSize, 2) + ' mm²'}`);
         }
         if (signatureParams.AvgSpacing !== undefined) {
-          doc.text(`• Spaziatura media: ${formatNumber(signatureParams.AvgSpacing, 2)} mm`);
+          doc.text(`• Spaziatura media: ${signatureParams.display?.spacing || formatNumber(signatureParams.AvgSpacing, 2) + ' mm'}`);
         }
         if (signatureParams.OverlapRatio !== undefined) {
-          doc.text(`• Rapporto sovrapposizione: ${formatNumber(signatureParams.OverlapRatio * 100, 1)}%`);
+          doc.text(`• Rapporto sovrapposizione: ${signatureParams.display?.overlap_ratio || formatNumber(signatureParams.OverlapRatio * 100, 1) + '%'}`);
         }
         if (signatureParams.LetterConnections !== undefined) {
-          doc.text(`• Connessioni lettere: ${formatNumber(signatureParams.LetterConnections, 2)}`);
+          doc.text(`• Connessioni lettere: ${signatureParams.display?.letter_connections || formatNumber(signatureParams.LetterConnections, 2)}`);
         }
         if (signatureParams.BaselineStdMm !== undefined) {
-          doc.text(`• Deviazione baseline: ${formatNumber(signatureParams.BaselineStdMm, 2)} mm`);
+          doc.text(`• Deviazione baseline: ${signatureParams.display?.baseline_std || formatNumber(signatureParams.BaselineStdMm, 2) + ' mm'}`);
         }
         
         doc.moveDown(1);
@@ -890,35 +957,35 @@ export function registerSignatureRoutes(appRouter: Router) {
         doc.moveDown(0.3);
         doc.fontSize(10);
         
-        // Calcola dimensioni in pixel dalle dimensioni reali + pixels_per_mm
+        // Usa le dimensioni originali dell'immagine invece di ricostruirle matematicamente
         const refPixelsPerMm = referenceParams.pixels_per_mm || 1;
-        const refWidthPx = Math.round(refWidth * refPixelsPerMm);
-        const refHeightPx = Math.round(refHeight * refPixelsPerMm);
+        const refWidthPx = referenceParams.original_width || Math.round(refWidth * refPixelsPerMm);
+        const refHeightPx = referenceParams.original_height || Math.round(refHeight * refPixelsPerMm);
         
-        doc.text(`• Dimensioni: ${refWidthPx}x${refHeightPx} px`);
-        doc.text(`• Dimensioni reali: ${formatNumber(refWidth, 1)}x${formatNumber(refHeight, 1)} mm`);
+        doc.text(`• Dimensioni: ${referenceParams.display?.dimensions_px || `${refWidthPx}x${refHeightPx} px`}`);
+        doc.text(`• Dimensioni reali: ${referenceParams.display?.dimensions_mm || `${formatNumber(refWidth, 1)}x${formatNumber(refHeight, 1)} mm`}`);
         
         // Parametri disponibili dal JSON
         if (referenceParams.PressureMean !== undefined) {
-          doc.text(`• Intensità pixel media: ${formatNumber(referenceParams.PressureMean, 1)} (0=nero/alta pressione, 255=bianco/bassa pressione)`);
+          doc.text(`• Intensità pixel media: ${referenceParams.display?.pressure_mean || formatNumber(referenceParams.PressureMean, 1)} (0=nero/alta pressione, 255=bianco/bassa pressione)`);
         }
         if (referenceParams.PressureStd !== undefined) {
-          doc.text(`• Varianza spessore: ${formatNumber(referenceParams.PressureStd, 2)}`);
+          doc.text(`• Varianza spessore: ${referenceParams.display?.pressure_std || formatNumber(referenceParams.PressureStd, 2)}`);
         }
         if (referenceParams.Proportion !== undefined) {
-          doc.text(`• Proporzione: ${formatNumber(referenceParams.Proportion, 3)}`);
+          doc.text(`• Proporzione: ${referenceParams.display?.proportion || formatNumber(referenceParams.Proportion, 3)}`);
         }
         if (referenceParams.Inclination !== undefined) {
-          doc.text(`• Inclinazione: ${formatNumber(referenceParams.Inclination, 1)}°`);
+          doc.text(`• Inclinazione: ${referenceParams.display?.inclination || formatNumber(referenceParams.Inclination, 1) + '°'}`);
         }
         if (referenceParams.PressureStd !== undefined) {
           doc.text(`• Deviazione intensità: ${formatNumber(referenceParams.PressureStd, 1)}`);
         }
         if (referenceParams.AvgCurvature !== undefined) {
-          doc.text(`• Curvatura media: ${formatNumber(referenceParams.AvgCurvature, 3)}`);
+          doc.text(`• Curvatura media: ${referenceParams.display?.curvature || formatNumber(referenceParams.AvgCurvature, 3)}`);
         }
         if (referenceParams.Velocity !== undefined) {
-          doc.text(`• Velocità scrittura: ${formatNumber(referenceParams.Velocity, 0)}/5`);
+          doc.text(`• Velocità scrittura: ${referenceParams.display?.velocity || formatNumber(referenceParams.Velocity, 0) + '/5'}`);
         }
         if (referenceParams.WritingStyle !== undefined) {
           doc.text(`• Stile scrittura: ${referenceParams.WritingStyle}`);
@@ -927,19 +994,19 @@ export function registerSignatureRoutes(appRouter: Router) {
           doc.text(`• Leggibilità: ${referenceParams.Readability}`);
         }
         if (referenceParams.AvgAsolaSize !== undefined) {
-          doc.text(`• Dimensione asole medie: ${formatNumber(referenceParams.AvgAsolaSize, 2)} mm²`);
+          doc.text(`• Dimensione asole medie: ${referenceParams.display?.asola_size || formatNumber(referenceParams.AvgAsolaSize, 2) + ' mm²'}`);
         }
         if (referenceParams.AvgSpacing !== undefined) {
-          doc.text(`• Spaziatura media: ${formatNumber(referenceParams.AvgSpacing, 2)} mm`);
+          doc.text(`• Spaziatura media: ${referenceParams.display?.spacing || formatNumber(referenceParams.AvgSpacing, 2) + ' mm'}`);
         }
         if (referenceParams.OverlapRatio !== undefined) {
-          doc.text(`• Rapporto sovrapposizione: ${formatNumber(referenceParams.OverlapRatio * 100, 1)}%`);
+          doc.text(`• Rapporto sovrapposizione: ${referenceParams.display?.overlap_ratio || formatNumber(referenceParams.OverlapRatio * 100, 1) + '%'}`);
         }
         if (referenceParams.LetterConnections !== undefined) {
-          doc.text(`• Connessioni lettere: ${formatNumber(referenceParams.LetterConnections, 2)}`);
+          doc.text(`• Connessioni lettere: ${referenceParams.display?.letter_connections || formatNumber(referenceParams.LetterConnections, 2)}`);
         }
         if (referenceParams.BaselineStdMm !== undefined) {
-          doc.text(`• Deviazione baseline: ${formatNumber(referenceParams.BaselineStdMm, 2)} mm`);
+          doc.text(`• Deviazione baseline: ${referenceParams.display?.baseline_std || formatNumber(referenceParams.BaselineStdMm, 2) + ' mm'}`);
         }
         
         doc.moveDown(1.5);
@@ -1242,13 +1309,10 @@ export function registerSignatureRoutes(appRouter: Router) {
         doc.moveDown(0.5);
         doc.fontSize(10);
         
-        const analysisLines = signature.analysisReport.split('\n');
-        for (const line of analysisLines) {
-          if (line.trim()) {
-            doc.text(line.trim(), { align: 'justify' });
-            doc.moveDown(0.3);
-          }
-        }
+        // Non mostrare il JSON grezzo - i parametri sono già formattati sopra
+        doc.text('I parametri dettagliati sono stati analizzati singolarmente nella sezione precedente.', { align: 'justify' });
+        doc.text('Il confronto quantitativo ha prodotto il punteggio di similarità e l\'indice di naturalezza riportati.', { align: 'justify' });
+        doc.moveDown(0.5);
         doc.moveDown(1);
       }
       
@@ -1381,9 +1445,8 @@ export function registerSignatureRoutes(appRouter: Router) {
             console.log('[PDF DEBUG] Buffer created, size:', chartBuffer.length);
             
             doc.image(chartBuffer, {
-              fit: [450, 300],
-              align: 'center',
-              valign: 'center'
+              width: 500,
+              align: 'center'
             });
             doc.moveDown(0.5);
             console.log('[PDF DEBUG] Naturalness chart successfully added to PDF');
@@ -1602,22 +1665,17 @@ async function processSignatureParameters(signatureId: number): Promise<void> {
       console.warn(`[AUTO-CROP] Errore durante ritaglio automatico (continuo con originale):`, cropError);
     }
     
-    // Verifica che le dimensioni reali siano presenti - OBBLIGATORIE
-    if (!signature.realWidthMm || !signature.realHeightMm || signature.realWidthMm <= 0 || signature.realHeightMm <= 0) {
-      throw new Error(`Firma ${signatureId} non ha dimensioni reali valide: ${signature.realWidthMm}x${signature.realHeightMm}mm`);
-    }
-    
-    // Usa l'analizzatore Python per elaborare i parametri con dimensioni reali
-    const parameters = await SignaturePythonAnalyzer.analyzeSignature(
+    // Elabora i parametri usando SignatureAnalyzer (supporta sia con che senza dimensioni reali)
+    const parameters = await SignatureAnalyzer.extractParameters(
       originalFilePath, // Usa sempre il file originale (eventualmente sostituito)
-      signature.realWidthMm, 
-      signature.realHeightMm
+      signature.realWidthMm || 120, // Default se mancanti
+      signature.realHeightMm || 40   // Default se mancanti
     );
     
-    // Aggiorna la firma con i parametri elaborati e imposta lo stato come completato
-    console.log(`[PROCESS PARAMS] Aggiornamento firma ${signatureId} con status 'completed'`);
+    // Salva i parametri nel campo corretto e imposta lo stato come completato
+    console.log(`[PROCESS PARAMS] Aggiornamento firma ${signatureId} con parametri`);
+    await storage.updateSignatureParameters(signatureId, parameters);
     await storage.updateSignature(signatureId, {
-      analysisReport: JSON.stringify(parameters),
       processingStatus: 'completed'
     });
     console.log(`[PROCESS PARAMS] Status aggiornato con successo per firma ${signatureId}`);
@@ -1627,8 +1685,11 @@ async function processSignatureParameters(signatureId: number): Promise<void> {
     console.log(`[PROCESS PARAMS] Status verificato nel database:`, {
       id: updatedSignature?.id,
       processingStatus: updatedSignature?.processingStatus,
-      hasAnalysisReport: !!updatedSignature?.analysisReport,
-      analysisReportLength: updatedSignature?.analysisReport?.length
+      hasParameters: !!updatedSignature?.parameters,
+      analysisReportLength: updatedSignature?.analysisReport?.length,
+      parametersCount: updatedSignature?.parameters ? Object.keys(updatedSignature.parameters).length : 0,
+      realWidth: updatedSignature?.realWidthMm,
+      realHeight: updatedSignature?.realHeightMm
     });
     
     console.log(`[PROCESS PARAMS] Elaborazione completata per firma ${signatureId}`);
