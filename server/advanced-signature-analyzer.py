@@ -2020,7 +2020,13 @@ def analyze_signature_with_dimensions(image_path, real_width_mm, real_height_mm)
         proportion = actual_width_mm / actual_height_mm if actual_height_mm > 0 else 1
         
         # Calcola l'inclinazione usando l'algoritmo robusto
-        inclination = calculate_signature_inclination([main_contour])
+        print(f"[DEBUG] Chiamando calculate_signature_inclination con contorno principale", file=sys.stderr)
+        try:
+            inclination = calculate_signature_inclination([main_contour])
+            print(f"[DEBUG] Inclinazione calcolata: {inclination}°", file=sys.stderr)
+        except Exception as e:
+            print(f"[ERROR] Errore nel calcolo inclinazione: {e}", file=sys.stderr)
+            inclination = 0.0
         
         # Calcola la pressione media e deviazione standard
         image_flat = image.flatten().astype(np.float64)
