@@ -229,8 +229,7 @@ export function registerSignatureRoutes(appRouter: Router) {
           
           // Cancella grafico cached per forzare rigenerazione
           await storage.updateSignature(signature.id, { 
-            comparisonChart: '', 
-            naturalnessChart: ''  // === NUOVO: CANCELLA ANCHE GRAFICO NATURALEZZA ===
+            comparisonChart: ''
           });
           
           let similarityScore = 0;
@@ -269,7 +268,7 @@ export function registerSignatureRoutes(appRouter: Router) {
             
             similarityScore = pythonResult.similarity; // Mantieni come percentuale diretta
             comparisonChart = pythonResult.comparison_chart; // CORRETTO: field name è comparison_chart
-            naturalnessChart = pythonResult.naturalness_chart || null;  // === NUOVO: GRAFICO NATURALEZZA ===
+            naturalnessChart = (pythonResult as any).naturalness_chart || null;  // === NUOVO: GRAFICO NATURALEZZA ===
             
             // === ESTRAZIONE NUOVI PARAMETRI DI NATURALEZZA ===
             verdict = pythonResult.verdict || null;
@@ -296,9 +295,9 @@ export function registerSignatureRoutes(appRouter: Router) {
               const interpretation = await generateSignatureInterpretation(
                 verdict || 'Non determinato',
                 similarityScore || 0,
-                naturalnessScore,
+                naturalnessScore ?? undefined,
                 pythonResult,
-                confidenceLevel,
+                confidenceLevel ?? undefined,
                 req.user?.openaiApiKey,
                 req.user?.id
               );

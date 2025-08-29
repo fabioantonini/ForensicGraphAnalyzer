@@ -11,7 +11,7 @@ import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
-import SignatureImage from "./signature-image";
+import { SignatureImage } from "./signature-image";
 import CropCalibrationDialog from "./crop-calibration-dialog";
 
 interface SignatureCardProps {
@@ -222,7 +222,7 @@ export default function SignatureCard({
                 {(signature.realWidth || signature.realWidthMm) && (signature.realHeight || signature.realHeightMm) && (
                   <span className="text-xs text-gray-600">
                     <span title={t('signatures.dimensionsInfo', 'Dimensioni reali della firma (inserite dall\'utente)')}>
-                      📏 {((signature.realWidth || signature.realWidthMm) / 10).toFixed(1)} × {((signature.realHeight || signature.realHeightMm) / 10).toFixed(1)} cm
+                      📏 {((signature.realWidth || signature.realWidthMm || 0) / 10).toFixed(1)} × {((signature.realHeight || signature.realHeightMm || 0) / 10).toFixed(1)} cm
                     </span>
                   </span>
                 )}
