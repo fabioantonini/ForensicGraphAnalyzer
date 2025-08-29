@@ -245,16 +245,6 @@ export function SignatureCard({
               </Badge>
             </div>
             
-            {/* Mostra il punteggio di similarità solo dopo aver eseguito il confronto */}
-            {showSimilarity && signature.processingStatus === 'completed' && 
-             (signature.isReference || signature.comparisonResult !== null) && 
-             renderSimilarityScore({
-              similarity: signature.comparisonResult,
-              naturalness: signature.naturalnessScore,
-              verdict: signature.verdict,
-              confidence: signature.confidenceLevel || null,
-              explanation: signature.verdictExplanation
-            })}
           </div>
         </CardContent>
       </Card>
