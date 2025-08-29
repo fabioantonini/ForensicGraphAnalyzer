@@ -245,8 +245,10 @@ export function SignatureCard({
               </Badge>
             </div>
             
-            {/* Mostra il punteggio di similarità solo per le firme da verificare */}
-            {showSimilarity && signature.processingStatus === 'completed' && renderSimilarityScore({
+            {/* Mostra il punteggio di similarità solo dopo aver eseguito il confronto */}
+            {showSimilarity && signature.processingStatus === 'completed' && 
+             (signature.isReference || signature.comparisonResult !== null) && 
+             renderSimilarityScore({
               similarity: signature.comparisonResult,
               naturalness: signature.naturalnessScore,
               verdict: signature.verdict,
