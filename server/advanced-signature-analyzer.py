@@ -2211,7 +2211,12 @@ if __name__ == "__main__":
             height_mm = float(sys.argv[4])
             
             print(f"[PYTHON] Analisi: {image_path} -> {width_mm}x{height_mm}mm", file=sys.stderr)
+            print(f"[PYTHON] DEBUG: Chiamando analyze_signature_with_dimensions", file=sys.stderr)
             result = analyze_signature_with_dimensions(image_path, width_mm, height_mm)
+            
+            print(f"[PYTHON] DEBUG: Risultato ricevuto: {type(result)}", file=sys.stderr)
+            if isinstance(result, dict):
+                print(f"[PYTHON] DEBUG: Chiavi nel risultato: {list(result.keys())}", file=sys.stderr)
             
             print(f"[PYTHON] Analisi completata con {len(result) if result and 'error' not in result else 0} parametri", file=sys.stderr)
             print(json.dumps(result))
