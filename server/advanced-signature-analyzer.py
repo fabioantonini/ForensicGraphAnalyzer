@@ -274,28 +274,21 @@ def calculate_signature_inclination(contours):
     if inclinations:
         inclinations = np.array(inclinations)
         
-        # Filtra outliers estremi (firme possono avere inclinazioni fino a ±70°)
-        valid_inclinations = inclinations[np.abs(inclinations) <= 70]
+        # Filtra outliers estremi (oltre ±40° sono improbabili)
+        valid_inclinations = inclinations[np.abs(inclinations) <= 40]
         
         if len(valid_inclinations) > 0:
             # Usa mediana per robustezza contro outliers
             final_inclination = np.median(valid_inclinations)
             
             # Assicurati che sia nel range corretto
-            final_inclination = np.clip(final_inclination, -70, 70)
+            final_inclination = np.clip(final_inclination, -45, 45)
             
             print(f"[INCLINATION] Calcolate {len(inclinations)} misure, {len(valid_inclinations)} valide, risultato: {final_inclination:.1f}°", file=sys.stderr)
             return float(final_inclination)
         else:
-            # Fallback intelligente: usa la mediana di tutte le misure anche se "outliers"
-            if len(inclinations) > 0:
-                fallback_inclination = np.median(inclinations)
-                fallback_inclination = np.clip(fallback_inclination, -70, 70)
-                print(f"[INCLINATION] Tutte le {len(inclinations)} misure erano outliers >70°, uso mediana: {fallback_inclination:.1f}°", file=sys.stderr)
-                return float(fallback_inclination)
-            else:
-                print(f"[INCLINATION] Nessuna misura disponibile, uso fallback neutro: 0°", file=sys.stderr)
-                return 0.0
+            print(f"[INCLINATION] Tutte le {len(inclinations)} misure sono outliers, uso fallback", file=sys.stderr)
+            return 0.0
     
     # Fallback: scrittura verticale
     print("[INCLINATION] Nessuna misura disponibile, uso fallback 0°", file=sys.stderr)
