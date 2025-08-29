@@ -1217,7 +1217,13 @@ export default function SignaturesPage() {
                             const referenceData = referenceSignatures.length > 0 && referenceSignatures[0].parameters 
                               ? referenceSignatures[0].parameters : null;
                             
+                            // DEBUG: Mostra cosa contengono i dati
+                            console.log('[TABLE DEBUG] reportData keys:', Object.keys(reportData || {}));
+                            console.log('[TABLE DEBUG] referenceData keys:', Object.keys(referenceData || {}));
+                            console.log('[TABLE DEBUG] referenceSignatures found:', referenceSignatures.length);
+                            
                             if (!reportData || !referenceData) {
+                              console.log('[TABLE DEBUG] Missing data - reportData:', !!reportData, 'referenceData:', !!referenceData);
                               return null;
                             }
                             
