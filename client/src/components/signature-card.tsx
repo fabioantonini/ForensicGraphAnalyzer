@@ -538,11 +538,11 @@ export function SignatureCard({
                       <div className="space-y-2 mt-1 text-sm">
                         <div className="flex justify-between">
                           <span>{t('signatures.parameters.width', 'Larghezza')}:</span>
-                          <span>{((signature.parameters.width || 0) / 10).toFixed(1)} cm</span>
+                          <span>{((signature.realWidthMm || signature.parameters.realWidthMm || 0) / 10).toFixed(1)} cm</span>
                         </div>
                         <div className="flex justify-between">
                           <span>{t('signatures.parameters.height', 'Altezza')}:</span>
-                          <span>{((signature.parameters.height || 0) / 10).toFixed(1)} cm</span>
+                          <span>{((signature.realHeightMm || signature.parameters.realHeightMm || 0) / 10).toFixed(1)} cm</span>
                         </div>
                         <div className="flex justify-between">
                           <span>{t('signatures.parameters.aspectRatio', 'Proporzione')}:</span>
