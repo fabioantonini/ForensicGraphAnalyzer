@@ -9,6 +9,7 @@ vite.config.ts.*
 uploads/
 temp/
 chroma_data/
+attached_assets/
 *.pid
 *.log
 
