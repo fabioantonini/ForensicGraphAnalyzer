@@ -1395,8 +1395,14 @@ export default function SignaturesPage() {
                                           const maxValue = Math.max(Math.abs(refValue), Math.abs(verifyValue));
                                           
                                           let compatibility;
+                                          // Per parametri angolari (inclinazione), usa scala forense normalizzata
+                                          if (param.key === 'Inclination') {
+                                            // Normalizza su scala ±45° come nel backend forense
+                                            const normalizedDiff = Math.min(diff, 45) / 45;
+                                            compatibility = Math.max(0, (1 - normalizedDiff) * 100);
+                                          }
                                           // Per parametri con valori molto piccoli (es. asole), usa soglie assolute
-                                          if (param.key === 'AvgAsolaSize' || param.key === 'BaselineStdMm') {
+                                          else if (param.key === 'AvgAsolaSize' || param.key === 'BaselineStdMm') {
                                             if (diff <= 0.05) compatibility = 95; // Entrambi molto piccoli = alta compatibilità
                                             else if (diff <= 0.1) compatibility = 80;
                                             else if (diff <= 0.2) compatibility = 70;
