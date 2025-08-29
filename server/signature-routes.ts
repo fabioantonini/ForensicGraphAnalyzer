@@ -325,6 +325,15 @@ export function registerSignatureRoutes(appRouter: Router) {
               analysisReport = pythonResult.description;
               console.log(`[COMPARE-ALL] Fallback a descrizione testuale per firma ${signature.id}`);
             }
+
+            // ✅ NUOVO: Salva anche i parametri della firma di riferimento per il PDF
+            if (pythonResult.reference_parameters && !referenceSignature.analysisReport) {
+              const referenceAnalysisReport = JSON.stringify(pythonResult.reference_parameters);
+              await storage.updateSignature(referenceSignature.id, { 
+                analysisReport: referenceAnalysisReport 
+              });
+              console.log(`[COMPARE-ALL] ✅ Salvati parametri JSON per firma di riferimento ${referenceSignature.id} con ${Object.keys(pythonResult.reference_parameters).length} parametri`);
+            }
             
           } catch (pythonError) {
             console.error(`[COMPARE-ALL] Errore Python analyzer per firma ${signature.id}:`, pythonError);
