@@ -154,7 +154,10 @@ def calculate_signature_inclination(contours):
     Returns:
         Angolo di inclinazione in gradi (-45 a +45, dove 0=verticale, +15=inclinata destra)
     """
+    print(f"[INCLINATION-DEBUG] Funzione chiamata con {len(contours) if contours else 0} contorni", file=sys.stderr)
+    
     if not contours:
+        print("[INCLINATION-DEBUG] Nessun contorno fornito, ritorno 0.0", file=sys.stderr)
         return 0.0
     
     inclinations = []
