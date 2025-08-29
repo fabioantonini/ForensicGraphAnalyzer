@@ -905,7 +905,10 @@ export class SignatureAnalyzer {
   public static compareSignatures(
     targetParameters: SignatureParameters,
     referenceParameters: SignatureParameters[]
-  ): number {
+  ): { 
+    similarity: number; 
+    parameterCompatibilities: Record<string, number>;
+  } {
     if (!referenceParameters.length) {
       throw new Error('Nessuna firma di riferimento fornita per il confronto');
     }
@@ -913,7 +916,7 @@ export class SignatureAnalyzer {
     console.log(`Confrontando firma con ${referenceParameters.length} firme di riferimento`);
 
     // Calcola la similitudine media rispetto a tutte le firme di riferimento
-    const similarities = referenceParameters.map(refParams => {
+    const detailedResults = referenceParameters.map(refParams => {
       // Similitudine del rapporto d'aspetto (con protezione completa contro valori non validi)
       const targetDims = targetParameters.realDimensions;
       const refDims = refParams.realDimensions;
@@ -974,16 +977,42 @@ export class SignatureAnalyzer {
       
       console.log(`Similitudine componenti: aspetto=${aspectRatioSim.toFixed(3)}, spessore=${strokeWidthSim.toFixed(3)}, lunghezza=${strokeLengthSim.toFixed(3)}, inclinazione=${inclinationSim.toFixed(3)}, complessità=${complexitySim.toFixed(3)}, caratteristiche=${featureSim.toFixed(3)} -> totale=${similarity.toFixed(3)}`);
       
-      return similarity;
+      // Restituisci oggetto dettagliato con compatibilità individuali
+      return {
+        similarity,
+        compatibilities: {
+          Proportion: aspectRatioSim * 100,
+          Inclination: inclinationSim * 100,
+          PressureMean: strokeWidthSim * 100,        // Approssimazione spessore->pressione
+          StrokeComplexity: complexitySim * 100,
+          LoopPoints: featureSim * 100,
+          StrokeLength: strokeLengthSim * 100
+        }
+      };
     });
     
-    // Restituisci la media delle similitudini con protezione finale
-    const validSimilarities = similarities.filter(sim => !isNaN(sim) && isFinite(sim));
-    const finalSimilarity = validSimilarities.length > 0 ? 
-      validSimilarities.reduce((sum, sim) => sum + sim, 0) / validSimilarities.length : 0.5;
+    // Calcola la media delle similitudini e compatibilità con protezione finale
+    const validResults = detailedResults.filter(result => 
+      !isNaN(result.similarity) && isFinite(result.similarity));
     
-    console.log(`Similitudine finale: ${finalSimilarity.toFixed(3)} (${validSimilarities.length}/${similarities.length} valori validi)`);
+    const finalSimilarity = validResults.length > 0 ? 
+      validResults.reduce((sum, result) => sum + result.similarity, 0) / validResults.length : 0.5;
     
-    return Math.max(0, Math.min(1, finalSimilarity)); // Assicura che sia tra 0 e 1
+    // Calcola compatibilità medie parametro per parametro
+    const avgCompatibilities: Record<string, number> = {};
+    if (validResults.length > 0) {
+      const paramKeys = Object.keys(validResults[0].compatibilities);
+      paramKeys.forEach(key => {
+        avgCompatibilities[key] = validResults.reduce((sum, result) => 
+          sum + result.compatibilities[key], 0) / validResults.length;
+      });
+    }
+    
+    console.log(`Similitudine finale: ${finalSimilarity.toFixed(3)} (${validResults.length}/${detailedResults.length} valori validi)`);
+    
+    return {
+      similarity: Math.max(0, Math.min(1, finalSimilarity)),
+      parameterCompatibilities: avgCompatibilities
+    };
   }
 }
