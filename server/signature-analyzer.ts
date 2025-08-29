@@ -157,6 +157,7 @@ export class SignatureAnalyzer {
       };
       
       console.log(`[ANALYZER] Analisi completata con ${Object.keys(finalParameters).length} parametri`);
+      console.log(`[DEBUG-DIMENSION] Dimensioni: ${realWidthMm}mm x ${realHeightMm}mm, Proporzione: ${(realWidthMm/realHeightMm).toFixed(3)}`);
       return finalParameters;
     } catch (error: any) {
       console.error(`[ANALYZER] Errore nell'analisi della firma ${imagePath}:`, error);
