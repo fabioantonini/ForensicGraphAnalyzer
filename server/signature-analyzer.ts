@@ -111,6 +111,13 @@ export class SignatureAnalyzer {
           heightMm: realHeightMm
         },
         
+        // MAPPING CORRETTO dall'analisi esistente per i campi che mostrano N/A
+        centerX: existingAnalysis.spatialDistribution?.centerOfMassX || 0,
+        centerY: existingAnalysis.spatialDistribution?.centerOfMassY || 0,
+        asole: existingAnalysis.featurePoints?.loopPoints || 0,
+        angoliNetti: existingAnalysis.featurePoints?.crossPoints || 0,
+        density: existingAnalysis.spatialDistribution?.inkDensity || 0,
+        
         // Parametri avanzati integrati con nomi corretti dal Python
         ...(advancedAnalysis.Proportion !== undefined && {
           proportion: advancedAnalysis.Proportion,
