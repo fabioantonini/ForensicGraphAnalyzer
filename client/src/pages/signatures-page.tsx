@@ -94,6 +94,7 @@ export default function SignaturesPage() {
   const [selectedReferenceFile, setSelectedReferenceFile] = useState<File | null>(null);
   const [selectedVerifyFile, setSelectedVerifyFile] = useState<File | null>(null);
   const [autoOpenedProjects, setAutoOpenedProjects] = useState<Set<number>>(new Set());
+  const [manuallyClosedProjects, setManuallyClosedProjects] = useState<Set<number>>(new Set());
   // Rimosso state per modifica DPI globale
   
   // Form for creating new project
@@ -510,6 +511,15 @@ export default function SignaturesPage() {
       setComparisonResults(data);
       setShowResultsDialog(true);
       
+      // Reset manual close tracking when user manually triggers comparison
+      if (selectedProject) {
+        setManuallyClosedProjects(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(selectedProject);
+          return newSet;
+        });
+      }
+      
       // Forza l'aggiornamento completo dei dati
       queryClient.invalidateQueries({ queryKey: [`/api/signature-projects/${selectedProject}/signatures`] });
       queryClient.invalidateQueries({ queryKey: ["/api/signature-projects", selectedProject, "signatures"] });
@@ -541,9 +551,9 @@ export default function SignaturesPage() {
 
   // Rimosso useEffect per aggiornare il form DPI globale
   
-  // Auto-open results dialog if comparison results already exist
+  // Auto-open results dialog if comparison results already exist (only if not manually closed)
   useEffect(() => {
-    if (signatures && signatures.length > 0 && selectedProject) {
+    if (signatures && signatures.length > 0 && selectedProject && !manuallyClosedProjects.has(selectedProject)) {
       // Check if we have signatures with comparison results
       const signaturesWithResults = signatures.filter(sig => 
         sig.comparisonResult !== null && 
@@ -557,12 +567,22 @@ export default function SignaturesPage() {
         setShowResultsDialog(true);
       }
     }
-  }, [selectedProject, signatures, showResultsDialog]);
+  }, [selectedProject, signatures, showResultsDialog, manuallyClosedProjects]);
   
-  // Reset auto-open tracking when project changes to allow re-opening on project switch
+  // Reset tracking when project changes to allow re-opening on project switch
   useEffect(() => {
     setAutoOpenedProjects(new Set());
+    setManuallyClosedProjects(new Set());
   }, [selectedProject]);
+  
+  // Handle dialog close - mark as manually closed to prevent auto-reopening
+  const handleResultsDialogClose = (isOpen: boolean) => {
+    setShowResultsDialog(isOpen);
+    if (!isOpen && selectedProject) {
+      // Mark this project as manually closed to prevent auto-reopening
+      setManuallyClosedProjects(prev => new Set([...prev, selectedProject]));
+    }
+  };
   
   return (
     <div className="container mx-auto py-6">
@@ -1133,7 +1153,7 @@ export default function SignaturesPage() {
       {/* Rimosso dialogo di modifica DPI globale */}
       
       {/* Dialog per mostrare i risultati del confronto */}
-      <Dialog open={showResultsDialog} onOpenChange={setShowResultsDialog}>
+      <Dialog open={showResultsDialog} onOpenChange={handleResultsDialogClose}>
         <DialogContent className="max-w-full max-h-full w-screen h-screen flex flex-col p-0 m-0">
           <DialogHeader className="px-6 pt-4 pb-2 border-b bg-background">
             <div>
