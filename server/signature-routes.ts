@@ -298,7 +298,7 @@ export function registerSignatureRoutes(appRouter: Router) {
             
             if (pythonResult.confidence !== undefined) {
               confidenceLevel = pythonResult.confidence;
-              console.log(`[COMPARE-ALL] ✅ CONFIDENZA: ${(confidenceLevel * 100).toFixed(1)}% per firma ${signature.id}`);
+              console.log(`[COMPARE-ALL] ✅ CONFIDENZA: ${confidenceLevel.toFixed(1)}% per firma ${signature.id}`);
             }
             
             if (pythonResult.explanation) {

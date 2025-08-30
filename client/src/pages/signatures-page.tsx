@@ -1385,6 +1385,9 @@ export default function SignaturesPage() {
                                           let compatibility;
                                           
                                           // Prima prova a usare le compatibilità pre-calcolate dal Python analyzer (forensi)
+                                          console.log(`[DEBUG] signature.parameterCompatibilities:`, (signature as any).parameterCompatibilities);
+                                          console.log(`[DEBUG] param.key:`, param.key, `- valore:`, (signature as any).parameterCompatibilities?.[param.key]);
+                                          
                                           if ((signature as any).parameterCompatibilities && (signature as any).parameterCompatibilities[param.key] !== undefined) {
                                             compatibility = (signature as any).parameterCompatibilities[param.key];
                                             console.log(`[PARAM] ✅ USATA compatibilità FORENSE per ${param.key}: ${compatibility.toFixed(1)}%`);
