@@ -532,6 +532,24 @@ export default function SignaturesPage() {
 
   // Rimosso useEffect per aggiornare il form DPI globale
   
+  // Auto-open results dialog if comparison results already exist
+  useEffect(() => {
+    if (signatures && signatures.length > 0 && selectedProject) {
+      // Check if we have signatures with comparison results
+      const signaturesWithResults = signatures.filter(sig => 
+        sig.comparisonResult !== null && 
+        sig.comparisonResult !== undefined && 
+        !isNaN(sig.comparisonResult)
+      );
+      
+      if (signaturesWithResults.length > 0 && !showResultsDialog) {
+        console.log(`[AUTO-OPEN] Found ${signaturesWithResults.length} signatures with comparison results, opening dialog automatically`);
+        setComparisonResults(signatures);
+        setShowResultsDialog(true);
+      }
+    }
+  }, [selectedProject, signatures, showResultsDialog]);
+  
   return (
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6" data-tour="signatures-header">
@@ -915,7 +933,11 @@ export default function SignaturesPage() {
                   data-tour="compare-signatures"
                 >
                   {compareAllSignatures.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {t('signatures.compareAll')}
+                  {/* Check if we have existing results to show "Aggiorna" instead of "Confronta" */}
+                  {signatures && signatures.some(sig => sig.comparisonResult !== null && sig.comparisonResult !== undefined) 
+                    ? (compareAllSignatures.isPending ? "Ricalcolando..." : "Aggiorna Comparazione")
+                    : t('signatures.compareAll')
+                  }
                 </Button>
                 <HelpTooltip 
                   content=""
