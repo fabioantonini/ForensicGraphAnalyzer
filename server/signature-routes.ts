@@ -426,6 +426,8 @@ export function registerSignatureRoutes(appRouter: Router) {
           
           // Aggiornamento diretto nel database PostgreSQL per i campi di riferimento
           try {
+            console.log(`[COMPARE-ALL] 🔍 SALVATAGGIO parameterCompatibilities per firma ${signature.id}:`, JSON.stringify(updateData.parameterCompatibilities, null, 2));
+            
             await db.update(signatures)
               .set({
                 comparisonChart: updateData.comparisonChart,
