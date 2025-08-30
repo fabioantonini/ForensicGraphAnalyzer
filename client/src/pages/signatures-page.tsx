@@ -347,6 +347,14 @@ export default function SignaturesPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/signature-projects/${selectedProject}/signatures`] });
+      // Reset auto-open tracking when a signature is deleted to invalidate existing comparisons
+      if (selectedProject) {
+        setAutoOpenedProjects(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(selectedProject);
+          return newSet;
+        });
+      }
       toast({
         title: "Successo",
         description: "Firma eliminata con successo",
