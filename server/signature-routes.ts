@@ -343,7 +343,6 @@ export function registerSignatureRoutes(appRouter: Router) {
             }
             
             // === NUOVO: ESTRAI COMPATIBILITÀ PARAMETRO PER PARAMETRO ===
-            let parameterCompatibilities: Record<string, number> = {};
             if (pythonResult.compatibilities) {
               parameterCompatibilities = pythonResult.compatibilities;
               console.log(`[COMPARE-ALL] 🎯 Estratte compatibilità forensi dal Python analyzer:`, Object.keys(parameterCompatibilities).map(key => 
