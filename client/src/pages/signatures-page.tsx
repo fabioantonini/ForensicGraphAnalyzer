@@ -541,9 +541,9 @@ export default function SignaturesPage() {
 
   // Rimosso useEffect per aggiornare il form DPI globale
   
-  // Auto-open results dialog if comparison results already exist (only once per project)
+  // Auto-open results dialog if comparison results already exist
   useEffect(() => {
-    if (signatures && signatures.length > 0 && selectedProject && !autoOpenedProjects.has(selectedProject)) {
+    if (signatures && signatures.length > 0 && selectedProject) {
       // Check if we have signatures with comparison results
       const signaturesWithResults = signatures.filter(sig => 
         sig.comparisonResult !== null && 
@@ -551,15 +551,18 @@ export default function SignaturesPage() {
         !isNaN(sig.comparisonResult)
       );
       
-      if (signaturesWithResults.length > 0) {
+      if (signaturesWithResults.length > 0 && !showResultsDialog) {
         console.log(`[AUTO-OPEN] Found ${signaturesWithResults.length} signatures with comparison results, opening dialog automatically`);
         setComparisonResults(signatures);
         setShowResultsDialog(true);
-        // Mark this project as auto-opened to prevent re-opening
-        setAutoOpenedProjects(prev => new Set([...prev, selectedProject]));
       }
     }
-  }, [selectedProject, signatures, autoOpenedProjects]);
+  }, [selectedProject, signatures, showResultsDialog]);
+  
+  // Reset auto-open tracking when project changes to allow re-opening on project switch
+  useEffect(() => {
+    setAutoOpenedProjects(new Set());
+  }, [selectedProject]);
   
   return (
     <div className="container mx-auto py-6">
