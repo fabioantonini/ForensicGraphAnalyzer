@@ -369,6 +369,200 @@ Il frontend **non calcola** parametri grafologici, ma si limita a:
 
 ---
 
+## **🎓 SIGNIFICATO GRAFOLOGICO DEI PARAMETRI**
+
+### **📊 Parametri Grafologici Primari - Interpretazione Forense:**
+
+#### **1. PressureMean (16% - Peso Massimo)**
+**Significato:** Intensità media con cui la persona preme la penna sul foglio.
+- **Alto (>150):** Personalità determinata, energia elevata, possibile tensione
+- **Medio (80-150):** Equilibrio emotivo, controllo normale della scrittura  
+- **Basso (<80):** Delicatezza, possibile debolezza fisica o emotiva
+- **🔍 Forense:** Parametro molto stabile nel tempo, difficile da imitare consapevolmente
+
+#### **2. AvgCurvature (14%)**
+**Significato:** Grado di curvilinearità vs angolarità dei tratti.
+- **Alta:** Scrittura fluida, personalità adattabile, pensiero intuitivo
+- **Bassa:** Scrittura angolare, rigidità mentale, pensiero logico-razionale
+- **🔍 Forense:** Caratteristica profondamente inconscia, resistente alla dissimulazione
+
+#### **3. Proportion (12%)**
+**Significato:** Rapporto tra sviluppo orizzontale e verticale della firma.
+- **>2:** Firma molto allargata - estroversione, bisogno di spazio sociale
+- **1-2:** Proporzioni equilibrate - personalità bilanciata
+- **<1:** Firma compressa - introversione, autocontrollo, riservatezza
+- **🔍 Forense:** Riflette l'immagine di sé e la proiezione sociale
+
+#### **4. Velocity (10%)**
+**Significato:** Velocità stimata di esecuzione della firma.
+- **Alta (>3):** Impazienza, rapidità decisionale, possibile superficialità
+- **Media (2-3):** Ritmo equilibrato, controllo normale
+- **Bassa (<2):** Riflessione, precisione, possibile insicurezza o età avanzata
+- **🔍 Forense:** Difficile controllare consapevolmente durante l'imitazione
+
+#### **5. PressureStd (8%)**
+**Significato:** Variabilità della pressione durante la scrittura.
+- **Alta:** Instabilità emotiva, nervosismo, stress
+- **Media:** Controllo normale delle emozioni
+- **Bassa:** Equilibrio, controllo costante, possibile rigidità
+- **🔍 Forense:** Indicatore di stato emotivo al momento della firma
+
+#### **6. AvgAsolaSize (8%)**
+**Significato:** Dimensione degli "occhielli" o spazi chiusi nelle lettere (come nelle 'a', 'o', 'e').
+- **Grandi (>2mm²):** Immaginazione, apertura mentale, espansività, possibile vanità
+- **Medie (0.5-2mm²):** Equilibrio tra razionalità e creatività, controllo normale
+- **Piccole (<0.5mm²):** Controllo, riservatezza, possibile chiusura mentale, precisione
+- **🔍 Forense:** Caratteristica molto personale e distintiva, difficile da contraffare
+
+#### **7. AvgSpacing (6%)**
+**Significato:** Distanza tra gli elementi grafici della firma.
+- **Ampia (>3mm):** Bisogno di autonomia, distacco sociale, possibile isolamento
+- **Media (1-3mm):** Socialità equilibrata, normale gestione delle relazioni
+- **Stretta (<1mm):** Socievolezza, legami stretti, possibile dipendenza dagli altri
+- **🔍 Forense:** Riflette il rapporto con gli altri e la gestione dello spazio sociale
+
+#### **8. Inclination (5%)**
+**Significato:** Inclinazione media dei tratti rispetto alla verticale.
+- **Destra (+15° a +45°):** Estroversione, slancio verso il futuro, emotività, impulsività
+- **Verticale (-5° a +5°):** Controllo, equilibrio, razionalità, autocontrollo
+- **Sinistra (-5° a -45°):** Introversione, legame al passato, riflessione, prudenza
+- **🔍 Forense:** Parametro fondamentale - riflette orientamento psicologico profondo
+
+#### **9. OverlapRatio (5%)**
+**Significato:** Densità di "riempimento" dell'area occupata dalla firma.
+- **Alto (>60%):** Presenza dominante, assertività, possibile invadenza o aggressività
+- **Medio (30-60%):** Equilibrio nell'occupazione dello spazio, presenza normale
+- **Basso (<30%):** Discrezione, modestia, possibile insicurezza o timidezza
+- **🔍 Forense:** Riflette autostima e percezione del proprio ruolo sociale
+
+#### **10. LetterConnections (5%)**
+**Significato:** Continuità del flusso grafico tra elementi della firma.
+- **Molte (>8):** Logica deduttiva, pensiero sequenziale, sistematicità, coerenza
+- **Medie (4-8):** Equilibrio tra logica e intuizione, flessibilità mentale
+- **Poche (<4):** Intuizione predominante, pensiero per salti, creatività, frammentarietà
+- **🔍 Forense:** Indica modalità di ragionamento e organizzazione del pensiero
+
+#### **11. BaselineStdMm (4%)**
+**Significato:** Stabilità della linea di base immaginaria su cui "poggia" la scrittura.
+- **Bassa (<0.5mm):** Controllo superiore, stabilità emotiva, determinazione, costanza
+- **Media (0.5-1mm):** Normale variabilità emotiva, flessibilità controllata
+- **Alta (>1mm):** Instabilità emotiva, variabilità umorale, stress, possibile ansia
+- **🔍 Forense:** Indicatore primario di controllo psicomotorio e stato emotivo
+
+#### **12. StrokeComplexity (4%)**
+**Significato:** Ricchezza di dettagli e articolazione dei movimenti grafici.
+- **Alta (>0.8):** Personalità complessa, ricchezza interiore, possibile complicazione mentale
+- **Media (0.3-0.8):** Equilibrio tra semplicità ed espressività, normale articolazione
+- **Bassa (<0.3):** Essenzialità, chiarezza mentale, possibile semplificazione eccessiva
+- **🔍 Forense:** Riflette la complessità della struttura di personalità
+
+#### **13. ConnectedComponents (2%)**
+**Significato:** Frammentazione vs continuità nell'esecuzione della firma.
+- **Poche (1-2):** Continuità esecutiva, coerenza interna, pensiero integrato
+- **Medie (3-4):** Normale articolazione con pause controllate
+- **Molte (>4):** Frammentazione, possibile dispersività, ansia o tremori
+- **🔍 Forense:** Indica coerenza interna e controllo neuromotorio
+
+#### **14. WritingStyle (1%)**
+**Significato:** Modalità grafica predominante adottata.
+- **Corsivo:** Fluidità espressiva, adattabilità, emotività, personalizzazione
+- **Stampatello:** Controllo formale, chiarezza comunicativa, possibile rigidità
+- **Misto:** Flessibilità adattiva, equilibrio tra controllo ed espressività
+- **🔍 Forense:** Riflette modalità di approccio alle relazioni e alla comunicazione
+
+#### **15. Readability (0%)**
+**Significato:** Chiarezza e leggibilità complessiva della forma grafica.
+- **Alta:** Chiarezza comunicativa, trasparenza relazionale, ordine mentale
+- **Media:** Normale equilibrio tra espressività personale e controllo sociale
+- **Bassa:** Complessità espressiva, possibile confusione o volontà di riservatezza
+- **🔍 Forense:** Indica atteggiamento verso la comunicazione e la trasparenza sociale
+
+---
+
+### **🧠 Parametri di Naturalezza - Rilevamento Dissimulazioni:**
+
+#### **1. FluidityScore (40% naturalezza)**
+**Significato:** Misura la fluidità e naturalezza dei movimenti grafici analizzando la regolarità delle curve.
+- **Alto (>80):** Movimenti grafici spontanei e naturali, esecuzione automatica della firma
+- **Medio (50-80):** Controllo normale con occasionali micro-tensioni, naturalezza accettabile  
+- **Basso (<50):** Movimenti rigidi e controllati, possibile dissimulazione consapevole
+- **🔍 Forense:** **CRUCIALE per rilevare imitazioni** - la fluidità naturale è impossibile da simulare perfettamente
+
+#### **2. PressureConsistency (30% naturalezza)** 
+**Significato:** Analizza la costanza della pressione lungo tutto il tracciato della firma.
+- **Alta (>80):** Controllo motorio stabile, equilibrio neuromotorio, esecuzione spontanea
+- **Media (50-80):** Normale variabilità della pressione, controllo adeguato
+- **Bassa (<50):** Variazioni irregolari di pressione, possibile tensione da imitazione
+- **🔍 Forense:** **INDICATORE DI AUTENTICITÀ** - le imitazioni mostrano inconsistenza tipica dello sforzo
+
+#### **3. CoordinationIndex (30% naturalezza)**
+**Significato:** Valuta la coordinazione motoria fine attraverso l'analisi della regolarità di curve e angoli.
+- **Alto (>80):** Eccellente controllo neuromotorio, movimenti armonici e coordinati
+- **Medio (50-80):** Coordinazione normale, controllo psicomotorio adeguato
+- **Basso (<50):** Incoordinazione motoria, tremori, stress da falsificazione
+- **🔍 Forense:** **RILEVATORE DI STRESS DA IMITAZIONE** - i falsari mostrano micro-tremori e incoordinazione
+
+#### **4. NaturalnessIndex (Indice Combinato Finale)**
+**Significato:** Punteggio globale che combina fluidità, consistenza pressione e coordinazione motoria.
+- **Alto (>80):** Firma eseguita in modo completamente naturale, altissima probabilità di autenticità
+- **Medio (60-80):** Esecuzione normale con lievi tensioni fisiologiche o emotive
+- **Basso (<60):** Forte sospetto di dissimulazione, imitazione, o stress estremo
+- **🔍 Forense:** **INDICATORE PRINCIPALE DI FALSIFICAZIONE** - combina tutti gli aspetti dell'automatismo grafico
+
+---
+
+### **📊 Parametri SSIM - Significato nell'Analisi Visiva:**
+
+#### **1. Luminance (Luminosità)**
+**Significato:** Confronta la luminosità media delle due firme.
+- **Alta (>0.9):** Intensità di tratto molto simile, stesso tipo di penna/pressione
+- **Media (0.7-0.9):** Leggere differenze di intensità, compatibile
+- **Bassa (<0.7):** Differenze significative di pressione o strumento di scrittura
+- **🔍 Forense:** Indica coerenza nello strumento e nel modo di scrivere
+
+#### **2. Contrast (Contrasto)**
+**Significato:** Confronta la variabilità tonal all'interno di ciascuna firma.
+- **Alto (>0.9):** Pattern di contrasto molto simili, stessa dinamica di pressione
+- **Medio (0.7-0.9):** Lievi differenze nel controllo della pressione
+- **Basso (<0.7):** Dinamiche di pressione significativamente diverse
+- **🔍 Forense:** Rivela differenze nel controllo motorio della pressione
+
+#### **3. Structure (Struttura)**
+**Significato:** Confronta l'organizzazione spaziale e la forma geometrica complessiva.
+- **Alta (>0.9):** Struttura geometrica quasi identica, stessa "architettura" della firma
+- **Media (0.7-0.9):** Struttura compatibile con lievi variazioni
+- **Bassa (<0.7):** Architettura della firma significativamente diversa
+- **🔍 Forense:** Parametro più importante per l'identificazione - confronta la "forma" globale
+
+#### **4. SSIM Total (Punteggio Finale)**
+**Significato:** Indice complessivo di similarità strutturale tra le due firme.
+- **Alto (>0.8):** Firme visualmente molto simili, alta compatibilità
+- **Medio (0.6-0.8):** Similarità accettabile con alcune differenze
+- **Basso (<0.6):** Differenze visive significative, scarsa compatibilità
+- **🔍 Forense:** **GOLD STANDARD** per la comparazione visiva oggettiva
+
+---
+
+### **🎯 Significato Integrato nell'Analisi Forense:**
+
+#### **🔬 Parametri di Stabilità (Alta Affidabilità):**
+- **PressureMean, AvgCurvature, Inclination**: Caratteristiche profonde della personalità
+- **Difficili da modificare** consapevolmente o imitare accuratamente
+
+#### **📊 Parametri di Controllo (Media Affidabilità):**
+- **Proportion, Velocity, StrokeComplexity**: Modificabili con sforzo consapevole
+- **Utili per rilevare** tentativi di dissimulazione
+
+#### **🔍 Parametri di Esecuzione (Variabili):**
+- **PressureStd, LetterConnections, BaselineStdMm**: Influenzati da stato emotivo
+- **Indicatori di stress** o condizioni particolari al momento della firma
+
+#### **🎨 Parametri Stilistici (Interpretativi):**
+- **WritingStyle, Readability, AvgSpacing**: Caratteristiche più superficiali
+- **Facilmente influenzabili** da fattori esterni
+
+---
+
 ## **🔍 CONCLUSIONI**
 
 **GrapholexInsight utilizza un approccio forense multi-livello** che combina:
