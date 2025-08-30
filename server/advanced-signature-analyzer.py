@@ -477,13 +477,14 @@ def create_naturalness_chart(verifica_data, comp_data):
         
         return image_base64
 
-def create_comparison_chart(verifica_data, comp_data):
+def create_comparison_chart(verifica_data, comp_data, forensic_compatibilities=None):
     """
     Crea un grafico di confronto tra i parametri di due firme
     
     Args:
         verifica_data: Parametri della firma da verificare
         comp_data: Parametri della firma di riferimento
+        forensic_compatibilities: Compatibilità forensi già calcolate (opzionale)
         
     Returns:
         Base64-encoded PNG immagine del grafico
@@ -551,50 +552,64 @@ def create_comparison_chart(verifica_data, comp_data):
     # Calcola la compatibilità percentuale per ogni parametro
     compatibilita_percentuale = []
     
-    for i, diff in enumerate(differenze):
-        valore_v = verifica_data.get(parametri_numerici[i], 0)
-        valore_c = comp_data.get(parametri_numerici[i], 0)
-        
-        # Se entrambi i valori sono 0, assegna 50% (nessun dato disponibile)
-        if valore_v == 0 and valore_c == 0:
-            print(f"[WARNING] Parametro {parametri_numerici[i]} non trovato nei dati - valore_v: {valore_v}, valore_c: {valore_c}", file=sys.stderr)
-            compatibilita_percentuale.append(50)  # Compatibilità neutra per dati mancanti
-            continue
+    # === NUOVO: USA COMPATIBILITÀ FORENSI SE DISPONIBILI ===
+    if forensic_compatibilities:
+        print(f"[CHART] 🎯 Uso compatibilità forensi per il grafico: {len(forensic_compatibilities)} parametri", file=sys.stderr)
+        for parametro in parametri_numerici:
+            if parametro in forensic_compatibilities:
+                compatibilita = forensic_compatibilities[parametro]
+                compatibilita_percentuale.append(compatibilita)
+                print(f"[CHART] ✅ {parametro}: {compatibilita}% (forense)", file=sys.stderr)
+            else:
+                compatibilita_percentuale.append(0)  # Parametro mancante
+                print(f"[CHART] ⚠️ {parametro}: 0% (mancante)", file=sys.stderr)
+    else:
+        # === FALLBACK: CALCOLO ORIGINALE ===
+        print(f"[CHART] ⚠️ Uso calcolo fallback per il grafico", file=sys.stderr)
+        for i, diff in enumerate(differenze):
+            valore_v = verifica_data.get(parametri_numerici[i], 0)
+            valore_c = comp_data.get(parametri_numerici[i], 0)
             
-        # USA LA STESSA LOGICA INTELLIGENTE DEL FRONTEND per la compatibilità
-        parametro_nome = parametri_numerici[i]
-        
-        # Per parametri con valori molto piccoli (es. asole), usa soglie assolute
-        if parametro_nome in ['AvgAsolaSize', 'BaselineStdMm']:
-            if diff <= 0.05:
-                compatibilita = 95  # Entrambi molto piccoli = alta compatibilità  
-            elif diff <= 0.10:
-                compatibilita = 85
-            elif diff <= 0.20:
-                compatibilita = 70
-            else:
-                compatibilita = max(20, 70 - (diff * 100))  # Graduale invece di fisso 50%
-        else:
-            # Per altri parametri, usa soglie relative
-            valore_max = max(abs(valore_v), abs(valore_c))
-            if valore_max == 0:
-                compatibilita = 100  # Identici
-            else:
-                diff_percentuale = (diff / valore_max) * 100
-                if diff_percentuale <= 5:
-                    compatibilita = 98
-                elif diff_percentuale <= 10:
-                    compatibilita = 90
-                elif diff_percentuale <= 15:
-                    compatibilita = 80
-                elif diff_percentuale <= 25:
+            # Se entrambi i valori sono 0, assegna 50% (nessun dato disponibile)
+            if valore_v == 0 and valore_c == 0:
+                print(f"[WARNING] Parametro {parametri_numerici[i]} non trovato nei dati - valore_v: {valore_v}, valore_c: {valore_c}", file=sys.stderr)
+                compatibilita_percentuale.append(50)  # Compatibilità neutra per dati mancanti
+                continue
+                
+            # USA LA STESSA LOGICA INTELLIGENTE DEL FRONTEND per la compatibilità
+            parametro_nome = parametri_numerici[i]
+            
+            # Per parametri con valori molto piccoli (es. asole), usa soglie assolute
+            if parametro_nome in ['AvgAsolaSize', 'BaselineStdMm']:
+                if diff <= 0.05:
+                    compatibilita = 95  # Entrambi molto piccoli = alta compatibilità  
+                elif diff <= 0.10:
+                    compatibilita = 85
+                elif diff <= 0.20:
                     compatibilita = 70
-                elif diff_percentuale <= 40:
-                    compatibilita = 50
                 else:
-                    compatibilita = max(0, 100 - diff_percentuale)
-            
-        compatibilita_percentuale.append(compatibilita)
+                    compatibilita = max(20, 70 - (diff * 100))  # Graduale invece di fisso 50%
+            else:
+                # Per altri parametri, usa soglie relative
+                valore_max = max(abs(valore_v), abs(valore_c))
+                if valore_max == 0:
+                    compatibilita = 100  # Identici
+                else:
+                    diff_percentuale = (diff / valore_max) * 100
+                    if diff_percentuale <= 5:
+                        compatibilita = 98
+                    elif diff_percentuale <= 10:
+                        compatibilita = 90
+                    elif diff_percentuale <= 15:
+                        compatibilita = 80
+                    elif diff_percentuale <= 25:
+                        compatibilita = 70
+                    elif diff_percentuale <= 40:
+                        compatibilita = 50
+                    else:
+                        compatibilita = max(0, 100 - diff_percentuale)
+                
+            compatibilita_percentuale.append(compatibilita)
 
     # Crea l'immagine del grafico - dimensioni più grandi per tutti i parametri
     fig = Figure(figsize=(14, max(10, len(parametri_numerici) * 0.6)))
@@ -1229,7 +1244,7 @@ generateInterpretation();
     # Normalizza i parametri per garantire chiavi corrette nel grafico
     verifica_data_normalized = normalize_parameter_keys(verifica_data)
     comp_data_normalized = normalize_parameter_keys(comp_data)
-    chart_img_base64 = create_comparison_chart(verifica_data_normalized, comp_data_normalized)
+    chart_img_base64 = create_comparison_chart(verifica_data_normalized, comp_data_normalized, compatibilities)
     
     # === NUOVO: GRAFICO DI NATURALEZZA ===
     naturalness_chart_base64 = create_naturalness_chart(verifica_data_normalized, comp_data_normalized)
@@ -1490,7 +1505,7 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
         
         
         # Crea il grafico di confronto con parametri normalizzati
-        chart_img = create_comparison_chart(verifica_data_normalized, comp_data_normalized)
+        chart_img = create_comparison_chart(verifica_data_normalized, comp_data_normalized, compatibilities)
         
         # === NUOVO: GRAFICO DI NATURALEZZA ===
         naturalness_chart_img = create_naturalness_chart(verifica_data_normalized, comp_data_normalized)
