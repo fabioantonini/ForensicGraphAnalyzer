@@ -235,6 +235,7 @@ export function registerSignatureRoutes(appRouter: Router) {
           let similarityScore = 0;
           let comparisonChart = null;
           let analysisReport = null;
+          let parameterCompatibilities: Record<string, number> = {}; // === NUOVO: COMPATIBILITÀ FORENSI ===
           
           // === DICHIARAZIONE VARIABILI DI NATURALEZZA ===
           let naturalnessScore = null;
@@ -324,6 +325,16 @@ export function registerSignatureRoutes(appRouter: Router) {
               analysisReport = pythonResult.description;
               console.log(`[COMPARE-ALL] Fallback a descrizione testuale per firma ${signature.id}`);
             }
+            
+            // === NUOVO: ESTRAI COMPATIBILITÀ PARAMETRO PER PARAMETRO ===
+            let parameterCompatibilities: Record<string, number> = {};
+            if (pythonResult.comparison_data && pythonResult.comparison_data.compatibilities) {
+              parameterCompatibilities = pythonResult.comparison_data.compatibilities;
+              console.log(`[COMPARE-ALL] 🎯 Estratte compatibilità forensi:`, Object.keys(parameterCompatibilities).map(key => 
+                `${key}: ${parameterCompatibilities[key].toFixed(1)}%`).join(', '));
+            } else {
+              console.log(`[COMPARE-ALL] ⚠️ Compatibilità parametri non trovate in pythonResult.comparison_data`);
+            }
 
             // ✅ NUOVO: Salva anche i parametri della firma di riferimento per il PDF
             console.log(`[DEBUG REF] reference_parameters esistono: ${!!pythonResult.reference_parameters}`);
@@ -364,6 +375,7 @@ export function registerSignatureRoutes(appRouter: Router) {
           const updateData: any = {
             comparisonResult: similarityScore,
             analysisReport,
+            parameterCompatibilities: parameterCompatibilities, // === NUOVO: COMPATIBILITÀ FORENSI ===
             
             // === NUOVI CAMPI PER INDICE DI NATURALEZZA ===
             naturalnessScore: naturalnessScore,
@@ -395,6 +407,7 @@ export function registerSignatureRoutes(appRouter: Router) {
                 analysisReport: updateData.analysisReport,
                 reportPath: updateData.reportPath,
                 comparisonResult: updateData.comparisonResult,
+                parameterCompatibilities: updateData.parameterCompatibilities, // === NUOVO: COMPATIBILITÀ FORENSI ===
                 
                 // === NUOVI CAMPI PER INDICE DI NATURALEZZA ===
                 naturalnessScore: updateData.naturalnessScore,

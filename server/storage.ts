@@ -961,6 +961,7 @@ export class MemStorage implements IStorage {
     reportPath?: string;
     dpi?: number;
     comparisonResult?: number;
+    parameterCompatibilities?: Record<string, number>;
     referenceSignatureFilename?: string;
     referenceSignatureOriginalFilename?: string;
     referenceDpi?: number;
@@ -978,6 +979,7 @@ export class MemStorage implements IStorage {
       ...(data.reportPath !== undefined && { reportPath: data.reportPath }),
       ...(data.dpi !== undefined && { dpi: data.dpi }),
       ...(data.comparisonResult !== undefined && { comparisonResult: data.comparisonResult }),
+      ...(data.parameterCompatibilities !== undefined && { parameterCompatibilities: data.parameterCompatibilities }),
       ...(data.referenceSignatureFilename !== undefined && { referenceSignatureFilename: data.referenceSignatureFilename }),
       ...(data.referenceSignatureOriginalFilename !== undefined && { referenceSignatureOriginalFilename: data.referenceSignatureOriginalFilename }),
       ...(data.referenceDpi !== undefined && { referenceDpi: data.referenceDpi }),
@@ -1428,6 +1430,7 @@ export class DatabaseStorage implements IStorage {
     reportPath?: string;
     dpi?: number;
     comparisonResult?: number;
+    parameterCompatibilities?: Record<string, number>;
     referenceSignatureFilename?: string;
     referenceSignatureOriginalFilename?: string;
     referenceDpi?: number;
@@ -1442,6 +1445,7 @@ export class DatabaseStorage implements IStorage {
         ...(data.reportPath !== undefined && { reportPath: data.reportPath }),
         ...(data.dpi !== undefined && { dpi: data.dpi }),
         ...(data.comparisonResult !== undefined && { comparisonResult: data.comparisonResult }),
+        ...(data.parameterCompatibilities !== undefined && { parameterCompatibilities: data.parameterCompatibilities }),
         ...(data.referenceSignatureFilename !== undefined && { referenceSignatureFilename: data.referenceSignatureFilename }),
         ...(data.referenceSignatureOriginalFilename !== undefined && { referenceSignatureOriginalFilename: data.referenceSignatureOriginalFilename }),
         ...(data.referenceDpi !== undefined && { referenceDpi: data.referenceDpi }),
