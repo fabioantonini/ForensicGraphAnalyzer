@@ -1244,7 +1244,7 @@ generateInterpretation();
     # Normalizza i parametri per garantire chiavi corrette nel grafico
     verifica_data_normalized = normalize_parameter_keys(verifica_data)
     comp_data_normalized = normalize_parameter_keys(comp_data)
-    chart_img_base64 = create_comparison_chart(verifica_data_normalized, comp_data_normalized, compatibilities)
+    chart_img_base64 = create_comparison_chart(verifica_data_normalized, comp_data_normalized, None)
     
     # === NUOVO: GRAFICO DI NATURALEZZA ===
     naturalness_chart_base64 = create_naturalness_chart(verifica_data_normalized, comp_data_normalized)
@@ -1504,8 +1504,7 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
         comp_data_normalized = normalize_parameter_keys(comp_data)
         
         
-        # Crea il grafico di confronto con parametri normalizzati
-        chart_img = create_comparison_chart(verifica_data_normalized, comp_data_normalized, compatibilities)
+        # ⚠️ GRAFICO SPOSTATO DOPO IL CALCOLO DELLE COMPATIBILITÀ ⚠️
         
         # === NUOVO: GRAFICO DI NATURALEZZA ===
         naturalness_chart_img = create_naturalness_chart(verifica_data_normalized, comp_data_normalized)
@@ -1714,6 +1713,10 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
         # ==============================================
         # FINE NUOVA CLASSIFICAZIONE
         # ==============================================
+        
+        # 🎯 CREA IL GRAFICO CON LE COMPATIBILITÀ FORENSI CALCOLATE
+        chart_img = create_comparison_chart(verifica_data_normalized, comp_data_normalized, individual_compatibilities)
+        print(f"[CHART] 🎯 Grafico creato con {len(individual_compatibilities)} compatibilità forensi", file=sys.stderr)
         
         # Prepara il risultato con la nuova classificazione
         result = {
