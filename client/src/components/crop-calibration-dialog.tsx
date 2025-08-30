@@ -5,12 +5,14 @@ interface CropCalibrationDialogProps {
   signatureId: number;
   originalFilename?: string;
   onClose: () => void;
+  onUpdate?: () => void;
 }
 
 export default function CropCalibrationDialog({ 
   signatureId, 
   originalFilename,
-  onClose 
+  onClose,
+  onUpdate
 }: CropCalibrationDialogProps) {
   return (
     <>

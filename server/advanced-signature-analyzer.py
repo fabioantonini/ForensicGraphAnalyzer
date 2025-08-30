@@ -146,93 +146,153 @@ def calculate_circularity(cnt):
 
 def calculate_signature_inclination(contours):
     """
-    Calcola l'inclinazione della firma usando multiple tecniche robuste
+    Calcola l'inclinazione della firma rispetto alla verticale
     
     Args:
         contours: Lista dei contorni della firma
         
     Returns:
-        Angolo di inclinazione in gradi (0-90)
+        Angolo di inclinazione in gradi (-45 a +45, dove 0=verticale, +15=inclinata destra)
     """
+    print(f"[INCLINATION-DEBUG] Funzione chiamata con {len(contours) if contours else 0} contorni", file=sys.stderr)
+    
     if not contours:
+        print("[INCLINATION-DEBUG] Nessun contorno fornito, ritorno 0.0", file=sys.stderr)
         return 0.0
     
     inclinations = []
     
-    # Metodo 1: Analisi linea principale usando regressione lineare
+    # Metodo 1: Analisi orientamento principale usando Principal Component Analysis
     try:
-        # Combina tutti i punti dei contorni
+        # Combina tutti i punti dei contorni principali
         all_points = []
         for contour in contours:
-            if len(contour) >= 3:
+            if len(contour) >= 5 and cv2.contourArea(contour) > 50:  # Solo contorni significativi
                 points = contour.reshape(-1, 2)
                 all_points.extend(points)
         
-        if len(all_points) > 10:
-            all_points = np.array(all_points)
+        if len(all_points) > 20:
+            all_points = np.array(all_points, dtype=np.float32)
             
-            # Regressione lineare per trovare la linea principale
-            x_coords = all_points[:, 0]
-            y_coords = all_points[:, 1]
+            # Normalizza i punti (centro in 0,0)
+            mean_point = np.mean(all_points, axis=0)
+            centered_points = all_points - mean_point
             
-            # Calcola il coefficiente angolare
-            if len(x_coords) > 1 and np.std(x_coords) > 0:
-                slope = np.polyfit(x_coords, y_coords, 1)[0]
-                angle_rad = np.arctan(slope)
-                angle_deg = np.degrees(angle_rad)
-                inclinations.append(abs(angle_deg))
+            # PCA per trovare la direzione principale
+            cov_matrix = np.cov(centered_points.T)
+            eigenvalues, eigenvectors = np.linalg.eigh(cov_matrix)
+            
+            # Il primo eigenvector è la direzione principale
+            principal_direction = eigenvectors[:, -1]  # Ultimo eigenvalue (maggiore)
+            
+            # Calcola l'angolo rispetto alla verticale (asse Y)
+            # Angolo tra vettore principale e asse Y (0, 1)
+            vertical_vector = np.array([0, 1])
+            dot_product = np.dot(principal_direction, vertical_vector)
+            angle_rad = np.arccos(np.clip(dot_product, -1.0, 1.0))
+            angle_deg = np.degrees(angle_rad)
+            
+            # Converti in inclinazione: 0° = verticale, positivo = inclinato a destra
+            if principal_direction[0] < 0:  # Inclinato a sinistra
+                inclination = -angle_deg
+            else:  # Inclinato a destra
+                inclination = angle_deg
                 
-    except Exception:
+            # Limita tra -45° e +45°
+            inclination = np.clip(inclination, -45, 45)
+            inclinations.append(inclination)
+                
+    except Exception as e:
+        print(f"Errore PCA inclinazione: {e}", file=sys.stderr)
         pass
     
-    # Metodo 2: Analisi ellisse per contorni sufficientemente grandi
+    # Metodo 2: Analisi boundingRect inclinato per contorni principali
     try:
         for contour in contours:
-            if len(contour) >= 5:  # Minimo per fitEllipse
-                ellipse = cv2.fitEllipse(contour)
-                angle = ellipse[2]  # Angolo in gradi
-                
-                # Normalizza l'angolo tra 0 e 90 gradi
-                if angle > 90:
-                    angle = 180 - angle
-                elif angle < 0:
-                    angle = abs(angle)
-                
-                inclinations.append(angle)
-                
-    except Exception:
-        pass
-    
-    # Metodo 3: Analisi boundingRect inclinato
-    try:
-        for contour in contours:
-            if len(contour) >= 4:
+            if len(contour) >= 5 and cv2.contourArea(contour) > 100:
                 rect = cv2.minAreaRect(contour)
-                angle = rect[2]  # Angolo della rotazione
+                angle = rect[2]  # Angolo della rotazione in gradi
                 
-                # Normalizza l'angolo
+                # minAreaRect restituisce angoli tra -90 e 0
+                # Convertiamo in inclinazione rispetto alla verticale
                 if angle < -45:
-                    angle = 90 + angle
-                elif angle > 45:
-                    angle = angle - 90
+                    inclination = angle + 90  # Da [-90,-45] a [0,45]
+                else:
+                    inclination = angle  # Da [-45,0] a [-45,0]
                 
-                inclinations.append(abs(angle))
+                # Limita il range
+                inclination = np.clip(inclination, -45, 45)
+                inclinations.append(inclination)
                 
-    except Exception:
+    except Exception as e:
+        print(f"Errore minAreaRect inclinazione: {e}", file=sys.stderr)
         pass
     
-    # Se abbiamo almeno una misurazione, usa la mediana per robustezza
-    if inclinations:
-        # Filtra valori outlier (maggiori di 60 gradi sono improbabili per firme)
-        valid_inclinations = [inc for inc in inclinations if 0 <= inc <= 60]
-        
-        if valid_inclinations:
-            return np.median(valid_inclinations)
-        else:
-            return np.median(inclinations)
+    # Metodo 3: Analisi direzione tratti principali
+    try:
+        for contour in contours:
+            if len(contour) >= 10 and cv2.contourArea(contour) > 50:
+                # Prendi punti equidistanti lungo il contorno
+                contour_points = contour.reshape(-1, 2)
+                if len(contour_points) >= 4:
+                    # Calcola direzioni tra punti consecutivi
+                    directions = []
+                    step = max(1, len(contour_points) // 20)  # Massimo 20 campioni
+                    
+                    for i in range(0, len(contour_points) - step, step):
+                        p1 = contour_points[i]
+                        p2 = contour_points[i + step]
+                        
+                        # Calcola angolo del segmento rispetto alla verticale
+                        dx = p2[0] - p1[0]
+                        dy = p2[1] - p1[1]
+                        
+                        if abs(dx) > 2 or abs(dy) > 2:  # Evita segmenti troppo piccoli
+                            angle_rad = np.arctan2(dx, dy)  # Rispetto alla verticale
+                            angle_deg = np.degrees(angle_rad)
+                            
+                            # Limita tra -45° e +45°
+                            angle_deg = np.clip(angle_deg, -45, 45)
+                            directions.append(angle_deg)
+                    
+                    if directions:
+                        # Media pesata delle direzioni (rimuovi outliers)
+                        directions = np.array(directions)
+                        median_dir = np.median(directions)
+                        
+                        # Filtra direzioni vicine alla mediana
+                        valid_directions = directions[np.abs(directions - median_dir) < 20]
+                        
+                        if len(valid_directions) > 0:
+                            inclinations.append(np.mean(valid_directions))
+                
+    except Exception as e:
+        print(f"Errore analisi direzioni: {e}", file=sys.stderr)
+        pass
     
-    # Fallback: restituisce un valore ragionevole
-    return 15.0  # Inclinazione tipica per firme corsive
+    # Se abbiamo misurazioni, usa la mediana per robustezza
+    if inclinations:
+        inclinations = np.array(inclinations)
+        
+        # Filtra outliers estremi (oltre ±40° sono improbabili)
+        valid_inclinations = inclinations[np.abs(inclinations) <= 40]
+        
+        if len(valid_inclinations) > 0:
+            # Usa mediana per robustezza contro outliers
+            final_inclination = np.median(valid_inclinations)
+            
+            # Assicurati che sia nel range corretto
+            final_inclination = np.clip(final_inclination, -45, 45)
+            
+            print(f"[INCLINATION] Calcolate {len(inclinations)} misure, {len(valid_inclinations)} valide, risultato: {final_inclination:.1f}°", file=sys.stderr)
+            return float(final_inclination)
+        else:
+            print(f"[INCLINATION] Tutte le {len(inclinations)} misure sono outliers, uso fallback", file=sys.stderr)
+            return 0.0
+    
+    # Fallback: scrittura verticale
+    print("[INCLINATION] Nessuna misura disponibile, uso fallback 0°", file=sys.stderr)
+    return 0.0  # Scrittura verticale
 
 def count_letter_connections(binary: np.ndarray) -> int:
     """Conta le connessioni tra lettere usando algoritmi alternativi"""
@@ -417,13 +477,14 @@ def create_naturalness_chart(verifica_data, comp_data):
         
         return image_base64
 
-def create_comparison_chart(verifica_data, comp_data):
+def create_comparison_chart(verifica_data, comp_data, forensic_compatibilities=None):
     """
     Crea un grafico di confronto tra i parametri di due firme
     
     Args:
         verifica_data: Parametri della firma da verificare
         comp_data: Parametri della firma di riferimento
+        forensic_compatibilities: Compatibilità forensi già calcolate (opzionale)
         
     Returns:
         Base64-encoded PNG immagine del grafico
@@ -491,50 +552,64 @@ def create_comparison_chart(verifica_data, comp_data):
     # Calcola la compatibilità percentuale per ogni parametro
     compatibilita_percentuale = []
     
-    for i, diff in enumerate(differenze):
-        valore_v = verifica_data.get(parametri_numerici[i], 0)
-        valore_c = comp_data.get(parametri_numerici[i], 0)
-        
-        # Se entrambi i valori sono 0, assegna 50% (nessun dato disponibile)
-        if valore_v == 0 and valore_c == 0:
-            print(f"[WARNING] Parametro {parametri_numerici[i]} non trovato nei dati - valore_v: {valore_v}, valore_c: {valore_c}", file=sys.stderr)
-            compatibilita_percentuale.append(50)  # Compatibilità neutra per dati mancanti
-            continue
+    # === NUOVO: USA COMPATIBILITÀ FORENSI SE DISPONIBILI ===
+    if forensic_compatibilities:
+        print(f"[CHART] 🎯 Uso compatibilità forensi per il grafico: {len(forensic_compatibilities)} parametri", file=sys.stderr)
+        for parametro in parametri_numerici:
+            if parametro in forensic_compatibilities:
+                compatibilita = forensic_compatibilities[parametro]
+                compatibilita_percentuale.append(compatibilita)
+                print(f"[CHART] ✅ {parametro}: {compatibilita}% (forense)", file=sys.stderr)
+            else:
+                compatibilita_percentuale.append(0)  # Parametro mancante
+                print(f"[CHART] ⚠️ {parametro}: 0% (mancante)", file=sys.stderr)
+    else:
+        # === FALLBACK: CALCOLO ORIGINALE ===
+        print(f"[CHART] ⚠️ Uso calcolo fallback per il grafico", file=sys.stderr)
+        for i, diff in enumerate(differenze):
+            valore_v = verifica_data.get(parametri_numerici[i], 0)
+            valore_c = comp_data.get(parametri_numerici[i], 0)
             
-        # USA LA STESSA LOGICA INTELLIGENTE DEL FRONTEND per la compatibilità
-        parametro_nome = parametri_numerici[i]
-        
-        # Per parametri con valori molto piccoli (es. asole), usa soglie assolute
-        if parametro_nome in ['AvgAsolaSize', 'BaselineStdMm']:
-            if diff <= 0.05:
-                compatibilita = 95  # Entrambi molto piccoli = alta compatibilità  
-            elif diff <= 0.10:
-                compatibilita = 85
-            elif diff <= 0.20:
-                compatibilita = 70
-            else:
-                compatibilita = max(20, 70 - (diff * 100))  # Graduale invece di fisso 50%
-        else:
-            # Per altri parametri, usa soglie relative
-            valore_max = max(abs(valore_v), abs(valore_c))
-            if valore_max == 0:
-                compatibilita = 100  # Identici
-            else:
-                diff_percentuale = (diff / valore_max) * 100
-                if diff_percentuale <= 5:
-                    compatibilita = 98
-                elif diff_percentuale <= 10:
-                    compatibilita = 90
-                elif diff_percentuale <= 15:
-                    compatibilita = 80
-                elif diff_percentuale <= 25:
+            # Se entrambi i valori sono 0, assegna 50% (nessun dato disponibile)
+            if valore_v == 0 and valore_c == 0:
+                print(f"[WARNING] Parametro {parametri_numerici[i]} non trovato nei dati - valore_v: {valore_v}, valore_c: {valore_c}", file=sys.stderr)
+                compatibilita_percentuale.append(50)  # Compatibilità neutra per dati mancanti
+                continue
+                
+            # USA LA STESSA LOGICA INTELLIGENTE DEL FRONTEND per la compatibilità
+            parametro_nome = parametri_numerici[i]
+            
+            # Per parametri con valori molto piccoli (es. asole), usa soglie assolute
+            if parametro_nome in ['AvgAsolaSize', 'BaselineStdMm']:
+                if diff <= 0.05:
+                    compatibilita = 95  # Entrambi molto piccoli = alta compatibilità  
+                elif diff <= 0.10:
+                    compatibilita = 85
+                elif diff <= 0.20:
                     compatibilita = 70
-                elif diff_percentuale <= 40:
-                    compatibilita = 50
                 else:
-                    compatibilita = max(0, 100 - diff_percentuale)
-            
-        compatibilita_percentuale.append(compatibilita)
+                    compatibilita = max(20, 70 - (diff * 100))  # Graduale invece di fisso 50%
+            else:
+                # Per altri parametri, usa soglie relative
+                valore_max = max(abs(valore_v), abs(valore_c))
+                if valore_max == 0:
+                    compatibilita = 100  # Identici
+                else:
+                    diff_percentuale = (diff / valore_max) * 100
+                    if diff_percentuale <= 5:
+                        compatibilita = 98
+                    elif diff_percentuale <= 10:
+                        compatibilita = 90
+                    elif diff_percentuale <= 15:
+                        compatibilita = 80
+                    elif diff_percentuale <= 25:
+                        compatibilita = 70
+                    elif diff_percentuale <= 40:
+                        compatibilita = 50
+                    else:
+                        compatibilita = max(0, 100 - diff_percentuale)
+                
+            compatibilita_percentuale.append(compatibilita)
 
     # Crea l'immagine del grafico - dimensioni più grandi per tutti i parametri
     fig = Figure(figsize=(14, max(10, len(parametri_numerici) * 0.6)))
@@ -1169,7 +1244,7 @@ generateInterpretation();
     # Normalizza i parametri per garantire chiavi corrette nel grafico
     verifica_data_normalized = normalize_parameter_keys(verifica_data)
     comp_data_normalized = normalize_parameter_keys(comp_data)
-    chart_img_base64 = create_comparison_chart(verifica_data_normalized, comp_data_normalized)
+    chart_img_base64 = create_comparison_chart(verifica_data_normalized, comp_data_normalized, None)
     
     # === NUOVO: GRAFICO DI NATURALEZZA ===
     naturalness_chart_base64 = create_naturalness_chart(verifica_data_normalized, comp_data_normalized)
@@ -1429,8 +1504,7 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
         comp_data_normalized = normalize_parameter_keys(comp_data)
         
         
-        # Crea il grafico di confronto con parametri normalizzati
-        chart_img = create_comparison_chart(verifica_data_normalized, comp_data_normalized)
+        # ⚠️ GRAFICO SPOSTATO DOPO IL CALCOLO DELLE COMPATIBILITÀ ⚠️
         
         # === NUOVO: GRAFICO DI NATURALEZZA ===
         naturalness_chart_img = create_naturalness_chart(verifica_data_normalized, comp_data_normalized)
@@ -1486,6 +1560,13 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
             diff = abs(ref_val - ver_val)
             max_val = max(abs(ref_val), abs(ver_val))
             
+            # === NUOVO: ALGORITMO FORENSE SPECIFICO PER INCLINAZIONE ===
+            if param_name == 'Inclination':
+                # Usa normalizzazione forense su 45° come nel JavaScript analyzer
+                inclination_diff = abs(ref_val - ver_val)
+                compatibility = 1 - min(1, inclination_diff / 45.0)  # Normalizza su 45° max
+                return max(0.1, compatibility)  # Minimo 10% per robustezza
+            
             # Per parametri con valori molto piccoli (asole, baseline), usa soglie assolute
             if param_name in ['AvgAsolaSize', 'BaselineStdMm']:
                 if diff <= 0.05: return 0.95
@@ -1524,9 +1605,10 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
             ('Readability', 0.00),      # 0%  - leggibilità (qualitativo, rimosso per spazio)
         ]
         
-        # Calcola punteggio parametri pesato
+        # Calcola punteggio parametri pesato E salva compatibilità individuali
         total_weight = 0
         weighted_score = 0
+        individual_compatibilities = {}  # === NUOVO: salva compatibilità parametro per parametro ===
         
         for param_name, weight in key_parameters:
             ref_val = comp_data.get(param_name)
@@ -1534,6 +1616,7 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
             
             if ref_val is not None and ver_val is not None:
                 compatibility = calculate_parameter_compatibility(ref_val, ver_val, param_name)
+                individual_compatibilities[param_name] = round(compatibility * 100, 1)  # Converte in percentuale
                 weighted_score += compatibility * weight
                 total_weight += weight
         
@@ -1631,6 +1714,10 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
         # FINE NUOVA CLASSIFICAZIONE
         # ==============================================
         
+        # 🎯 CREA IL GRAFICO CON LE COMPATIBILITÀ FORENSI CALCOLATE
+        chart_img = create_comparison_chart(verifica_data_normalized, comp_data_normalized, individual_compatibilities)
+        print(f"[CHART] 🎯 Grafico creato con {len(individual_compatibilities)} compatibilità forensi", file=sys.stderr)
+        
         # Prepara il risultato con la nuova classificazione
         result = {
             "similarity": final_similarity,  # Punteggio tradizionale per compatibilità
@@ -1642,6 +1729,7 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
             "reference_parameters": comp_data,
             "comparison_chart": chart_img,
             "naturalness_chart": naturalness_chart_img,  # === NUOVO GRAFICO DI NATURALEZZA ===
+            "compatibilities": individual_compatibilities,  # === NUOVO: compatibilità parametri individuali ===
             "description": description,
             "report_path": report_path if report_path else None
         }
@@ -1901,6 +1989,7 @@ def analyze_signature_with_dimensions(image_path, real_width_mm, real_height_mm)
     Returns:
         Dizionario con i parametri estratti dalla firma
     """
+    print(f"[DEBUG-START] Inizio analyze_signature_with_dimensions: {image_path}", file=sys.stderr)
     try:
         # Carica l'immagine
         image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
@@ -1957,10 +2046,17 @@ def analyze_signature_with_dimensions(image_path, real_width_mm, real_height_mm)
         # Non richiamare analyze_signature che usa DPI - implementa l'analisi diretta
         
         # Calcola tutti i parametri usando le dimensioni reali calibrate
-        proportion = actual_width_mm / actual_height_mm if actual_height_mm > 0 else 1
+        # IMPORTANTE: Usa le dimensioni reali dell'immagine (calibrate dall'utente), non del bounding box della firma
+        proportion = real_width_mm / real_height_mm if real_height_mm > 0 else 1
         
         # Calcola l'inclinazione usando l'algoritmo robusto
-        inclination = calculate_signature_inclination([main_contour])
+        print(f"[DEBUG] Chiamando calculate_signature_inclination con contorno principale", file=sys.stderr)
+        try:
+            inclination = calculate_signature_inclination([main_contour])
+            print(f"[DEBUG] Inclinazione calcolata: {inclination}°", file=sys.stderr)
+        except Exception as e:
+            print(f"[ERROR] Errore nel calcolo inclinazione: {e}", file=sys.stderr)
+            inclination = 0.0
         
         # Calcola la pressione media e deviazione standard
         image_flat = image.flatten().astype(np.float64)
@@ -2136,6 +2232,26 @@ def adapt_parameters_for_json(params):
 
 # Funzione principale per l'esecuzione come script
 if __name__ == "__main__":
+    # Supporto per analisi singola chiamata dal TypeScript
+    if len(sys.argv) >= 4 and sys.argv[1] == "analyze":
+        try:
+            image_path = sys.argv[2]
+            width_mm = float(sys.argv[3])
+            height_mm = float(sys.argv[4])
+            
+            print(f"[PYTHON] Analisi: {image_path} -> {width_mm}x{height_mm}mm", file=sys.stderr)
+            result = analyze_signature_with_dimensions(image_path, width_mm, height_mm)
+            
+            print(f"[PYTHON] Analisi completata con {len(result) if result and 'error' not in result else 0} parametri", file=sys.stderr)
+            print(json.dumps(result))
+            sys.exit(0)
+        except Exception as e:
+            print(f"[ERROR] Errore nell'analisi: {str(e)}", file=sys.stderr)
+            print(f"[ERROR] Stack trace: {repr(e)}", file=sys.stderr)
+            # Invece di uscire, restituisco un errore JSON
+            print(json.dumps({"error": str(e)}))
+            sys.exit(1)
+    
     # Supporto per test di analisi singola con dimensioni
     if len(sys.argv) >= 4 and sys.argv[1] == "--analyze-dimensions":
         try:

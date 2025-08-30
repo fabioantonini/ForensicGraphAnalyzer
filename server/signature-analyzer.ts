@@ -79,7 +79,7 @@ export class SignatureAnalyzer {
       let advancedAnalysis: any = {};
       
       try {
-        const pythonCommand = `python3 advanced_signature_analyzer.py analyze "${imagePath}" ${realWidthMm} ${realHeightMm}`;
+        const pythonCommand = `python3 server/advanced-signature-analyzer.py analyze "${imagePath}" ${realWidthMm} ${realHeightMm}`;
         const result = execSync(pythonCommand, { 
           encoding: 'utf-8',
           timeout: 30000, // 30 secondi timeout
@@ -108,29 +108,52 @@ export class SignatureAnalyzer {
         original_height: pixelHeight,
         realDimensions: {
           widthMm: realWidthMm,
-          heightMm: realHeightMm
+          heightMm: realHeightMm,
+          pixelsPerMm: pixelWidth / realWidthMm
         },
         
-        // Parametri avanzati integrati se disponibili
-        ...(advancedAnalysis.proportion !== undefined && {
-          proportion: advancedAnalysis.proportion,
-          inclination: advancedAnalysis.inclination || 0,
-          pressureMean: advancedAnalysis.pressureMean || 0,
-          pressureStd: advancedAnalysis.pressureStd || 0,
-          avgCurvature: advancedAnalysis.avgCurvature || 0,
-          writingStyle: advancedAnalysis.writingStyle || 'Sconosciuto',
-          readability: advancedAnalysis.readability || 'Media',
-          avgAsolaSize: advancedAnalysis.avgAsolaSize || 0,
-          avgSpacing: advancedAnalysis.avgSpacing || 0,
-          velocity: advancedAnalysis.velocity || 1,
-          overlapRatio: advancedAnalysis.overlapRatio || 0,
-          letterConnections: advancedAnalysis.letterConnections || 1,
-          baselineStdMm: advancedAnalysis.baselineStdMm || 0,
-          // Parametri mancanti aggiunti
-          pressureDeviation: advancedAnalysis.pressureStd || 0, // map pressureStd to pressureDeviation  
-          connectedComponents: advancedAnalysis.connectedComponents || 1,
-          strokeComplexity: advancedAnalysis.strokeComplexity || 0
-        })
+        // MAPPING CORRETTO con i nomi esatti che l'UI si aspetta
+        loopPoints: existingAnalysis.featurePoints?.loopPoints || 0,
+        sharpCorners: existingAnalysis.featurePoints?.crossPoints || 0,
+        
+        // Parametri avanzati integrati con nomi corretti dal Python
+        ...(advancedAnalysis.Proportion !== undefined && {
+          proportion: advancedAnalysis.Proportion,
+          inclination: advancedAnalysis.Inclination || 0,
+          pressureMean: advancedAnalysis.PressureMean || 0,
+          pressureStd: advancedAnalysis.PressureStd || 0,
+          avgCurvature: advancedAnalysis.AvgCurvature || 0,
+          writingStyle: advancedAnalysis.WritingStyle || 'Sconosciuto',
+          readability: advancedAnalysis.Readability || 'Media',
+          avgAsolaSize: advancedAnalysis.AvgAsolaSize || 0,
+          avgSpacing: advancedAnalysis.AvgSpacing || 0,
+          velocity: advancedAnalysis.Velocity || 1,
+          overlapRatio: advancedAnalysis.OverlapRatio || 0,
+          letterConnections: advancedAnalysis.LetterConnections || 1,
+          baselineStdMm: advancedAnalysis.BaselineStdMm || 0,
+          // Parametri mancanti aggiunti con nomi corretti
+          pressureDeviation: advancedAnalysis.PressureStd || 0,
+          connectedComponents: advancedAnalysis.ConnectedComponents || 1,
+          strokeComplexity: advancedAnalysis.StrokeComplexity || 0,
+          // Nuovi parametri di naturalezza
+          fluidityScore: advancedAnalysis.FluidityScore || 0,
+          pressureConsistency: advancedAnalysis.PressureConsistency || 0,
+          coordinationIndex: advancedAnalysis.CoordinationIndex || 0,
+          naturalnessIndex: advancedAnalysis.NaturalnessIndex || 0
+        }),
+        
+        // Parametri obbligatori per il tipo SignatureParameters
+        aspectRatio: realWidthMm && realHeightMm ? realWidthMm / realHeightMm : 1.0,
+        imageMetadata: {
+          originalWidth: pixelWidth,
+          originalHeight: pixelHeight,
+          format: 'processed',
+          originalDpi: Math.round(pixelWidth / realWidthMm * 25.4), // Calcola DPI dai mm
+          detectedInkColor: 'black',
+          backgroundNoise: 0.1,
+          imageQuality: 0.8,
+          contrastLevel: 0.7
+        }
       };
       
       console.log(`[ANALYZER] Analisi completata con ${Object.keys(finalParameters).length} parametri`);
@@ -277,57 +300,187 @@ export class SignatureAnalyzer {
   }
 
   /**
-   * Misura gli spessori del tratto usando distance transform
+   * Misura gli spessori reali del tratto usando distance transform
+   * Calcola la distanza dal centro del tratto alle pareti per ottenere lo spessore effettivo
    */
   private static measureStrokeWidths(binaryMatrix: boolean[][]) {
     const height = binaryMatrix.length;
     const width = binaryMatrix[0].length;
+    
+    // Calcola distance transform per trovare la distanza da ogni pixel ai bordi
+    const distanceMap = this.computeDistanceTransform(binaryMatrix);
+    
+    // Trova lo scheletro del tratto (medial axis)
+    const skeleton = this.extractSkeleton(binaryMatrix, distanceMap);
+    
+    // Estrai le misure di spessore dai punti dello scheletro
     const widths: number[] = [];
+    const maxSamples = 5000;
     
-    // Limita il numero di campioni per evitare overflow dello stack
-    const maxSamples = 10000;
-    const step = Math.max(1, Math.floor(height / 100)); // Campiona massimo 100 righe
-    
-    for (let y = 0; y < height && widths.length < maxSamples; y += step) {
-      let currentWidth = 0;
-      for (let x = 0; x < width; x++) {
-        if (binaryMatrix[y][x]) {
-          currentWidth++;
-        } else {
-          if (currentWidth > 0) {
-            widths.push(currentWidth);
-            currentWidth = 0;
-            if (widths.length >= maxSamples) break;
+    for (let y = 0; y < height && widths.length < maxSamples; y++) {
+      for (let x = 0; x < width && widths.length < maxSamples; x++) {
+        if (skeleton[y][x]) {
+          // Lo spessore in questo punto è 2 volte la distanza al bordo
+          const thickness = distanceMap[y][x] * 2;
+          if (thickness > 0.5) { // Filtro rumore (spessori sotto 0.5 pixel)
+            widths.push(thickness);
           }
         }
       }
-      if (currentWidth > 0 && widths.length < maxSamples) {
-        widths.push(currentWidth);
+    }
+    
+    if (widths.length === 0) {
+      // Fallback: calcolo approssimativo basato su area
+      const strokeArea = this.calculateStrokeArea(binaryMatrix);
+      const strokeLength = this.estimateStrokeLength(binaryMatrix);
+      const avgWidth = strokeLength > 0 ? strokeArea / strokeLength : 1;
+      return { min: avgWidth * 0.7, max: avgWidth * 1.3, mean: avgWidth, variance: 0.1 };
+    }
+    
+    // Filtra outliers (rimuove il 5% più alto e più basso)
+    widths.sort((a, b) => a - b);
+    const startIdx = Math.floor(widths.length * 0.05);
+    const endIdx = Math.floor(widths.length * 0.95);
+    const filteredWidths = widths.slice(startIdx, endIdx);
+    
+    if (filteredWidths.length === 0) {
+      return { min: 1, max: 1, mean: 1, variance: 0 };
+    }
+    
+    const min = filteredWidths[0];
+    const max = filteredWidths[filteredWidths.length - 1];
+    const sum = filteredWidths.reduce((a, b) => a + b, 0);
+    const mean = sum / filteredWidths.length;
+    
+    const varianceSum = filteredWidths.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0);
+    const variance = varianceSum / filteredWidths.length;
+    
+    return { min, max, mean, variance };
+  }
+
+  /**
+   * Calcola la distance transform (distanza euclidea ai bordi)
+   */
+  private static computeDistanceTransform(binaryMatrix: boolean[][]): number[][] {
+    const height = binaryMatrix.length;
+    const width = binaryMatrix[0].length;
+    const distanceMap: number[][] = Array.from({ length: height }, () => Array(width).fill(0));
+    
+    // Inizializza: INF per pixel di inchiostro, 0 per background
+    const INF = Math.max(width, height);
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        distanceMap[y][x] = binaryMatrix[y][x] ? INF : 0;
       }
     }
     
-    if (widths.length === 0) return { min: 1, max: 1, mean: 1, variance: 0 };
-    
-    // Uso iterativo per trovare min/max invece di spread operator per evitare stack overflow
-    let min = widths[0];
-    let max = widths[0];
-    let sum = 0;
-    
-    for (const width of widths) {
-      if (width < min) min = width;
-      if (width > max) max = width;
-      sum += width;
+    // Forward pass (da top-left a bottom-right)
+    for (let y = 1; y < height - 1; y++) {
+      for (let x = 1; x < width - 1; x++) {
+        if (binaryMatrix[y][x]) {
+          distanceMap[y][x] = Math.min(
+            distanceMap[y][x],
+            distanceMap[y-1][x] + 1,
+            distanceMap[y][x-1] + 1,
+            distanceMap[y-1][x-1] + 1.414,
+            distanceMap[y-1][x+1] + 1.414
+          );
+        }
+      }
     }
     
-    const mean = sum / widths.length;
-    
-    let varianceSum = 0;
-    for (const width of widths) {
-      varianceSum += Math.pow(width - mean, 2);
+    // Backward pass (da bottom-right a top-left)
+    for (let y = height - 2; y > 0; y--) {
+      for (let x = width - 2; x > 0; x--) {
+        if (binaryMatrix[y][x]) {
+          distanceMap[y][x] = Math.min(
+            distanceMap[y][x],
+            distanceMap[y+1][x] + 1,
+            distanceMap[y][x+1] + 1,
+            distanceMap[y+1][x+1] + 1.414,
+            distanceMap[y+1][x-1] + 1.414
+          );
+        }
+      }
     }
-    const variance = varianceSum / widths.length;
     
-    return { min, max, mean, variance };
+    return distanceMap;
+  }
+
+  /**
+   * Estrae lo scheletro del tratto (medial axis)
+   */
+  private static extractSkeleton(binaryMatrix: boolean[][], distanceMap: number[][]): boolean[][] {
+    const height = binaryMatrix.length;
+    const width = binaryMatrix[0].length;
+    const skeleton: boolean[][] = Array.from({ length: height }, () => Array(width).fill(false));
+    
+    for (let y = 1; y < height - 1; y++) {
+      for (let x = 1; x < width - 1; x++) {
+        if (binaryMatrix[y][x] && distanceMap[y][x] > 1) {
+          // Un punto appartiene allo scheletro se è un massimo locale della distance map
+          const currentDist = distanceMap[y][x];
+          let isLocalMax = true;
+          
+          // Controlla i 8 vicini
+          for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+              if (dy === 0 && dx === 0) continue;
+              if (distanceMap[y + dy][x + dx] > currentDist) {
+                isLocalMax = false;
+                break;
+              }
+            }
+            if (!isLocalMax) break;
+          }
+          
+          skeleton[y][x] = isLocalMax;
+        }
+      }
+    }
+    
+    return skeleton;
+  }
+
+  /**
+   * Calcola l'area approssimativa del tratto
+   */
+  private static calculateStrokeArea(binaryMatrix: boolean[][]): number {
+    let area = 0;
+    for (let y = 0; y < binaryMatrix.length; y++) {
+      for (let x = 0; x < binaryMatrix[0].length; x++) {
+        if (binaryMatrix[y][x]) area++;
+      }
+    }
+    return area;
+  }
+
+  /**
+   * Stima la lunghezza del tratto
+   */
+  private static estimateStrokeLength(binaryMatrix: boolean[][]): number {
+    const height = binaryMatrix.length;
+    const width = binaryMatrix[0].length;
+    let length = 0;
+    
+    for (let y = 1; y < height - 1; y++) {
+      for (let x = 1; x < width - 1; x++) {
+        if (binaryMatrix[y][x]) {
+          // Conta connessioni ai vicini
+          let connections = 0;
+          for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+              if (dy === 0 && dx === 0) continue;
+              if (binaryMatrix[y + dy][x + dx]) connections++;
+            }
+          }
+          // Punti con poche connessioni contribuiscono di più alla lunghezza
+          if (connections <= 3) length += 1;
+        }
+      }
+    }
+    
+    return length;
   }
 
   /**
@@ -752,7 +905,10 @@ export class SignatureAnalyzer {
   public static compareSignatures(
     targetParameters: SignatureParameters,
     referenceParameters: SignatureParameters[]
-  ): number {
+  ): { 
+    similarity: number; 
+    parameterCompatibilities: Record<string, number>;
+  } {
     if (!referenceParameters.length) {
       throw new Error('Nessuna firma di riferimento fornita per il confronto');
     }
@@ -760,7 +916,7 @@ export class SignatureAnalyzer {
     console.log(`Confrontando firma con ${referenceParameters.length} firme di riferimento`);
 
     // Calcola la similitudine media rispetto a tutte le firme di riferimento
-    const similarities = referenceParameters.map(refParams => {
+    const detailedResults = referenceParameters.map(refParams => {
       // Similitudine del rapporto d'aspetto (con protezione completa contro valori non validi)
       const targetDims = targetParameters.realDimensions;
       const refDims = refParams.realDimensions;
@@ -784,13 +940,11 @@ export class SignatureAnalyzer {
       const strokeLengthSim = (maxLength > 0) ? 
         1 - Math.min(1, Math.abs(targetLength - refLength) / maxLength) : 0.5;
       
-      // Similitudine della distribuzione spaziale - con protezione
-      const targetCenterX = targetParameters.spatialDistribution?.centerOfMassX || 0;
-      const targetCenterY = targetParameters.spatialDistribution?.centerOfMassY || 0;
-      const refCenterX = refParams.spatialDistribution?.centerOfMassX || 0;
-      const refCenterY = refParams.spatialDistribution?.centerOfMassY || 0;
-      const spatialDiff = Math.abs(targetCenterX - refCenterX) + Math.abs(targetCenterY - refCenterY);
-      const spatialSim = 1 - Math.min(1, spatialDiff / 2);
+      // Similitudine dell'inclinazione - parametro forense significativo
+      const targetInclination = targetParameters.inclination || 0;
+      const refInclination = refParams.inclination || 0;
+      const inclinationDiff = Math.abs(targetInclination - refInclination);
+      const inclinationSim = 1 - Math.min(1, inclinationDiff / 45); // Normalizza su 45° max
       
       // Similitudine della complessità - con protezione
       const targetComplexity = targetParameters.connectivity?.strokeComplexity || 0;
@@ -808,33 +962,57 @@ export class SignatureAnalyzer {
       const geometricSim = 1 - Math.min(1, Math.abs(targetSlope - refSlope));
       
       // Calcola il punteggio totale (media ponderata basata su importanza forense)
-      let similarity = (
+      let similarity = 
         aspectRatioSim * 0.10 +      // Forma generale
-        strokeWidthSim * 0.20 +      // Spessore tratto (molto importante)
+        strokeWidthSim * 0.25 +      // Spessore tratto (molto importante)
         strokeLengthSim * 0.15 +     // Lunghezza complessiva
-        spatialSim * 0.15 +          // Distribuzione spaziale
+        inclinationSim * 0.20 +      // Inclinazione (parametro forense chiave)
         complexitySim * 0.15 +       // Complessità del movimento
-        featureSim * 0.15 +          // Caratteristiche specifiche
-        geometricSim * 0.10          // Variazioni geometriche
-      );
+        featureSim * 0.15;           // Caratteristiche specifiche
       
       // Protezione finale contro NaN
       if (isNaN(similarity) || !isFinite(similarity)) {
         similarity = 0.5; // Valore neutro se c'è un problema nel calcolo
       }
       
-      console.log(`Similitudine componenti: aspetto=${aspectRatioSim.toFixed(3)}, spessore=${strokeWidthSim.toFixed(3)}, lunghezza=${strokeLengthSim.toFixed(3)}, spaziale=${spatialSim.toFixed(3)}, complessità=${complexitySim.toFixed(3)}, caratteristiche=${featureSim.toFixed(3)}, geometria=${geometricSim.toFixed(3)} -> totale=${similarity.toFixed(3)}`);
+      console.log(`Similitudine componenti: aspetto=${aspectRatioSim.toFixed(3)}, spessore=${strokeWidthSim.toFixed(3)}, lunghezza=${strokeLengthSim.toFixed(3)}, inclinazione=${inclinationSim.toFixed(3)}, complessità=${complexitySim.toFixed(3)}, caratteristiche=${featureSim.toFixed(3)} -> totale=${similarity.toFixed(3)}`);
       
-      return similarity;
+      // Restituisci oggetto dettagliato con compatibilità individuali
+      return {
+        similarity,
+        compatibilities: {
+          Proportion: aspectRatioSim * 100,
+          Inclination: inclinationSim * 100,
+          PressureMean: strokeWidthSim * 100,        // Approssimazione spessore->pressione
+          StrokeComplexity: complexitySim * 100,
+          LoopPoints: featureSim * 100,
+          StrokeLength: strokeLengthSim * 100
+        }
+      };
     });
     
-    // Restituisci la media delle similitudini con protezione finale
-    const validSimilarities = similarities.filter(sim => !isNaN(sim) && isFinite(sim));
-    const finalSimilarity = validSimilarities.length > 0 ? 
-      validSimilarities.reduce((sum, sim) => sum + sim, 0) / validSimilarities.length : 0.5;
+    // Calcola la media delle similitudini e compatibilità con protezione finale
+    const validResults = detailedResults.filter(result => 
+      !isNaN(result.similarity) && isFinite(result.similarity));
     
-    console.log(`Similitudine finale: ${finalSimilarity.toFixed(3)} (${validSimilarities.length}/${similarities.length} valori validi)`);
+    const finalSimilarity = validResults.length > 0 ? 
+      validResults.reduce((sum, result) => sum + result.similarity, 0) / validResults.length : 0.5;
     
-    return Math.max(0, Math.min(1, finalSimilarity)); // Assicura che sia tra 0 e 1
+    // Calcola compatibilità medie parametro per parametro
+    const avgCompatibilities: Record<string, number> = {};
+    if (validResults.length > 0) {
+      const paramKeys = Object.keys(validResults[0].compatibilities);
+      paramKeys.forEach(key => {
+        avgCompatibilities[key] = validResults.reduce((sum, result) => 
+          sum + result.compatibilities[key], 0) / validResults.length;
+      });
+    }
+    
+    console.log(`Similitudine finale: ${finalSimilarity.toFixed(3)} (${validResults.length}/${detailedResults.length} valori validi)`);
+    
+    return {
+      similarity: Math.max(0, Math.min(1, finalSimilarity)),
+      parameterCompatibilities: avgCompatibilities
+    };
   }
 }

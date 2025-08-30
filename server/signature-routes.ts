@@ -235,6 +235,7 @@ export function registerSignatureRoutes(appRouter: Router) {
           let similarityScore = 0;
           let comparisonChart = null;
           let analysisReport = null;
+          let parameterCompatibilities: Record<string, number> = {}; // === NUOVO: COMPATIBILITÀ FORENSI ===
           
           // === DICHIARAZIONE VARIABILI DI NATURALEZZA ===
           let naturalnessScore = null;
@@ -251,6 +252,12 @@ export function registerSignatureRoutes(appRouter: Router) {
             const verificaPath = path.join('uploads', signature.filename);
             const referencePath = path.join('uploads', referenceSignature.filename);
             
+            console.log(`[COMPARE-ALL] 🔍 VERIFICA PREREQUISITI per firma ${signature.id}:`);
+            console.log(`[COMPARE-ALL] - Verifica path: ${verificaPath}`);
+            console.log(`[COMPARE-ALL] - Reference path: ${referencePath}`);
+            console.log(`[COMPARE-ALL] - Verifica dimensioni: ${signature.realWidthMm}x${signature.realHeightMm}mm`);
+            console.log(`[COMPARE-ALL] - Reference dimensioni: ${referenceSignature.realWidthMm}x${referenceSignature.realHeightMm}mm`);
+            
             // Verifica che entrambe le firme abbiano dimensioni reali - OBBLIGATORIE, no fallback ai DPI
             if (!signature.realWidthMm || !signature.realHeightMm) {
               throw new Error(`Firma ${signature.id} non ha dimensioni reali definite`);
@@ -259,6 +266,16 @@ export function registerSignatureRoutes(appRouter: Router) {
               throw new Error(`Firma di riferimento ${referenceSignature.id} non ha dimensioni reali definite`);
             }
             
+            // Verifica che i file esistano
+            try {
+              await fs.access(verificaPath);
+              await fs.access(referencePath);
+              console.log(`[COMPARE-ALL] ✅ File verificati esistenti`);
+            } catch (fileError) {
+              throw new Error(`File non trovati: ${(fileError as Error).message}`);
+            }
+            
+            console.log(`[COMPARE-ALL] 🚀 CHIAMATA Python analyzer per firma ${signature.id}...`);
             const pythonResult = await SignaturePythonAnalyzer.compareSignatures(
               verificaPath,
               referencePath,
@@ -281,7 +298,7 @@ export function registerSignatureRoutes(appRouter: Router) {
             
             if (pythonResult.confidence !== undefined) {
               confidenceLevel = pythonResult.confidence;
-              console.log(`[COMPARE-ALL] ✅ CONFIDENZA: ${(confidenceLevel * 100).toFixed(1)}% per firma ${signature.id}`);
+              console.log(`[COMPARE-ALL] ✅ CONFIDENZA: ${confidenceLevel.toFixed(1)}% per firma ${signature.id}`);
             }
             
             if (pythonResult.explanation) {
@@ -324,6 +341,27 @@ export function registerSignatureRoutes(appRouter: Router) {
               analysisReport = pythonResult.description;
               console.log(`[COMPARE-ALL] Fallback a descrizione testuale per firma ${signature.id}`);
             }
+            
+            // === NUOVO: ESTRAI COMPATIBILITÀ PARAMETRO PER PARAMETRO ===
+            console.log(`[DEBUG] 🔍 PRE-ASSEGNAZIONE parameterCompatibilities:`, JSON.stringify(parameterCompatibilities));
+            console.log(`[DEBUG] 🔍 pythonResult.compatibilities:`, JSON.stringify(pythonResult.compatibilities));
+            
+            if (pythonResult.compatibilities) {
+              parameterCompatibilities = pythonResult.compatibilities;
+              console.log(`[DEBUG] 🔍 POST-ASSEGNAZIONE parameterCompatibilities:`, JSON.stringify(parameterCompatibilities));
+              console.log(`[COMPARE-ALL] 🎯 Estratte compatibilità forensi dal Python analyzer:`, Object.keys(parameterCompatibilities).map(key => 
+                `${key}: ${parameterCompatibilities[key].toFixed(1)}%`).join(', '));
+            } else if (pythonResult.comparison_data && pythonResult.comparison_data.compatibilities) {
+              // Fallback per compatibilità con versioni precedenti
+              parameterCompatibilities = pythonResult.comparison_data.compatibilities;
+              console.log(`[DEBUG] 🔍 POST-ASSEGNAZIONE (fallback) parameterCompatibilities:`, JSON.stringify(parameterCompatibilities));
+              console.log(`[COMPARE-ALL] 🎯 Estratte compatibilità forensi (fallback):`, Object.keys(parameterCompatibilities).map(key => 
+                `${key}: ${parameterCompatibilities[key].toFixed(1)}%`).join(', '));
+            } else {
+              console.log(`[COMPARE-ALL] ⚠️ Compatibilità parametri non trovate nel Python result`);
+            }
+            
+            console.log(`[DEBUG] 🔍 FINALE parameterCompatibilities prima dell'updateData:`, JSON.stringify(parameterCompatibilities));
 
             // ✅ NUOVO: Salva anche i parametri della firma di riferimento per il PDF
             console.log(`[DEBUG REF] reference_parameters esistono: ${!!pythonResult.reference_parameters}`);
@@ -341,7 +379,12 @@ export function registerSignatureRoutes(appRouter: Router) {
             }
             
           } catch (pythonError) {
-            console.error(`[COMPARE-ALL] Errore Python analyzer per firma ${signature.id}:`, pythonError);
+            console.error(`[COMPARE-ALL] ❌ ERRORE CRITICO Python analyzer per firma ${signature.id}:`);
+            console.error(`[COMPARE-ALL] Errore dettagliato:`, pythonError);
+            console.error(`[COMPARE-ALL] Message:`, (pythonError as Error).message);
+            console.error(`[COMPARE-ALL] Stack:`, (pythonError as Error).stack);
+            console.error(`[COMPARE-ALL] Paths usati: verifica=${path.join('uploads', signature.filename)}, ref=${path.join('uploads', referenceSignature.filename)}`);
+            console.error(`[COMPARE-ALL] Dimensioni: verifica=${signature.realWidthMm}x${signature.realHeightMm}mm, ref=${referenceSignature.realWidthMm}x${referenceSignature.realHeightMm}mm`);
             
             // Fallback al JavaScript analyzer (disabilitato per incompatibilità di tipo)
             try {
@@ -361,9 +404,12 @@ export function registerSignatureRoutes(appRouter: Router) {
           
           // Aggiorna la firma con i risultati del confronto
           
+          console.log(`[DEBUG] 🔍 CREAZIONE updateData.parameterCompatibilities:`, JSON.stringify(parameterCompatibilities));
+          
           const updateData: any = {
             comparisonResult: similarityScore,
             analysisReport,
+            parameterCompatibilities: parameterCompatibilities, // === NUOVO: COMPATIBILITÀ FORENSI ===
             
             // === NUOVI CAMPI PER INDICE DI NATURALEZZA ===
             naturalnessScore: naturalnessScore,
@@ -388,6 +434,8 @@ export function registerSignatureRoutes(appRouter: Router) {
           
           // Aggiornamento diretto nel database PostgreSQL per i campi di riferimento
           try {
+            console.log(`[COMPARE-ALL] 🔍 SALVATAGGIO parameterCompatibilities per firma ${signature.id}:`, JSON.stringify(updateData.parameterCompatibilities, null, 2));
+            
             await db.update(signatures)
               .set({
                 comparisonChart: updateData.comparisonChart,
@@ -395,6 +443,7 @@ export function registerSignatureRoutes(appRouter: Router) {
                 analysisReport: updateData.analysisReport,
                 reportPath: updateData.reportPath,
                 comparisonResult: updateData.comparisonResult,
+                parameterCompatibilities: updateData.parameterCompatibilities, // === NUOVO: COMPATIBILITÀ FORENSI ===
                 
                 // === NUOVI CAMPI PER INDICE DI NATURALEZZA ===
                 naturalnessScore: updateData.naturalnessScore,

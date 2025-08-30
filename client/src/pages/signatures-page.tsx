@@ -1377,45 +1377,55 @@ export default function SignaturesPage() {
                                           const refValue = normalizedReferenceData[param.key];
                                           const verifyValue = reportData[param.key];
                                           
-                                          // DEBUG DETTAGLIATO
-                                          console.log(`[PARAM DEBUG] ${param.key}:`, {
-                                            refValue,
-                                            verifyValue,
-                                            refUndefined: refValue === undefined,
-                                            verifyUndefined: verifyValue === undefined
-                                          });
-                                          
                                           if (refValue === undefined || verifyValue === undefined) {
-                                            console.log(`[PARAM DEBUG] SKIPPING ${param.key} - ref:${refValue} verify:${verifyValue}`);
                                             return null;
                                           }
                                           
-                                          // Calcola compatibilità con logica migliorata per valori piccoli
-                                          const diff = Math.abs(refValue - verifyValue);
-                                          const maxValue = Math.max(Math.abs(refValue), Math.abs(verifyValue));
-                                          
+                                          // ✅ USA COMPATIBILITÀ SALVATE DAL PYTHON ANALYZER
                                           let compatibility;
-                                          // Per parametri con valori molto piccoli (es. asole), usa soglie assolute
-                                          if (param.key === 'AvgAsolaSize' || param.key === 'BaselineStdMm') {
-                                            if (diff <= 0.05) compatibility = 95; // Entrambi molto piccoli = alta compatibilità
-                                            else if (diff <= 0.1) compatibility = 80;
-                                            else if (diff <= 0.2) compatibility = 70;
-                                            else if (diff <= 0.5) compatibility = 60;
-                                            else if (diff <= 1.0) compatibility = 50;
-                                            else if (diff <= 2.0) compatibility = 30;
-                                            else compatibility = Math.max(10, 100 - (diff * 40)); // Formula più graduale
-                                          }
-                                          // Per altri parametri, usa logica relativa migliorata
-                                          else {
-                                            if (maxValue > 0) {
-                                              const relativeDiff = diff / maxValue;
-                                              // Soglia di tolleranza per evitare 0% su piccole differenze
-                                              if (relativeDiff <= 0.05) compatibility = 98;
-                                              else if (relativeDiff <= 0.1) compatibility = 90;
-                                              else if (relativeDiff <= 0.15) compatibility = 80;
-                                              else compatibility = Math.max(0, 100 - (relativeDiff * 100));
-                                            } else {
-                                              compatibility = 100; // Entrambi zero
+                                          
+                                          // Prima prova a usare le compatibilità pre-calcolate dal Python analyzer (forensi)
+                                          console.log(`[DEBUG] signature.parameterCompatibilities:`, (signature as any).parameterCompatibilities);
+                                          console.log(`[DEBUG] param.key:`, param.key, `- valore:`, (signature as any).parameterCompatibilities?.[param.key]);
+                                          
+                                          if ((signature as any).parameterCompatibilities && (signature as any).parameterCompatibilities[param.key] !== undefined) {
+                                            compatibility = (signature as any).parameterCompatibilities[param.key];
+                                            console.log(`[PARAM] ✅ USATA compatibilità FORENSE per ${param.key}: ${compatibility.toFixed(1)}%`);
+                                          } else {
+                                            // Fallback al calcolo JavaScript per compatibilità con versioni precedenti
+                                            console.log(`[PARAM] ⚠️ FALLBACK JavaScript per ${param.key} - parameterCompatibilities non trovate`);
+                                            
+                                            const diff = Math.abs(refValue - verifyValue);
+                                            const maxValue = Math.max(Math.abs(refValue), Math.abs(verifyValue));
+                                            
+                                            // Per parametri angolari (inclinazione), usa scala forense normalizzata
+                                            if (param.key === 'Inclination') {
+                                              // Normalizza su scala ±45° come nel backend forense
+                                              const normalizedDiff = Math.min(diff, 45) / 45;
+                                              compatibility = Math.max(0, (1 - normalizedDiff) * 100);
+                                            }
+                                            // Per parametri con valori molto piccoli (es. asole), usa soglie assolute
+                                            else if (param.key === 'AvgAsolaSize' || param.key === 'BaselineStdMm') {
+                                              if (diff <= 0.05) compatibility = 95; // Entrambi molto piccoli = alta compatibilità
+                                              else if (diff <= 0.1) compatibility = 80;
+                                              else if (diff <= 0.2) compatibility = 70;
+                                              else if (diff <= 0.5) compatibility = 60;
+                                              else if (diff <= 1.0) compatibility = 50;
+                                              else if (diff <= 2.0) compatibility = 30;
+                                              else compatibility = Math.max(10, 100 - (diff * 40)); // Formula più graduale
+                                            }
+                                            // Per altri parametri, usa logica relativa migliorata
+                                            else {
+                                              if (maxValue > 0) {
+                                                const relativeDiff = diff / maxValue;
+                                                // Soglia di tolleranza per evitare 0% su piccole differenze
+                                                if (relativeDiff <= 0.05) compatibility = 98;
+                                                else if (relativeDiff <= 0.1) compatibility = 90;
+                                                else if (relativeDiff <= 0.15) compatibility = 80;
+                                                else compatibility = Math.max(0, 100 - (relativeDiff * 100));
+                                              } else {
+                                                compatibility = 100; // Entrambi zero
+                                              }
                                             }
                                           }
                                           

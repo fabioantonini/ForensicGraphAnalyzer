@@ -378,7 +378,7 @@ export function SignatureCard({
                           </div>
                           <div className="flex justify-between">
                             <span>Inclinazione:</span>
-                            <span>{signature.parameters.inclination ? signature.parameters.inclination.toFixed(1) + '°' : 'N/A'}</span>
+                            <span>{signature.parameters.inclination !== undefined && signature.parameters.inclination !== null ? signature.parameters.inclination.toFixed(1) + '°' : 'N/A'}</span>
                           </div>
                         </div>
                       </div>
@@ -423,7 +423,7 @@ export function SignatureCard({
                         <div className="space-y-2 mt-1 text-sm">
                           <div className="flex justify-between">
                             <span>{t('signatures.parameters.sharpCorners', 'Angoli netti')}:</span>
-                            <span>N/A</span>
+                            <span>{signature.parameters.sharpCorners !== undefined && signature.parameters.sharpCorners !== null ? signature.parameters.sharpCorners : 'N/A'}</span>
                           </div>
                           <div className="flex justify-between">
                             <span>{t('signatures.parameters.smoothCurves', 'Curve fluide')}:</span>
@@ -436,24 +436,6 @@ export function SignatureCard({
                         </div>
                       </div>
                       
-                      {/* Distribuzione spaziale */}
-                      <div className="col-span-2">
-                        <h4 className="font-medium">{t('signatures.parameters.spatialDistribution', 'Distribuzione spaziale')}</h4>
-                        <div className="grid grid-cols-3 gap-2 mt-1 text-sm">
-                          <div className="flex justify-between">
-                            <span>{t('signatures.parameters.density', 'Densità')}:</span>
-                            <span>{signature.parameters.overlapRatio ? (signature.parameters.overlapRatio * 100).toFixed(1) : 'N/A'}%</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>{t('signatures.parameters.centerX', 'Centro X')}:</span>
-                            <span>N/A</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>{t('signatures.parameters.centerY', 'Centro Y')}:</span>
-                            <span>N/A</span>
-                          </div>
-                        </div>
-                      </div>
                       
                       {/* Punti caratteristici */}
                       <div className="col-span-2">
@@ -461,7 +443,7 @@ export function SignatureCard({
                         <div className="grid grid-cols-2 gap-2 mt-1 text-sm">
                           <div className="flex justify-between">
                             <span>{t('signatures.parameters.loopPoints', 'Asole')}:</span>
-                            <span>{signature.parameters.avgAsolaSize > 0 ? signature.parameters.avgAsolaSize.toFixed(2) + 'mm²' : 'N/A'}</span>
+                            <span>{signature.parameters.loopPoints !== undefined && signature.parameters.loopPoints !== null ? signature.parameters.loopPoints : 'N/A'}</span>
                           </div>
                           <div className="flex justify-between">
                             <span>{t('signatures.parameters.crossPoints', 'Incroci')}:</span>

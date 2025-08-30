@@ -449,6 +449,7 @@ export const signatures = pgTable("signatures", {
   realHeightMm: real("real_height_mm"), // Altezza reale in millimetri
   processingStatus: text("processing_status").default("pending").notNull(), // pending, processing, completed, failed
   comparisonResult: real("comparison_result"), // null for reference signatures, 0-1 for verification signatures
+  parameterCompatibilities: json("parameter_compatibilities").$type<Record<string, number>>(), // JSON delle compatibilità parametro per parametro
   
   // === NUOVI CAMPI PER INDICE DI NATURALEZZA ===
   naturalnessScore: real("naturalness_score"), // Indice di naturalezza 0-1 (fluidità + coordinazione)
