@@ -187,7 +187,7 @@ export function SignatureCard({
                 <Eye className="h-4 w-4" />
               </Button>
             )}
-            {signature.parameters && Object.keys(signature.parameters).length > 0 && (
+            {false && signature.parameters && Object.keys(signature.parameters).length > 0 && (
               <Button
                 variant="outline"
                 size="icon"
