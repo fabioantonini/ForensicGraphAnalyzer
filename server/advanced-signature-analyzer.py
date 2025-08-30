@@ -1546,6 +1546,13 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
             diff = abs(ref_val - ver_val)
             max_val = max(abs(ref_val), abs(ver_val))
             
+            # === NUOVO: ALGORITMO FORENSE SPECIFICO PER INCLINAZIONE ===
+            if param_name == 'Inclination':
+                # Usa normalizzazione forense su 45° come nel JavaScript analyzer
+                inclination_diff = abs(ref_val - ver_val)
+                compatibility = 1 - min(1, inclination_diff / 45.0)  # Normalizza su 45° max
+                return max(0.1, compatibility)  # Minimo 10% per robustezza
+            
             # Per parametri con valori molto piccoli (asole, baseline), usa soglie assolute
             if param_name in ['AvgAsolaSize', 'BaselineStdMm']:
                 if diff <= 0.05: return 0.95
