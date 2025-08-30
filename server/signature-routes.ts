@@ -1651,6 +1651,34 @@ export function registerSignatureRoutes(appRouter: Router) {
       // Elimina dal database
       await storage.deleteSignature(signatureId);
       
+      // Invalida tutti i risultati di comparazione delle altre firme dello stesso progetto
+      // perché la comparazione non è più valida senza questa firma
+      try {
+        console.log(`[DELETE SIGNATURE] Invalidazione risultati comparazione per progetto ${signature.projectId}`);
+        await db.update(signatures)
+          .set({
+            comparisonResult: null,
+            comparisonChart: null,
+            analysisReport: null,
+            parameterCompatibilities: null,
+            naturalnessScore: null,
+            naturalnessChart: null,
+            verdict: null,
+            confidenceLevel: null,
+            verdictExplanation: null,
+            referenceSignatureFilename: null,
+            referenceSignatureOriginalFilename: null,
+            referenceDpi: null,
+            updatedAt: new Date()
+          })
+          .where(eq(signatures.projectId, signature.projectId));
+        
+        console.log(`[DELETE SIGNATURE] ✅ Risultati comparazione invalidati per tutte le firme del progetto ${signature.projectId}`);
+      } catch (invalidateError) {
+        console.warn(`[DELETE SIGNATURE] Errore invalidazione risultati:`, invalidateError);
+        // Non blocchiamo l'eliminazione se l'invalidazione fallisce
+      }
+      
       console.log(`[DELETE SIGNATURE] Firma ${signatureId} eliminata con successo`);
       res.json({ message: 'Firma eliminata con successo' });
     } catch (error: any) {
