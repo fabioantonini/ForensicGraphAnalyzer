@@ -93,6 +93,7 @@ export default function SignaturesPage() {
   const [showResultsDialog, setShowResultsDialog] = useState(false);
   const [selectedReferenceFile, setSelectedReferenceFile] = useState<File | null>(null);
   const [selectedVerifyFile, setSelectedVerifyFile] = useState<File | null>(null);
+  const [autoOpenedProjects, setAutoOpenedProjects] = useState<Set<number>>(new Set());
   // Rimosso state per modifica DPI globale
   
   // Form for creating new project
@@ -532,9 +533,9 @@ export default function SignaturesPage() {
 
   // Rimosso useEffect per aggiornare il form DPI globale
   
-  // Auto-open results dialog if comparison results already exist
+  // Auto-open results dialog if comparison results already exist (only once per project)
   useEffect(() => {
-    if (signatures && signatures.length > 0 && selectedProject) {
+    if (signatures && signatures.length > 0 && selectedProject && !autoOpenedProjects.has(selectedProject)) {
       // Check if we have signatures with comparison results
       const signaturesWithResults = signatures.filter(sig => 
         sig.comparisonResult !== null && 
@@ -542,13 +543,15 @@ export default function SignaturesPage() {
         !isNaN(sig.comparisonResult)
       );
       
-      if (signaturesWithResults.length > 0 && !showResultsDialog) {
+      if (signaturesWithResults.length > 0) {
         console.log(`[AUTO-OPEN] Found ${signaturesWithResults.length} signatures with comparison results, opening dialog automatically`);
         setComparisonResults(signatures);
         setShowResultsDialog(true);
+        // Mark this project as auto-opened to prevent re-opening
+        setAutoOpenedProjects(prev => new Set([...prev, selectedProject]));
       }
     }
-  }, [selectedProject, signatures, showResultsDialog]);
+  }, [selectedProject, signatures, autoOpenedProjects]);
   
   return (
     <div className="container mx-auto py-6">
