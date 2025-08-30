@@ -328,12 +328,17 @@ export function registerSignatureRoutes(appRouter: Router) {
             
             // === NUOVO: ESTRAI COMPATIBILITÀ PARAMETRO PER PARAMETRO ===
             let parameterCompatibilities: Record<string, number> = {};
-            if (pythonResult.comparison_data && pythonResult.comparison_data.compatibilities) {
+            if (pythonResult.compatibilities) {
+              parameterCompatibilities = pythonResult.compatibilities;
+              console.log(`[COMPARE-ALL] 🎯 Estratte compatibilità forensi dal Python analyzer:`, Object.keys(parameterCompatibilities).map(key => 
+                `${key}: ${parameterCompatibilities[key].toFixed(1)}%`).join(', '));
+            } else if (pythonResult.comparison_data && pythonResult.comparison_data.compatibilities) {
+              // Fallback per compatibilità con versioni precedenti
               parameterCompatibilities = pythonResult.comparison_data.compatibilities;
-              console.log(`[COMPARE-ALL] 🎯 Estratte compatibilità forensi:`, Object.keys(parameterCompatibilities).map(key => 
+              console.log(`[COMPARE-ALL] 🎯 Estratte compatibilità forensi (fallback):`, Object.keys(parameterCompatibilities).map(key => 
                 `${key}: ${parameterCompatibilities[key].toFixed(1)}%`).join(', '));
             } else {
-              console.log(`[COMPARE-ALL] ⚠️ Compatibilità parametri non trovate in pythonResult.comparison_data`);
+              console.log(`[COMPARE-ALL] ⚠️ Compatibilità parametri non trovate nel Python result`);
             }
 
             // ✅ NUOVO: Salva anche i parametri della firma di riferimento per il PDF

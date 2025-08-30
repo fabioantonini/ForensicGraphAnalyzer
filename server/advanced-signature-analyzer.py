@@ -1591,9 +1591,10 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
             ('Readability', 0.00),      # 0%  - leggibilità (qualitativo, rimosso per spazio)
         ]
         
-        # Calcola punteggio parametri pesato
+        # Calcola punteggio parametri pesato E salva compatibilità individuali
         total_weight = 0
         weighted_score = 0
+        individual_compatibilities = {}  # === NUOVO: salva compatibilità parametro per parametro ===
         
         for param_name, weight in key_parameters:
             ref_val = comp_data.get(param_name)
@@ -1601,6 +1602,7 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
             
             if ref_val is not None and ver_val is not None:
                 compatibility = calculate_parameter_compatibility(ref_val, ver_val, param_name)
+                individual_compatibilities[param_name] = round(compatibility * 100, 1)  # Converte in percentuale
                 weighted_score += compatibility * weight
                 total_weight += weight
         
@@ -1709,6 +1711,7 @@ def compare_signatures_with_dimensions(verifica_path, comp_path, verifica_dims, 
             "reference_parameters": comp_data,
             "comparison_chart": chart_img,
             "naturalness_chart": naturalness_chart_img,  # === NUOVO GRAFICO DI NATURALEZZA ===
+            "compatibilities": individual_compatibilities,  # === NUOVO: compatibilità parametri individuali ===
             "description": description,
             "report_path": report_path if report_path else None
         }

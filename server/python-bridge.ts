@@ -17,6 +17,9 @@ interface ComparisonResult {
   confidence?: number;         // Livello di confidenza 0-1 del verdetto
   explanation?: string;        // Spiegazione dettagliata del verdetto
   
+  // === COMPATIBILITÀ PARAMETRI INDIVIDUALI ===
+  compatibilities?: Record<string, number>;  // Compatibilità parametro per parametro (0-100%)
+  
   // === DETTAGLI NATURALEZZA ===
   naturalness_details?: {
     fluidity_score?: number;      // Punteggio fluidità 0-100
