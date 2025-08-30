@@ -252,6 +252,12 @@ export function registerSignatureRoutes(appRouter: Router) {
             const verificaPath = path.join('uploads', signature.filename);
             const referencePath = path.join('uploads', referenceSignature.filename);
             
+            console.log(`[COMPARE-ALL] 🔍 VERIFICA PREREQUISITI per firma ${signature.id}:`);
+            console.log(`[COMPARE-ALL] - Verifica path: ${verificaPath}`);
+            console.log(`[COMPARE-ALL] - Reference path: ${referencePath}`);
+            console.log(`[COMPARE-ALL] - Verifica dimensioni: ${signature.realWidthMm}x${signature.realHeightMm}mm`);
+            console.log(`[COMPARE-ALL] - Reference dimensioni: ${referenceSignature.realWidthMm}x${referenceSignature.realHeightMm}mm`);
+            
             // Verifica che entrambe le firme abbiano dimensioni reali - OBBLIGATORIE, no fallback ai DPI
             if (!signature.realWidthMm || !signature.realHeightMm) {
               throw new Error(`Firma ${signature.id} non ha dimensioni reali definite`);
@@ -260,6 +266,16 @@ export function registerSignatureRoutes(appRouter: Router) {
               throw new Error(`Firma di riferimento ${referenceSignature.id} non ha dimensioni reali definite`);
             }
             
+            // Verifica che i file esistano
+            try {
+              await fs.access(verificaPath);
+              await fs.access(referencePath);
+              console.log(`[COMPARE-ALL] ✅ File verificati esistenti`);
+            } catch (fileError) {
+              throw new Error(`File non trovati: ${(fileError as Error).message}`);
+            }
+            
+            console.log(`[COMPARE-ALL] 🚀 CHIAMATA Python analyzer per firma ${signature.id}...`);
             const pythonResult = await SignaturePythonAnalyzer.compareSignatures(
               verificaPath,
               referencePath,
@@ -357,7 +373,12 @@ export function registerSignatureRoutes(appRouter: Router) {
             }
             
           } catch (pythonError) {
-            console.error(`[COMPARE-ALL] Errore Python analyzer per firma ${signature.id}:`, pythonError);
+            console.error(`[COMPARE-ALL] ❌ ERRORE CRITICO Python analyzer per firma ${signature.id}:`);
+            console.error(`[COMPARE-ALL] Errore dettagliato:`, pythonError);
+            console.error(`[COMPARE-ALL] Message:`, (pythonError as Error).message);
+            console.error(`[COMPARE-ALL] Stack:`, (pythonError as Error).stack);
+            console.error(`[COMPARE-ALL] Paths usati: verifica=${path.join('uploads', signature.filename)}, ref=${path.join('uploads', referenceSignature.filename)}`);
+            console.error(`[COMPARE-ALL] Dimensioni: verifica=${signature.realWidthMm}x${signature.realHeightMm}mm, ref=${referenceSignature.realWidthMm}x${referenceSignature.realHeightMm}mm`);
             
             // Fallback al JavaScript analyzer (disabilitato per incompatibilità di tipo)
             try {
