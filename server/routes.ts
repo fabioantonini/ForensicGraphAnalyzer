@@ -335,7 +335,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         // Process the file to extract text
         updateProgress(tempDocId, 25); // 25% - Inizio estrazione testo
-        const content = await processFile(filepath, req.file.mimetype);
+        const content = await processFile(filepath, req.file.mimetype, (progress, stage) => {
+          // Map OCR progress to overall document progress (25% to 40%)
+          const mappedProgress = 25 + (progress * 0.15); // 15% range for processing
+          updateProgress(tempDocId, Math.min(40, mappedProgress));
+        });
         updateProgress(tempDocId, 40); // 40% - Testo estratto
         
         // Save document to database
