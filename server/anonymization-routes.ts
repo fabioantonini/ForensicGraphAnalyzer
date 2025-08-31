@@ -30,18 +30,23 @@ const storage = multer.diskStorage({
 
 const upload = multer({ 
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max
+  limits: { fileSize: 25 * 1024 * 1024 }, // 25MB max per supportare immagini OCR
   fileFilter: (req, file, cb) => {
     const allowedTypes = [
       'application/pdf',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'text/plain'
+      'text/plain',
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'image/tiff',
+      'image/webp'
     ];
     
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Tipo di file non supportato. Sono accettati solo PDF, DOCX e TXT.'));
+      cb(new Error('Tipo di file non supportato. Sono accettati PDF, DOCX, TXT e immagini (JPG, PNG, TIFF).'));
     }
   }
 });

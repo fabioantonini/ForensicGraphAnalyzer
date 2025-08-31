@@ -6,6 +6,7 @@ import fs from "fs/promises";
 import fsSync from "fs";
 import path from "path";
 import { extractTextFromPDF, extractTextFromDOCX } from "./document-processor";
+import { processOCR } from "./ocr-service";
 import mammoth from "mammoth";
 import PdfPrinter from "pdfkit";
 
@@ -409,18 +410,64 @@ export async function processUploadedFileForAnonymization(
     
     const userApiKey = user?.openaiApiKey ? user.openaiApiKey : undefined;
     
-    // Estrai testo dal file
-    let text: string;
+    // Estrai testo dal file - con supporto OCR per immagini e PDF scannerizzati
+    let text: string = '';
+    let needsOCR = false;
     
-    if (fileType === 'application/pdf') {
-      text = await extractTextFromPDF(filePath);
+    // Determina se è necessario l'OCR
+    const isImage = fileType.startsWith('image/');
+    
+    if (isImage) {
+      // Per le immagini, usa sempre OCR
+      console.log(`[ANONYMIZATION-OCR] Processing image file: ${filename}`);
+      needsOCR = true;
+    } else if (fileType === 'application/pdf') {
+      // Per i PDF, prova prima estrazione diretta
+      try {
+        text = await extractTextFromPDF(filePath);
+        
+        // Se il testo estratto è troppo breve, probabilmente è un PDF scannerizzato
+        if (text.trim().length < 100) {
+          console.log(`[ANONYMIZATION-OCR] PDF appears to be scanned (${text.trim().length} chars), switching to OCR`);
+          needsOCR = true;
+        }
+      } catch (error) {
+        console.log(`[ANONYMIZATION-OCR] PDF text extraction failed, switching to OCR: ${(error as Error).message}`);
+        needsOCR = true;
+      }
     } else if (fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
       text = await extractTextFromDOCX(filePath);
     } else {
       text = await fs.readFile(filePath, 'utf-8');
     }
     
+    // Se necessario, usa OCR
+    if (needsOCR) {
+      console.log(`[ANONYMIZATION-OCR] Running OCR on file: ${filename}`);
+      
+      const fileBuffer = await fs.readFile(filePath);
+      const ocrSettings = {
+        language: "ita+eng",
+        dpi: 300,
+        preprocessingMode: "auto" as const,
+        outputFormat: "text" as const
+      };
+      
+      const ocrResult = await processOCR(
+        fileBuffer, 
+        filename, 
+        ocrSettings, 
+        (progress: number, stage: string) => {
+          console.log(`[ANONYMIZATION-OCR] ${stage} (${progress}%)`);
+        }
+      );
+      
+      text = ocrResult.extractedText;
+      console.log(`[ANONYMIZATION-OCR] OCR completed, extracted ${text.length} characters`);
+    }
+    
     // Rileva entità sensibili
+    console.log(`[ANONYMIZATION] Detecting entities in ${text.length} characters of text`);
     const detectedEntities = await detectEntities(text, userApiKey);
     
     // Filtra solo le entità richieste
