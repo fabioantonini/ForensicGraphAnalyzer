@@ -26,6 +26,7 @@ import {
   X
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface EntityType {
   key: string;
@@ -63,6 +64,7 @@ interface AnonymizationResult {
 export default function AnonymizationPage() {
   const { t } = useTranslation(['common', 'anonymization']);
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   // Stati del componente
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -151,22 +153,59 @@ export default function AnonymizationPage() {
   // Configurazione dropzone
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
-      setSelectedFile(acceptedFiles[0]);
+      const file = acceptedFiles[0];
+      
+      // Validazione estesa tipi file
+      const supportedTypes = [
+        'application/pdf',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'text/plain',
+        'image/jpeg',
+        'image/png', 
+        'image/tiff',
+        'image/webp'
+      ];
+      
+      if (!supportedTypes.includes(file.type)) {
+        toast({
+          title: "Formato file non supportato",
+          description: `Il tipo ${file.type} non è supportato. Usa PDF, DOCX, TXT o immagini (JPG, PNG, TIFF).`,
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Validazione dimensione
+      const maxSize = 25 * 1024 * 1024; // 25MB
+      if (file.size > maxSize) {
+        toast({
+          title: "File troppo grande",
+          description: `Il file è di ${(file.size / 1024 / 1024).toFixed(1)}MB. Limite massimo: 25MB.`,
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      setSelectedFile(file);
       setPreviewData(null);
       setProcessingResult(null);
       setActiveTab("settings");
     }
-  }, []);
+  }, [toast]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
       'application/pdf': ['.pdf'],
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-      'text/plain': ['.txt']
+      'text/plain': ['.txt'],
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/png': ['.png'],
+      'image/tiff': ['.tiff', '.tif'],
+      'image/webp': ['.webp']
     },
     maxFiles: 1,
-    maxSize: 10 * 1024 * 1024 // 10MB
+    maxSize: 25 * 1024 * 1024 // 25MB per supportare immagini OCR
   });
 
   // Gestione selezione tipi di entità
@@ -186,9 +225,23 @@ export default function AnonymizationPage() {
     }));
   };
 
+  // Helper per determinare se il file richiederà OCR
+  const requiresOCR = (file: File): boolean => {
+    return file.type.startsWith('image/') || 
+           (file.type === 'application/pdf' && file.size > 500000); // PDF grandi spesso sono scannerizzati
+  };
+
   // Anteprima anonimizzazione
   const handlePreview = async () => {
     if (!selectedFile) return;
+
+    // Informa l'utente se il file richiederà OCR
+    if (requiresOCR(selectedFile)) {
+      toast({
+        title: "Elaborazione OCR richiesta",
+        description: "Il file verrà processato con OCR per estrarre il testo. Potrebbe richiedere alcuni minuti.",
+      });
+    }
 
     const formData = new FormData();
     formData.append('file', selectedFile);
@@ -201,6 +254,14 @@ export default function AnonymizationPage() {
   // Anonimizzazione completa
   const handleAnonymize = async () => {
     if (!selectedFile || !previewData) return;
+
+    // Informa l'utente se il file richiederà elaborazione aggiuntiva
+    if (requiresOCR(selectedFile)) {
+      toast({
+        title: "Anonimizzazione in corso",
+        description: "Generazione del documento anonimizzato. Potrebbe richiedere alcuni minuti per file grandi.",
+      });
+    }
 
     const formData = new FormData();
     formData.append('file', selectedFile);
@@ -286,10 +347,10 @@ export default function AnonymizationPage() {
                   ) : (
                     <>
                       <p className="text-lg">
-                        Trascina un documento qui o clicca per selezionare
+                        Trascina un documento o immagine qui o clicca per selezionare
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        Formati supportati: PDF, DOCX, TXT (max 10MB)
+                        Formati supportati: PDF, DOCX, TXT, JPG, PNG, TIFF (max 25MB)
                       </p>
                     </>
                   )}
