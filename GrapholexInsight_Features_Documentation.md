@@ -9,7 +9,7 @@ GrapholexInsight è un sistema completo di analisi grafologica forense sviluppat
 - **Gestione Documentale Intelligente**: Upload, processamento e indicizzazione automatica di documenti
 - **OCR Avanzato**: Estrazione testo multilingue con preprocessing avanzato delle immagini
 - **Ricerca Semantica (RAG)**: Query intelligenti sulla base di conoscenza documentale
-- **Anonimizzazione AI**: Protezione automatica dei dati sensibili
+- **Anonimizzazione AI**: Protezione automatica dei dati sensibili con supporto documenti scansionati e immagini tramite OCR
 - **Sistema Educativo**: Quiz interattivi per formazione in grafologia
 
 ---
@@ -193,7 +193,11 @@ GrapholexInsight è un sistema completo di analisi grafologica forense sviluppat
 - Personalizzazione entità da anonimizzare
 - Preview modifiche prima dell'applicazione
 - Sostituzione intelligente mantenendo formato documento
-- Supporto multi-formato (PDF, DOCX, TXT)
+- Supporto multi-formato universale (PDF, DOCX, TXT, JPG, PNG, TIFF)
+- Integrazione OCR automatica per documenti scansionati e immagini
+- Rilevamento intelligente formato con fallback OCR seamless
+- Progress indicator per elaborazione OCR di file grandi
+- Validazione estesa file fino a 25MB per supportare immagini
 
 **Tecnologie Utilizzate**:
 - OpenAI GPT-4o per entity recognition

@@ -30,7 +30,7 @@
 ### 🧠 **AI-Powered Analysis**
 - **Vector Database Integration**: pgvector (PostgreSQL) + ChromaDB for semantic search
 - **RAG System**: Retrieval Augmented Generation for intelligent document querying
-- **Document Anonymization**: GPT-4o powered entity detection and replacement (13 entity types)
+- **Document Anonymization**: GPT-4o powered entity detection and replacement (13 entity types) with OCR integration for scanned PDFs and images
 - **AI Report Generation**: Automated forensic documentation with objective analysis
 - **Wake-Up Quiz**: Interactive graphology knowledge testing with progress tracking
 
@@ -159,7 +159,7 @@ The application will be available at `http://localhost:5000`
 
 - **Document OCR**: Upload documents for text extraction and indexing
 - **Semantic Search**: Query your document knowledge base
-- **Document Anonymization**: Remove sensitive information automatically
+- **Document Anonymization**: Remove sensitive information automatically from text documents and scanned images
 - **Feedback System**: Report issues and request features
 - **FAQ Support**: Access comprehensive help documentation
 
