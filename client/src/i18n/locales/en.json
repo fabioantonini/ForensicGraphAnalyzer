@@ -108,7 +108,7 @@
     "noDocuments": "No documents found",
     "uploadNew": "Upload new documents",
     "dragDrop": "Drag and drop files here or click to browse",
-    "supportedFormats": "Supported formats: PDF, DOCX, PPTX, TXT, HTML",
+    "supportedFormats": "Supported formats: PDF, DOCX, PPTX, TXT, HTML, PNG, JPG",
     "uploading": "Uploading...",
     "lastUploaded": "Last uploaded",
     "uploadSuccess": "Document uploaded",
@@ -116,7 +116,7 @@
     "uploadFailed": "Upload failed",
     "uploadFailedGeneric": "Failed to upload document",
     "dragDropOrBrowse": "Drag & drop files or browse",
-    "fileFormatInfo": "PDF, DOCX, PPTX, TXT, HTML (Max 25MB)",
+    "fileFormatInfo": "PDF, DOCX, PPTX, TXT, HTML, PNG, JPG (Max 25MB)",
     "uploadDocument": "Upload Document",
     "uploadAFile": "Upload a file",
     "selectFile": "Select file",
@@ -125,6 +125,8 @@
     "powerPointPresentation": "PowerPoint Presentation",
     "textDocument": "Text Document",
     "htmlDocument": "HTML Document",
+    "pngImage": "PNG Image",
+    "jpgImage": "JPG Image",
     "unknownType": "Unknown Type"
   },
   "query": {

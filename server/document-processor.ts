@@ -3,6 +3,7 @@ import path from 'path';
 import { randomBytes } from 'crypto';
 import mammoth from 'mammoth';
 import { log } from './vite';
+import { processOCR } from './ocr-service';
 
 // Dynamic import for pdf-parse to avoid initialization issues
 let pdfParse: (buffer: Buffer, options?: any) => Promise<{ text: string, numpages: number, info: any, metadata: any, version: string, numrender: number }>;
@@ -30,17 +31,32 @@ async function getPdfParse() {
   return pdfParse;
 }
 
-// File type verification
+// File type verification - supports both native documents and scanned images
 export function isValidFileType(mimetype: string): boolean {
   const validTypes = [
+    // Native document formats
     'application/pdf',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX
     'application/vnd.openxmlformats-officedocument.presentationml.presentation', // PPTX
     'text/plain', // TXT
-    'text/html' // HTML
+    'text/html', // HTML
+    // Image formats for OCR processing
+    'image/jpeg',
+    'image/png',
+    'image/jpg'
   ];
   
   return validTypes.includes(mimetype);
+}
+
+// Check if file type requires OCR processing
+export function requiresOCR(mimetype: string): boolean {
+  const ocrTypes = [
+    'image/jpeg',
+    'image/png', 
+    'image/jpg'
+  ];
+  return ocrTypes.includes(mimetype);
 }
 
 // Generate a unique filename
@@ -216,28 +232,115 @@ export async function extractTextFromHTML(filepath: string, content?: string): P
   }
 }
 
-// Process file based on type
+// Process file based on type - supports both native documents and OCR for scanned content
 export async function processFile(
   filepath: string, 
-  fileType: string
+  fileType: string,
+  progressCallback?: (progress: number, stage: string) => void
 ): Promise<string> {
   try {
     let text = '';
     
-    if (fileType === 'application/pdf') {
-      text = await extractTextFromPDF(filepath);
+    // Handle images with OCR
+    if (requiresOCR(fileType)) {
+      log(`Processing image file with OCR: ${filepath}`, "document-processor");
+      progressCallback?.(30, "Avvio OCR per immagine");
+      
+      const fileBuffer = await fs.readFile(filepath);
+      const filename = path.basename(filepath);
+      
+      const ocrSettings = {
+        language: "ita+eng",
+        dpi: 300,
+        preprocessingMode: "auto" as const,
+        outputFormat: "text" as const
+      };
+      
+      const ocrResult = await processOCR(
+        fileBuffer, 
+        filename, 
+        ocrSettings,
+        progressCallback
+      );
+      
+      text = ocrResult.extractedText;
+      log(`OCR completed for image: ${text.length} characters extracted`, "document-processor");
+      
+    } else if (fileType === 'application/pdf') {
+      // Try native PDF extraction first
+      try {
+        progressCallback?.(30, "Estrazione testo da PDF");
+        text = await extractTextFromPDF(filepath);
+        
+        // If extracted text is very short, it might be a scanned PDF - use OCR fallback
+        if (text.trim().length < 100) {
+          log(`PDF appears to be scanned (${text.trim().length} chars), attempting OCR fallback`, "document-processor");
+          progressCallback?.(40, "PDF scansionato rilevato, avvio OCR");
+          
+          const fileBuffer = await fs.readFile(filepath);
+          const filename = path.basename(filepath);
+          
+          const ocrSettings = {
+            language: "ita+eng",
+            dpi: 300,
+            preprocessingMode: "auto" as const,
+            outputFormat: "text" as const
+          };
+          
+          const ocrResult = await processOCR(
+            fileBuffer, 
+            filename, 
+            ocrSettings,
+            (ocrProgress, stage) => progressCallback?.(40 + (ocrProgress * 0.5), stage)
+          );
+          
+          text = ocrResult.extractedText;
+          log(`OCR fallback completed for scanned PDF: ${text.length} characters extracted`, "document-processor");
+        } else {
+          log(`Native PDF extraction successful: ${text.length} characters`, "document-processor");
+        }
+      } catch (pdfError) {
+        log(`PDF extraction failed, trying OCR fallback: ${pdfError}`, "document-processor");
+        progressCallback?.(40, "Errore estrazione PDF, tentativo OCR");
+        
+        const fileBuffer = await fs.readFile(filepath);
+        const filename = path.basename(filepath);
+        
+        const ocrSettings = {
+          language: "ita+eng",
+          dpi: 300,
+          preprocessingMode: "auto" as const,
+          outputFormat: "text" as const
+        };
+        
+        const ocrResult = await processOCR(
+          fileBuffer, 
+          filename, 
+          ocrSettings,
+          (ocrProgress, stage) => progressCallback?.(40 + (ocrProgress * 0.5), stage)
+        );
+        
+        text = ocrResult.extractedText;
+        log(`OCR fallback completed for problematic PDF: ${text.length} characters extracted`, "document-processor");
+      }
+      
     } else if (fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+      progressCallback?.(30, "Estrazione testo da DOCX");
       text = await extractTextFromDOCX(filepath);
     } else if (fileType === 'application/vnd.openxmlformats-officedocument.presentationml.presentation') {
+      progressCallback?.(30, "Estrazione testo da PPTX");
       text = await extractTextFromPPTX(filepath);
     } else if (fileType === 'text/plain') {
+      progressCallback?.(30, "Lettura file di testo");
       text = await extractTextFromTXT(filepath);
     } else if (fileType === 'text/html') {
+      progressCallback?.(30, "Estrazione testo da HTML");
       text = await extractTextFromHTML(filepath);
     } else {
       throw new Error('Unsupported file type');
     }
     
+    progressCallback?.(90, "Elaborazione testo completata");
     return text;
   } catch (error) {
     log(`Error processing file: ${error}`, "document-processor");

@@ -293,6 +293,8 @@ export default function DocumentsPage() {
                   <SelectItem value="pptx">PPTX</SelectItem>
                   <SelectItem value="txt">TXT</SelectItem>
                   <SelectItem value="html">HTML</SelectItem>
+                  <SelectItem value="png">PNG</SelectItem>
+                  <SelectItem value="jpg">JPG</SelectItem>
                 </SelectContent>
               </Select>
             </div>

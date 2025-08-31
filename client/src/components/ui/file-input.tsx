@@ -17,7 +17,7 @@ interface FileInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 export function FileInput({
   onFileSelect,
   label,
-  accept = ".pdf,.docx,.pptx,.txt,.html",
+  accept = ".pdf,.docx,.pptx,.txt,.html,.png,.jpg,.jpeg",
   maxSize = 25 * 1024 * 1024, // 25MB default
   className = "",
   buttonText,
