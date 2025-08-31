@@ -249,7 +249,7 @@ Per ogni categoria, assegna:
 - Weight: peso della categoria (già specificato)
 
 Fornisci anche:
-- Suggestions: suggerimenti specifici per migliorare la conformità
+- Suggestions: suggerimenti specifici e contestuali per migliorare la conformità, basati sui punteggi più bassi identificati. Concentrati sulle 2-3 aree che necessitano maggiori miglioramenti e fornisci consigli pratici e actionable. Varia l'approccio e lo stile: usa esempi concreti, riferimenti a standard specifici, e suggerimenti operativi diversi per ogni tipo di carenza. Evita suggerimenti generici o template.
 - Motiva sempre le tue valutazioni con esempi specifici dal testo
 
 RISPOSTA IN FORMATO JSON:
@@ -271,11 +271,21 @@ RISPOSTA IN FORMATO JSON:
         { role: "system", content: systemPrompt },
         { 
           role: "user", 
-          content: `Analizza la seguente perizia grafica secondo il framework ENFSI e fornisci una valutazione dettagliata della conformità agli standard professionali:\n\n${peritiaContent}` 
+          content: `Analizza la seguente perizia grafica secondo il framework ENFSI e fornisci una valutazione dettagliata della conformità agli standard professionali.
+
+Per i suggerimenti, adatta il focus in base ai risultati:
+- Se i punteggi metodologici sono bassi: concentrati su procedure specifiche e approcci sistematici
+- Se la validazione è carente: enfatizza controlli qualità e peer review
+- Se la presentazione è debole: suggerisci miglioramenti nella comunicazione dei risultati
+- Se l'analisi tecnica è insufficiente: proponi strumenti e parametri specifici
+
+Testo della perizia da analizzare:
+
+${peritiaContent}` 
         }
       ],
       response_format: { type: "json_object" },
-      temperature: 0.3, // Temperatura bassa per coerenza nell'analisi
+      temperature: 0.5, // Temperatura bilanciata: coerenza nelle valutazioni + variabilità nei suggerimenti
       max_tokens: 4000
     });
 
