@@ -200,7 +200,7 @@ export async function generateAnonymizedPDF(
     // Header minimalista e professionale
     doc.fontSize(14).font('Helvetica-Bold').text('DOCUMENTO ANONIMIZZATO', { align: 'center' });
     doc.fontSize(10).font('Helvetica').text(`File originale: ${originalFilename}`, { align: 'center' });
-    doc.fontSize(8).text(`Generato il: ${new Date().toLocaleDateString('it-IT')} alle ${new Date().toLocaleTimeString('it-IT')} - GrapholexInsight ${getVersionString()}`, { align: 'center' });
+    doc.fontSize(8).text(`Generato il: ${new Date().toLocaleDateString('it-IT')} alle ${new Date().toLocaleTimeString('it-IT')}`, { align: 'center' });
     doc.moveDown(1.5);
     
     // Linea separatrice
@@ -240,7 +240,7 @@ export async function generateAnonymizedPDF(
     // Footer con versione
     doc.moveDown(2);
     doc.fontSize(7).fillColor('gray').text(
-      `Generato da ${getFullVersionString()} - ${new Date().toLocaleString('it-IT')}`,
+      `Generato da GrapholexInsight ${getFullVersionString()} - ${new Date().toLocaleString('it-IT')}`,
       { align: 'center' }
     );
     
