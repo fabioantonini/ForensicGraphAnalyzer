@@ -199,11 +199,16 @@ export function setupAnonymizationRoutes(app: Express) {
       let outputFilename: string;
       let outputPath: string;
       
+      console.log(`[ANONYMIZATION DEBUG] File mimetype: '${req.file.mimetype}', originalname: '${req.file.originalname}'`);
+      
       if (req.file.mimetype === 'application/pdf') {
+        console.log(`[ANONYMIZATION DEBUG] Generating PDF output`);
         outputFilename = `anonymized_${Date.now()}.pdf`;
         outputPath = path.join(uploadsDir, outputFilename);
         await generateAnonymizedPDF(result.anonymizedText, outputPath, req.file.originalname || 'document');
       } else {
+        console.log(`[ANONYMIZATION DEBUG] Generating TXT output (mimetype not PDF)`);
+        console.log(`[ANONYMIZATION DEBUG] File info: mimetype: '${req.file.mimetype}', size: ${req.file.size}, original: '${req.file.originalname}'`);
         // Per tutti i file non-PDF, generiamo un file di testo formattato
         outputFilename = `anonymized_${Date.now()}.txt`;
         outputPath = path.join(uploadsDir, outputFilename);
