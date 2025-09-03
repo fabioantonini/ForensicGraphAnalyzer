@@ -3,10 +3,10 @@
  */
 export const APP_VERSION = {
   major: 2,
-  minor: 1, 
-  patch: 3,
+  minor: 2, 
+  patch: 0,
   build: '2025.09.03',
-  name: 'Enhanced Peer Review'
+  name: 'Version Tracking System'
 };
 
 export const getVersionString = (): string => {
