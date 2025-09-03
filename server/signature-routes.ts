@@ -345,13 +345,13 @@ export function registerSignatureRoutes(appRouter: Router) {
             
             // === NUOVO: ESTRAI COMPATIBILITÀ PARAMETRO PER PARAMETRO ===
             
-            if (pythonResult.compatibilities) {
-              parameterCompatibilities = pythonResult.compatibilities;
+            if ((pythonResult as any).compatibilities) {
+              parameterCompatibilities = (pythonResult as any).compatibilities;
               console.log(`[COMPARE-ALL] 🎯 Estratte compatibilità forensi dal Python analyzer:`, Object.keys(parameterCompatibilities).map(key => 
                 `${key}: ${parameterCompatibilities[key].toFixed(1)}%`).join(', '));
-            } else if (pythonResult.comparison_chart && pythonResult.comparison_chart.compatibilities) {
+            } else if ((pythonResult as any).comparison_chart && typeof (pythonResult as any).comparison_chart === 'object' && (pythonResult as any).comparison_chart.compatibilities) {
               // Fallback per compatibilità con versioni precedenti
-              parameterCompatibilities = pythonResult.comparison_chart.compatibilities;
+              parameterCompatibilities = (pythonResult as any).comparison_chart.compatibilities;
               console.log(`[COMPARE-ALL] 🎯 Estratte compatibilità forensi (fallback):`, Object.keys(parameterCompatibilities).map(key => 
                 `${key}: ${parameterCompatibilities[key].toFixed(1)}%`).join(', '));
             } else {
