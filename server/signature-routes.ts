@@ -316,7 +316,7 @@ export function registerSignatureRoutes(appRouter: Router) {
                 naturalnessScore ?? undefined,
                 pythonResult,
                 confidenceLevel ?? undefined,
-                req.user?.openaiApiKey,
+                req.user?.openaiApiKey || undefined,
                 req.user?.id
               );
               
@@ -352,9 +352,9 @@ export function registerSignatureRoutes(appRouter: Router) {
               console.log(`[DEBUG] 🔍 POST-ASSEGNAZIONE parameterCompatibilities:`, JSON.stringify(parameterCompatibilities));
               console.log(`[COMPARE-ALL] 🎯 Estratte compatibilità forensi dal Python analyzer:`, Object.keys(parameterCompatibilities).map(key => 
                 `${key}: ${parameterCompatibilities[key].toFixed(1)}%`).join(', '));
-            } else if (pythonResult.comparison_data && pythonResult.comparison_data.compatibilities) {
+            } else if (pythonResult.comparison_chart && pythonResult.comparison_chart.compatibilities) {
               // Fallback per compatibilità con versioni precedenti
-              parameterCompatibilities = pythonResult.comparison_data.compatibilities;
+              parameterCompatibilities = pythonResult.comparison_chart.compatibilities;
               console.log(`[DEBUG] 🔍 POST-ASSEGNAZIONE (fallback) parameterCompatibilities:`, JSON.stringify(parameterCompatibilities));
               console.log(`[COMPARE-ALL] 🎯 Estratte compatibilità forensi (fallback):`, Object.keys(parameterCompatibilities).map(key => 
                 `${key}: ${parameterCompatibilities[key].toFixed(1)}%`).join(', '));
