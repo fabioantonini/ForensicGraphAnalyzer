@@ -361,6 +361,10 @@ router.get('/:id/report', requireAuth, async (req, res) => {
     const nameWithoutExt = path.parse(originalName).name;
     const reportFilename = `${nameWithoutExt}_peer_review.pdf`;
     
+    console.log(`[PEER-REVIEW] Nome file originale: ${originalName}`);
+    console.log(`[PEER-REVIEW] Nome senza estensione: ${nameWithoutExt}`);
+    console.log(`[PEER-REVIEW] Nome report finale: ${reportFilename}`);
+    
     // Imposta headers per download
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${reportFilename}"`);
