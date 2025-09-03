@@ -199,10 +199,22 @@ const PeerReviewPage = () => {
       }
 
       const blob = await response.blob();
+      
+      // Estrai il nome del file dall'header Content-Disposition
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let filename = `report-peer-review-${reviewId}.pdf`; // fallback
+      
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1].replace(/['"]/g, '');
+        }
+      }
+      
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `report-peer-review-${reviewId}.pdf`;
+      link.download = filename;
       document.body.appendChild(link);
       link.click();
       window.URL.revokeObjectURL(url);
