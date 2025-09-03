@@ -9,6 +9,7 @@ import { extractTextFromPDF, extractTextFromDOCX } from "./document-processor";
 import { processOCR } from "./ocr-service";
 import mammoth from "mammoth";
 import PdfPrinter from "pdfkit";
+import { getVersionString, getFullVersionString } from '@shared/version';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -235,6 +236,13 @@ export async function generateAnonymizedPDF(
         }
       }
     });
+    
+    // Footer con versione
+    doc.moveDown(2);
+    doc.fontSize(7).fillColor('gray').text(
+      `Generato da ${getFullVersionString()} - ${new Date().toLocaleString('it-IT')}`,
+      { align: 'center' }
+    );
     
     doc.end();
     

@@ -169,14 +169,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register anonymization routes
   setupAnonymizationRoutes(app);
   
-  // Risposta API per indicare quale versione di codice sta eseguendo
-  router.get("/version", (req, res) => {
-    res.json({
-      version: "1.1.0",
-      updated: "2025-05-11",
-      features: ["Project isolation", "Full PDF report generation", "Reference signatures validation", "Demo mode"]
-    });
-  });
+  // Versione rimossa - ora gestita dal nuovo sistema di versioning dinamico alla fine del file
 
   // Get user stats
   app.get("/api/stats", isAuthenticated, isActiveUser, async (req, res, next) => {
