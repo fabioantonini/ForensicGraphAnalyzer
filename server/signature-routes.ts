@@ -12,6 +12,7 @@ import { log } from "./vite";
 import PDFDocument from "pdfkit";
 import OpenAI from "openai";
 import { SignatureCropper } from "./signature-cropper";
+import { getVersionString } from "@shared/version";
 // Import determineBestDPI rimosso - ora utilizziamo solo dimensioni reali inserite dall'utente
 
 // Per compatibilità retroattiva, inizialmente usiamo solo fs standard
@@ -1608,7 +1609,7 @@ export function registerSignatureRoutes(appRouter: Router) {
       // Footer
       doc.moveDown(2);
       doc.fontSize(8).text(
-        `Report generato automaticamente da GrapholexInsight il ${new Date().toLocaleDateString('it-IT')} alle ${new Date().toLocaleTimeString('it-IT')}`,
+        `Report generato automaticamente da GrapholexInsight ${getVersionString()} il ${new Date().toLocaleDateString('it-IT')} alle ${new Date().toLocaleTimeString('it-IT')}`,
         { align: 'center' }
       );
       
