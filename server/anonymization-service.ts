@@ -291,6 +291,11 @@ export async function generateAnonymizedDOCX(
     }
   });
   
+  // Footer con versione
+  formattedContent += '\n\n';
+  formattedContent += '━'.repeat(50) + '\n';
+  formattedContent += `Generato da GrapholexInsight ${getVersionString()} il ${new Date().toLocaleDateString('it-IT')} alle ${new Date().toLocaleTimeString('it-IT')}\n`;
+  
   // Salva come file di testo con encoding UTF-8 per preservare caratteri speciali
   await fs.writeFile(outputPath.replace('.docx', '.txt'), formattedContent, 'utf-8');
 }
