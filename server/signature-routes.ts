@@ -344,30 +344,21 @@ export function registerSignatureRoutes(appRouter: Router) {
             }
             
             // === NUOVO: ESTRAI COMPATIBILITÀ PARAMETRO PER PARAMETRO ===
-            console.log(`[DEBUG] 🔍 PRE-ASSEGNAZIONE parameterCompatibilities:`, JSON.stringify(parameterCompatibilities));
-            console.log(`[DEBUG] 🔍 pythonResult.compatibilities:`, JSON.stringify(pythonResult.compatibilities));
             
             if (pythonResult.compatibilities) {
               parameterCompatibilities = pythonResult.compatibilities;
-              console.log(`[DEBUG] 🔍 POST-ASSEGNAZIONE parameterCompatibilities:`, JSON.stringify(parameterCompatibilities));
               console.log(`[COMPARE-ALL] 🎯 Estratte compatibilità forensi dal Python analyzer:`, Object.keys(parameterCompatibilities).map(key => 
                 `${key}: ${parameterCompatibilities[key].toFixed(1)}%`).join(', '));
             } else if (pythonResult.comparison_chart && pythonResult.comparison_chart.compatibilities) {
               // Fallback per compatibilità con versioni precedenti
               parameterCompatibilities = pythonResult.comparison_chart.compatibilities;
-              console.log(`[DEBUG] 🔍 POST-ASSEGNAZIONE (fallback) parameterCompatibilities:`, JSON.stringify(parameterCompatibilities));
               console.log(`[COMPARE-ALL] 🎯 Estratte compatibilità forensi (fallback):`, Object.keys(parameterCompatibilities).map(key => 
                 `${key}: ${parameterCompatibilities[key].toFixed(1)}%`).join(', '));
             } else {
               console.log(`[COMPARE-ALL] ⚠️ Compatibilità parametri non trovate nel Python result`);
             }
             
-            console.log(`[DEBUG] 🔍 FINALE parameterCompatibilities prima dell'updateData:`, JSON.stringify(parameterCompatibilities));
-
             // ✅ NUOVO: Salva anche i parametri della firma di riferimento per il PDF
-            console.log(`[DEBUG REF] reference_parameters esistono: ${!!pythonResult.reference_parameters}`);
-            console.log(`[DEBUG REF] referenceSignature.analysisReport esistente: ${!!referenceSignature.analysisReport}`);
-            console.log(`[DEBUG REF] referenceSignature.id: ${referenceSignature.id}`);
             
             if (pythonResult.reference_parameters) {
               const referenceAnalysisReport = JSON.stringify(pythonResult.reference_parameters);
