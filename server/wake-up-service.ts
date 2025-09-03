@@ -259,7 +259,6 @@ ${instructions[lang].format}`;
       }
     );
     
-    console.log(`[WAKE-UP] Request config:`, JSON.stringify(requestConfig, null, 2));
     
     const response = await openai.chat.completions.create(requestConfig);
 
@@ -283,15 +282,7 @@ ${instructions[lang].format}`;
       difficulty: q.difficulty || "medium"
     }));
     
-    // Log delle domande generate per debug
     console.log(`[WAKE-UP] Successfully generated ${questions.length} quiz questions using GPT-4o`);
-    questions.forEach((q, i) => {
-      console.log(`[WAKE-UP] Question ${i+1}: ${q.question}`);
-      console.log(`[WAKE-UP] Options: ${JSON.stringify(q.options)}`);
-      console.log(`[WAKE-UP] Correct answer index: ${q.correct}`);
-      console.log(`[WAKE-UP] Correct option: ${q.options[q.correct]}`);
-      console.log(`[WAKE-UP] ---`);
-    });
     return questions;
 
   } catch (error) {
