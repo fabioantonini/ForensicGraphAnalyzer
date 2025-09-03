@@ -363,9 +363,6 @@ router.get('/:id/report', requireAuth, async (req, res) => {
     const cleanName = nameWithoutExt.replace(/[^a-zA-Z0-9_-]/g, '_');
     const reportFilename = `${cleanName}_peer_review.pdf`;
     
-    console.log(`[PEER-REVIEW] Nome file originale: ${originalName}`);
-    console.log(`[PEER-REVIEW] Nome pulito: ${cleanName}`);
-    console.log(`[PEER-REVIEW] Nome report finale: ${reportFilename}`);
     
     // Imposta headers per download con encoding sicuro
     res.setHeader('Content-Type', 'application/pdf');
