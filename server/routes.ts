@@ -52,6 +52,7 @@ import {
   updateRecommendationStatus
 } from "./recommendation-service";
 import { analyzeImageQuality } from "./image-quality-analyzer";
+import { getVersionString, getFullVersionString, APP_VERSION } from "@shared/version";
 
 // Initialize multer for file uploads
 const upload = multer({
@@ -1016,7 +1017,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId,
         filename,
         originalFilename: proposedFilename,
-        fileSize,
+        fileSize: content.length,
         fileType: 'text/plain',
         content,
         indexed: false,
@@ -1030,7 +1031,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Add to vector store for RAG
       try {
         const user = await storage.getUser(userId);
-        await addDocumentToCollection(document, user?.openaiApiKey);
+        await addDocumentToCollection(document, user?.openaiApiKey || undefined);
         // Mark as indexed - using direct database update since storage interface doesn't have updateDocument  
         await db.update(documents).set({ indexed: true }).where(eq(documents.id, document.id));
         log("ocr", `Documento OCR indicizzato nel vector store: ${document.id}`);
@@ -1424,7 +1425,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const demoAccount = await storage.createDemoAccount(
         {
           ...demoData,
-          password: hashedPassword
+          password: hashedPassword,
+          confirmPassword: hashedPassword
         }, 
         demoData.durationDays
       );
@@ -1568,7 +1570,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.status(500).json({ 
         message: "Failed to analyze image quality",
-        error: err.message || "Unknown error"
+        error: (err as Error).message || "Unknown error"
       });
     }
   });
@@ -1629,6 +1631,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register feedback routes
   app.use("/api/feedback", feedbackRoutes);
+
+  // Endpoint per informazioni versione
+  router.get("/version", (req: Request, res: Response) => {
+    res.json({
+      version: getVersionString(),
+      fullVersion: getFullVersionString(),
+      build: APP_VERSION.build,
+      name: APP_VERSION.name
+    });
+  });
 
   const httpServer = createServer(app);
   return httpServer;

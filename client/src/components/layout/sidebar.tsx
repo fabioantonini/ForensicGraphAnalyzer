@@ -7,6 +7,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/use-auth";
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { VersionInfo } from "../version-info";
 
 interface SidebarProps {
   className?: string;
@@ -199,6 +200,13 @@ export function Sidebar({ className }: SidebarProps) {
               ))}
             </nav>
           </ScrollArea>
+
+          {/* Footer con versione */}
+          {!collapsed && (
+            <div className="px-4 py-2 border-t border-border">
+              <VersionInfo />
+            </div>
+          )}
         </div>
       </aside>
 

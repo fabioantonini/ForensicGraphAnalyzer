@@ -7,6 +7,7 @@ import * as fs from 'fs/promises';
 import { createWriteStream, constants } from 'fs';
 import { log } from './vite';
 import PDFDocument from 'pdfkit';
+import { getVersionString, getFullVersionString } from '@shared/version';
 
 // Path per i file temporanei
 const REPORTS_DIR = path.join(process.cwd(), 'uploads', 'reports');
@@ -109,7 +110,7 @@ export async function generateSignatureReportPDF(data: {
       size: 'A4',
       info: {
         Title: `Rapporto di analisi firma - ${data.originalFilename}`,
-        Author: 'GrapholexInsight',
+        Author: `GrapholexInsight ${getVersionString()}`,
         Subject: `Verifica firma: ${data.originalFilename}`,
         Keywords: 'firma, verifica, analisi, grafologia',
         CreationDate: new Date()
@@ -355,6 +356,13 @@ export async function generateSignatureReportPDF(data: {
     doc.fontSize(8).fillColor('gray').text(
       "Nota: Questo report è generato automaticamente da un sistema di analisi computazionale e non " +
       "costituisce una perizia legale. Per scopi legali o forensi, consultare un esperto grafologo certificato.",
+      { align: 'center' }
+    );
+    
+    // Footer con versione
+    doc.moveDown();
+    doc.fontSize(7).fillColor('darkgray').text(
+      `Generato da ${getFullVersionString()} - ${new Date().toLocaleString('it-IT')}`,
       { align: 'center' }
     );
     
