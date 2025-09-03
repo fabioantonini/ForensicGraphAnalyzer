@@ -20,6 +20,7 @@ const requireAuth = (req: any, res: any, next: any) => {
 import mammoth from "mammoth";
 import pdfParse from "pdf-parse";
 import PDFDocument from "pdfkit";
+import { getVersionString } from "@shared/version";
 
 const router = express.Router();
 
@@ -406,7 +407,7 @@ router.get('/:id/report', requireAuth, async (req, res) => {
     
     // Footer
     doc.moveDown();
-    doc.fontSize(8).text(`Report generato il ${new Date().toLocaleDateString('it-IT')} - GrapholexInsight`, { align: 'center' });
+    doc.fontSize(8).text(`Report generato il ${new Date().toLocaleDateString('it-IT')} - GrapholexInsight ${getVersionString()}`, { align: 'center' });
 
     // Finalizza il documento
     doc.end();
