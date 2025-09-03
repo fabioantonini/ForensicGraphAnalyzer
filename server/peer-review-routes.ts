@@ -359,15 +359,17 @@ router.get('/:id/report', requireAuth, async (req, res) => {
     // Genera nome file basato su quello originale
     const originalName = review.originalFilename;
     const nameWithoutExt = path.parse(originalName).name;
-    const reportFilename = `${nameWithoutExt}_peer_review.pdf`;
+    // Rimuovi caratteri speciali e spazi per compatibility browser
+    const cleanName = nameWithoutExt.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const reportFilename = `${cleanName}_peer_review.pdf`;
     
     console.log(`[PEER-REVIEW] Nome file originale: ${originalName}`);
-    console.log(`[PEER-REVIEW] Nome senza estensione: ${nameWithoutExt}`);
+    console.log(`[PEER-REVIEW] Nome pulito: ${cleanName}`);
     console.log(`[PEER-REVIEW] Nome report finale: ${reportFilename}`);
     
-    // Imposta headers per download
+    // Imposta headers per download con encoding sicuro
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${reportFilename}"`);
+    res.setHeader('Content-Disposition', `attachment; filename="${reportFilename}"; filename*=UTF-8''${encodeURIComponent(reportFilename)}`);
     
     // Pipe del documento al response
     doc.pipe(res);
