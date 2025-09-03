@@ -200,7 +200,7 @@ export async function generateAnonymizedPDF(
     // Header minimalista e professionale
     doc.fontSize(14).font('Helvetica-Bold').text('DOCUMENTO ANONIMIZZATO', { align: 'center' });
     doc.fontSize(10).font('Helvetica').text(`File originale: ${originalFilename}`, { align: 'center' });
-    doc.fontSize(8).text(`Generato il: ${new Date().toLocaleDateString('it-IT')} alle ${new Date().toLocaleTimeString('it-IT')}`, { align: 'center' });
+    // Header più pulito senza data/ora
     doc.moveDown(1.5);
     
     // Linea separatrice

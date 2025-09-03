@@ -199,15 +199,19 @@ export function setupAnonymizationRoutes(app: Express) {
       let outputFilename: string;
       let outputPath: string;
       
+      // Genera nome file basato su quello originale
+      const originalName = req.file.originalname || 'document';
+      const nameWithoutExt = path.parse(originalName).name;
+      
       if (req.file.mimetype === 'application/pdf') {
-        outputFilename = `anonymized_${Date.now()}.pdf`;
+        outputFilename = `${nameWithoutExt}_anonymized.pdf`;
         outputPath = path.join(uploadsDir, outputFilename);
-        await generateAnonymizedPDF(result.anonymizedText, outputPath, req.file.originalname || 'document');
+        await generateAnonymizedPDF(result.anonymizedText, outputPath, originalName);
       } else {
         // Per tutti i file non-PDF, generiamo un file di testo formattato
-        outputFilename = `anonymized_${Date.now()}.txt`;
+        outputFilename = `${nameWithoutExt}_anonymized.txt`;
         outputPath = path.join(uploadsDir, outputFilename);
-        await generateAnonymizedDOCX(result.anonymizedText, outputPath, req.file.originalname || 'document');
+        await generateAnonymizedDOCX(result.anonymizedText, outputPath, originalName);
       }
 
       res.json({
@@ -251,7 +255,7 @@ export function setupAnonymizationRoutes(app: Express) {
       const userToken = req.query.token;
       
       // Validazione nome file per sicurezza
-      if (!/^anonymized_\d+\.(pdf|txt)$/.test(filename)) {
+      if (!/^.+_anonymized\.(pdf|txt)$/.test(filename)) {
         return res.status(400).json({ error: 'Invalid filename' });
       }
       
