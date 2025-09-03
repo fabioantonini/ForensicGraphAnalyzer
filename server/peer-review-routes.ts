@@ -356,9 +356,14 @@ router.get('/:id/report', requireAuth, async (req, res) => {
     // Genera il report PDF utilizzando PDFKit
     const doc = new PDFDocument({ margin: 50 });
     
+    // Genera nome file basato su quello originale
+    const originalName = review.originalFilename;
+    const nameWithoutExt = path.parse(originalName).name;
+    const reportFilename = `${nameWithoutExt}_peer_review.pdf`;
+    
     // Imposta headers per download
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="report-peer-review-${reviewId}.pdf"`);
+    res.setHeader('Content-Disposition', `attachment; filename="${reportFilename}"`);
     
     // Pipe del documento al response
     doc.pipe(res);
