@@ -5,7 +5,7 @@ export const APP_VERSION = {
   major: 2,
   minor: 1, 
   patch: 3,
-  build: '2025.01.13',
+  build: '2025.09.03',
   name: 'Enhanced Peer Review'
 };
 
