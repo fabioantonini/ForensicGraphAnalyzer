@@ -156,9 +156,7 @@ DO NOT add any other text besides the JSON.`
     
     recentQuestions = recentQuestionsQuery.map((q: { question: string }) => q.question);
     
-    console.log(`[WAKE-UP] Found ${frequentQuestions.length} frequent questions and ${recentQuestions.length} recent questions to avoid`);
   } catch (error) {
-    console.log(`[WAKE-UP] Could not fetch questions to avoid: ${error}`);
   }
 
   // Crea lista aggressiva di argomenti da evitare
@@ -235,7 +233,6 @@ ${instructions[lang].format}`;
         : "Sei un esperto di cultura generale. Genera domande di quiz FATALMENTE ACCURATE ed educative su arte, storia, scienza, letteratura, geografia e conoscenze generali. Verifica SEMPRE fatti storici, nomi, date e informazioni scientifiche prima di rispondere. La precisione è CRITICA - risposte sbagliate sono inaccettabili.";
     }
 
-    console.log(`[WAKE-UP] Generating quiz with model: ${model}`);
     
     // Import helper function
     const { createOpenAIRequestConfig } = await import("./openai");
