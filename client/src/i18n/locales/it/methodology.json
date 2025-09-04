@@ -1,0 +1,106 @@
+{
+  "title": "Metodologia di Analisi",
+  "subtitle": "Sistema di analisi grafologica forense per la verifica delle firme",
+  "tabs": {
+    "overview": "Panoramica",
+    "parameters": "Parametri",
+    "algorithms": "Algoritmi",
+    "interpretation": "Interpretazione"
+  },
+  "categories": {
+    "graphological": {
+      "title": "Parametri Grafologici",
+      "description": "15 parametri pesati che determinano la compatibilità tra firme"
+    },
+    "naturalness": {
+      "title": "Analisi di Naturalezza",
+      "description": "4 parametri per rilevare dissimulazioni e imitazioni",
+      "weight": "Classificazione"
+    },
+    "ssim": {
+      "title": "Analisi Visiva SSIM",
+      "description": "Comparazione pixel-per-pixel della struttura grafica"
+    },
+    "metadata": {
+      "title": "Metadata e Calibrazione",
+      "description": "Parametri tecnici e informativi per supporto sistema",
+      "weight": "Solo info"
+    }
+  },
+  "overview": {
+    "systemTitle": "Sistema Multi-Livello GrapholexInsight",
+    "systemDescription": "GrapholexInsight utilizza un sistema avanzato che combina analisi Python, orchestrazione backend TypeScript e visualizzazione React per fornire perizie grafologiche conformi agli standard ENFSI.",
+    "weight": "Peso",
+    "parameters": "Parametri",
+    "formulaTitle": "Formula di Similarità Finale", 
+    "formula": {
+      "final": "Similarità Finale",
+      "ssim": "Punteggio SSIM", 
+      "parameters": "Parametri Grafologici",
+      "ssimWeight": "Analisi Visiva",
+      "parametersWeight": "Parametri Pesati"
+    }
+  },
+  "parameters": {
+    "graphologicalTitle": "Parametri Grafologici Principali (Top 5)",
+    "graphologicalDescription": "I 5 parametri con peso maggiore nel calcolo della compatibilità. Insieme contribuiscono al 60% del peso totale dei parametri grafologici.",
+    "naturalnessTitle": "Parametri di Naturalezza",
+    "naturalnessDescription": "Parametri specializzati per rilevare dissimulazioni, imitazioni e falsificazioni attraverso l'analisi dell'automatismo grafico.",
+    "pressureMean": "Pressione media del tratto - indicatore più importante per autenticità",
+    "avgCurvature": "Curvatura media dei tratti - caratteristica inconscia e distintiva",
+    "proportion": "Rapporto larghezza/altezza - riflette l'immagine di sé",
+    "velocity": "Velocità di esecuzione stimata - difficile da controllare nell'imitazione",
+    "pressureStd": "Variabilità della pressione - indicatore di stato emotivo"
+  },
+  "naturalness": {
+    "fluidity": "Fluidità dei movimenti grafici - cruciale per rilevare imitazioni",
+    "pressure": "Consistenza della pressione - indicatore di autenticità",
+    "coordination": "Coordinazione motoria - rileva stress da falsificazione"
+  },
+  "algorithms": {
+    "title": "Algoritmi di Calcolo Principali",
+    "inclination": {
+      "title": "Algoritmo Inclinazione (Specifico Forense)",
+      "description": "Utilizza Principal Component Analysis per determinare la direzione principale dei tratti e calcola l'inclinazione rispetto alla verticale."
+    },
+    "pressure": {
+      "title": "Analisi della Pressione",
+      "description": "Calcola media e deviazione standard dell'intensità dei pixel per determinare la pressione del tratto."
+    },
+    "naturalness": {
+      "title": "Indice di Naturalezza Combinato", 
+      "description": "Formula pesata che combina fluidità, consistenza pressione e coordinazione motoria per rilevare dissimulazioni."
+    }
+  },
+  "interpretation": {
+    "title": "Interpretazione dei Risultati",
+    "description": "Le soglie di autenticità seguono gli standard forensi internazionali e combinano similarità grafica con naturalezza di esecuzione.",
+    "thresholds": "Soglie di Autenticità",
+    "confidence": "Confidenza",
+    "matrix": {
+      "title": "Matrice di Classificazione 2D",
+      "description": "Il verdetto finale combina il punteggio di similarità con l'indice di naturalezza per una classificazione forense completa.",
+      "highNaturalness": "Alta Naturalezza (≥80%)",
+      "lowNaturalness": "Bassa Naturalezza (<60%)",
+      "highSimilarity": "Alta Similarità (≥85%)",
+      "mediumSimilarity": "Media Similarità (65-84%)", 
+      "lowSimilarity": "Bassa Similarità (<65%)",
+      "authentic": "Autentica",
+      "skilledCopy": "Possibile copia abile",
+      "probablyAuthentic": "Probabilmente autentica",
+      "suspicious": "Sospetta",
+      "probablyFalse": "Probabilmente falsa"
+    }
+  },
+  "thresholds": {
+    "authentic": "Autentica",
+    "probablyAuthentic": "Probabilmente Autentica", 
+    "inconclusive": "Non Conclusiva",
+    "suspicious": "Sospetta"
+  },
+  "documentation": {
+    "title": "Documentazione Completa",
+    "description": "Per una comprensione approfondita di tutti i parametri, algoritmi e significati grafologici, consulta la documentazione tecnica completa.",
+    "viewDocument": "Visualizza Documentazione Completa"
+  }
+}
