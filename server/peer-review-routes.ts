@@ -425,49 +425,116 @@ router.get('/:id/report', requireAuth, async (req, res) => {
       
       // Header categoria con barra di progresso visiva
       const categoryY = doc.y;
-      doc.rect(50, categoryY, 495, 35).fillAndStroke('#f1f5f9', '#e2e8f0');
+      doc.rect(50, categoryY, 495, 45).fillAndStroke('#f8fafc', '#e2e8f0');
       doc.fillColor('#1e293b');
-      doc.fontSize(14).text(`${index + 1}. ${categoryName}`, 60, categoryY + 8);
-      doc.fontSize(11).text(`Score: ${score}% | Peso: ${weight}%`, 60, categoryY + 22);
+      doc.fontSize(16).text(`${index + 1}. ${categoryName}`, 60, categoryY + 12);
+      doc.fontSize(12).text(`Score: ${score}% | Peso: ${weight}%`, 60, categoryY + 28);
       
-      // Barra progresso score
-      const progressWidth = (score / 100) * 200;
+      // Barra progresso score più grande
+      const progressWidth = (score / 100) * 180;
       const progressColor = score >= 85 ? '#10B981' : score >= 70 ? '#F59E0B' : score >= 60 ? '#F97316' : '#EF4444';
-      doc.rect(350, categoryY + 8, 180, 8).fillAndStroke('#e5e7eb', '#d1d5db');
+      doc.rect(350, categoryY + 15, 180, 12).fillAndStroke('#e5e7eb', '#d1d5db');
       if (progressWidth > 0) {
-        doc.rect(350, categoryY + 8, progressWidth, 8).fillAndStroke(progressColor, progressColor);
+        doc.rect(350, categoryY + 15, progressWidth, 12).fillAndStroke(progressColor, progressColor);
       }
-      doc.fillColor(progressColor).fontSize(9).text(`${score}%`, 355 + progressWidth, categoryY + 18);
+      doc.fillColor('#ffffff').fontSize(10).text(`${score}%`, 425, categoryY + 18);
       
-      doc.y = categoryY + 45;
+      doc.y = categoryY + 55;
       doc.fillColor('#374151');
       
-      // Parsing dettagli per sub-criteri (se disponibili)
+      // Parsing migliorato per sub-criteri
       const details = criterion.details || '';
-      if (details.includes('•')) {
-        // Dettagli strutturati con sub-criteri
-        doc.fontSize(10).text('Sub-criteri e valutazioni:', { indent: 20 });
-        const lines = details.split('\n').filter(line => line.trim());
-        lines.forEach(line => {
-          if (line.includes('•')) {
-            doc.fontSize(9).text(line.trim(), { indent: 30 });
-          } else if (line.includes('Analisi dettagliata')) {
-            // Skip header già mostrato
-          } else if (line.trim()) {
-            doc.fontSize(9).text(line.trim(), { indent: 40, align: 'justify' });
+      
+      if (details.includes('Analisi dettagliata per sub-criteri:')) {
+        // Estrai i sub-criteri strutturati
+        const subcriteriaPart = details.split('Analisi dettagliata per sub-criteri:')[1] || details;
+        const subcriteriaLines = subcriteriaPart.split(/(?=\w+:)/);
+        
+        doc.fontSize(12).text('Sub-criteri valutati:', { indent: 20 });
+        doc.moveDown(0.3);
+        
+        subcriteriaLines.forEach((line: string) => {
+          if (line.trim() && line.includes(':')) {
+            const parts = line.split(':');
+            if (parts.length >= 2) {
+              const criterionName = parts[0].trim();
+              const criterionDetails = parts.slice(1).join(':').trim();
+              
+              // Estrai score se presente
+              const scoreMatch = criterionDetails.match(/(\d+)%/);
+              const subScore = scoreMatch ? parseInt(scoreMatch[1]) : null;
+              
+              // Estrai evidenza e gap
+              const evidenceMatch = criterionDetails.match(/Evidenza:\s*"([^"]*)"?/);
+              const gapMatch = criterionDetails.match(/Gap:\s*([^.]*\.?)/);
+              
+              const evidence = evidenceMatch ? evidenceMatch[1] : '';
+              const gap = gapMatch ? gapMatch[1] : '';
+              
+              // Box per ogni sub-criterio
+              const subY = doc.y;
+              const subBoxHeight = 65;
+              
+              // Colore basato su score
+              const subColor = subScore ? 
+                (subScore >= 85 ? '#f0fdf4' : subScore >= 70 ? '#fffbeb' : subScore >= 60 ? '#fff7ed' : '#fef2f2') : 
+                '#f9fafb';
+              const subBorderColor = subScore ?
+                (subScore >= 85 ? '#10b981' : subScore >= 70 ? '#f59e0b' : subScore >= 60 ? '#f97316' : '#ef4444') :
+                '#d1d5db';
+              
+              doc.rect(70, subY, 460, subBoxHeight).fillAndStroke(subColor, subBorderColor);
+              
+              // Nome sub-criterio
+              doc.fillColor('#1f2937');
+              doc.fontSize(11).text(`📋 ${criterionName}`, 80, subY + 8);
+              
+              if (subScore !== null) {
+                doc.fillColor(subBorderColor).fontSize(10).text(`${subScore}%`, 470, subY + 8);
+              }
+              
+              // Evidenza
+              if (evidence) {
+                doc.fillColor('#374151');
+                doc.fontSize(9).text(`💡 Evidenza: ${evidence}`, 80, subY + 23, { width: 440 });
+              }
+              
+              // Gap/Miglioramento
+              if (gap) {
+                doc.fillColor('#6b7280');
+                doc.fontSize(9).text(`⚠️ Gap: ${gap}`, 80, subY + 42, { width: 440 });
+              }
+              
+              doc.y = subY + subBoxHeight + 5;
+            }
           }
         });
+        
       } else {
-        // Dettagli semplici
-        doc.fontSize(10).text(details, { indent: 20, align: 'justify' });
+        // Dettagli semplici con migliore formattazione
+        doc.fontSize(11).text('Dettagli valutazione:', { indent: 20 });
+        doc.moveDown(0.3);
+        
+        const cleanDetails = details.replace(/\s+/g, ' ').trim();
+        doc.fontSize(10).text(cleanDetails, { 
+          indent: 30, 
+          align: 'justify',
+          width: 480,
+          lineGap: 2
+        });
       }
       
-      doc.moveDown(0.8);
+      doc.moveDown(1);
       
-      // Separatore tra categorie
+      // Separatore elegante tra categorie
       if (index < Object.keys(criteriaResults).length - 1) {
-        doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke('#e2e8f0');
-        doc.moveDown(0.5);
+        doc.moveTo(70, doc.y).lineTo(525, doc.y).strokeColor('#cbd5e1').lineWidth(1).stroke();
+        doc.moveDown(1);
+      }
+      
+      // Gestione nuova pagina se necessario
+      if (doc.y > 650) {
+        doc.addPage();
       }
     });
 
