@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { it, enUS } from "date-fns/locale";
+import { useToast } from "@/hooks/use-toast";
 
 interface PeerReviewResult {
   id: number;
@@ -81,6 +82,7 @@ interface StatsData {
 const PeerReviewPage = () => {
   const { t: tCommon, i18n } = useTranslation('common');
   const { t } = useTranslation('peerReview');
+  const { toast } = useToast();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [currentResult, setCurrentResult] = useState<PeerReviewResult | null>(null);
