@@ -52,6 +52,12 @@ const ENFSI_DETAILED_FRAMEWORK_IT = {
         weight: 1.0,
         description: "Numerazione progressiva, totale pagine",
         indicators: ["numerazione sequenziale", "formato 'X di Y'", "coerenza numerazione", "assenza salti"]
+      },
+      documentMetadata: {
+        name: "Metadati Documento",
+        weight: 0.0,
+        description: "Informazioni tecniche e proprietà documento",
+        indicators: ["versione software", "timestamp creazione", "hash integrità", "proprietà file"]
       }
     }
   },
@@ -88,6 +94,12 @@ const ENFSI_DETAILED_FRAMEWORK_IT = {
         weight: 2.0,
         description: "Tracciabilità completa del materiale",
         indicators: ["registro passaggi", "identificazione operatori", "date/orari", "firme responsabili"]
+      },
+      storageConditions: {
+        name: "Condizioni Conservazione",
+        weight: 0.0,
+        description: "Ambiente e modalità di conservazione appropriate",
+        indicators: ["temperatura controllata", "umidità adeguata", "protezione luce", "contenitori sigillati"]
       }
     }
   },
