@@ -666,12 +666,41 @@ const PeerReviewPage = () => {
                         </CardHeader>
                         <CardContent>
                           <div className="space-y-2">
-                            {category.criteria.map((criterion: string, index: number) => (
-                              <div key={index} className="flex items-center gap-2 text-sm">
-                                <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
-                                <span>{criterion}</span>
+                            {/* Gestione sia della vecchia struttura criteria che della nuova subcriteria */}
+                            {category.criteria ? (
+                              // Vecchia struttura con array di criteri
+                              category.criteria.map((criterion: string, index: number) => (
+                                <div key={index} className="flex items-center gap-2 text-sm">
+                                  <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                                  <span>{criterion}</span>
+                                </div>
+                              ))
+                            ) : category.subcriteria ? (
+                              // Nuova struttura con sub-criteri dettagliati
+                              Object.entries(category.subcriteria).map(([key, subcriterion]: [string, any]) => (
+                                <div key={key} className="bg-white rounded-lg p-3 border">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                                    <span className="font-medium text-sm">{subcriterion.name}</span>
+                                    <Badge variant="secondary" className="text-xs">Peso: {subcriterion.weight}%</Badge>
+                                  </div>
+                                  <p className="text-xs text-gray-600 mb-2">{subcriterion.description}</p>
+                                  {subcriterion.indicators && (
+                                    <div className="flex flex-wrap gap-1">
+                                      {subcriterion.indicators.map((indicator: string, idx: number) => (
+                                        <span key={idx} className="inline-flex items-center px-2 py-1 rounded-md bg-blue-50 text-blue-700 text-xs">
+                                          {indicator}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              ))
+                            ) : (
+                              <div className="text-sm text-gray-500 italic">
+                                Nessun criterio disponibile
                               </div>
-                            ))}
+                            )}
                           </div>
                         </CardContent>
                       </Card>

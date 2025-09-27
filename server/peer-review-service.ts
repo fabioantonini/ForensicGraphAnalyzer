@@ -506,7 +506,7 @@ Genera suggerimenti che siano:
 3. PRIORITIZZATI: Ordina per impatto sulla conformità
 4. CON ESEMPI: Fornisci template/esempi quando possibile
 
-Formato richiesto:
+Fornisci la risposta in formato JSON strutturato come segue:
 {
   "prioritySuggestions": [
     {
