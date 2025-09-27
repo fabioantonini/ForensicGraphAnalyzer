@@ -584,12 +584,13 @@ const PeerReviewPage = () => {
                               
                               <div className="flex items-center gap-2">
                                 <Button
-                                  variant="ghost"
+                                  variant="outline"
                                   size="sm"
                                   onClick={() => handleDownloadReport(review.id)}
-                                  title={t('analysis.downloadReport')}
+                                  className="flex items-center gap-2"
                                 >
                                   <Download className="h-4 w-4" />
+                                  <span className="text-xs">Report PDF</span>
                                 </Button>
                                 <Button
                                   variant="ghost"
