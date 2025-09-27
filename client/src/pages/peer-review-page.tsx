@@ -191,22 +191,16 @@ const PeerReviewPage = () => {
   // Funzione per scaricare il report PDF
   const handleDownloadReport = async (reviewId: number) => {
     try {
-      console.log('🔍 Inizio download report per ID:', reviewId);
-      
       const response = await fetch(`/api/peer-review/${reviewId}/report`, {
         method: 'GET',
         credentials: 'include',
       });
-      
-      console.log('📡 Response status:', response.status);
-      console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
       
       if (!response.ok) {
         throw new Error(`Errore HTTP ${response.status}: ${response.statusText}`);
       }
 
       const blob = await response.blob();
-      console.log('📄 Blob ricevuto:', blob.size, 'bytes, tipo:', blob.type);
       
       if (blob.size === 0) {
         throw new Error('Il file PDF ricevuto è vuoto');
@@ -223,8 +217,6 @@ const PeerReviewPage = () => {
         }
       }
       
-      console.log('💾 Filename estratto:', filename);
-      
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -232,25 +224,23 @@ const PeerReviewPage = () => {
       link.style.display = 'none';
       document.body.appendChild(link);
       
-      console.log('⬇️ Triggering download...');
       link.click();
       
       // Cleanup dopo un breve delay
       setTimeout(() => {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(link);
-        console.log('✅ Download cleanup completato');
       }, 1000);
       
       // Notifica successo
       toast({
         title: "Download completato",
-        description: `Report PDF scaricato: ${filename}`,
+        description: `Report PDF scaricato con successo`,
         variant: "default",
       });
       
     } catch (error) {
-      console.error('❌ Errore download report:', error);
+      console.error('Errore download report:', error);
       toast({
         title: "Errore download",
         description: error instanceof Error ? error.message : "Errore sconosciuto durante il download",

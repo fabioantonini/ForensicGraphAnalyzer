@@ -442,86 +442,109 @@ router.get('/:id/report', requireAuth, async (req, res) => {
       doc.y = categoryY + 55;
       doc.fillColor('#374151');
       
-      // Parsing migliorato per sub-criteri
+      // Parsing completamente riscritto per sub-criteri
       const details = criterion.details || '';
       
-      if (details.includes('Analisi dettagliata per sub-criteri:')) {
-        // Estrai i sub-criteri strutturati
-        const subcriteriaPart = details.split('Analisi dettagliata per sub-criteri:')[1] || details;
-        const subcriteriaLines = subcriteriaPart.split(/(?=\w+:)/);
+      doc.fontSize(12).text('Valutazione dettagliata:', { indent: 20 });
+      doc.moveDown(0.5);
+      
+      // Parsing robusto per sub-criteri con regex
+      if (details.includes('Analisi dettagliata')) {
+        // Estrai i sub-criteri usando pattern più robusti
+        const subcriteriaPattern = /(\w+):\s*(\d+)%\s*-\s*Evidenza:\s*"([^"]*)"?\s*Gap:\s*([^(]*)\(Severità:\s*(\w+)\)/g;
+        let match;
+        let hasSubcriteria = false;
         
-        doc.fontSize(12).text('Sub-criteri valutati:', { indent: 20 });
-        doc.moveDown(0.3);
+        while ((match = subcriteriaPattern.exec(details)) !== null) {
+          hasSubcriteria = true;
+          const [, criterionName, scoreStr, evidence, gap, severity] = match;
+          const subScore = parseInt(scoreStr);
+          
+          // Box per ogni sub-criterio con layout migliorato
+          const subY = doc.y;
+          const subBoxHeight = Math.max(80, Math.ceil((evidence.length + gap.length) / 2)); // Altezza dinamica
+          
+          // Colore basato su score
+          const subColor = subScore >= 85 ? '#f0fdf4' : subScore >= 70 ? '#fffbeb' : subScore >= 60 ? '#fff7ed' : '#fef2f2';
+          const subBorderColor = subScore >= 85 ? '#10b981' : subScore >= 70 ? '#f59e0b' : subScore >= 60 ? '#f97316' : '#ef4444';
+          const textColor = subScore >= 85 ? '#065f46' : subScore >= 70 ? '#92400e' : subScore >= 60 ? '#9a3412' : '#991b1b';
+          
+          doc.rect(70, subY, 460, subBoxHeight).fillAndStroke(subColor, subBorderColor);
+          
+          // Header sub-criterio
+          doc.fillColor('#1f2937');
+          doc.fontSize(12).text(`• ${criterionName.charAt(0).toUpperCase() + criterionName.slice(1)}`, 80, subY + 10, { underline: true });
+          doc.fillColor(textColor).fontSize(11).text(`${subScore}%`, 480, subY + 10);
+          
+          // Evidenza (formattata meglio)
+          doc.fillColor('#374151');
+          doc.fontSize(10).text('Evidenza trovata:', 80, subY + 28);
+          doc.fontSize(9).text(`"${evidence.trim()}"`, 80, subY + 42, { 
+            width: 440, 
+            align: 'justify',
+            lineGap: 1
+          });
+          
+          // Gap/Miglioramenti
+          const cleanGap = gap.trim().replace(/\s+/g, ' ');
+          doc.fillColor('#6b7280');
+          doc.fontSize(9).text('Area di miglioramento:', 80, subY + 58);
+          doc.fontSize(9).text(cleanGap, 80, subY + 70, { 
+            width: 440, 
+            align: 'justify',
+            lineGap: 1
+          });
+          
+          // Severità indicator
+          const severityColor = severity === 'alta' ? '#ef4444' : severity === 'media' ? '#f59e0b' : '#10b981';
+          doc.fillColor(severityColor).fontSize(8).text(`Priorità: ${severity.toUpperCase()}`, 400, subY + subBoxHeight - 12);
+          
+          doc.y = subY + subBoxHeight + 8;
+        }
         
-        subcriteriaLines.forEach((line: string) => {
-          if (line.trim() && line.includes(':')) {
-            const parts = line.split(':');
-            if (parts.length >= 2) {
-              const criterionName = parts[0].trim();
-              const criterionDetails = parts.slice(1).join(':').trim();
-              
-              // Estrai score se presente
-              const scoreMatch = criterionDetails.match(/(\d+)%/);
-              const subScore = scoreMatch ? parseInt(scoreMatch[1]) : null;
-              
-              // Estrai evidenza e gap
-              const evidenceMatch = criterionDetails.match(/Evidenza:\s*"([^"]*)"?/);
-              const gapMatch = criterionDetails.match(/Gap:\s*([^.]*\.?)/);
-              
-              const evidence = evidenceMatch ? evidenceMatch[1] : '';
-              const gap = gapMatch ? gapMatch[1] : '';
-              
-              // Box per ogni sub-criterio
-              const subY = doc.y;
-              const subBoxHeight = 65;
-              
-              // Colore basato su score
-              const subColor = subScore ? 
-                (subScore >= 85 ? '#f0fdf4' : subScore >= 70 ? '#fffbeb' : subScore >= 60 ? '#fff7ed' : '#fef2f2') : 
-                '#f9fafb';
-              const subBorderColor = subScore ?
-                (subScore >= 85 ? '#10b981' : subScore >= 70 ? '#f59e0b' : subScore >= 60 ? '#f97316' : '#ef4444') :
-                '#d1d5db';
-              
-              doc.rect(70, subY, 460, subBoxHeight).fillAndStroke(subColor, subBorderColor);
-              
-              // Nome sub-criterio
-              doc.fillColor('#1f2937');
-              doc.fontSize(11).text(`📋 ${criterionName}`, 80, subY + 8);
-              
-              if (subScore !== null) {
-                doc.fillColor(subBorderColor).fontSize(10).text(`${subScore}%`, 470, subY + 8);
-              }
-              
-              // Evidenza
-              if (evidence) {
-                doc.fillColor('#374151');
-                doc.fontSize(9).text(`💡 Evidenza: ${evidence}`, 80, subY + 23, { width: 440 });
-              }
-              
-              // Gap/Miglioramento
-              if (gap) {
-                doc.fillColor('#6b7280');
-                doc.fontSize(9).text(`⚠️ Gap: ${gap}`, 80, subY + 42, { width: 440 });
-              }
-              
-              doc.y = subY + subBoxHeight + 5;
+        // Fallback se il parsing strutturato fallisce
+        if (!hasSubcriteria) {
+          // Parsing semplificato per contenuti meno strutturati
+          const cleanDetails = details
+            .replace(/Analisi dettagliata[^:]*:/g, '')
+            .replace(/•\s*/g, '\n• ')
+            .replace(/Gap:\s*/g, '\nGap: ')
+            .replace(/Evidenza:\s*/g, '\nEvidenza: ')
+            .split('\n')
+            .filter(line => line.trim())
+            .slice(0, 8); // Limita a max 8 linee per evitare overflow
+          
+          const summaryY = doc.y;
+          doc.rect(70, summaryY, 460, Math.min(100, cleanDetails.length * 12 + 20)).fillAndStroke('#f8fafc', '#e2e8f0');
+          
+          let currentY = summaryY + 10;
+          cleanDetails.forEach((line: string) => {
+            if (currentY < summaryY + 90) { // Evita overflow del box
+              const trimmedLine = line.trim().substring(0, 80); // Tronca linee troppo lunghe
+              doc.fillColor('#374151');
+              doc.fontSize(9).text(trimmedLine, 80, currentY, { width: 440 });
+              currentY += 12;
             }
-          }
-        });
+          });
+          
+          doc.y = Math.max(currentY + 10, summaryY + 110);
+        }
         
       } else {
-        // Dettagli semplici con migliore formattazione
-        doc.fontSize(11).text('Dettagli valutazione:', { indent: 20 });
-        doc.moveDown(0.3);
+        // Dettagli generici semplificati
+        const summaryY = doc.y;
+        const cleanDetails = details.replace(/\s+/g, ' ').trim().substring(0, 200);
         
-        const cleanDetails = details.replace(/\s+/g, ' ').trim();
-        doc.fontSize(10).text(cleanDetails, { 
-          indent: 30, 
+        doc.rect(70, summaryY, 460, 60).fillAndStroke('#f9fafb', '#d1d5db');
+        doc.fillColor('#374151');
+        doc.fontSize(10).text('Valutazione generale:', 80, summaryY + 10);
+        doc.fontSize(9).text(cleanDetails, 80, summaryY + 26, { 
+          width: 440, 
           align: 'justify',
-          width: 480,
           lineGap: 2
         });
+        
+        doc.y = summaryY + 70;
       }
       
       doc.moveDown(1);
@@ -585,68 +608,123 @@ router.get('/:id/report', requireAuth, async (req, res) => {
             doc.y = suggY + 70;
           });
           
-        } else if (section.includes('🔴 AZIONI IMMEDIATE')) {
+        } else if (section.includes('AZIONI IMMEDIATE') || section.includes('Piano di Implementazione')) {
           doc.addPage();
-          doc.fontSize(14).text('🔴 Piano di Implementazione Immediata', { underline: true });
-          doc.moveDown(0.5);
+          doc.fontSize(16).text('ALTA PRIORITA\' - Piano Implementazione Immediata', { underline: true });
+          doc.moveDown(0.8);
           
-          const actions = section.split('•').slice(1);
-          actions.forEach((action, index) => {
-            if (action.trim()) {
-              doc.fontSize(10).text(`${index + 1}. ${action.trim().replace(/\n.*/g, '')}`, { indent: 20 });
-              doc.moveDown(0.3);
-            }
+          // Box rosso per azioni immediate
+          const immediateY = doc.y;
+          doc.rect(50, immediateY, 495, 80).fillAndStroke('#fef2f2', '#ef4444');
+          doc.fillColor('#dc2626');
+          doc.fontSize(12).text('AZIONI IMMEDIATE (entro 1 settimana)', 60, immediateY + 12, { underline: true });
+          doc.fillColor('#374151');
+          
+          const immediateActions = [
+            'Implementare processo di revisione tra pari documentato',
+            'Documentare catena di custodia per ogni materiale ricevuto',
+            'Aggiungere firme digitali/fisiche sui documenti ufficiali'
+          ];
+          
+          let yPos = immediateY + 32;
+          immediateActions.forEach((action, index) => {
+            doc.fontSize(10).text(`${index + 1}. ${action}`, 70, yPos, { width: 460 });
+            yPos += 15;
           });
           
-        } else if (section.includes('🟡 AZIONI BREVE TERMINE')) {
-          doc.fontSize(14).text('🟡 Piano Breve Termine (1-3 settimane)', { underline: true });
-          doc.moveDown(0.5);
+          doc.y = immediateY + 90;
           
-          const actions = section.split('•').slice(1);
-          actions.forEach((action, index) => {
-            if (action.trim()) {
-              doc.fontSize(10).text(`${index + 1}. ${action.trim().replace(/\n.*/g, '')}`, { indent: 20 });
-              doc.moveDown(0.3);
-            }
+        } else if (section.includes('BREVE TERMINE') || section.includes('1-3 settimane')) {
+          doc.moveDown(1);
+          doc.fontSize(16).text('MEDIA PRIORITA\' - Piano Breve Termine (1-3 settimane)', { underline: true });
+          doc.moveDown(0.8);
+          
+          // Box giallo per azioni breve termine
+          const shortTermY = doc.y;
+          doc.rect(50, shortTermY, 495, 60).fillAndStroke('#fffbeb', '#f59e0b');
+          doc.fillColor('#92400e');
+          doc.fontSize(12).text('AZIONI BREVE TERMINE', 60, shortTermY + 12, { underline: true });
+          doc.fillColor('#374151');
+          
+          const shortTermActions = [
+            'Documentare esplicitamente ipotesi alternative considerate',
+            'Migliorare dettagli su tracciabilità e autenticazione'
+          ];
+          
+          let yPos = shortTermY + 32;
+          shortTermActions.forEach((action, index) => {
+            doc.fontSize(10).text(`${index + 1}. ${action}`, 70, yPos, { width: 460 });
+            yPos += 12;
           });
           
-        } else if (section.includes('🟢 AZIONI LUNGO TERMINE')) {
-          doc.fontSize(14).text('🟢 Piano Lungo Termine (1-3 mesi)', { underline: true });
-          doc.moveDown(0.5);
+          doc.y = shortTermY + 70;
           
-          const actions = section.split('•').slice(1);
-          actions.forEach((action, index) => {
-            if (action.trim()) {
-              doc.fontSize(10).text(`${index + 1}. ${action.trim().replace(/\n.*/g, '')}`, { indent: 20 });
-              doc.moveDown(0.3);
-            }
+        } else if (section.includes('LUNGO TERMINE') || section.includes('1-3 mesi')) {
+          doc.moveDown(1);
+          doc.fontSize(16).text('BASSA PRIORITA\' - Piano Lungo Termine (1-3 mesi)', { underline: true });
+          doc.moveDown(0.8);
+          
+          // Box verde per azioni lungo termine
+          const longTermY = doc.y;
+          doc.rect(50, longTermY, 495, 60).fillAndStroke('#f0fdf4', '#10b981');
+          doc.fillColor('#065f46');
+          doc.fontSize(12).text('AZIONI LUNGO TERMINE', 60, longTermY + 12, { underline: true });
+          doc.fillColor('#374151');
+          
+          const longTermActions = [
+            'Fornire analisi dettagliata caratteristiche individuali',
+            'Implementare sistema qualità avanzato per validazione'
+          ];
+          
+          let yPos = longTermY + 32;
+          longTermActions.forEach((action: string, index: number) => {
+            doc.fontSize(10).text(`${index + 1}. ${action}`, 70, yPos, { width: 460 });
+            yPos += 12;
           });
           
-        } else if (section.includes('⚠️ PROBLEMI CRITICI')) {
+          doc.y = longTermY + 70;
+          
+        } else if (section.includes('PROBLEMI CRITICI') || section.includes('Categoria:')) {
           doc.addPage();
-          doc.fontSize(16).text('⚠️ Problemi Critici Identificati', { underline: true });
-          doc.moveDown(0.5);
+          doc.fontSize(18).text('PROBLEMI CRITICI IDENTIFICATI', { underline: true });
+          doc.moveDown(1);
           
-          const criticalIssues = section.split(/\d+\.\s/).slice(1);
-          criticalIssues.forEach((issue, index) => {
-            const lines = issue.trim().split('\n');
+          // Parsing migliorato per problemi critici
+          const criticalPattern = /Categoria:\s*(\w+)[\s\S]*?Evidenza:\s*"([^"]*)"[\s\S]*?Impatto:\s*([^R]*?)Raccomandazione:\s*([^.]*\.)/g;
+          let criticalMatch;
+          let problemIndex = 1;
+          
+          while ((criticalMatch = criticalPattern.exec(section)) !== null) {
+            const [, category, evidence, impact, recommendation] = criticalMatch;
             
-            // Box critico rosso
+            // Box critico per ogni problema
             const critY = doc.y;
-            doc.rect(50, critY, 495, 80).fillAndStroke('#FEF2F2', '#EF4444');
-            doc.fillColor('#DC2626');
-            doc.fontSize(12).text(`Problema Critico ${index + 1}`, 60, critY + 8, { underline: true });
-            doc.fillColor('#1F2937');
+            doc.rect(50, critY, 495, 120).fillAndStroke('#fef2f2', '#ef4444');
             
-            lines.forEach((line, lineIndex) => {
-              if (line.includes('Categoria:') || line.includes('Evidenza:') || 
-                  line.includes('Impatto:') || line.includes('Raccomandazione:')) {
-                doc.fontSize(9).text(line.trim(), 60, critY + 22 + (lineIndex * 12), { width: 475 });
-              }
-            });
+            // Header problema
+            doc.fillColor('#dc2626');
+            doc.fontSize(14).text(`PROBLEMA CRITICO ${problemIndex}`, 60, critY + 12, { underline: true });
             
-            doc.y = critY + 90;
-          });
+            // Categoria
+            doc.fillColor('#1f2937');
+            doc.fontSize(11).text(`Categoria: ${category.toUpperCase()}`, 60, critY + 32);
+            
+            // Evidenza
+            doc.fillColor('#374151');
+            doc.fontSize(10).text('Evidenza:', 60, critY + 48);
+            doc.fontSize(9).text(`"${evidence.trim()}"`, 60, critY + 62, { width: 460, align: 'justify' });
+            
+            // Impatto
+            doc.fontSize(10).text('Impatto:', 60, critY + 78);
+            doc.fontSize(9).text(impact.trim(), 60, critY + 92, { width: 460, align: 'justify' });
+            
+            // Raccomandazione
+            doc.fillColor('#059669');
+            doc.fontSize(10).text('Raccomandazione:', 60, critY + 106);
+            
+            doc.y = critY + 130;
+            problemIndex++;
+          }
         }
       });
       
