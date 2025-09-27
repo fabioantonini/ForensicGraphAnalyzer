@@ -5,79 +5,229 @@
 
 import { createOpenAIClient } from "./openai";
 
-// Framework ENFSI multilingue per valutazione perizie
-const ENFSI_FRAMEWORK_IT = {
+// Framework ENFSI esteso con 39 parametri forensi dettagliati
+const ENFSI_DETAILED_FRAMEWORK_IT = {
   structureInfo: {
     name: "Struttura Obbligatoria della Relazione",
     weight: 15,
-    criteria: [
-      "Identificatore univoco del caso",
-      "Nome e indirizzo del laboratorio/esperto", 
-      "Identità dell'esaminatore e qualifiche",
-      "Firma dell'esaminatore forense",
-      "Date (firma relazione, ricevimento materiale)",
-      "Nome e status del trasmettitore",
-      "Sistema di numerazione pagine"
-    ]
+    subcriteria: {
+      caseIdentifier: {
+        name: "Identificatore Univoco Caso",
+        weight: 3.0,
+        description: "Numero/codice caso univoco, riferimenti legali",
+        indicators: ["numero protocollo", "riferimento tribunale", "codice alfanumerico", "data/anno identificativo"]
+      },
+      expertLaboratoryData: {
+        name: "Dati Esperto/Laboratorio", 
+        weight: 3.0,
+        description: "Nome, indirizzo, accreditamenti, partita IVA",
+        indicators: ["ragione sociale completa", "indirizzo fisico", "certificazioni", "codice fiscale/partita IVA"]
+      },
+      examinerQualifications: {
+        name: "Qualifiche Esaminatore",
+        weight: 3.0,
+        description: "Titoli, specializzazioni, esperienza, formazione",
+        indicators: ["laurea pertinente", "master/specializzazioni", "anni esperienza", "corsi aggiornamento"]
+      },
+      signatures: {
+        name: "Firme e Autenticazione",
+        weight: 2.0,
+        description: "Firma digitale/fisica, timbri, autenticazione",
+        indicators: ["firma leggibile", "timbro professionale", "firma digitale", "data apposizione"]
+      },
+      completeDates: {
+        name: "Date Complete",
+        weight: 2.0,
+        description: "Data ricevimento, analisi, firma relazione",
+        indicators: ["data ricevimento materiale", "data inizio analisi", "data completamento", "data firma relazione"]
+      },
+      submitterInfo: {
+        name: "Dati Trasmettitore",
+        weight: 1.0,
+        description: "Nome, qualità, autorità di riferimento",
+        indicators: ["nome completo mittente", "qualità giuridica", "autorità competente", "recapiti"]
+      },
+      pageNumbering: {
+        name: "Sistema Numerazione",
+        weight: 1.0,
+        description: "Numerazione progressiva, totale pagine",
+        indicators: ["numerazione sequenziale", "formato 'X di Y'", "coerenza numerazione", "assenza salti"]
+      }
+    }
   },
   materialDocumentation: {
     name: "Documentazione del Materiale",
     weight: 15,
-    criteria: [
-      "Elenco completo del materiale presentato",
-      "Stato del materiale e imballaggio alla ricezione",
-      "Eventuali alterazioni, danni o contaminazioni",
-      "Informazioni ricevute con il materiale",
-      "Chain of custody (catena di custodia)"
-    ]
+    subcriteria: {
+      materialList: {
+        name: "Elenco Completo Materiale",
+        weight: 4.0,
+        description: "Inventario dettagliato di tutti gli elementi ricevuti",
+        indicators: ["numero elementi", "descrizione dettagliata", "formato/supporto", "identificazione univoca"]
+      },
+      receptionConditions: {
+        name: "Stato Ricevimento",
+        weight: 3.0,
+        description: "Condizioni fisiche e imballaggio alla ricezione",
+        indicators: ["integrità imballaggio", "stato conservazione", "presenza sigilli", "documentazione accompagnatoria"]
+      },
+      alterationsDamages: {
+        name: "Alterazioni/Danni",
+        weight: 3.0,
+        description: "Documentazione di problemi, contaminazioni, alterazioni",
+        indicators: ["danni fisici", "macchie/alterazioni", "parti mancanti", "contaminazioni"]
+      },
+      materialInformation: {
+        name: "Informazioni Materiale",
+        weight: 3.0,
+        description: "Metadati, informazioni di contesto ricevute",
+        indicators: ["data creazione", "provenienza", "storia conservazione", "precedenti analisi"]
+      },
+      chainCustody: {
+        name: "Catena Custodia",
+        weight: 2.0,
+        description: "Tracciabilità completa del materiale",
+        indicators: ["registro passaggi", "identificazione operatori", "date/orari", "firme responsabili"]
+      }
+    }
   },
   methodology: {
     name: "Metodologia e Procedure",
     weight: 25,
-    criteria: [
-      "Definizione chiara dello scopo dell'esame",
-      "Descrizione dell'approccio sistematico utilizzato",
-      "Considerazione di ipotesi alternative (pro/contro)",
-      "Priorità e sequenza degli esami giustificate",
-      "Dettagli degli esami/analisi effettuati",
-      "Uso di attrezzature appropriate",
-      "Test non distruttivi prioritari"
-    ]
+    subcriteria: {
+      examPurpose: {
+        name: "Scopo Esame",
+        weight: 5.0,
+        description: "Definizione chiara degli obiettivi e quesiti",
+        indicators: ["quesiti specifici", "obiettivi misurabili", "ambito definito", "limitazioni dichiarate"]
+      },
+      systematicApproach: {
+        name: "Approccio Sistematico",
+        weight: 6.0,
+        description: "Metodologia strutturata e riproducibile",
+        indicators: ["protocollo standardizzato", "sequenza logica", "criteri oggettivi", "riproducibilità"]
+      },
+      alternativeHypotheses: {
+        name: "Ipotesi Alternative",
+        weight: 5.0,
+        description: "Considerazione di scenari pro e contro",
+        indicators: ["ipotesi autenticità", "ipotesi falsificazione", "scenari intermedi", "valutazione probabilistica"]
+      },
+      examinationSequence: {
+        name: "Sequenza Esami",
+        weight: 4.0,
+        description: "Priorità e logica dei procedimenti",
+        indicators: ["ordine giustificato", "test non distruttivi prima", "conservazione evidenze", "documentazione step"]
+      },
+      analysisDetails: {
+        name: "Dettagli Analisi",
+        weight: 3.0,
+        description: "Specificità tecniche delle procedure",
+        indicators: ["parametri misurati", "soglie decisionali", "margini errore", "incertezze"]
+      },
+      appropriateEquipment: {
+        name: "Attrezzature Appropriate",
+        weight: 2.0,
+        description: "Strumentazione idonea e calibrata",
+        indicators: ["strumenti adeguati", "calibrazioni recenti", "manutenzioni", "specifiche tecniche"]
+      }
+    }
   },
   technicalAnalysis: {
     name: "Analisi Tecnica Specialistica",
     weight: 20,
-    criteria: [
-      "Parametri di analisi delle manoscritture",
-      "Variazioni nella manoscrittura analizzate",
-      "Stili di scrittura identificati",
-      "Fluidità grafica valutata",
-      "Fattori esterni e interni considerati",
-      "Processo di comparazione descritto",
-      "Caratteristiche individuali vs. di classe"
-    ]
+    subcriteria: {
+      graphologicalParameters: {
+        name: "Parametri Grafologici",
+        weight: 5.0,
+        description: "Completezza parametri misurati (39 parametri ENFSI)",
+        indicators: ["pressione tratto", "velocità esecuzione", "inclinazione", "spaziatura", "curvatura", "collegamenti"]
+      },
+      handwritingVariations: {
+        name: "Variazioni Manoscrittura",
+        weight: 4.0,
+        description: "Analisi variabilità naturale vs. anomala",
+        indicators: ["range normalità", "deviazioni significative", "pattern ripetitivi", "inconsistenze sospette"]
+      },
+      writingStyles: {
+        name: "Stili Scrittura",
+        weight: 4.0,
+        description: "Classificazione e identificazione stili",
+        indicators: ["corsivo/stampatello", "forme lettere", "legature", "personalizzazioni caratteristiche"]
+      },
+      comparisonProcess: {
+        name: "Processo Comparazione",
+        weight: 4.0,
+        description: "Metodologia confronto sistematico",
+        indicators: ["criterio per criterio", "pesi relativi", "soglie decisione", "algoritmi utilizzati"]
+      },
+      individualFeatures: {
+        name: "Caratteristiche Individuali",
+        weight: 3.0,
+        description: "Distinzione caratteristiche individuali vs. classe",
+        indicators: ["tratti unici", "specificità personali", "elementi comuni", "rarità statistiche"]
+      }
+    }
   },
   validation: {
-    name: "Validazione e Controlli Qualità", 
+    name: "Validazione e Controlli Qualità",
     weight: 15,
-    criteria: [
-      "Peer Review obbligatoria eseguita",
-      "Evidenze decisive confermate da secondo esperto",
-      "Controlli di qualità applicati",
-      "Validazione delle tecniche utilizzate",
-      "Protocolli anti-contaminazione seguiti"
-    ]
+    subcriteria: {
+      peerReview: {
+        name: "Peer Review Obbligatoria",
+        weight: 5.0,
+        description: "Revisione indipendente da secondo esperto",
+        indicators: ["revisore qualificato", "analisi indipendente", "concordanza/discordanza", "risoluzione differenze"]
+      },
+      evidenceConfirmation: {
+        name: "Conferma Evidenze",
+        weight: 4.0,
+        description: "Validazione findings critici",
+        indicators: ["evidenze decisive verificate", "metodi alternativi", "conferma indipendente", "documentazione validazione"]
+      },
+      qualityControls: {
+        name: "Controlli Qualità",
+        weight: 3.0,
+        description: "Procedure QC implementate",
+        indicators: ["controlli interni", "standard riferimento", "calibrazioni", "protocolli documentati"]
+      },
+      techniqueValidation: {
+        name: "Validazione Tecniche",
+        weight: 3.0,
+        description: "Standard metodologici rispettati",
+        indicators: ["tecniche validate", "letteratura scientifica", "protocolli ENFSI", "certificazioni"]
+      }
+    }
   },
   presentation: {
     name: "Presentazione e Valutazione",
     weight: 10,
-    criteria: [
-      "Risultati chiari e supportati da esami",
-      "Valutazione della significatività nel contesto",
-      "Opinione dell'esperto con motivazioni",
-      "Scale di conclusioni standardizzate",
-      "Documentazione adeguata e tracciabile"
-    ]
+    subcriteria: {
+      clearResults: {
+        name: "Chiarezza Risultati",
+        weight: 4.0,
+        description: "Comprensibilità e supporto evidenze",
+        indicators: ["linguaggio chiaro", "risultati inequivocabili", "evidenze mostrate", "logica consequenziale"]
+      },
+      contextSignificance: {
+        name: "Significatività Contesto",
+        weight: 2.0,
+        description: "Rilevanza nel contesto legale",
+        indicators: ["impatto decisionale", "rilevanza quesiti", "contestualizzazione", "limitazioni dichiarate"]
+      },
+      expertOpinion: {
+        name: "Opinione Motivata",
+        weight: 2.0,
+        description: "Giustificazioni e motivazioni dell'esperto",
+        indicators: ["conclusioni motivate", "gradi certezza", "evidenze a supporto", "ragionamento logico"]
+      },
+      traceability: {
+        name: "Tracciabilità",
+        weight: 2.0,
+        description: "Documentazione processo completa",
+        indicators: ["step documentati", "decisioni motivate", "archivio evidenze", "riproducibilità"]
+      }
+    }
   }
 };
 
@@ -402,7 +552,7 @@ Formato richiesto:
     for (const category of categories) {
       const categoryData = detailedAnalysis.categories?.[category];
       if (categoryData) {
-        const weight = ENFSI_FRAMEWORK_IT[category as keyof typeof ENFSI_FRAMEWORK_IT]?.weight || 0;
+        const weight = ENFSI_DETAILED_FRAMEWORK_IT[category as keyof typeof ENFSI_DETAILED_FRAMEWORK_IT]?.weight || 0;
         const score = categoryData.overallScore || 0;
         
         // Crea descrizione dettagliata con sub-criteri
@@ -522,7 +672,7 @@ Formato richiesto:
  * Ottiene i criteri del framework ENFSI
  */
 export function getENFSIFramework(language: string = 'it') {
-  const framework = language === 'en' ? ENFSI_FRAMEWORK_EN : ENFSI_FRAMEWORK_IT;
+  const framework = language === 'en' ? ENFSI_FRAMEWORK_EN : ENFSI_DETAILED_FRAMEWORK_IT;
   return {
     framework,
     classifications: {
