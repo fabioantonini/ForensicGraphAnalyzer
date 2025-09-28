@@ -417,6 +417,71 @@ const PeerReviewPage = () => {
     );
   };
 
+  // Traduzioni per i sub-criteri ENFSI
+  const translateSubcriteria = (term: string) => {
+    const translations: Record<string, Record<string, string>> = {
+      en: {
+        caseIdentifier: 'Case Identifier',
+        expertData: 'Expert Data',
+        examinerQualifications: 'Examiner Qualifications',
+        signatures: 'Signatures',
+        completeDates: 'Complete Dates',
+        submitterInfo: 'Submitter Info',
+        pageNumbering: 'Page Numbering',
+        documentMetadata: 'Document Metadata',
+        materialList: 'Material List',
+        receptionConditions: 'Reception Conditions',
+        custodyChain: 'Custody Chain',
+        materialTracking: 'Material Tracking',
+        qualityControls: 'Quality Controls',
+        methodologyDescription: 'Methodology Description',
+        equipmentDescription: 'Equipment Description',
+        analysisScope: 'Analysis Scope',
+        limitationsReporting: 'Limitations Reporting',
+        comparativeAnalysis: 'Comparative Analysis',
+        technicalDetails: 'Technical Details',
+        validation: 'Validation',
+        qualityAssurance: 'Quality Assurance',
+        uncertaintyAssessment: 'Uncertainty Assessment',
+        interpretation: 'Interpretation',
+        conclusions: 'Conclusions',
+        presentation: 'Presentation',
+        alternativeHypotheses: 'Alternative Hypotheses'
+      },
+      it: {
+        caseIdentifier: 'Identificatore Caso',
+        expertData: 'Dati Esperto',
+        examinerQualifications: 'Qualifiche Esaminatore',
+        signatures: 'Firme',
+        completeDates: 'Date Complete',
+        submitterInfo: 'Info Trasmettitore',
+        pageNumbering: 'Numerazione Pagine',
+        documentMetadata: 'Metadati Documento',
+        materialList: 'Elenco Materiale',
+        receptionConditions: 'Condizioni Ricezione',
+        custodyChain: 'Catena Custodia',
+        materialTracking: 'Tracciabilità Materiale',
+        qualityControls: 'Controlli Qualità',
+        methodologyDescription: 'Descrizione Metodologia',
+        equipmentDescription: 'Descrizione Strumentazione',
+        analysisScope: 'Ambito Analisi',
+        limitationsReporting: 'Segnalazione Limitazioni',
+        comparativeAnalysis: 'Analisi Comparativa',
+        technicalDetails: 'Dettagli Tecnici',
+        validation: 'Validazione',
+        qualityAssurance: 'Garanzia Qualità',
+        uncertaintyAssessment: 'Valutazione Incertezza',
+        interpretation: 'Interpretazione',
+        conclusions: 'Conclusioni',
+        presentation: 'Presentazione',
+        alternativeHypotheses: 'Ipotesi Alternative'
+      }
+    };
+
+    const lang = i18n.language === 'it' ? 'it' : 'en';
+    return translations[lang][term] || term.charAt(0).toUpperCase() + term.slice(1);
+  };
+
   // Funzione per formattare i dettagli dell'analisi
   const formatCriteriaDetails = (details: string) => {
     if (!details || !details.includes('Analisi dettagliata')) {
@@ -433,7 +498,7 @@ const PeerReviewPage = () => {
     while ((match = subcriteriaPattern.exec(details)) !== null) {
       const [, name, score, evidence, gap, severity] = match;
       subcriteria.push({
-        name: name.charAt(0).toUpperCase() + name.slice(1),
+        name: translateSubcriteria(name),
         score: parseInt(score),
         evidence: evidence.trim(),
         gap: gap.trim(),
