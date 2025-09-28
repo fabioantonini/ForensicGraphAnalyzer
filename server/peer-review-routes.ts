@@ -353,23 +353,16 @@ router.get('/:id/report', requireAuth, async (req, res) => {
 
     console.log(`[PEER-REVIEW] Generazione report PDF per analisi ID: ${reviewId}`);
 
-    // Genera il report PDF utilizzando PDFKit con numerazione pagine
+    // Genera il report PDF utilizzando PDFKit
     const doc = new PDFDocument({ margin: 50 });
     
-    // Aggiunge numerazione pagine automatica
+    // Numerazione pagine semplificata
     let pageNumber = 1;
     const addPageNumber = () => {
       doc.fontSize(8).fillColor('#6b7280');
       doc.text(`Pagina ${pageNumber}`, 50, 750, { align: 'center', width: 495 });
+      doc.fillColor('#000000'); // Reset colore
       pageNumber++;
-    };
-    
-    // Override del metodo addPage per includere numerazione
-    const originalAddPage = doc.addPage.bind(doc);
-    doc.addPage = (options?: any) => {
-      addPageNumber();
-      const result = originalAddPage(options);
-      return result;
     };
     
     // Genera nome file basato su quello originale
@@ -475,6 +468,7 @@ router.get('/:id/report', requireAuth, async (req, res) => {
     doc.moveDown();
 
     // === SEZIONE 1: ANALISI DETTAGLIATA PER CATEGORIA ===
+    addPageNumber();
     doc.addPage();
     doc.fontSize(18).text('1. Analisi ENFSI Dettagliata', { underline: true });
     doc.moveDown();
@@ -628,11 +622,13 @@ router.get('/:id/report', requireAuth, async (req, res) => {
       
       // Gestione nuova pagina se necessario
       if (doc.y > 650) {
+        addPageNumber();
         doc.addPage();
       }
     });
 
     // === SEZIONE 2: SUGGERIMENTI E RACCOMANDAZIONI ===
+    addPageNumber();
     doc.addPage();
     doc.fontSize(18).text('2. Piano di Miglioramento', { underline: true });
     doc.moveDown();
@@ -680,6 +676,7 @@ router.get('/:id/report', requireAuth, async (req, res) => {
           });
           
         } else if (section.includes('AZIONI IMMEDIATE') || section.includes('Piano di Implementazione')) {
+          addPageNumber();
           doc.addPage();
           doc.fontSize(16).text('ALTA PRIORITA\' - Piano Implementazione Immediata', { underline: true });
           doc.moveDown(0.8);
@@ -756,6 +753,7 @@ router.get('/:id/report', requireAuth, async (req, res) => {
           doc.y = longTermY + 70;
           
         } else if (section.includes('PROBLEMI CRITICI') || section.includes('Categoria:')) {
+          addPageNumber();
           doc.addPage();
           doc.fontSize(18).text('PROBLEMI CRITICI IDENTIFICATI', { underline: true });
           doc.moveDown(1);
@@ -807,6 +805,7 @@ router.get('/:id/report', requireAuth, async (req, res) => {
     }
     
     // === SEZIONE 3: METODOLOGIA E CONFORMITÀ ===
+    addPageNumber();
     doc.addPage();
     doc.fontSize(18).text('3. Metodologia e Standard ENFSI', { underline: true });
     doc.moveDown();
