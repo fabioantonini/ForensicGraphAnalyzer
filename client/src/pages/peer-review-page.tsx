@@ -85,6 +85,7 @@ const PeerReviewPage = () => {
   const { toast } = useToast();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [progressPhase, setProgressPhase] = useState<string>('');
   const [currentResult, setCurrentResult] = useState<PeerReviewResult | null>(null);
 
   // Caricamento storico analisi
@@ -130,10 +131,12 @@ const PeerReviewPage = () => {
       queryClient.invalidateQueries({ queryKey: ["/api/peer-review/history"] });
       queryClient.invalidateQueries({ queryKey: ["/api/peer-review/stats/summary"] });
       setUploadProgress(100);
+      setProgressPhase('Analisi completata con successo!');
     },
     onError: (error) => {
       console.error('Errore upload perizia:', error);
       setUploadProgress(0);
+      setProgressPhase('');
     }
   });
 
@@ -163,6 +166,7 @@ const PeerReviewPage = () => {
       setSelectedFile(acceptedFiles[0]);
       setCurrentResult(null);
       setUploadProgress(0);
+      setProgressPhase('');
     }
   }, []);
 
@@ -180,7 +184,39 @@ const PeerReviewPage = () => {
   const handleUpload = async () => {
     if (!selectedFile) return;
 
-    setUploadProgress(10);
+    // Simulazione progresso graduale durante l'analisi ENFSI
+    const simulateProgress = () => {
+      setUploadProgress(15);
+      setProgressPhase('Estrazione testo e preparazione documento...');
+      
+      setTimeout(() => {
+        setUploadProgress(30);
+        setProgressPhase('Analisi strutturale secondo framework ENFSI...');
+      }, 1000);
+      
+      setTimeout(() => {
+        setUploadProgress(50);
+        setProgressPhase('Valutazione dettagliata dei 39 criteri ENFSI...');
+      }, 3000);
+      
+      setTimeout(() => {
+        setUploadProgress(70);
+        setProgressPhase('Elaborazione analisi per ogni categoria...');
+      }, 6000);
+      
+      setTimeout(() => {
+        setUploadProgress(85);
+        setProgressPhase('Generazione suggerimenti e raccomandazioni...');
+      }, 9000);
+      
+      setTimeout(() => {
+        setUploadProgress(95);
+        setProgressPhase('Finalizzazione calcolo score complessivo...');
+      }, 11000);
+    };
+
+    simulateProgress();
+    
     try {
       await uploadMutation.mutateAsync(selectedFile);
     } catch (error) {
@@ -593,12 +629,20 @@ const PeerReviewPage = () => {
             {uploadMutation.isPending && (
               <Card className="border-0 shadow-lg">
                 <CardContent className="pt-6">
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <div className="flex justify-between text-sm">
                       <span>Analisi framework ENFSI in corso...</span>
                       <span>{uploadProgress}%</span>
                     </div>
                     <Progress value={uploadProgress} className="h-2" />
+                    {progressPhase && (
+                      <div className="text-sm text-blue-600 bg-blue-50 px-3 py-2 rounded-md border border-blue-200">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                          {progressPhase}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
