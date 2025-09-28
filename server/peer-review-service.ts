@@ -467,6 +467,14 @@ Per ogni SUB-CRITERIO fornisci:
 - Gap: cosa manca specificamente
 - Severity: quanto è grave la mancanza
 
+IMPORTANTE: Per i PROBLEMI CRITICI (score < 70 con severity "critica" o "alta"):
+- Identifica max 3 problemi più gravi che compromettono la conformità ENFSI
+- Per ogni problema, fornisci una RACCOMANDAZIONE SPECIFICA e ACTIONABLE che includa:
+  * Step concreti da seguire
+  * Riferimenti agli standard ENFSI
+  * Esempio di implementazione o template
+  * Risultato atteso
+
 RISPOSTA JSON:
 {
   "categories": {
@@ -480,11 +488,11 @@ RISPOSTA JSON:
   },
   "criticalIssues": [
     {
-      "category": "categoria",
-      "issue": "problema specifico", 
-      "evidence": "citazione dal documento",
-      "impact": "impatto sulla validità",
-      "recommendation": "azione specifica raccomandata"
+      "category": "VALIDATION",
+      "issue": "Assenza di processo di peer review documentato", 
+      "evidence": "Non è menzionata alcuna revisione da parte di colleghi esperti",
+      "impact": "Riduce la credibilità delle conclusioni e non rispetta gli standard ENFSI di validazione",
+      "recommendation": "Implementare un processo formale di peer review: 1) Far rivedere l'analisi da un secondo esperto qualificato, 2) Documentare il processo di revisione con nome del revisore e data, 3) Includere una sezione 'Peer Review' nel report che attesti la conformità metodologica, 4) Utilizzare checklist ENFSI per la validazione. Risultato atteso: aumento del punteggio di validazione da 70 a 85+."
     }
   ]
 }`;
@@ -513,28 +521,36 @@ CITAZIONI STRUTTURALI:
 ${JSON.stringify(structuralAnalysis, null, 2)}
 
 Genera suggerimenti che siano:
-1. SPECIFICI: Non generici ma basati sui gap identificati
-2. ACTIONABLE: Con step concreti da seguire
-3. PRIORITIZZATI: Ordina per impatto sulla conformità
-4. CON ESEMPI: Fornisci template/esempi quando possibile
+1. SPECIFICI: Non generici ma basati sui gap identificati nell'analisi
+2. ACTIONABLE: Con step numerati e concreti da seguire
+3. PRIORITIZZATI: Ordina per impatto sulla conformità ENFSI
+4. CON ESEMPI: Fornisci template/esempi pratici
+5. MISURABILI: Include metriche di miglioramento attese
+
+LINEE GUIDA RACCOMANDAZIONI:
+- Ogni raccomandazione deve iniziare con un verbo d'azione
+- Include riferimenti specifici agli standard ENFSI
+- Fornisci step numerati: "1) [azione], 2) [azione], 3) [risultato atteso]"
+- Specifica tempistiche realistiche per implementazione
+- Identifica risorse/competenze necessarie
 
 Fornisci la risposta in formato JSON strutturato come segue:
 {
   "prioritySuggestions": [
     {
-      "priority": "alta/media/bassa",
-      "category": "categoria ENFSI",  
-      "issue": "problema specifico identificato",
-      "evidence": "citazione dal documento che dimostra il problema",
-      "recommendation": "azione specifica da fare",
-      "example": "esempio concreto o template",
-      "impact": "miglioramento atteso nel punteggio"
+      "priority": "ALTA",
+      "category": "validation",
+      "issue": "Mancanza di processo peer review documentato",
+      "evidence": "Non è menzionata alcuna revisione tra pari nel documento",
+      "recommendation": "Implementare processo peer review formale: 1) Identificare esperto qualificato per revisione indipendente, 2) Creare checklist di validazione basata su standard ENFSI, 3) Documentare processo di revisione con firma del peer reviewer, 4) Includere sezione 'Peer Review' nel report finale",
+      "example": "Sezione template: 'PEER REVIEW - Il presente lavoro è stato revisionato dal Dr. [Nome] in data [Data] secondo protocollo ENFSI. Validazione metodologica: CONFORME. Note: [Eventuali osservazioni]'",
+      "impact": "Aumento del punteggio di validazione da 75 a 85+"
     }
   ],
   "implementationRoadmap": {
-    "immediate": ["azione 1", "azione 2"],
-    "shortTerm": ["azione 3", "azione 4"], 
-    "longTerm": ["azione 5"]
+    "immediate": ["Implementare processo peer review documentato", "Documentare catena di custodia materiali"],
+    "shortTerm": ["Aggiungere firme digitali ai documenti", "Migliorare dettagli qualifiche esperto"], 
+    "longTerm": ["Sistema qualità avanzato per validazione", "Analisi dettagliata caratteristiche individuali"]
   }
 }`;
 
