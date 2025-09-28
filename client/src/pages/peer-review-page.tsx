@@ -184,35 +184,35 @@ const PeerReviewPage = () => {
   const handleUpload = async () => {
     if (!selectedFile) return;
 
-    // Simulazione progresso graduale durante l'analisi ENFSI
+    // Simulazione progresso graduale durante l'analisi ENFSI - timing realistico
     const simulateProgress = () => {
-      setUploadProgress(15);
+      setUploadProgress(10);
       setProgressPhase('Estrazione testo e preparazione documento...');
       
       setTimeout(() => {
-        setUploadProgress(30);
+        setUploadProgress(20);
         setProgressPhase('Analisi strutturale secondo framework ENFSI...');
-      }, 1000);
+      }, 3000); // Più tempo per l'estrazione iniziale
       
       setTimeout(() => {
-        setUploadProgress(50);
-        setProgressPhase('Valutazione dettagliata dei 39 criteri ENFSI...');
-      }, 3000);
+        setUploadProgress(35);
+        setProgressPhase('Prima chiamata AI: valutazione strutturale...');
+      }, 8000); // Prima chiamata OpenAI
       
       setTimeout(() => {
-        setUploadProgress(70);
-        setProgressPhase('Elaborazione analisi per ogni categoria...');
-      }, 6000);
+        setUploadProgress(55);
+        setProgressPhase('Seconda chiamata AI: analisi dettagliata criteri...');
+      }, 16000); // Seconda chiamata OpenAI
       
       setTimeout(() => {
-        setUploadProgress(85);
-        setProgressPhase('Generazione suggerimenti e raccomandazioni...');
-      }, 9000);
+        setUploadProgress(75);
+        setProgressPhase('Terza chiamata AI: generazione suggerimenti...');
+      }, 24000); // Terza chiamata OpenAI
       
       setTimeout(() => {
-        setUploadProgress(95);
-        setProgressPhase('Finalizzazione calcolo score complessivo...');
-      }, 11000);
+        setUploadProgress(90);
+        setProgressPhase('Elaborazione finale e calcolo score...');
+      }, 30000); // Elaborazione finale
     };
 
     simulateProgress();
