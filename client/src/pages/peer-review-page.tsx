@@ -277,6 +277,203 @@ const PeerReviewPage = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  // Funzione per formattare i suggerimenti
+  const formatSuggestions = (suggestions: string) => {
+    if (!suggestions) return null;
+
+    // Parse dei suggerimenti per azioni immediate, breve termine, lungo termine
+    const sections = [
+      { 
+        title: 'AZIONI IMMEDIATE (Alta Priorità)', 
+        pattern: /AZIONI IMMEDIATE|Piano di Implementazione Immediata/i,
+        color: 'border-red-200 bg-red-50',
+        icon: '🔴'
+      },
+      { 
+        title: 'AZIONI BREVE TERMINE (Media Priorità)', 
+        pattern: /BREVE TERMINE|1-3 settimane/i,
+        color: 'border-yellow-200 bg-yellow-50',
+        icon: '🟡'
+      },
+      { 
+        title: 'AZIONI LUNGO TERMINE (Bassa Priorità)', 
+        pattern: /LUNGO TERMINE|1-3 mesi/i,
+        color: 'border-green-200 bg-green-50',
+        icon: '🟢'
+      }
+    ];
+
+    // Cerca sezioni strutturate
+    const structuredSections: Array<{
+      title: string;
+      pattern: RegExp;
+      color: string;
+      icon: string;
+      actions: string[];
+    }> = [];
+    
+    sections.forEach(section => {
+      if (section.pattern.test(suggestions)) {
+        // Trova le azioni per questa sezione
+        const sectionStart = suggestions.search(section.pattern);
+        if (sectionStart !== -1) {
+          const nextSectionStart = suggestions.slice(sectionStart + 50).search(/AZIONI|Piano/i);
+          const sectionText = nextSectionStart !== -1 
+            ? suggestions.slice(sectionStart, sectionStart + 50 + nextSectionStart)
+            : suggestions.slice(sectionStart);
+          
+          // Estrai le azioni (bullet points)
+          const actions = sectionText
+            .split(/[•\-\n]/)
+            .filter((action: string) => action.trim() && !section.pattern.test(action))
+            .slice(0, 4) // Massimo 4 azioni per sezione
+            .map((action: string) => action.trim());
+          
+          if (actions.length > 0) {
+            structuredSections.push({
+              ...section,
+              actions
+            });
+          }
+        }
+      }
+    });
+
+    if (structuredSections.length > 0) {
+      return (
+        <div className="space-y-4">
+          <h4 className="font-semibold text-gray-800">Piano di Miglioramento Strutturato:</h4>
+          {structuredSections.map((section, index) => (
+            <div key={index} className={`p-4 rounded-lg border ${section.color}`}>
+              <h5 className="font-medium text-gray-800 mb-3 flex items-center gap-2">
+                <span>{section.icon}</span>
+                {section.title}
+              </h5>
+              <div className="space-y-2">
+                {section.actions.map((action: string, actionIndex: number) => (
+                  <div key={actionIndex} className="flex items-start gap-2">
+                    <span className="text-gray-600 mt-1">•</span>
+                    <p className="text-sm text-gray-700">{action}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    // Fallback per suggerimenti non strutturati
+    const lines = suggestions
+      .split(/[•\-\n]/)
+      .filter(line => line.trim())
+      .slice(0, 8); // Massimo 8 suggerimenti
+
+    return (
+      <div className="space-y-2">
+        {lines.map((line, index) => (
+          <div key={index} className="flex items-start gap-2 p-2 bg-blue-50 rounded border-l-4 border-blue-200">
+            <span className="text-blue-600 mt-1">💡</span>
+            <p className="text-sm text-gray-700">{line.trim()}</p>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  // Funzione per formattare i dettagli dell'analisi
+  const formatCriteriaDetails = (details: string) => {
+    if (!details || !details.includes('Analisi dettagliata')) {
+      return (
+        <p className="text-sm text-gray-600">{details}</p>
+      );
+    }
+
+    // Parse dei sub-criteri usando pattern regex robusto
+    const subcriteriaPattern = /(\w+):\s*(\d+)%\s*-\s*Evidenza:\s*"([^"]*)"?\s*Gap:\s*([^(]*)\(Severità:\s*(\w+)\)/g;
+    const subcriteria = [];
+    let match;
+    
+    while ((match = subcriteriaPattern.exec(details)) !== null) {
+      const [, name, score, evidence, gap, severity] = match;
+      subcriteria.push({
+        name: name.charAt(0).toUpperCase() + name.slice(1),
+        score: parseInt(score),
+        evidence: evidence.trim(),
+        gap: gap.trim(),
+        severity: severity
+      });
+    }
+
+    if (subcriteria.length === 0) {
+      // Fallback per parsing semplificato
+      const lines = details
+        .replace(/Analisi dettagliata[^:]*:/g, '')
+        .split(/[•\-]/)
+        .filter(line => line.trim())
+        .slice(0, 5);
+      
+      return (
+        <div className="space-y-2">
+          {lines.map((line, index) => (
+            <p key={index} className="text-sm text-gray-600 pl-2 border-l-2 border-gray-200">
+              {line.trim()}
+            </p>
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-3">
+        <p className="text-sm font-medium text-gray-700">Analisi dettagliata per sub-criteri:</p>
+        <div className="space-y-3">
+          {subcriteria.map((sub, index) => {
+            const scoreColor = sub.score >= 85 ? 'text-green-700 bg-green-50' : 
+                             sub.score >= 70 ? 'text-yellow-700 bg-yellow-50' : 
+                             sub.score >= 60 ? 'text-orange-700 bg-orange-50' : 
+                             'text-red-700 bg-red-50';
+            
+            const severityColor = sub.severity === 'alta' ? 'text-red-600' : 
+                                 sub.severity === 'media' ? 'text-yellow-600' : 
+                                 'text-green-600';
+
+            return (
+              <div key={index} className="p-3 bg-gray-50 rounded-lg border">
+                <div className="flex items-center justify-between mb-2">
+                  <h5 className="font-medium text-gray-800">{sub.name}</h5>
+                  <Badge className={scoreColor}>
+                    {sub.score}%
+                  </Badge>
+                </div>
+                
+                {sub.evidence && (
+                  <div className="mb-2">
+                    <span className="text-xs font-medium text-green-700">💡 Evidenza:</span>
+                    <p className="text-sm text-gray-600 mt-1 italic">"{sub.evidence}"</p>
+                  </div>
+                )}
+                
+                {sub.gap && (
+                  <div className="mb-2">
+                    <span className="text-xs font-medium text-orange-700">⚠️ Area di miglioramento:</span>
+                    <p className="text-sm text-gray-600 mt-1">{sub.gap}</p>
+                  </div>
+                )}
+                
+                <div className="flex items-center justify-between">
+                  <span className={`text-xs font-medium ${severityColor}`}>
+                    Priorità: {sub.severity.toUpperCase()}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   const locale = i18n.language === 'it' ? it : enUS;
 
   return (
@@ -495,7 +692,7 @@ const PeerReviewPage = () => {
                                 </Badge>
                               </div>
                               <Progress value={criteria.score} className="h-2 mb-3" />
-                              <p className="text-sm text-gray-600">{criteria.details}</p>
+                              {formatCriteriaDetails(criteria.details)}
                             </CardContent>
                           </Card>
                         );
@@ -504,13 +701,13 @@ const PeerReviewPage = () => {
                   </div>
 
                   {/* Suggestions */}
-                  <Alert>
-                    <TrendingUp className="h-4 w-4" />
-                    <AlertDescription>
-                      <strong>{t('analysis.suggestions')}:</strong><br />
-                      {currentResult.suggestions}
-                    </AlertDescription>
-                  </Alert>
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-200">
+                    <div className="flex items-center gap-2 mb-4">
+                      <TrendingUp className="h-5 w-5 text-blue-600" />
+                      <h3 className="text-lg font-semibold text-blue-800">{t('analysis.suggestions')}</h3>
+                    </div>
+                    {formatSuggestions(currentResult.suggestions)}
+                  </div>
                 </CardContent>
               </Card>
             )}
