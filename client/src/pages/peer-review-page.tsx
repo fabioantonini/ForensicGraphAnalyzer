@@ -417,10 +417,73 @@ const PeerReviewPage = () => {
     );
   };
 
+  // Normalizzazione delle chiavi per gestire varianti
+  const normalizeKey = (key: string): string => {
+    // Pulizia iniziale della chiave (rimuove spazi extra e trim)
+    const cleanKey = key.trim();
+    
+    // Gestisce varianti comuni con mapping esteso
+    const variations: Record<string, string> = {
+      // Varianti con spazi
+      'Chain of Custody': 'ChainOfCustody',
+      'Date Complete': 'completeDates',
+      'Date Completed': 'completeDates',
+      'Receipt Condition': 'ReceiptCondition',
+      'Receipt Conditions': 'ReceiptCondition',
+      'Alterations/Damages': 'AlterationsDamages',
+      'Material Info': 'MaterialInfo',
+      'Exam Purpose': 'ExamPurpose',
+      'Systematic Approach': 'SystematicApproach',
+      'Exam Sequence': 'ExamSequence',
+      'Analysis Details': 'AnalysisDetails',
+      'Graphological Parameters': 'GraphologicalParameters',
+      'Handwriting Variations': 'HandwritingVariations',
+      'Writing Styles': 'WritingStyles',
+      'Comparison Process': 'ComparisonProcess',
+      'Individual Characteristics': 'IndividualCharacteristics',
+      'Peer Review': 'PeerReview',
+      'Evidence Confirmation': 'EvidenceConfirmation',
+      'Signature Authentication': 'SignatureAuthentication',
+      // Varianti plurali/singolari
+      'Case Identifiers': 'caseIdentifier',
+      'Expert Data': 'expertData',
+      'Examiner Qualifications': 'examinerQualifications',
+      'Complete Dates': 'completeDates',
+      'Submitter Info': 'submitterInfo',
+      'Page Numbering': 'pageNumbering',
+      'Document Metadata': 'documentMetadata',
+      'Material List': 'materialList',
+      'Reception Conditions': 'receptionConditions',
+      'Custody Chain': 'custodyChain',
+      'Material Tracking': 'materialTracking',
+      'Quality Controls': 'qualityControls',
+      'Methodology Description': 'methodologyDescription',
+      'Equipment Description': 'equipmentDescription',
+      'Analysis Scope': 'analysisScope',
+      'Limitations Reporting': 'limitationsReporting',
+      'Comparative Analysis': 'comparativeAnalysis',
+      'Technical Details': 'technicalDetails',
+      'Quality Assurance': 'qualityAssurance',
+      'Uncertainty Assessment': 'uncertaintyAssessment',
+      'Alternative Hypotheses': 'alternativeHypotheses'
+    };
+    
+    return variations[cleanKey] || cleanKey;
+  };
+
+  // Funzione per humanizzare nomi camelCase/PascalCase per il fallback
+  const humanizeName = (name: string): string => {
+    return name
+      .replace(/([A-Z])/g, ' $1') // Separa camelCase
+      .replace(/^./, str => str.toUpperCase()) // Capitalizza prima lettera
+      .trim();
+  };
+
   // Traduzioni per i sub-criteri ENFSI
   const translateSubcriteria = (term: string) => {
     const translations: Record<string, Record<string, string>> = {
       en: {
+        // Struttura Informazioni
         caseIdentifier: 'Case Identifier',
         expertData: 'Expert Data',
         examinerQualifications: 'Examiner Qualifications',
@@ -429,69 +492,132 @@ const PeerReviewPage = () => {
         submitterInfo: 'Submitter Info',
         pageNumbering: 'Page Numbering',
         documentMetadata: 'Document Metadata',
+        // Gestione Materiale
         materialList: 'Material List',
         receptionConditions: 'Reception Conditions',
-        custodyChain: 'Custody Chain',
+        custodyChain: 'Chain of Custody',
         materialTracking: 'Material Tracking',
         qualityControls: 'Quality Controls',
+        // Metodologia
         methodologyDescription: 'Methodology Description',
         equipmentDescription: 'Equipment Description',
         analysisScope: 'Analysis Scope',
         limitationsReporting: 'Limitations Reporting',
+        // Analisi Tecnica
         comparativeAnalysis: 'Comparative Analysis',
         technicalDetails: 'Technical Details',
         validation: 'Validation',
         qualityAssurance: 'Quality Assurance',
         uncertaintyAssessment: 'Uncertainty Assessment',
+        // Interpretazione
         interpretation: 'Interpretation',
         conclusions: 'Conclusions',
         presentation: 'Presentation',
-        alternativeHypotheses: 'Alternative Hypotheses'
+        alternativeHypotheses: 'Alternative Hypotheses',
+        // Criteri aggiuntivi visibili nelle immagini
+        SignatureAuthentication: 'Signature Authentication',
+        'Date Complete': 'Complete Dates',
+        Transmitter: 'Transmitter',
+        ReceiptCondition: 'Receipt Condition',
+        AlterationsDamages: 'Alterations/Damages',
+        MaterialInfo: 'Material Info',
+        ChainOfCustody: 'Chain of Custody',
+        ExamPurpose: 'Exam Purpose',
+        SystematicApproach: 'Systematic Approach',
+        ExamSequence: 'Exam Sequence',
+        AnalysisDetails: 'Analysis Details',
+        Equipment: 'Equipment',
+        GraphologicalParameters: 'Graphological Parameters',
+        HandwritingVariations: 'Handwriting Variations',
+        WritingStyles: 'Writing Styles',
+        ComparisonProcess: 'Comparison Process',
+        IndividualCharacteristics: 'Individual Characteristics',
+        PeerReview: 'Peer Review',
+        EvidenceConfirmation: 'Evidence Confirmation'
       },
       it: {
+        // Struttura Informazioni
         caseIdentifier: 'Identificatore Caso',
         expertData: 'Dati Esperto',
         examinerQualifications: 'Qualifiche Esaminatore',
         signatures: 'Firme',
-        completeDates: 'Date Complete',
+        completeDates: 'Date Completate',
         submitterInfo: 'Info Trasmettitore',
         pageNumbering: 'Numerazione Pagine',
         documentMetadata: 'Metadati Documento',
+        // Gestione Materiale
         materialList: 'Elenco Materiale',
         receptionConditions: 'Condizioni Ricezione',
         custodyChain: 'Catena Custodia',
         materialTracking: 'Tracciabilità Materiale',
         qualityControls: 'Controlli Qualità',
+        // Metodologia
         methodologyDescription: 'Descrizione Metodologia',
         equipmentDescription: 'Descrizione Strumentazione',
         analysisScope: 'Ambito Analisi',
         limitationsReporting: 'Segnalazione Limitazioni',
+        // Analisi Tecnica
         comparativeAnalysis: 'Analisi Comparativa',
         technicalDetails: 'Dettagli Tecnici',
         validation: 'Validazione',
         qualityAssurance: 'Garanzia Qualità',
         uncertaintyAssessment: 'Valutazione Incertezza',
+        // Interpretazione
         interpretation: 'Interpretazione',
         conclusions: 'Conclusioni',
         presentation: 'Presentazione',
-        alternativeHypotheses: 'Ipotesi Alternative'
+        alternativeHypotheses: 'Ipotesi Alternative',
+        // Criteri aggiuntivi visibili nelle immagini
+        SignatureAuthentication: 'Autenticazione Firma',
+        'Date Complete': 'Date Completate',
+        Transmitter: 'Trasmittente',
+        ReceiptCondition: 'Condizione Ricezione',
+        AlterationsDamages: 'Alterazioni/Danni',
+        MaterialInfo: 'Info Materiale',
+        ChainOfCustody: 'Catena Custodia',
+        ExamPurpose: 'Scopo Esame',
+        SystematicApproach: 'Approccio Sistematico',
+        ExamSequence: 'Sequenza Esame',
+        AnalysisDetails: 'Dettagli Analisi',
+        Equipment: 'Strumentazione',
+        GraphologicalParameters: 'Parametri Grafologici',
+        HandwritingVariations: 'Variazioni Calligrafia',
+        WritingStyles: 'Stili Scrittura',
+        ComparisonProcess: 'Processo Comparazione',
+        IndividualCharacteristics: 'Caratteristiche Individuali',
+        PeerReview: 'Revisione Pari',
+        EvidenceConfirmation: 'Conferma Evidenza'
       }
     };
 
     const lang = i18n.language === 'it' ? 'it' : 'en';
-    return translations[lang][term] || term.charAt(0).toUpperCase() + term.slice(1);
+    
+    // Normalizza la chiave per gestire varianti
+    const normalizedKey = normalizeKey(term);
+    
+    // Cerca traduzione con chiave normalizzata
+    let translated = translations[lang][normalizedKey] || translations[lang][term];
+    
+    // Se non trovata, prova con fallback humanizzato
+    if (!translated) {
+      translated = humanizeName(term);
+      // Log per debug delle chiavi non trovate
+      console.log(`[TRANSLATION] Chiave non trovata: "${term}" (normalizzata: "${normalizedKey}"), usando fallback: "${translated}"`);
+    }
+    
+    return translated;
   };
 
   // Funzione per formattare i dettagli dell'analisi
   const formatCriteriaDetails = (details: string) => {
-    if (!details || !details.includes('Analisi dettagliata')) {
+    if (!details || !/(Analisi dettagliata|Detailed analysis)/i.test(details)) {
       return (
         <p className="text-sm text-gray-600">{details}</p>
       );
     }
 
-    // Parse dei sub-criteri usando pattern regex robusto
-    const subcriteriaPattern = /(\w+):\s*(\d+)%\s*-\s*Evidenza:\s*"([^"]*)"?\s*Gap:\s*([^(]*)\(Severità:\s*(\w+)\)/g;
+    // Parse dei sub-criteri usando pattern regex robusto per multi-parola e simboli internazionali
+    const subcriteriaPattern = /([^:]+?):\s*(\d+)%\s*-\s*(?:Evidenza|Evidence):\s*"?([^"]*)"?\s*(?:Gap|Lacuna):\s*([^\(]*)\((?:Severità|Severity):\s*([^\)]+)\)/g;
     const subcriteria = [];
     let match;
     
@@ -507,9 +633,9 @@ const PeerReviewPage = () => {
     }
 
     if (subcriteria.length === 0) {
-      // Fallback per parsing semplificato
+      // Fallback per parsing semplificato - supporta entrambe le lingue
       const lines = details
-        .replace(/Analisi dettagliata[^:]*:/g, '')
+        .replace(/(Analisi dettagliata|Detailed analysis)[^:]*:/gi, '')
         .split(/[•\-]/)
         .filter(line => line.trim())
         .slice(0, 5);
@@ -780,21 +906,34 @@ const PeerReviewPage = () => {
                     
                     <div className="grid gap-4">
                       {Object.entries(currentResult.criteriaResults).map(([key, criteria]) => {
-                        const categoryNames: Record<string, string> = {
-                          structureInfo: "Struttura Obbligatoria",
-                          materialDocumentation: "Documentazione Materiale", 
-                          methodology: "Metodologia e Procedure",
-                          technicalAnalysis: "Analisi Tecnica Specialistica",
-                          validation: "Validazione e Controlli Qualità",
-                          presentation: "Presentazione e Valutazione"
+                        const categoryNames: Record<string, Record<string, string>> = {
+                          it: {
+                            structureInfo: "Struttura Obbligatoria",
+                            materialDocumentation: "Documentazione Materiale", 
+                            methodology: "Metodologia e Procedure",
+                            technicalAnalysis: "Analisi Tecnica Specialistica",
+                            validation: "Validazione e Controlli Qualità",
+                            presentation: "Presentazione e Valutazione"
+                          },
+                          en: {
+                            structureInfo: "Mandatory Structure",
+                            materialDocumentation: "Material Documentation", 
+                            methodology: "Methodology and Procedures",
+                            technicalAnalysis: "Technical Analysis",
+                            validation: "Validation and Quality Controls",
+                            presentation: "Presentation and Evaluation"
+                          }
                         };
+                        
+                        const lang = i18n.language === 'it' ? 'it' : 'en';
+                        const categoryName = categoryNames[lang][key] || translateSubcriteria(key);
 
                         return (
                           <Card key={key} className="bg-gray-50">
                             <CardContent className="pt-4">
                               <div className="flex justify-between items-center mb-2">
                                 <h4 className="font-medium">
-                                  {categoryNames[key]} (Peso: {criteria.weight}%)
+                                  {categoryName} (Peso: {criteria.weight}%)
                                 </h4>
                                 <Badge variant={criteria.score >= 75 ? "default" : "destructive"}>
                                   {criteria.score}/100
