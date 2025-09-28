@@ -419,8 +419,11 @@ const PeerReviewPage = () => {
 
   // Normalizzazione delle chiavi per gestire varianti
   const normalizeKey = (key: string): string => {
-    // Pulizia iniziale della chiave (rimuove spazi extra e trim)
-    const cleanKey = key.trim();
+    // Pulizia robusta: rimuove bullets, dash, newlines e spazi extra
+    const cleanKey = key
+      .replace(/^[\s•\-–—\n\r]+/, '') // Rimuove prefissi (bullet, dash, newlines)
+      .replace(/\s+/g, ' ') // Normalizza spazi multipli
+      .trim();
     
     // Gestisce varianti comuni con mapping esteso
     const variations: Record<string, string> = {
@@ -465,7 +468,41 @@ const PeerReviewPage = () => {
       'Technical Details': 'technicalDetails',
       'Quality Assurance': 'qualityAssurance',
       'Uncertainty Assessment': 'uncertaintyAssessment',
-      'Alternative Hypotheses': 'alternativeHypotheses'
+      'Alternative Hypotheses': 'alternativeHypotheses',
+      // Termini aggiuntivi dai log console
+      'techniqueValidation': 'validation',
+      'technique Validation': 'validation',
+      'resultClarity': 'presentation',
+      'result Clarity': 'presentation',
+      'significance': 'conclusions',
+      'justifications': 'interpretation',
+      'traceability': 'materialTracking',
+      'examinationPurpose': 'ExamPurpose',
+      'examination Purpose': 'ExamPurpose',
+      'systematicApproach': 'SystematicApproach',
+      'systematic Approach': 'SystematicApproach',
+      'examinationSequence': 'ExamSequence',
+      'examination Sequence': 'ExamSequence',
+      'analysisDetails': 'AnalysisDetails',
+      'analysis Details': 'AnalysisDetails',
+      'graphologicalParameters': 'GraphologicalParameters',
+      'graphological Parameters': 'GraphologicalParameters',
+      'handwritingVariations': 'HandwritingVariations',
+      'handwriting Variations': 'HandwritingVariations',
+      'writingStyles': 'WritingStyles',
+      'writing Styles': 'WritingStyles',
+      'comparisonProcess': 'ComparisonProcess',
+      'comparison Process': 'ComparisonProcess',
+      'individualCharacteristics': 'IndividualCharacteristics',
+      'individual Characteristics': 'IndividualCharacteristics',
+      'peerReview': 'PeerReview',
+      'peer Review': 'PeerReview',
+      'evidenceConfirmation': 'EvidenceConfirmation',
+      'evidence Confirmation': 'EvidenceConfirmation',
+      'qualityControls': 'qualityControls',
+      'quality Controls': 'qualityControls',
+      'signatureAuthentication': 'SignatureAuthentication',
+      'signature Authentication': 'SignatureAuthentication'
     };
     
     return variations[cleanKey] || cleanKey;
@@ -586,7 +623,10 @@ const PeerReviewPage = () => {
         ComparisonProcess: 'Processo Comparazione',
         IndividualCharacteristics: 'Caratteristiche Individuali',
         PeerReview: 'Revisione Pari',
-        EvidenceConfirmation: 'Conferma Evidenza'
+        EvidenceConfirmation: 'Conferma Evidenza',
+        // Termini aggiuntivi per completezza
+        equipment: 'Strumentazione',
+        transmitter: 'Trasmittente'
       }
     };
 
@@ -653,7 +693,7 @@ const PeerReviewPage = () => {
 
     return (
       <div className="space-y-3">
-        <p className="text-sm font-medium text-gray-700">Analisi dettagliata per sub-criteri:</p>
+        <p className="text-sm font-medium text-gray-700">{t('details.detailedAnalysis')}</p>
         <div className="space-y-3">
           {subcriteria.map((sub, index) => {
             const scoreColor = sub.score >= 85 ? 'text-green-700 bg-green-50' : 
@@ -676,21 +716,21 @@ const PeerReviewPage = () => {
                 
                 {sub.evidence && (
                   <div className="mb-2">
-                    <span className="text-xs font-medium text-green-700">💡 Evidenza:</span>
+                    <span className="text-xs font-medium text-green-700">💡 {t('details.evidence')}</span>
                     <p className="text-sm text-gray-600 mt-1 italic">"{sub.evidence}"</p>
                   </div>
                 )}
                 
                 {sub.gap && (
                   <div className="mb-2">
-                    <span className="text-xs font-medium text-orange-700">⚠️ Area di miglioramento:</span>
+                    <span className="text-xs font-medium text-orange-700">⚠️ {t('details.improvementArea')}</span>
                     <p className="text-sm text-gray-600 mt-1">{sub.gap}</p>
                   </div>
                 )}
                 
                 <div className="flex items-center justify-between">
                   <span className={`text-xs font-medium ${severityColor}`}>
-                    Priorità: {sub.severity.toUpperCase()}
+                    {t('details.priority')} {sub.severity.toUpperCase()}
                   </span>
                 </div>
               </div>
@@ -901,7 +941,7 @@ const PeerReviewPage = () => {
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold flex items-center gap-2">
                       <Weight className="h-5 w-5" />
-                      Valutazione per Criteri ENFSI
+                      {t('details.criteriaEvaluation')}
                     </h3>
                     
                     <div className="grid gap-4">
