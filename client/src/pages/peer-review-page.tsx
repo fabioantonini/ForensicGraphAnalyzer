@@ -431,10 +431,10 @@ const PeerReviewPage = () => {
       'Chain of Custody': 'ChainOfCustody',
       'Date Complete': 'completeDates',
       'Date Completed': 'completeDates',
-      'Receipt Condition': 'ReceiptCondition',
-      'Receipt Conditions': 'ReceiptCondition',
-      'Alterations/Damages': 'AlterationsDamages',
-      'Material Info': 'MaterialInfo',
+      'Receipt Condition': 'receiptCondition',
+      'Receipt Conditions': 'receiptCondition',
+      'Alterations/Damages': 'alterationsDocumentation',
+      'Material Info': 'materialInfo',
       'Exam Purpose': 'ExamPurpose',
       'Systematic Approach': 'SystematicApproach',
       'Exam Sequence': 'ExamSequence',
@@ -502,7 +502,20 @@ const PeerReviewPage = () => {
       'qualityControls': 'qualityControls',
       'quality Controls': 'qualityControls',
       'signatureAuthentication': 'SignatureAuthentication',
-      'signature Authentication': 'SignatureAuthentication'
+      'signature Authentication': 'SignatureAuthentication',
+      // Termini sezione "Documentazione materiale"
+      'transmitterIdentification': 'transmitterIdentification',
+      'transmitter Identification': 'transmitterIdentification',
+      'receiptCondition': 'receiptCondition',
+      'receipt Condition': 'receiptCondition',
+      'alterationsDocumentation': 'alterationsDocumentation',
+      'alterations Documentation': 'alterationsDocumentation',
+      'materialInfo': 'materialInfo',
+      'material Info': 'materialInfo',
+      'chainOfCustody': 'chainOfCustody',
+      'chain Of Custody': 'chainOfCustody',
+      'examPurpose': 'ExamPurpose',
+      'exam Purpose': 'ExamPurpose'
     };
     
     return variations[cleanKey] || cleanKey;
@@ -570,7 +583,13 @@ const PeerReviewPage = () => {
         ComparisonProcess: 'Comparison Process',
         IndividualCharacteristics: 'Individual Characteristics',
         PeerReview: 'Peer Review',
-        EvidenceConfirmation: 'Evidence Confirmation'
+        EvidenceConfirmation: 'Evidence Confirmation',
+        // Termini sezione "Documentazione materiale"
+        transmitterIdentification: 'Transmitter Identification',
+        receiptCondition: 'Receipt Condition',
+        alterationsDocumentation: 'Alterations Documentation',
+        materialInfo: 'Material Information',
+        chainOfCustody: 'Chain of Custody'
       },
       it: {
         // Struttura Informazioni
@@ -626,7 +645,13 @@ const PeerReviewPage = () => {
         EvidenceConfirmation: 'Conferma Evidenza',
         // Termini aggiuntivi per completezza
         equipment: 'Strumentazione',
-        transmitter: 'Trasmittente'
+        transmitter: 'Trasmittente',
+        // Termini sezione "Documentazione materiale"
+        transmitterIdentification: 'Identificazione Trasmittente',
+        receiptCondition: 'Condizione Ricezione',
+        alterationsDocumentation: 'Documentazione Alterazioni',
+        materialInfo: 'Informazioni Materiale',
+        chainOfCustody: 'Catena di Custodia'
       }
     };
 
