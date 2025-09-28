@@ -224,7 +224,7 @@ const PeerReviewPage = () => {
     }
   };
 
-  // Funzione per scaricare il report PDF
+  // Funzione per scaricare il report PDF con supporto mobile migliorato
   const handleDownloadReport = async (reviewId: number) => {
     try {
       const response = await fetch(`/api/peer-review/${reviewId}/report`, {
@@ -253,27 +253,63 @@ const PeerReviewPage = () => {
         }
       }
       
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      link.style.display = 'none';
-      document.body.appendChild(link);
+      // Rileva se siamo su mobile/Android
+      const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const isAndroid = /Android/i.test(navigator.userAgent);
       
-      link.click();
-      
-      // Cleanup dopo un breve delay
-      setTimeout(() => {
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(link);
-      }, 1000);
-      
-      // Notifica successo
-      toast({
-        title: "Download completato",
-        description: `Report PDF scaricato con successo`,
-        variant: "default",
-      });
+      if (isMobile) {
+        // Su mobile, prova prima ad aprire direttamente il PDF
+        const url = window.URL.createObjectURL(blob);
+        const newWindow = window.open(url, '_blank');
+        
+        if (!newWindow) {
+          // Se popup bloccato, usa il metodo download tradizionale
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = filename;
+          link.style.display = 'none';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+        
+        // Cleanup
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url);
+        }, 3000);
+        
+        // Messaggio specifico per Android
+        toast({
+          title: "Download completato",
+          description: isAndroid 
+            ? `File salvato nella cartella "Downloads". Apri l'app "I miei file" per trovarlo.`
+            : `Report PDF scaricato con successo`,
+          variant: "default",
+        });
+        
+      } else {
+        // Desktop: comportamento normale
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        
+        link.click();
+        
+        // Cleanup dopo un breve delay
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(link);
+        }, 1000);
+        
+        toast({
+          title: "Download completato",
+          description: `Report PDF scaricato con successo`,
+          variant: "default",
+        });
+      }
       
     } catch (error) {
       console.error('Errore download report:', error);
