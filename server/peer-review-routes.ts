@@ -12,7 +12,7 @@ import { eq, desc, and } from "drizzle-orm";
 import { analyzePeerReview, getENFSIFramework, getClassificationInfo } from "./peer-review-service";
 // Import middleware functions from auth.ts
 const requireAuth = (req: any, res: any, next: any) => {
-  if (!req.user) {
+  if (!req.isAuthenticated()) {
     return res.status(401).json({ error: 'Authentication required' });
   }
   next();
