@@ -353,8 +353,24 @@ router.get('/:id/report', requireAuth, async (req, res) => {
 
     console.log(`[PEER-REVIEW] Generazione report PDF per analisi ID: ${reviewId}`);
 
-    // Genera il report PDF utilizzando PDFKit
+    // Genera il report PDF utilizzando PDFKit con numerazione pagine
     const doc = new PDFDocument({ margin: 50 });
+    
+    // Aggiunge numerazione pagine automatica
+    let pageNumber = 1;
+    const addPageNumber = () => {
+      doc.fontSize(8).fillColor('#6b7280');
+      doc.text(`Pagina ${pageNumber}`, 50, 750, { align: 'center', width: 495 });
+      pageNumber++;
+    };
+    
+    // Override del metodo addPage per includere numerazione
+    const originalAddPage = doc.addPage.bind(doc);
+    doc.addPage = (options?: any) => {
+      addPageNumber();
+      const result = originalAddPage(options);
+      return result;
+    };
     
     // Genera nome file basato su quello originale
     const originalName = review.originalFilename;
@@ -371,11 +387,16 @@ router.get('/:id/report', requireAuth, async (req, res) => {
     // Pipe del documento al response
     doc.pipe(res);
 
-    // Header del documento con logo e branding
-    doc.fontSize(24).text('GrapholexInsight', { align: 'center' });
-    doc.fontSize(18).text('Report Analisi ENFSI Forense', { align: 'center' });
-    doc.fontSize(12).text('Conformità agli Standard Europei di Perizia Grafica', { align: 'center' });
-    doc.moveDown(2);
+    // Header del documento con logo e branding migliorato
+    const headerY = doc.y;
+    doc.rect(50, headerY, 495, 60).fillAndStroke('#1e40af', '#1e40af');
+    doc.fillColor('#ffffff');
+    doc.fontSize(26).text('📊 GrapholexInsight', { align: 'center' }, 60, headerY + 10);
+    doc.fontSize(16).text('Report Analisi ENFSI Forense', { align: 'center' }, 60, headerY + 32);
+    doc.fontSize(11).text('Conformità agli Standard Europei di Perizia Grafica', { align: 'center' }, 60, headerY + 48);
+    doc.fillColor('#212529');
+    doc.y = headerY + 70;
+    doc.moveDown(1);
     
     // Box Executive Summary
     const boxY = doc.y;
@@ -403,6 +424,56 @@ router.get('/:id/report', requireAuth, async (req, res) => {
     doc.y = boxY + 90;
     doc.moveDown();
 
+    // === TABELLA RIASSUNTIVA PUNTEGGI ===
+    doc.fontSize(14).text('📈 Riassunto Punteggi per Categoria', { underline: true });
+    doc.moveDown(0.5);
+    
+    const tableY = doc.y;
+    const tableHeight = 200;
+    const colWidth = 165;
+    
+    // Header tabella
+    doc.rect(50, tableY, colWidth, 25).fillAndStroke('#1e40af', '#1e40af');
+    doc.rect(50 + colWidth, tableY, colWidth, 25).fillAndStroke('#1e40af', '#1e40af');
+    doc.rect(50 + colWidth * 2, tableY, colWidth, 25).fillAndStroke('#1e40af', '#1e40af');
+    
+    doc.fillColor('#ffffff').fontSize(10);
+    doc.text('Categoria ENFSI', 55, tableY + 8);
+    doc.text('Punteggio', 55 + colWidth + 60, tableY + 8);
+    doc.text('Valutazione', 55 + colWidth * 2 + 50, tableY + 8);
+    
+    // Righe tabella
+    const tableCriteriaResults = review.criteriaResults as any;
+    const tableCategoryNames = {
+      structureInfo: 'Struttura Obbligatoria',
+      materialDocumentation: 'Documentazione Materiale',
+      methodology: 'Metodologia e Procedure',
+      technicalAnalysis: 'Analisi Tecnica', 
+      validation: 'Validazione e Controlli',
+      presentation: 'Presentazione'
+    };
+    
+    let rowY = tableY + 25;
+    Object.entries(tableCriteriaResults).forEach(([key, criterion]: [string, any], index: number) => {
+      const categoryName = (tableCategoryNames as any)[key] || key;
+      const score = criterion.score || 0;
+      const evaluation = score >= 85 ? '🟢 Eccellente' : score >= 70 ? '🟡 Buono' : score >= 60 ? '🟠 Sufficiente' : '🔴 Insufficiente';
+      
+      // Alternar colori righe
+      const rowColor = index % 2 === 0 ? '#f8fafc' : '#ffffff';
+      doc.rect(50, rowY, colWidth * 3, 25).fillAndStroke(rowColor, '#e2e8f0');
+      
+      doc.fillColor('#374151').fontSize(9);
+      doc.text(categoryName, 55, rowY + 8, { width: colWidth - 10 });
+      doc.text(`${score}%`, 55 + colWidth + 60, rowY + 8);
+      doc.text(evaluation, 55 + colWidth * 2 + 10, rowY + 8);
+      
+      rowY += 25;
+    });
+    
+    doc.y = rowY + 10;
+    doc.moveDown();
+
     // === SEZIONE 1: ANALISI DETTAGLIATA PER CATEGORIA ===
     doc.addPage();
     doc.fontSize(18).text('1. Analisi ENFSI Dettagliata', { underline: true });
@@ -418,8 +489,8 @@ router.get('/:id/report', requireAuth, async (req, res) => {
       presentation: 'Presentazione e Valutazione'
     };
 
-    Object.entries(criteriaResults).forEach(([key, criterion]: [string, any], index: number) => {
-      const categoryName = (categoryNames as any)[key] || key;
+    Object.entries(tableCriteriaResults).forEach(([key, criterion]: [string, any], index: number) => {
+      const categoryName = (tableCategoryNames as any)[key] || key;
       const score = criterion.score || 0;
       const weight = criterion.weight || 0;
       
@@ -511,7 +582,7 @@ router.get('/:id/report', requireAuth, async (req, res) => {
             .replace(/Gap:\s*/g, '\nGap: ')
             .replace(/Evidenza:\s*/g, '\nEvidenza: ')
             .split('\n')
-            .filter(line => line.trim())
+            .filter((line: string) => line.trim())
             .slice(0, 8); // Limita a max 8 linee per evitare overflow
           
           const summaryY = doc.y;
@@ -769,6 +840,9 @@ router.get('/:id/report', requireAuth, async (req, res) => {
     doc.fontSize(8).text(`Report generato il ${new Date().toLocaleDateString('it-IT')} alle ${new Date().toLocaleTimeString('it-IT')} - GrapholexInsight ${getVersionString()}`, { align: 'center' });
     doc.text('Sistema di Analisi Forense Conforme agli Standard ENFSI', { align: 'center' });
 
+    // Aggiungi numero pagina alla pagina finale
+    addPageNumber();
+    
     // Finalizza il documento
     doc.end();
 
