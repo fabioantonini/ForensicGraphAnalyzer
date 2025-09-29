@@ -15,7 +15,7 @@ Il sistema esegue **3 chiamate separate a OpenAI GPT-4o** per ogni analisi peer 
 ### Scopo
 Estrarre citazioni e elementi strutturali specifici dal documento
 
-### Prompt Utilizzato
+### Prompt Completo Utilizzato
 ```
 Sei un esperto forense ENFSI. Analizza questo documento per estrarre elementi strutturali specifici.
 
@@ -53,6 +53,13 @@ Fornisci output JSON con citazioni specifiche:
     }
   ]
 }
+```
+
+### Messaggio Utente
+```
+Analizza strutturalmente questo documento:
+
+[CONTENUTO DEL DOCUMENTO DA ANALIZZARE]
 ```
 
 ### Parametri Configurazione
@@ -115,15 +122,57 @@ Il sistema valuta **39 sub-criteri** suddivisi in **6 categorie principali**:
 - **Motivazioni (2%)**: giustificazioni opinioni
 - **Tracciabilità (2%)**: documentazione processo
 
-### Prompt Utilizzato (versione accorciata)
+### Prompt Completo Utilizzato
 ```
 Sei un esperto forense ENFSI. Analizza questo documento secondo il framework ENFSI utilizzando i dati strutturali già identificati.
 
 ANALISI STRUTTURALE DISPONIBILE:
-[Dati della chiamata precedente]
+${JSON.stringify(structuralAnalysis, null, 2)}
 
 FRAMEWORK ENFSI DETTAGLIATO - evaluta ogni sub-criterio:
-[Struttura dettagliata con tutti i 39 sub-criteri]
+
+1. STRUTTURA OBBLIGATORIA (15%):
+   - Identificatore caso (3%): presente/assente, qualità
+   - Dati esperto/laboratorio (3%): completezza informazioni
+   - Qualifiche esaminatore (3%): dettaglio credenziali
+   - Firma/autenticazione (2%): presenza firma digitale/fisica  
+   - Date complete (2%): tutte le date richieste
+   - Trasmettitore (1%): identificazione mittente
+   - Numerazione pagine (1%): sistema numerazione
+
+2. DOCUMENTAZIONE MATERIALE (15%):
+   - Elenco materiale (4%): completezza inventario
+   - Stato ricevimento (3%): descrizione condizioni
+   - Alterazioni/danni (3%): documentazione problemi
+   - Info materiale (3%): metadati ricevuti
+   - Chain of custody (2%): tracciabilità
+
+3. METODOLOGIA (25%):
+   - Scopo esame (5%): chiarezza obiettivi
+   - Approccio sistematico (6%): metodologia strutturata
+   - Ipotesi alternative (5%): considerazione pro/contro
+   - Sequenza esami (4%): logica procedimenti
+   - Dettagli analisi (3%): specificità tecniche
+   - Attrezzature (2%): appropriatezza strumenti
+
+4. ANALISI TECNICA (20%):
+   - Parametri grafologici (5%): completezza parametri
+   - Variazioni manoscrittura (4%): analisi variabilità
+   - Stili scrittura (4%): classificazione stili
+   - Processo comparazione (4%): metodologia confronto
+   - Caratteristiche individuali (3%): vs. caratteristiche classe
+
+5. VALIDAZIONE (15%):
+   - Peer review (5%): presenza revisione
+   - Conferma evidenze (4%): validazione findings
+   - Controlli qualità (3%): procedure QC
+   - Validazione tecniche (3%): standard metodologici
+
+6. PRESENTAZIONE (10%):
+   - Chiarezza risultati (4%): comprensibilità 
+   - Significatività (2%): rilevanza contesto
+   - Motivazioni (2%): giustificazioni opinioni
+   - Tracciabilità (2%): documentazione processo
 
 Per ogni SUB-CRITERIO fornisci:
 - Score: 0-100
@@ -145,12 +194,28 @@ RISPOSTA JSON:
     "structureInfo": {
       "overallScore": 85,
       "subcriteria": {
-        "caseIdentifier": { "score": 90, "evidence": "citazione", "gap": "dettaglio mancante", "severity": "media" }
+        "caseIdentifier": { "score": 90, "evidence": "citazione", "gap": "dettaglio mancante", "severity": "media" },
+        "expertData": { "score": 80, "evidence": "", "gap": "", "severity": "bassa" }
       }
     }
   },
-  "criticalIssues": [...]
+  "criticalIssues": [
+    {
+      "category": "VALIDATION",
+      "issue": "Assenza di processo di peer review documentato", 
+      "evidence": "Non è menzionata alcuna revisione da parte di colleghi esperti",
+      "impact": "Riduce la credibilità delle conclusioni e non rispetta gli standard ENFSI di validazione",
+      "recommendation": "Implementare un processo formale di peer review: 1) Far rivedere l'analisi da un secondo esperto qualificato, 2) Documentare il processo di revisione con nome del revisore e data, 3) Includere una sezione 'Peer Review' nel report che attesti la conformità metodologica, 4) Utilizzare checklist ENFSI per la validazione. Risultato atteso: aumento del punteggio di validazione da 70 a 85+."
+    }
+  ]
 }
+```
+
+### Messaggio Utente
+```
+Documento da analizzare:
+
+[CONTENUTO DEL DOCUMENTO DA ANALIZZARE]
 ```
 
 ### Parametri Configurazione
