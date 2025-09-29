@@ -68,6 +68,13 @@
     "presentation": "Presentazione e Chiarezza",
     "competence": "Competenze e Qualifiche"
   },
+  "details": {
+    "detailedAnalysis": "Analisi dettagliata per sub-criteri:",
+    "evidence": "Evidenza:",
+    "improvementArea": "Area di miglioramento:",
+    "priority": "Priorità:",
+    "criteriaEvaluation": "Valutazione per Criteri ENFSI"
+  },
   "common": {
     "loading": "Caricamento...",
     "error": "Errore",

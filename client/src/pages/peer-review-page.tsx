@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import { it, enUS } from "date-fns/locale";
+import { useToast } from "@/hooks/use-toast";
 
 interface PeerReviewResult {
   id: number;
@@ -81,8 +82,10 @@ interface StatsData {
 const PeerReviewPage = () => {
   const { t: tCommon, i18n } = useTranslation('common');
   const { t } = useTranslation('peerReview');
+  const { toast } = useToast();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [progressPhase, setProgressPhase] = useState<string>('');
   const [currentResult, setCurrentResult] = useState<PeerReviewResult | null>(null);
 
   // Caricamento storico analisi
@@ -128,10 +131,12 @@ const PeerReviewPage = () => {
       queryClient.invalidateQueries({ queryKey: ["/api/peer-review/history"] });
       queryClient.invalidateQueries({ queryKey: ["/api/peer-review/stats/summary"] });
       setUploadProgress(100);
+      setProgressPhase('Analisi completata con successo!');
     },
     onError: (error) => {
       console.error('Errore upload perizia:', error);
       setUploadProgress(0);
+      setProgressPhase('');
     }
   });
 
@@ -161,6 +166,7 @@ const PeerReviewPage = () => {
       setSelectedFile(acceptedFiles[0]);
       setCurrentResult(null);
       setUploadProgress(0);
+      setProgressPhase('');
     }
   }, []);
 
@@ -178,7 +184,39 @@ const PeerReviewPage = () => {
   const handleUpload = async () => {
     if (!selectedFile) return;
 
-    setUploadProgress(10);
+    // Simulazione progresso graduale durante l'analisi ENFSI - timing realistico
+    const simulateProgress = () => {
+      setUploadProgress(10);
+      setProgressPhase('Estrazione testo e preparazione documento...');
+      
+      setTimeout(() => {
+        setUploadProgress(20);
+        setProgressPhase('Analisi strutturale secondo framework ENFSI...');
+      }, 3000); // Più tempo per l'estrazione iniziale
+      
+      setTimeout(() => {
+        setUploadProgress(35);
+        setProgressPhase('Prima chiamata AI: valutazione strutturale...');
+      }, 8000); // Prima chiamata OpenAI
+      
+      setTimeout(() => {
+        setUploadProgress(55);
+        setProgressPhase('Seconda chiamata AI: analisi dettagliata criteri...');
+      }, 16000); // Seconda chiamata OpenAI
+      
+      setTimeout(() => {
+        setUploadProgress(75);
+        setProgressPhase('Terza chiamata AI: generazione suggerimenti...');
+      }, 24000); // Terza chiamata OpenAI
+      
+      setTimeout(() => {
+        setUploadProgress(90);
+        setProgressPhase('Elaborazione finale e calcolo score...');
+      }, 30000); // Elaborazione finale
+    };
+
+    simulateProgress();
+    
     try {
       await uploadMutation.mutateAsync(selectedFile);
     } catch (error) {
@@ -186,7 +224,7 @@ const PeerReviewPage = () => {
     }
   };
 
-  // Funzione per scaricare il report PDF
+  // Funzione per scaricare il report PDF con supporto mobile migliorato
   const handleDownloadReport = async (reviewId: number) => {
     try {
       const response = await fetch(`/api/peer-review/${reviewId}/report`, {
@@ -195,10 +233,14 @@ const PeerReviewPage = () => {
       });
       
       if (!response.ok) {
-        throw new Error('Errore durante il download del report');
+        throw new Error(`Errore HTTP ${response.status}: ${response.statusText}`);
       }
 
       const blob = await response.blob();
+      
+      if (blob.size === 0) {
+        throw new Error('Il file PDF ricevuto è vuoto');
+      }
       
       // Estrai il nome del file dall'header Content-Disposition
       const contentDisposition = response.headers.get('Content-Disposition');
@@ -211,16 +253,71 @@ const PeerReviewPage = () => {
         }
       }
       
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(link);
+      // Rileva se siamo su mobile/Android
+      const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const isAndroid = /Android/i.test(navigator.userAgent);
+      
+      if (isMobile) {
+        // Su mobile, prova prima ad aprire direttamente il PDF
+        const url = window.URL.createObjectURL(blob);
+        const newWindow = window.open(url, '_blank');
+        
+        if (!newWindow) {
+          // Se popup bloccato, usa il metodo download tradizionale
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = filename;
+          link.style.display = 'none';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+        
+        // Cleanup
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url);
+        }, 3000);
+        
+        // Messaggio specifico per Android
+        toast({
+          title: "Download completato",
+          description: isAndroid 
+            ? `File salvato nella cartella "Downloads". Apri l'app "I miei file" per trovarlo.`
+            : `Report PDF scaricato con successo`,
+          variant: "default",
+        });
+        
+      } else {
+        // Desktop: comportamento normale
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        
+        link.click();
+        
+        // Cleanup dopo un breve delay
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(link);
+        }, 1000);
+        
+        toast({
+          title: "Download completato",
+          description: `Report PDF scaricato con successo`,
+          variant: "default",
+        });
+      }
+      
     } catch (error) {
       console.error('Errore download report:', error);
+      toast({
+        title: "Errore download",
+        description: error instanceof Error ? error.message : "Errore sconosciuto durante il download",
+        variant: "destructive",
+      });
     }
   };
 
@@ -250,6 +347,459 @@ const PeerReviewPage = () => {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  // Funzione per formattare i suggerimenti
+  const formatSuggestions = (suggestions: string) => {
+    if (!suggestions) return null;
+
+    // Parse dei suggerimenti per azioni immediate, breve termine, lungo termine
+    const sections = [
+      { 
+        title: 'AZIONI IMMEDIATE (Alta Priorità)', 
+        pattern: /AZIONI IMMEDIATE|Piano di Implementazione Immediata/i,
+        color: 'border-red-200 bg-red-50',
+        icon: '🔴'
+      },
+      { 
+        title: 'AZIONI BREVE TERMINE (Media Priorità)', 
+        pattern: /BREVE TERMINE|1-3 settimane/i,
+        color: 'border-yellow-200 bg-yellow-50',
+        icon: '🟡'
+      },
+      { 
+        title: 'AZIONI LUNGO TERMINE (Bassa Priorità)', 
+        pattern: /LUNGO TERMINE|1-3 mesi/i,
+        color: 'border-green-200 bg-green-50',
+        icon: '🟢'
+      }
+    ];
+
+    // Cerca sezioni strutturate
+    const structuredSections: Array<{
+      title: string;
+      pattern: RegExp;
+      color: string;
+      icon: string;
+      actions: string[];
+    }> = [];
+    
+    sections.forEach(section => {
+      if (section.pattern.test(suggestions)) {
+        // Trova le azioni per questa sezione
+        const sectionStart = suggestions.search(section.pattern);
+        if (sectionStart !== -1) {
+          const nextSectionStart = suggestions.slice(sectionStart + 50).search(/AZIONI|Piano/i);
+          const sectionText = nextSectionStart !== -1 
+            ? suggestions.slice(sectionStart, sectionStart + 50 + nextSectionStart)
+            : suggestions.slice(sectionStart);
+          
+          // Estrai le azioni (bullet points)
+          const actions = sectionText
+            .split(/[•\-\n]/)
+            .filter((action: string) => action.trim() && !section.pattern.test(action))
+            .slice(0, 4) // Massimo 4 azioni per sezione
+            .map((action: string) => action.trim());
+          
+          if (actions.length > 0) {
+            structuredSections.push({
+              ...section,
+              actions
+            });
+          }
+        }
+      }
+    });
+
+    if (structuredSections.length > 0) {
+      return (
+        <div className="space-y-4">
+          <h4 className="font-semibold text-gray-800">Piano di Miglioramento Strutturato:</h4>
+          {structuredSections.map((section, index) => (
+            <div key={index} className={`p-4 rounded-lg border ${section.color}`}>
+              <h5 className="font-medium text-gray-800 mb-3 flex items-center gap-2">
+                <span>{section.icon}</span>
+                {section.title}
+              </h5>
+              <div className="space-y-2">
+                {section.actions.map((action: string, actionIndex: number) => (
+                  <div key={actionIndex} className="flex items-start gap-2">
+                    <span className="text-gray-600 mt-1">•</span>
+                    <p className="text-sm text-gray-700">{action}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    // Fallback per suggerimenti non strutturati
+    const lines = suggestions
+      .split(/[•\-\n]/)
+      .filter(line => line.trim())
+      .slice(0, 8); // Massimo 8 suggerimenti
+
+    return (
+      <div className="space-y-2">
+        {lines.map((line, index) => (
+          <div key={index} className="flex items-start gap-2 p-2 bg-blue-50 rounded border-l-4 border-blue-200">
+            <span className="text-blue-600 mt-1">💡</span>
+            <p className="text-sm text-gray-700">{line.trim()}</p>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  // Normalizzazione delle chiavi per gestire varianti
+  const normalizeKey = (key: string): string => {
+    // Pulizia robusta: rimuove bullets, dash, newlines e spazi extra
+    const cleanKey = key
+      .replace(/^[\s•\-–—\n\r]+/, '') // Rimuove prefissi (bullet, dash, newlines)
+      .replace(/\s+/g, ' ') // Normalizza spazi multipli
+      .trim();
+    
+    // Gestisce varianti comuni con mapping esteso
+    const variations: Record<string, string> = {
+      // Varianti con spazi
+      'Chain of Custody': 'ChainOfCustody',
+      'Date Complete': 'completeDates',
+      'Date Completed': 'completeDates',
+      'Receipt Condition': 'receiptCondition',
+      'Receipt Conditions': 'receiptCondition',
+      'Alterations/Damages': 'alterationsDocumentation',
+      'Material Info': 'materialInfo',
+      'Exam Purpose': 'ExamPurpose',
+      'Systematic Approach': 'SystematicApproach',
+      'Exam Sequence': 'ExamSequence',
+      'Analysis Details': 'AnalysisDetails',
+      'Graphological Parameters': 'GraphologicalParameters',
+      'Handwriting Variations': 'HandwritingVariations',
+      'Writing Styles': 'WritingStyles',
+      'Comparison Process': 'ComparisonProcess',
+      'Individual Characteristics': 'IndividualCharacteristics',
+      'Peer Review': 'PeerReview',
+      'Evidence Confirmation': 'EvidenceConfirmation',
+      'Signature Authentication': 'SignatureAuthentication',
+      // Varianti plurali/singolari
+      'Case Identifiers': 'caseIdentifier',
+      'Expert Data': 'expertData',
+      'Examiner Qualifications': 'examinerQualifications',
+      'Complete Dates': 'completeDates',
+      'Submitter Info': 'submitterInfo',
+      'Page Numbering': 'pageNumbering',
+      'Document Metadata': 'documentMetadata',
+      'Material List': 'materialList',
+      'Reception Conditions': 'receptionConditions',
+      'Custody Chain': 'custodyChain',
+      'Material Tracking': 'materialTracking',
+      'Quality Controls': 'qualityControls',
+      'Methodology Description': 'methodologyDescription',
+      'Equipment Description': 'equipmentDescription',
+      'Analysis Scope': 'analysisScope',
+      'Limitations Reporting': 'limitationsReporting',
+      'Comparative Analysis': 'comparativeAnalysis',
+      'Technical Details': 'technicalDetails',
+      'Quality Assurance': 'qualityAssurance',
+      'Uncertainty Assessment': 'uncertaintyAssessment',
+      'Alternative Hypotheses': 'alternativeHypotheses',
+      // Termini aggiuntivi dai log console
+      'techniqueValidation': 'validation',
+      'technique Validation': 'validation',
+      'resultClarity': 'presentation',
+      'result Clarity': 'presentation',
+      'significance': 'conclusions',
+      'justifications': 'interpretation',
+      'traceability': 'materialTracking',
+      'examinationPurpose': 'ExamPurpose',
+      'examination Purpose': 'ExamPurpose',
+      'systematicApproach': 'SystematicApproach',
+      'systematic Approach': 'SystematicApproach',
+      'examinationSequence': 'ExamSequence',
+      'examination Sequence': 'ExamSequence',
+      'analysisDetails': 'AnalysisDetails',
+      'analysis Details': 'AnalysisDetails',
+      'graphologicalParameters': 'GraphologicalParameters',
+      'graphological Parameters': 'GraphologicalParameters',
+      'handwritingVariations': 'HandwritingVariations',
+      'handwriting Variations': 'HandwritingVariations',
+      'writingStyles': 'WritingStyles',
+      'writing Styles': 'WritingStyles',
+      'comparisonProcess': 'ComparisonProcess',
+      'comparison Process': 'ComparisonProcess',
+      'individualCharacteristics': 'IndividualCharacteristics',
+      'individual Characteristics': 'IndividualCharacteristics',
+      'peerReview': 'PeerReview',
+      'peer Review': 'PeerReview',
+      'evidenceConfirmation': 'EvidenceConfirmation',
+      'evidence Confirmation': 'EvidenceConfirmation',
+      'qualityControls': 'qualityControls',
+      'quality Controls': 'qualityControls',
+      'signatureAuthentication': 'SignatureAuthentication',
+      'signature Authentication': 'SignatureAuthentication',
+      // Termini sezione "Documentazione materiale"
+      'transmitterIdentification': 'transmitterIdentification',
+      'transmitter Identification': 'transmitterIdentification',
+      'receiptCondition': 'receiptCondition',
+      'receipt Condition': 'receiptCondition',
+      'alterationsDocumentation': 'alterationsDocumentation',
+      'alterations Documentation': 'alterationsDocumentation',
+      'materialInfo': 'materialInfo',
+      'material Info': 'materialInfo',
+      'chainOfCustody': 'chainOfCustody',
+      'chain Of Custody': 'chainOfCustody',
+      'examPurpose': 'ExamPurpose',
+      'exam Purpose': 'ExamPurpose'
+    };
+    
+    return variations[cleanKey] || cleanKey;
+  };
+
+  // Funzione per humanizzare nomi camelCase/PascalCase per il fallback
+  const humanizeName = (name: string): string => {
+    return name
+      .replace(/([A-Z])/g, ' $1') // Separa camelCase
+      .replace(/^./, str => str.toUpperCase()) // Capitalizza prima lettera
+      .trim();
+  };
+
+  // Traduzioni per i sub-criteri ENFSI
+  const translateSubcriteria = (term: string) => {
+    const translations: Record<string, Record<string, string>> = {
+      en: {
+        // Struttura Informazioni
+        caseIdentifier: 'Case Identifier',
+        expertData: 'Expert Data',
+        examinerQualifications: 'Examiner Qualifications',
+        signatures: 'Signatures',
+        completeDates: 'Complete Dates',
+        submitterInfo: 'Submitter Info',
+        pageNumbering: 'Page Numbering',
+        documentMetadata: 'Document Metadata',
+        // Gestione Materiale
+        materialList: 'Material List',
+        receptionConditions: 'Reception Conditions',
+        custodyChain: 'Chain of Custody',
+        materialTracking: 'Material Tracking',
+        qualityControls: 'Quality Controls',
+        // Metodologia
+        methodologyDescription: 'Methodology Description',
+        equipmentDescription: 'Equipment Description',
+        analysisScope: 'Analysis Scope',
+        limitationsReporting: 'Limitations Reporting',
+        // Analisi Tecnica
+        comparativeAnalysis: 'Comparative Analysis',
+        technicalDetails: 'Technical Details',
+        validation: 'Validation',
+        qualityAssurance: 'Quality Assurance',
+        uncertaintyAssessment: 'Uncertainty Assessment',
+        // Interpretazione
+        interpretation: 'Interpretation',
+        conclusions: 'Conclusions',
+        presentation: 'Presentation',
+        alternativeHypotheses: 'Alternative Hypotheses',
+        // Criteri aggiuntivi visibili nelle immagini
+        SignatureAuthentication: 'Signature Authentication',
+        'Date Complete': 'Complete Dates',
+        Transmitter: 'Transmitter',
+        ReceiptCondition: 'Receipt Condition',
+        AlterationsDamages: 'Alterations/Damages',
+        MaterialInfo: 'Material Info',
+        ChainOfCustody: 'Chain of Custody',
+        ExamPurpose: 'Exam Purpose',
+        SystematicApproach: 'Systematic Approach',
+        ExamSequence: 'Exam Sequence',
+        AnalysisDetails: 'Analysis Details',
+        Equipment: 'Equipment',
+        GraphologicalParameters: 'Graphological Parameters',
+        HandwritingVariations: 'Handwriting Variations',
+        WritingStyles: 'Writing Styles',
+        ComparisonProcess: 'Comparison Process',
+        IndividualCharacteristics: 'Individual Characteristics',
+        PeerReview: 'Peer Review',
+        EvidenceConfirmation: 'Evidence Confirmation',
+        // Termini sezione "Documentazione materiale"
+        transmitterIdentification: 'Transmitter Identification',
+        receiptCondition: 'Receipt Condition',
+        alterationsDocumentation: 'Alterations Documentation',
+        materialInfo: 'Material Information',
+        chainOfCustody: 'Chain of Custody'
+      },
+      it: {
+        // Struttura Informazioni
+        caseIdentifier: 'Identificatore Caso',
+        expertData: 'Dati Esperto',
+        examinerQualifications: 'Qualifiche Esaminatore',
+        signatures: 'Firme',
+        completeDates: 'Date Completate',
+        submitterInfo: 'Info Trasmettitore',
+        pageNumbering: 'Numerazione Pagine',
+        documentMetadata: 'Metadati Documento',
+        // Gestione Materiale
+        materialList: 'Elenco Materiale',
+        receptionConditions: 'Condizioni Ricezione',
+        custodyChain: 'Catena Custodia',
+        materialTracking: 'Tracciabilità Materiale',
+        qualityControls: 'Controlli Qualità',
+        // Metodologia
+        methodologyDescription: 'Descrizione Metodologia',
+        equipmentDescription: 'Descrizione Strumentazione',
+        analysisScope: 'Ambito Analisi',
+        limitationsReporting: 'Segnalazione Limitazioni',
+        // Analisi Tecnica
+        comparativeAnalysis: 'Analisi Comparativa',
+        technicalDetails: 'Dettagli Tecnici',
+        validation: 'Validazione',
+        qualityAssurance: 'Garanzia Qualità',
+        uncertaintyAssessment: 'Valutazione Incertezza',
+        // Interpretazione
+        interpretation: 'Interpretazione',
+        conclusions: 'Conclusioni',
+        presentation: 'Presentazione',
+        alternativeHypotheses: 'Ipotesi Alternative',
+        // Criteri aggiuntivi visibili nelle immagini
+        SignatureAuthentication: 'Autenticazione Firma',
+        'Date Complete': 'Date Completate',
+        Transmitter: 'Trasmittente',
+        ReceiptCondition: 'Condizione Ricezione',
+        AlterationsDamages: 'Alterazioni/Danni',
+        MaterialInfo: 'Info Materiale',
+        ChainOfCustody: 'Catena Custodia',
+        ExamPurpose: 'Scopo Esame',
+        SystematicApproach: 'Approccio Sistematico',
+        ExamSequence: 'Sequenza Esame',
+        AnalysisDetails: 'Dettagli Analisi',
+        Equipment: 'Strumentazione',
+        GraphologicalParameters: 'Parametri Grafologici',
+        HandwritingVariations: 'Variazioni Calligrafia',
+        WritingStyles: 'Stili Scrittura',
+        ComparisonProcess: 'Processo Comparazione',
+        IndividualCharacteristics: 'Caratteristiche Individuali',
+        PeerReview: 'Revisione Pari',
+        EvidenceConfirmation: 'Conferma Evidenza',
+        // Termini aggiuntivi per completezza
+        equipment: 'Strumentazione',
+        transmitter: 'Trasmittente',
+        // Termini sezione "Documentazione materiale"
+        transmitterIdentification: 'Identificazione Trasmittente',
+        receiptCondition: 'Condizione Ricezione',
+        alterationsDocumentation: 'Documentazione Alterazioni',
+        materialInfo: 'Informazioni Materiale',
+        chainOfCustody: 'Catena di Custodia'
+      }
+    };
+
+    const lang = i18n.language === 'it' ? 'it' : 'en';
+    
+    // Normalizza la chiave per gestire varianti
+    const normalizedKey = normalizeKey(term);
+    
+    // Cerca traduzione con chiave normalizzata
+    let translated = translations[lang][normalizedKey] || translations[lang][term];
+    
+    // Se non trovata, prova con fallback humanizzato
+    if (!translated) {
+      translated = humanizeName(term);
+      // Log per debug delle chiavi non trovate
+      console.log(`[TRANSLATION] Chiave non trovata: "${term}" (normalizzata: "${normalizedKey}"), usando fallback: "${translated}"`);
+    }
+    
+    return translated;
+  };
+
+  // Funzione per formattare i dettagli dell'analisi
+  const formatCriteriaDetails = (details: string) => {
+    if (!details || !/(Analisi dettagliata|Detailed analysis)/i.test(details)) {
+      return (
+        <p className="text-sm text-gray-600">{details}</p>
+      );
+    }
+
+    // Parse dei sub-criteri usando pattern regex robusto per multi-parola e simboli internazionali
+    const subcriteriaPattern = /([^:]+?):\s*(\d+)%\s*-\s*(?:Evidenza|Evidence):\s*"?([^"]*)"?\s*(?:Gap|Lacuna):\s*([^\(]*)\((?:Severità|Severity):\s*([^\)]+)\)/g;
+    const subcriteria = [];
+    let match;
+    
+    while ((match = subcriteriaPattern.exec(details)) !== null) {
+      const [, name, score, evidence, gap, severity] = match;
+      subcriteria.push({
+        name: translateSubcriteria(name),
+        score: parseInt(score),
+        evidence: evidence.trim(),
+        gap: gap.trim(),
+        severity: severity
+      });
+    }
+
+    if (subcriteria.length === 0) {
+      // Fallback per parsing semplificato - supporta entrambe le lingue
+      const lines = details
+        .replace(/(Analisi dettagliata|Detailed analysis)[^:]*:/gi, '')
+        .split(/[•\-]/)
+        .filter(line => line.trim())
+        .slice(0, 5);
+      
+      return (
+        <div className="space-y-2">
+          {lines.map((line, index) => (
+            <p key={index} className="text-sm text-gray-600 pl-2 border-l-2 border-gray-200">
+              {line.trim()}
+            </p>
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-3">
+        <p className="text-sm font-medium text-gray-700">{t('details.detailedAnalysis')}</p>
+        <div className="space-y-3">
+          {subcriteria.map((sub, index) => {
+            const scoreColor = sub.score >= 85 ? 'text-green-700 bg-green-50' : 
+                             sub.score >= 70 ? 'text-yellow-700 bg-yellow-50' : 
+                             sub.score >= 60 ? 'text-orange-700 bg-orange-50' : 
+                             'text-red-700 bg-red-50';
+            
+            const severityColor = sub.severity === 'alta' ? 'text-red-600' : 
+                                 sub.severity === 'media' ? 'text-yellow-600' : 
+                                 'text-green-600';
+
+            return (
+              <div key={index} className="p-3 bg-gray-50 rounded-lg border">
+                <div className="flex items-center justify-between mb-2">
+                  <h5 className="font-medium text-gray-800">{sub.name}</h5>
+                  <Badge className={scoreColor}>
+                    {sub.score}%
+                  </Badge>
+                </div>
+                
+                {sub.evidence && (
+                  <div className="mb-2">
+                    <span className="text-xs font-medium text-green-700">💡 {t('details.evidence')}</span>
+                    <p className="text-sm text-gray-600 mt-1 italic">"{sub.evidence}"</p>
+                  </div>
+                )}
+                
+                {sub.gap && (
+                  <div className="mb-2">
+                    <span className="text-xs font-medium text-orange-700">⚠️ {t('details.improvementArea')}</span>
+                    <p className="text-sm text-gray-600 mt-1">{sub.gap}</p>
+                  </div>
+                )}
+                
+                <div className="flex items-center justify-between">
+                  <span className={`text-xs font-medium ${severityColor}`}>
+                    {t('details.priority')} {sub.severity.toUpperCase()}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
   const locale = i18n.language === 'it' ? it : enUS;
@@ -371,12 +921,20 @@ const PeerReviewPage = () => {
             {uploadMutation.isPending && (
               <Card className="border-0 shadow-lg">
                 <CardContent className="pt-6">
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <div className="flex justify-between text-sm">
                       <span>Analisi framework ENFSI in corso...</span>
                       <span>{uploadProgress}%</span>
                     </div>
                     <Progress value={uploadProgress} className="h-2" />
+                    {progressPhase && (
+                      <div className="text-sm text-blue-600 bg-blue-50 px-3 py-2 rounded-md border border-blue-200">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                          {progressPhase}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -444,33 +1002,46 @@ const PeerReviewPage = () => {
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold flex items-center gap-2">
                       <Weight className="h-5 w-5" />
-                      Valutazione per Criteri ENFSI
+                      {t('details.criteriaEvaluation')}
                     </h3>
                     
                     <div className="grid gap-4">
                       {Object.entries(currentResult.criteriaResults).map(([key, criteria]) => {
-                        const categoryNames: Record<string, string> = {
-                          structureInfo: "Struttura Obbligatoria",
-                          materialDocumentation: "Documentazione Materiale", 
-                          methodology: "Metodologia e Procedure",
-                          technicalAnalysis: "Analisi Tecnica Specialistica",
-                          validation: "Validazione e Controlli Qualità",
-                          presentation: "Presentazione e Valutazione"
+                        const categoryNames: Record<string, Record<string, string>> = {
+                          it: {
+                            structureInfo: "Struttura Obbligatoria",
+                            materialDocumentation: "Documentazione Materiale", 
+                            methodology: "Metodologia e Procedure",
+                            technicalAnalysis: "Analisi Tecnica Specialistica",
+                            validation: "Validazione e Controlli Qualità",
+                            presentation: "Presentazione e Valutazione"
+                          },
+                          en: {
+                            structureInfo: "Mandatory Structure",
+                            materialDocumentation: "Material Documentation", 
+                            methodology: "Methodology and Procedures",
+                            technicalAnalysis: "Technical Analysis",
+                            validation: "Validation and Quality Controls",
+                            presentation: "Presentation and Evaluation"
+                          }
                         };
+                        
+                        const lang = i18n.language === 'it' ? 'it' : 'en';
+                        const categoryName = categoryNames[lang][key] || translateSubcriteria(key);
 
                         return (
                           <Card key={key} className="bg-gray-50">
                             <CardContent className="pt-4">
                               <div className="flex justify-between items-center mb-2">
                                 <h4 className="font-medium">
-                                  {categoryNames[key]} (Peso: {criteria.weight}%)
+                                  {categoryName} (Peso: {criteria.weight}%)
                                 </h4>
                                 <Badge variant={criteria.score >= 75 ? "default" : "destructive"}>
                                   {criteria.score}/100
                                 </Badge>
                               </div>
                               <Progress value={criteria.score} className="h-2 mb-3" />
-                              <p className="text-sm text-gray-600">{criteria.details}</p>
+                              {formatCriteriaDetails(criteria.details)}
                             </CardContent>
                           </Card>
                         );
@@ -479,13 +1050,13 @@ const PeerReviewPage = () => {
                   </div>
 
                   {/* Suggestions */}
-                  <Alert>
-                    <TrendingUp className="h-4 w-4" />
-                    <AlertDescription>
-                      <strong>{t('analysis.suggestions')}:</strong><br />
-                      {currentResult.suggestions}
-                    </AlertDescription>
-                  </Alert>
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border border-blue-200">
+                    <div className="flex items-center gap-2 mb-4">
+                      <TrendingUp className="h-5 w-5 text-blue-600" />
+                      <h3 className="text-lg font-semibold text-blue-800">{t('analysis.suggestions')}</h3>
+                    </div>
+                    {formatSuggestions(currentResult.suggestions)}
+                  </div>
                 </CardContent>
               </Card>
             )}
@@ -549,12 +1120,13 @@ const PeerReviewPage = () => {
                               
                               <div className="flex items-center gap-2">
                                 <Button
-                                  variant="ghost"
+                                  variant="outline"
                                   size="sm"
                                   onClick={() => handleDownloadReport(review.id)}
-                                  title={t('analysis.downloadReport')}
+                                  className="flex items-center gap-2"
                                 >
                                   <Download className="h-4 w-4" />
+                                  <span className="text-xs">Report PDF</span>
                                 </Button>
                                 <Button
                                   variant="ghost"
@@ -666,12 +1238,41 @@ const PeerReviewPage = () => {
                         </CardHeader>
                         <CardContent>
                           <div className="space-y-2">
-                            {category.criteria.map((criterion: string, index: number) => (
-                              <div key={index} className="flex items-center gap-2 text-sm">
-                                <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
-                                <span>{criterion}</span>
+                            {/* Gestione sia della vecchia struttura criteria che della nuova subcriteria */}
+                            {category.criteria ? (
+                              // Vecchia struttura con array di criteri
+                              category.criteria.map((criterion: string, index: number) => (
+                                <div key={index} className="flex items-center gap-2 text-sm">
+                                  <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                                  <span>{criterion}</span>
+                                </div>
+                              ))
+                            ) : category.subcriteria ? (
+                              // Nuova struttura con sub-criteri dettagliati
+                              Object.entries(category.subcriteria).map(([key, subcriterion]: [string, any]) => (
+                                <div key={key} className="bg-white rounded-lg p-3 border">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                                    <span className="font-medium text-sm">{subcriterion.name}</span>
+                                    <Badge variant="secondary" className="text-xs">Peso: {subcriterion.weight}%</Badge>
+                                  </div>
+                                  <p className="text-xs text-gray-600 mb-2">{subcriterion.description}</p>
+                                  {subcriterion.indicators && (
+                                    <div className="flex flex-wrap gap-1">
+                                      {subcriterion.indicators.map((indicator: string, idx: number) => (
+                                        <span key={idx} className="inline-flex items-center px-2 py-1 rounded-md bg-blue-50 text-blue-700 text-xs">
+                                          {indicator}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              ))
+                            ) : (
+                              <div className="text-sm text-gray-500 italic">
+                                Nessun criterio disponibile
                               </div>
-                            ))}
+                            )}
                           </div>
                         </CardContent>
                       </Card>

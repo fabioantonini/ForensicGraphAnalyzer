@@ -1,0 +1,106 @@
+{
+  "title": "Analysis Methodology",
+  "subtitle": "Forensic graphological analysis system for signature verification",
+  "tabs": {
+    "overview": "Overview",
+    "parameters": "Parameters", 
+    "algorithms": "Algorithms",
+    "interpretation": "Interpretation"
+  },
+  "categories": {
+    "graphological": {
+      "title": "Graphological Parameters",
+      "description": "15 weighted parameters that determine compatibility between signatures"
+    },
+    "naturalness": {
+      "title": "Naturalness Analysis",
+      "description": "4 parameters to detect dissimulations and imitations",
+      "weight": "Classification"
+    },
+    "ssim": {
+      "title": "SSIM Visual Analysis",
+      "description": "Pixel-by-pixel comparison of graphic structure"
+    },
+    "metadata": {
+      "title": "Metadata and Calibration",
+      "description": "Technical and informational parameters for system support",
+      "weight": "Info only"
+    }
+  },
+  "overview": {
+    "systemTitle": "GrapholexInsight Multi-Layer System",
+    "systemDescription": "GrapholexInsight utilizes an advanced system combining Python analysis, TypeScript backend orchestration, and React visualization to provide ENFSI-compliant graphological expertise.",
+    "weight": "Weight",
+    "parameters": "Parameters",
+    "formulaTitle": "Final Similarity Formula",
+    "formula": {
+      "final": "Final Similarity", 
+      "ssim": "SSIM Score",
+      "parameters": "Graphological Parameters",
+      "ssimWeight": "Visual Analysis",
+      "parametersWeight": "Weighted Parameters"
+    }
+  },
+  "parameters": {
+    "graphologicalTitle": "Main Graphological Parameters (Top 5)",
+    "graphologicalDescription": "The 5 parameters with highest weight in compatibility calculation. Together they contribute to 60% of total graphological parameters weight.",
+    "naturalnessTitle": "Naturalness Parameters",
+    "naturalnessDescription": "Specialized parameters to detect dissimulations, imitations and falsifications through graphic automatism analysis.",
+    "pressureMean": "Average stroke pressure - most important indicator for authenticity",
+    "avgCurvature": "Average stroke curvature - unconscious and distinctive characteristic",
+    "proportion": "Width/height ratio - reflects self-image",
+    "velocity": "Estimated execution velocity - difficult to control in imitation",
+    "pressureStd": "Pressure variability - indicator of emotional state"
+  },
+  "naturalness": {
+    "fluidity": "Graphic movement fluidity - crucial for detecting imitations",
+    "pressure": "Pressure consistency - authenticity indicator", 
+    "coordination": "Motor coordination - detects falsification stress"
+  },
+  "algorithms": {
+    "title": "Main Calculation Algorithms",
+    "inclination": {
+      "title": "Inclination Algorithm (Forensic Specific)",
+      "description": "Uses Principal Component Analysis to determine main stroke direction and calculates inclination relative to vertical."
+    },
+    "pressure": {
+      "title": "Pressure Analysis",
+      "description": "Calculates mean and standard deviation of pixel intensity to determine stroke pressure."
+    },
+    "naturalness": {
+      "title": "Combined Naturalness Index",
+      "description": "Weighted formula combining fluidity, pressure consistency and motor coordination to detect dissimulations."
+    }
+  },
+  "interpretation": {
+    "title": "Result Interpretation",
+    "description": "Authenticity thresholds follow international forensic standards and combine graphic similarity with execution naturalness.",
+    "thresholds": "Authenticity Thresholds",
+    "confidence": "Confidence",
+    "matrix": {
+      "title": "2D Classification Matrix",
+      "description": "Final verdict combines similarity score with naturalness index for complete forensic classification.",
+      "highNaturalness": "High Naturalness (≥80%)",
+      "lowNaturalness": "Low Naturalness (<60%)", 
+      "highSimilarity": "High Similarity (≥85%)",
+      "mediumSimilarity": "Medium Similarity (65-84%)",
+      "lowSimilarity": "Low Similarity (<65%)",
+      "authentic": "Authentic",
+      "skilledCopy": "Possible skilled copy",
+      "probablyAuthentic": "Probably authentic",
+      "suspicious": "Suspicious", 
+      "probablyFalse": "Probably false"
+    }
+  },
+  "thresholds": {
+    "authentic": "Authentic",
+    "probablyAuthentic": "Probably Authentic",
+    "inconclusive": "Inconclusive", 
+    "suspicious": "Suspicious"
+  },
+  "documentation": {
+    "title": "Complete Documentation",
+    "description": "For an in-depth understanding of all parameters, algorithms and graphological meanings, consult the complete technical documentation.",
+    "viewDocument": "View Complete Documentation"
+  }
+}

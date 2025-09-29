@@ -5,79 +5,241 @@
 
 import { createOpenAIClient } from "./openai";
 
-// Framework ENFSI multilingue per valutazione perizie
-const ENFSI_FRAMEWORK_IT = {
+// Framework ENFSI esteso con 39 parametri forensi dettagliati
+const ENFSI_DETAILED_FRAMEWORK_IT = {
   structureInfo: {
     name: "Struttura Obbligatoria della Relazione",
     weight: 15,
-    criteria: [
-      "Identificatore univoco del caso",
-      "Nome e indirizzo del laboratorio/esperto", 
-      "Identità dell'esaminatore e qualifiche",
-      "Firma dell'esaminatore forense",
-      "Date (firma relazione, ricevimento materiale)",
-      "Nome e status del trasmettitore",
-      "Sistema di numerazione pagine"
-    ]
+    subcriteria: {
+      caseIdentifier: {
+        name: "Identificatore Univoco Caso",
+        weight: 3.0,
+        description: "Numero/codice caso univoco, riferimenti legali",
+        indicators: ["numero protocollo", "riferimento tribunale", "codice alfanumerico", "data/anno identificativo"]
+      },
+      expertLaboratoryData: {
+        name: "Dati Esperto/Laboratorio", 
+        weight: 3.0,
+        description: "Nome, indirizzo, accreditamenti, partita IVA",
+        indicators: ["ragione sociale completa", "indirizzo fisico", "certificazioni", "codice fiscale/partita IVA"]
+      },
+      examinerQualifications: {
+        name: "Qualifiche Esaminatore",
+        weight: 3.0,
+        description: "Titoli, specializzazioni, esperienza, formazione",
+        indicators: ["laurea pertinente", "master/specializzazioni", "anni esperienza", "corsi aggiornamento"]
+      },
+      signatures: {
+        name: "Firme e Autenticazione",
+        weight: 2.0,
+        description: "Firma digitale/fisica, timbri, autenticazione",
+        indicators: ["firma leggibile", "timbro professionale", "firma digitale", "data apposizione"]
+      },
+      completeDates: {
+        name: "Date Complete",
+        weight: 2.0,
+        description: "Data ricevimento, analisi, firma relazione",
+        indicators: ["data ricevimento materiale", "data inizio analisi", "data completamento", "data firma relazione"]
+      },
+      submitterInfo: {
+        name: "Dati Trasmettitore",
+        weight: 1.0,
+        description: "Nome, qualità, autorità di riferimento",
+        indicators: ["nome completo mittente", "qualità giuridica", "autorità competente", "recapiti"]
+      },
+      pageNumbering: {
+        name: "Sistema Numerazione",
+        weight: 1.0,
+        description: "Numerazione progressiva, totale pagine",
+        indicators: ["numerazione sequenziale", "formato 'X di Y'", "coerenza numerazione", "assenza salti"]
+      },
+      documentMetadata: {
+        name: "Metadati Documento",
+        weight: 0.0,
+        description: "Informazioni tecniche e proprietà documento",
+        indicators: ["versione software", "timestamp creazione", "hash integrità", "proprietà file"]
+      }
+    }
   },
   materialDocumentation: {
     name: "Documentazione del Materiale",
     weight: 15,
-    criteria: [
-      "Elenco completo del materiale presentato",
-      "Stato del materiale e imballaggio alla ricezione",
-      "Eventuali alterazioni, danni o contaminazioni",
-      "Informazioni ricevute con il materiale",
-      "Chain of custody (catena di custodia)"
-    ]
+    subcriteria: {
+      materialList: {
+        name: "Elenco Completo Materiale",
+        weight: 4.0,
+        description: "Inventario dettagliato di tutti gli elementi ricevuti",
+        indicators: ["numero elementi", "descrizione dettagliata", "formato/supporto", "identificazione univoca"]
+      },
+      receptionConditions: {
+        name: "Stato Ricevimento",
+        weight: 3.0,
+        description: "Condizioni fisiche e imballaggio alla ricezione",
+        indicators: ["integrità imballaggio", "stato conservazione", "presenza sigilli", "documentazione accompagnatoria"]
+      },
+      alterationsDamages: {
+        name: "Alterazioni/Danni",
+        weight: 3.0,
+        description: "Documentazione di problemi, contaminazioni, alterazioni",
+        indicators: ["danni fisici", "macchie/alterazioni", "parti mancanti", "contaminazioni"]
+      },
+      materialInformation: {
+        name: "Informazioni Materiale",
+        weight: 3.0,
+        description: "Metadati, informazioni di contesto ricevute",
+        indicators: ["data creazione", "provenienza", "storia conservazione", "precedenti analisi"]
+      },
+      chainCustody: {
+        name: "Catena Custodia",
+        weight: 2.0,
+        description: "Tracciabilità completa del materiale",
+        indicators: ["registro passaggi", "identificazione operatori", "date/orari", "firme responsabili"]
+      },
+      storageConditions: {
+        name: "Condizioni Conservazione",
+        weight: 0.0,
+        description: "Ambiente e modalità di conservazione appropriate",
+        indicators: ["temperatura controllata", "umidità adeguata", "protezione luce", "contenitori sigillati"]
+      }
+    }
   },
   methodology: {
     name: "Metodologia e Procedure",
     weight: 25,
-    criteria: [
-      "Definizione chiara dello scopo dell'esame",
-      "Descrizione dell'approccio sistematico utilizzato",
-      "Considerazione di ipotesi alternative (pro/contro)",
-      "Priorità e sequenza degli esami giustificate",
-      "Dettagli degli esami/analisi effettuati",
-      "Uso di attrezzature appropriate",
-      "Test non distruttivi prioritari"
-    ]
+    subcriteria: {
+      examPurpose: {
+        name: "Scopo Esame",
+        weight: 5.0,
+        description: "Definizione chiara degli obiettivi e quesiti",
+        indicators: ["quesiti specifici", "obiettivi misurabili", "ambito definito", "limitazioni dichiarate"]
+      },
+      systematicApproach: {
+        name: "Approccio Sistematico",
+        weight: 6.0,
+        description: "Metodologia strutturata e riproducibile",
+        indicators: ["protocollo standardizzato", "sequenza logica", "criteri oggettivi", "riproducibilità"]
+      },
+      alternativeHypotheses: {
+        name: "Ipotesi Alternative",
+        weight: 5.0,
+        description: "Considerazione di scenari pro e contro",
+        indicators: ["ipotesi autenticità", "ipotesi falsificazione", "scenari intermedi", "valutazione probabilistica"]
+      },
+      examinationSequence: {
+        name: "Sequenza Esami",
+        weight: 4.0,
+        description: "Priorità e logica dei procedimenti",
+        indicators: ["ordine giustificato", "test non distruttivi prima", "conservazione evidenze", "documentazione step"]
+      },
+      analysisDetails: {
+        name: "Dettagli Analisi",
+        weight: 3.0,
+        description: "Specificità tecniche delle procedure",
+        indicators: ["parametri misurati", "soglie decisionali", "margini errore", "incertezze"]
+      },
+      appropriateEquipment: {
+        name: "Attrezzature Appropriate",
+        weight: 2.0,
+        description: "Strumentazione idonea e calibrata",
+        indicators: ["strumenti adeguati", "calibrazioni recenti", "manutenzioni", "specifiche tecniche"]
+      }
+    }
   },
   technicalAnalysis: {
     name: "Analisi Tecnica Specialistica",
     weight: 20,
-    criteria: [
-      "Parametri di analisi delle manoscritture",
-      "Variazioni nella manoscrittura analizzate",
-      "Stili di scrittura identificati",
-      "Fluidità grafica valutata",
-      "Fattori esterni e interni considerati",
-      "Processo di comparazione descritto",
-      "Caratteristiche individuali vs. di classe"
-    ]
+    subcriteria: {
+      graphologicalParameters: {
+        name: "Parametri Grafologici",
+        weight: 5.0,
+        description: "Completezza parametri misurati (39 parametri ENFSI)",
+        indicators: ["pressione tratto", "velocità esecuzione", "inclinazione", "spaziatura", "curvatura", "collegamenti"]
+      },
+      handwritingVariations: {
+        name: "Variazioni Manoscrittura",
+        weight: 4.0,
+        description: "Analisi variabilità naturale vs. anomala",
+        indicators: ["range normalità", "deviazioni significative", "pattern ripetitivi", "inconsistenze sospette"]
+      },
+      writingStyles: {
+        name: "Stili Scrittura",
+        weight: 4.0,
+        description: "Classificazione e identificazione stili",
+        indicators: ["corsivo/stampatello", "forme lettere", "legature", "personalizzazioni caratteristiche"]
+      },
+      comparisonProcess: {
+        name: "Processo Comparazione",
+        weight: 4.0,
+        description: "Metodologia confronto sistematico",
+        indicators: ["criterio per criterio", "pesi relativi", "soglie decisione", "algoritmi utilizzati"]
+      },
+      individualFeatures: {
+        name: "Caratteristiche Individuali",
+        weight: 3.0,
+        description: "Distinzione caratteristiche individuali vs. classe",
+        indicators: ["tratti unici", "specificità personali", "elementi comuni", "rarità statistiche"]
+      }
+    }
   },
   validation: {
-    name: "Validazione e Controlli Qualità", 
+    name: "Validazione e Controlli Qualità",
     weight: 15,
-    criteria: [
-      "Peer Review obbligatoria eseguita",
-      "Evidenze decisive confermate da secondo esperto",
-      "Controlli di qualità applicati",
-      "Validazione delle tecniche utilizzate",
-      "Protocolli anti-contaminazione seguiti"
-    ]
+    subcriteria: {
+      peerReview: {
+        name: "Peer Review Obbligatoria",
+        weight: 5.0,
+        description: "Revisione indipendente da secondo esperto",
+        indicators: ["revisore qualificato", "analisi indipendente", "concordanza/discordanza", "risoluzione differenze"]
+      },
+      evidenceConfirmation: {
+        name: "Conferma Evidenze",
+        weight: 4.0,
+        description: "Validazione findings critici",
+        indicators: ["evidenze decisive verificate", "metodi alternativi", "conferma indipendente", "documentazione validazione"]
+      },
+      qualityControls: {
+        name: "Controlli Qualità",
+        weight: 3.0,
+        description: "Procedure QC implementate",
+        indicators: ["controlli interni", "standard riferimento", "calibrazioni", "protocolli documentati"]
+      },
+      techniqueValidation: {
+        name: "Validazione Tecniche",
+        weight: 3.0,
+        description: "Standard metodologici rispettati",
+        indicators: ["tecniche validate", "letteratura scientifica", "protocolli ENFSI", "certificazioni"]
+      }
+    }
   },
   presentation: {
     name: "Presentazione e Valutazione",
     weight: 10,
-    criteria: [
-      "Risultati chiari e supportati da esami",
-      "Valutazione della significatività nel contesto",
-      "Opinione dell'esperto con motivazioni",
-      "Scale di conclusioni standardizzate",
-      "Documentazione adeguata e tracciabile"
-    ]
+    subcriteria: {
+      clearResults: {
+        name: "Chiarezza Risultati",
+        weight: 4.0,
+        description: "Comprensibilità e supporto evidenze",
+        indicators: ["linguaggio chiaro", "risultati inequivocabili", "evidenze mostrate", "logica consequenziale"]
+      },
+      contextSignificance: {
+        name: "Significatività Contesto",
+        weight: 2.0,
+        description: "Rilevanza nel contesto legale",
+        indicators: ["impatto decisionale", "rilevanza quesiti", "contestualizzazione", "limitazioni dichiarate"]
+      },
+      expertOpinion: {
+        name: "Opinione Motivata",
+        weight: 2.0,
+        description: "Giustificazioni e motivazioni dell'esperto",
+        indicators: ["conclusioni motivate", "gradi certezza", "evidenze a supporto", "ragionamento logico"]
+      },
+      traceability: {
+        name: "Tracciabilità",
+        weight: 2.0,
+        description: "Documentazione processo completa",
+        indicators: ["step documentati", "decisioni motivate", "archivio evidenze", "riproducibilità"]
+      }
+    }
   }
 };
 
@@ -174,7 +336,7 @@ const getClassificationColor = (classification: string): string => {
 };
 
 /**
- * Analizza una perizia grafica utilizzando il framework ENFSI
+ * Analizza una perizia grafica utilizzando il framework ENFSI con approccio multi-step
  */
 export async function analyzePeerReview(
   peritiaContent: string,
@@ -186,146 +348,346 @@ export async function analyzePeerReview(
   criteriaResults: any;
   suggestions: string;
   processingTime: number;
+  detailedAnalysis?: any;
 }> {
   const startTime = Date.now();
   
   try {
-    console.log('[PEER-REVIEW] Avvio analisi perizia grafica con framework ENFSI');
+    console.log('[PEER-REVIEW] Avvio analisi perizia grafica con framework ENFSI multi-step');
     
     const openai = await createOpenAIClient(userApiKey, userId);
     
-    // Costruisce il prompt di sistema con framework ENFSI
-    const systemPrompt = `Sei un esperto in perizia grafica forense specializzato nella valutazione della conformità alle best practice ENFSI.
+    // STEP 1: Analisi strutturale preliminare per estrarre citazioni
+    console.log('[PEER-REVIEW] Step 1: Analisi strutturale preliminare');
+    const structuralPrompt = `Sei un esperto forense ENFSI. Analizza questo documento per estrarre elementi strutturali specifici.
 
-Il tuo compito è analizzare una relazione peritale grafica e valutarla secondo il framework ENFSI per determinare la sua conformità agli standard professionali.
+Devi identificare e citare ESATTAMENTE dal testo (con virgolette):
+- Identificatori caso/riferimenti
+- Nomi di esperti/laboratori/trasmettitori  
+- Date significative
+- Metodologie menzionate
+- Strumenti/attrezzature citate
+- Conclusioni/opinioni espresse
 
-FRAMEWORK DI VALUTAZIONE ENFSI:
-
-1. STRUTTURA OBBLIGATORIA DELLA RELAZIONE (15%)
-   - Identificatore univoco del caso
-   - Nome e indirizzo del laboratorio/esperto
-   - Identità dell'esaminatore e qualifiche
-   - Firma dell'esaminatore forense
-   - Date (firma relazione, ricevimento materiale)
-   - Nome e status del trasmettitore
-   - Sistema di numerazione pagine
-
-2. DOCUMENTAZIONE DEL MATERIALE (15%)
-   - Elenco completo del materiale presentato
-   - Stato del materiale e imballaggio alla ricezione
-   - Eventuali alterazioni, danni o contaminazioni
-   - Informazioni ricevute con il materiale
-   - Chain of custody
-
-3. METODOLOGIA E PROCEDURE (25%)
-   - Definizione chiara dello scopo dell'esame
-   - Descrizione dell'approccio sistematico utilizzato
-   - Considerazione di ipotesi alternative
-   - Dettagli degli esami/analisi effettuati
-   - Uso di attrezzature appropriate
-
-4. ANALISI TECNICA SPECIALISTICA (20%)
-   - Parametri di analisi delle manoscritture
-   - Variazioni nella manoscrittura
-   - Stili di scrittura identificati
-   - Processo di comparazione
-   - Caratteristiche individuali vs. di classe
-
-5. VALIDAZIONE E CONTROLLI QUALITÀ (15%)
-   - Peer Review obbligatoria eseguita
-   - Evidenze decisive confermate
-   - Controlli di qualità applicati
-   - Validazione delle tecniche
-
-6. PRESENTAZIONE E VALUTAZIONE (10%)
-   - Risultati chiari e supportati
-   - Valutazione della significatività
-   - Opinione dell'esperto motivata
-   - Documentazione tracciabile
-
-Per ogni categoria, assegna:
-- Score: punteggio da 0 a 100
-- Details: analisi dettagliata di cosa è presente/mancante
-- Weight: peso della categoria (già specificato)
-
-Fornisci anche:
-- Suggestions: suggerimenti specifici e contestuali per migliorare la conformità, basati sui punteggi più bassi identificati. Concentrati sulle 2-3 aree che necessitano maggiori miglioramenti e fornisci consigli pratici e actionable. Varia l'approccio e lo stile: usa esempi concreti, riferimenti a standard specifici, e suggerimenti operativi diversi per ogni tipo di carenza. Evita suggerimenti generici o template.
-- Motiva sempre le tue valutazioni con esempi specifici dal testo
-
-RISPOSTA IN FORMATO JSON:
+Fornisci output JSON con citazioni specifiche:
 {
-  "structureInfo": { "score": 85, "details": "...", "weight": 15 },
-  "materialDocumentation": { "score": 70, "details": "...", "weight": 15 },
-  "methodology": { "score": 90, "details": "...", "weight": 25 },
-  "technicalAnalysis": { "score": 80, "details": "...", "weight": 20 },
-  "validation": { "score": 60, "details": "...", "weight": 15 },
-  "presentation": { "score": 85, "details": "...", "weight": 10 },
-  "suggestions": "Suggerimenti specifici per migliorare la conformità agli standard ENFSI..."
+  "documentStructure": {
+    "caseIdentifiers": ["citazione 1", "citazione 2"],
+    "expertInfo": ["nome esperto", "laboratorio"],  
+    "dates": ["data 1", "data 2"],
+    "methodologies": ["metodologia citata"],
+    "equipment": ["strumento citato"],
+    "conclusions": ["conclusione specifica"]
+  },
+  "documentStats": {
+    "totalPages": 0,
+    "hasPageNumbers": true/false,
+    "hasSectionHeaders": true/false,
+    "hasFooters": true/false
+  },
+  "keyFindings": [
+    {
+      "category": "struttura/metodologia/tecnica/validazione",
+      "finding": "descrizione specifica", 
+      "quote": "citazione esatta dal documento",
+      "location": "sezione/paragrafo approssimativo",
+      "severity": "critica/alta/media/bassa"
+    }
+  ]
 }`;
 
-    console.log('[PEER-REVIEW] Invio richiesta a OpenAI per analisi conformità ENFSI');
-
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o", // il modello più recente OpenAI
+    const structuralResponse = await openai.chat.completions.create({
+      model: "gpt-4o",
       messages: [
-        { role: "system", content: systemPrompt },
-        { 
-          role: "user", 
-          content: `Analizza la seguente perizia grafica secondo il framework ENFSI e fornisci una valutazione dettagliata della conformità agli standard professionali.
-
-Per i suggerimenti, adatta il focus in base ai risultati:
-- Se i punteggi metodologici sono bassi: concentrati su procedure specifiche e approcci sistematici
-- Se la validazione è carente: enfatizza controlli qualità e peer review
-- Se la presentazione è debole: suggerisci miglioramenti nella comunicazione dei risultati
-- Se l'analisi tecnica è insufficiente: proponi strumenti e parametri specifici
-
-Testo della perizia da analizzare:
-
-${peritiaContent}` 
-        }
+        { role: "system", content: structuralPrompt },
+        { role: "user", content: `Analizza strutturalmente questo documento:\n\n${peritiaContent}` }
       ],
       response_format: { type: "json_object" },
-      temperature: 0.5, // Temperatura bilanciata: coerenza nelle valutazioni + variabilità nei suggerimenti
+      temperature: 0.3,
+      max_tokens: 3000
+    });
+
+    const structuralAnalysis = JSON.parse(structuralResponse.choices[0].message.content || '{}');
+    
+    // STEP 2: Analisi dettagliata per categoria ENFSI con sub-criteri
+    console.log('[PEER-REVIEW] Step 2: Analisi dettagliata per categoria ENFSI');
+    const detailedPrompt = `Sei un esperto forense ENFSI. Analizza questo documento secondo il framework ENFSI utilizzando i dati strutturali già identificati.
+
+ANALISI STRUTTURALE DISPONIBILE:
+${JSON.stringify(structuralAnalysis, null, 2)}
+
+FRAMEWORK ENFSI DETTAGLIATO - evaluta ogni sub-criterio:
+
+1. STRUTTURA OBBLIGATORIA (15%):
+   - Identificatore caso (3%): presente/assente, qualità
+   - Dati esperto/laboratorio (3%): completezza informazioni
+   - Qualifiche esaminatore (3%): dettaglio credenziali
+   - Firma/autenticazione (2%): presenza firma digitale/fisica  
+   - Date complete (2%): tutte le date richieste
+   - Trasmettitore (1%): identificazione mittente
+   - Numerazione pagine (1%): sistema numerazione
+
+2. DOCUMENTAZIONE MATERIALE (15%):
+   - Elenco materiale (4%): completezza inventario
+   - Stato ricevimento (3%): descrizione condizioni
+   - Alterazioni/danni (3%): documentazione problemi
+   - Info materiale (3%): metadati ricevuti
+   - Chain of custody (2%): tracciabilità
+
+3. METODOLOGIA (25%):
+   - Scopo esame (5%): chiarezza obiettivi
+   - Approccio sistematico (6%): metodologia strutturata
+   - Ipotesi alternative (5%): considerazione pro/contro
+   - Sequenza esami (4%): logica procedimenti
+   - Dettagli analisi (3%): specificità tecniche
+   - Attrezzature (2%): appropriatezza strumenti
+
+4. ANALISI TECNICA (20%):
+   - Parametri grafologici (5%): completezza parametri
+   - Variazioni manoscrittura (4%): analisi variabilità
+   - Stili scrittura (4%): classificazione stili
+   - Processo comparazione (4%): metodologia confronto
+   - Caratteristiche individuali (3%): vs. caratteristiche classe
+
+5. VALIDAZIONE (15%):
+   - Peer review (5%): presenza revisione
+   - Conferma evidenze (4%): validazione findings
+   - Controlli qualità (3%): procedure QC
+   - Validazione tecniche (3%): standard metodologici
+
+6. PRESENTAZIONE (10%):
+   - Chiarezza risultati (4%): comprensibilità 
+   - Significatività (2%): rilevanza contesto
+   - Motivazioni (2%): giustificazioni opinioni
+   - Tracciabilità (2%): documentazione processo
+
+Per ogni SUB-CRITERIO fornisci:
+- Score: 0-100
+- Evidence: citazione specifica dal documento (se presente)  
+- Gap: cosa manca specificamente
+- Severity: quanto è grave la mancanza
+
+IMPORTANTE: Per i PROBLEMI CRITICI (score < 70 con severity "critica" o "alta"):
+- Identifica max 3 problemi più gravi che compromettono la conformità ENFSI
+- Per ogni problema, fornisci una RACCOMANDAZIONE SPECIFICA e ACTIONABLE che includa:
+  * Step concreti da seguire
+  * Riferimenti agli standard ENFSI
+  * Esempio di implementazione o template
+  * Risultato atteso
+
+RISPOSTA JSON:
+{
+  "categories": {
+    "structureInfo": {
+      "overallScore": 85,
+      "subcriteria": {
+        "caseIdentifier": { "score": 90, "evidence": "citazione", "gap": "dettaglio mancante", "severity": "media" },
+        "expertData": { "score": 80, "evidence": "", "gap": "", "severity": "bassa" }
+      }
+    }
+  },
+  "criticalIssues": [
+    {
+      "category": "VALIDATION",
+      "issue": "Assenza di processo di peer review documentato", 
+      "evidence": "Non è menzionata alcuna revisione da parte di colleghi esperti",
+      "impact": "Riduce la credibilità delle conclusioni e non rispetta gli standard ENFSI di validazione",
+      "recommendation": "Implementare un processo formale di peer review: 1) Far rivedere l'analisi da un secondo esperto qualificato, 2) Documentare il processo di revisione con nome del revisore e data, 3) Includere una sezione 'Peer Review' nel report che attesti la conformità metodologica, 4) Utilizzare checklist ENFSI per la validazione. Risultato atteso: aumento del punteggio di validazione da 70 a 85+."
+    }
+  ]
+}`;
+
+    const detailedResponse = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        { role: "system", content: detailedPrompt },
+        { role: "user", content: `Documento da analizzare:\n\n${peritiaContent}` }
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.4,
       max_tokens: 4000
     });
 
-    const analysisResult = JSON.parse(response.choices[0].message.content || '{}');
-    console.log('[PEER-REVIEW] Analisi completata, elaborazione risultati');
+    const detailedAnalysis = JSON.parse(detailedResponse.choices[0].message.content || '{}');
+    
+    // STEP 3: Generazione suggerimenti actionable specifici
+    console.log('[PEER-REVIEW] Step 3: Generazione suggerimenti specifici');
+    const suggestionPrompt = `Basandoti sull'analisi dettagliata ENFSI, genera suggerimenti SPECIFICI e ACTIONABLE per migliorare la conformità.
 
-    // Calcola il punteggio complessivo ponderato
-    const categories = ['structureInfo', 'materialDocumentation', 'methodology', 'technicalAnalysis', 'validation', 'presentation'];
+DATI ANALISI:
+${JSON.stringify(detailedAnalysis, null, 2)}
+
+CITAZIONI STRUTTURALI:
+${JSON.stringify(structuralAnalysis, null, 2)}
+
+Genera suggerimenti che siano:
+1. SPECIFICI: Non generici ma basati sui gap identificati nell'analisi
+2. ACTIONABLE: Con step numerati e concreti da seguire
+3. PRIORITIZZATI: Ordina per impatto sulla conformità ENFSI
+4. CON ESEMPI: Fornisci template/esempi pratici
+5. MISURABILI: Include metriche di miglioramento attese
+
+LINEE GUIDA RACCOMANDAZIONI:
+- Ogni raccomandazione deve iniziare con un verbo d'azione
+- Include riferimenti specifici agli standard ENFSI
+- Fornisci step numerati: "1) [azione], 2) [azione], 3) [risultato atteso]"
+- Specifica tempistiche realistiche per implementazione
+- Identifica risorse/competenze necessarie
+
+Fornisci la risposta in formato JSON strutturato come segue:
+{
+  "prioritySuggestions": [
+    {
+      "priority": "ALTA",
+      "category": "validation",
+      "issue": "Mancanza di processo peer review documentato",
+      "evidence": "Non è menzionata alcuna revisione tra pari nel documento",
+      "recommendation": "Implementare processo peer review formale: 1) Identificare esperto qualificato per revisione indipendente, 2) Creare checklist di validazione basata su standard ENFSI, 3) Documentare processo di revisione con firma del peer reviewer, 4) Includere sezione 'Peer Review' nel report finale",
+      "example": "Sezione template: 'PEER REVIEW - Il presente lavoro è stato revisionato dal Dr. [Nome] in data [Data] secondo protocollo ENFSI. Validazione metodologica: CONFORME. Note: [Eventuali osservazioni]'",
+      "impact": "Aumento del punteggio di validazione da 75 a 85+"
+    }
+  ],
+  "implementationRoadmap": {
+    "immediate": ["Implementare processo peer review documentato", "Documentare catena di custodia materiali"],
+    "shortTerm": ["Aggiungere firme digitali ai documenti", "Migliorare dettagli qualifiche esperto"], 
+    "longTerm": ["Sistema qualità avanzato per validazione", "Analisi dettagliata caratteristiche individuali"]
+  }
+}`;
+
+    const suggestionResponse = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        { role: "system", content: suggestionPrompt },
+        { role: "user", content: "Genera suggerimenti specifici basati sull'analisi fornita." }
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.6,
+      max_tokens: 2500
+    });
+
+    const suggestionAnalysis = JSON.parse(suggestionResponse.choices[0].message.content || '{}');
+
+    // Conversione dei dati multi-step nel formato legacy per compatibilità
+    console.log('[PEER-REVIEW] Elaborazione risultati per compatibilità legacy');
+    
+    const criteriaResults: any = {};
     let totalScore = 0;
     let totalWeight = 0;
 
-    const criteriaResults: any = {};
-
+    // Converte i risultati dettagliati nel formato legacy
+    const categories = ['structureInfo', 'materialDocumentation', 'methodology', 'technicalAnalysis', 'validation', 'presentation'];
+    
     for (const category of categories) {
-      const categoryData = analysisResult[category];
+      const categoryData = detailedAnalysis.categories?.[category];
       if (categoryData) {
-        const weight = ENFSI_FRAMEWORK_IT[category as keyof typeof ENFSI_FRAMEWORK_IT]?.weight || 0;
-        totalScore += (categoryData.score * weight);
+        const weight = ENFSI_DETAILED_FRAMEWORK_IT[category as keyof typeof ENFSI_DETAILED_FRAMEWORK_IT]?.weight || 0;
+        const score = categoryData.overallScore || 0;
+        
+        // Crea descrizione dettagliata con sub-criteri
+        let details = `Analisi dettagliata (Score: ${score}%):\n\n`;
+        
+        if (categoryData.subcriteria) {
+          Object.entries(categoryData.subcriteria).forEach(([subKey, subData]: [string, any]) => {
+            details += `• ${subKey}: ${subData.score}% - `;
+            if (subData.evidence) {
+              details += `Evidenza: "${subData.evidence}" `;
+            }
+            if (subData.gap) {
+              details += `Gap: ${subData.gap} `;
+            }
+            details += `(Severità: ${subData.severity})\n`;
+          });
+        }
+        
+        totalScore += (score * weight);
         totalWeight += weight;
         
         criteriaResults[category] = {
-          score: categoryData.score,
-          details: categoryData.details,
+          score: score,
+          details: details.trim(),
           weight: weight
         };
       }
+    }
+
+    // Genera suggerimenti consolidati
+    let consolidatedSuggestions = "SUGGERIMENTI PRIORITIZZATI PER IL MIGLIORAMENTO:\n\n";
+    
+    // Aggiungi suggerimenti prioritari
+    if (suggestionAnalysis.prioritySuggestions) {
+      suggestionAnalysis.prioritySuggestions.forEach((suggestion: any, index: number) => {
+        consolidatedSuggestions += `${index + 1}. [PRIORITÀ ${suggestion.priority?.toUpperCase()}] ${suggestion.category}\n`;
+        consolidatedSuggestions += `   Problema: ${suggestion.issue}\n`;
+        if (suggestion.evidence) {
+          consolidatedSuggestions += `   Evidenza: "${suggestion.evidence}"\n`;
+        }
+        consolidatedSuggestions += `   Raccomandazione: ${suggestion.recommendation}\n`;
+        if (suggestion.example) {
+          consolidatedSuggestions += `   Esempio: ${suggestion.example}\n`;
+        }
+        consolidatedSuggestions += `   Impatto atteso: ${suggestion.impact}\n\n`;
+      });
+    }
+
+    // Aggiungi roadmap implementazione
+    if (suggestionAnalysis.implementationRoadmap) {
+      consolidatedSuggestions += "ROADMAP DI IMPLEMENTAZIONE:\n\n";
+      
+      if (suggestionAnalysis.implementationRoadmap.immediate?.length) {
+        consolidatedSuggestions += "🔴 AZIONI IMMEDIATE:\n";
+        suggestionAnalysis.implementationRoadmap.immediate.forEach((action: string) => {
+          consolidatedSuggestions += `• ${action}\n`;
+        });
+        consolidatedSuggestions += "\n";
+      }
+      
+      if (suggestionAnalysis.implementationRoadmap.shortTerm?.length) {
+        consolidatedSuggestions += "🟡 AZIONI BREVE TERMINE:\n";
+        suggestionAnalysis.implementationRoadmap.shortTerm.forEach((action: string) => {
+          consolidatedSuggestions += `• ${action}\n`;
+        });
+        consolidatedSuggestions += "\n";
+      }
+      
+      if (suggestionAnalysis.implementationRoadmap.longTerm?.length) {
+        consolidatedSuggestions += "🟢 AZIONI LUNGO TERMINE:\n";
+        suggestionAnalysis.implementationRoadmap.longTerm.forEach((action: string) => {
+          consolidatedSuggestions += `• ${action}\n`;
+        });
+      }
+    }
+
+    // Aggiungi note critiche se presenti
+    if (detailedAnalysis.criticalIssues?.length) {
+      consolidatedSuggestions += "\n⚠️ PROBLEMI CRITICI IDENTIFICATI:\n\n";
+      detailedAnalysis.criticalIssues.forEach((issue: any, index: number) => {
+        consolidatedSuggestions += `${index + 1}. ${issue.issue}\n`;
+        consolidatedSuggestions += `   Categoria: ${issue.category}\n`;
+        if (issue.evidence) {
+          consolidatedSuggestions += `   Evidenza: "${issue.evidence}"\n`;
+        }
+        consolidatedSuggestions += `   Impatto: ${issue.impact}\n`;
+        consolidatedSuggestions += `   Raccomandazione: ${issue.recommendation}\n\n`;
+      });
     }
 
     const overallScore = totalWeight > 0 ? Math.round(totalScore / totalWeight) : 0;
     const classification = getClassification(overallScore);
     const processingTime = Math.round((Date.now() - startTime) / 1000);
 
-    console.log(`[PEER-REVIEW] Analisi completata: Score ${overallScore}, Classificazione: ${classification}`);
+    console.log(`[PEER-REVIEW] Analisi multi-step completata: Score ${overallScore}, Classificazione: ${classification}`);
 
     return {
       overallScore,
       classification,
       criteriaResults,
-      suggestions: analysisResult.suggestions || "Nessun suggerimento specifico fornito.",
-      processingTime
+      suggestions: consolidatedSuggestions,
+      processingTime,
+      detailedAnalysis: {
+        structural: structuralAnalysis,
+        detailed: detailedAnalysis,
+        suggestions: suggestionAnalysis
+      }
     };
 
   } catch (error: any) {
@@ -338,7 +700,7 @@ ${peritiaContent}`
  * Ottiene i criteri del framework ENFSI
  */
 export function getENFSIFramework(language: string = 'it') {
-  const framework = language === 'en' ? ENFSI_FRAMEWORK_EN : ENFSI_FRAMEWORK_IT;
+  const framework = language === 'en' ? ENFSI_FRAMEWORK_EN : ENFSI_DETAILED_FRAMEWORK_IT;
   return {
     framework,
     classifications: {

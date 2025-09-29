@@ -28,6 +28,7 @@ import WakeUpPage from "@/pages/wake-up-page";
 import PeerReviewPage from "@/pages/peer-review-page";
 import FeedbackPage from "@/pages/feedback-page";
 import FAQPage from "@/pages/faq-page";
+import MethodologyPage from "@/pages/methodology-page";
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -84,6 +85,12 @@ function Router() {
       <ProtectedRoute path="/signatures" component={() => (
         <AppLayout>
           <SignaturesPage />
+        </AppLayout>
+      )} />
+      
+      <ProtectedRoute path="/methodology" component={() => (
+        <AppLayout>
+          <MethodologyPage />
         </AppLayout>
       )} />
 
